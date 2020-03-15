@@ -1,0 +1,42 @@
+service: ${env:NAME, file(./.env/env.${self:provider.env}.json):NAME}
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
+  env: ${env:SLS_ENV, 'test'}
+  region: us-east-1
+  timeout: 30
+  environment:
+    NODE_ENV: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
+    SWAGGER: ${env:SWAGGER, file(./.env/env.${self:provider.env}.json):SWAGGER}
+    PROTOCOL: ${env:PROTOCOL, file(./.env/env.${self:provider.env}.json):PROTOCOL}
+    MONGO: ${env:MONGO, file(./.env/env.${self:provider.env}.json):MONGO}
+    REPLICA: ${env:REPLICA, file(./.env/env.${self:provider.env}.json):REPLICA}
+
+package:
+  exclude:
+    - src/**
+
+plugins:
+ - serverless-domain-manager
+ - serverless-apigw-binary
+
+custom:
+  customDomain:
+    domainName: ${env:SWAGGER, file(./.env/env.${self:provider.env}.json):SWAGGER}
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+  apigwBinary:
+    types:
+      - 'multipart/form-data'
+      - 'image/jpeg'
+      - 'image/png'
+
+functions:
+  app:
+    handler: dist/slsapp.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'

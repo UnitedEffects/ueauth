@@ -1,0 +1,194 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Boilerplate Service
+  description: A Boilerplate for services that run in docker or lambda
+tags:
+  - name: Health
+    description: Service Status
+paths:
+  /logs:
+    post:
+      tags:
+        - logs
+      summary: Write a new log to the console and the db
+      description: This is unlikely to be used with frequency.
+      operationId: writeLog
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLog'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Log'
+        description: Log data to be written
+        required: true
+    get:
+      tags:
+        - logs
+      summary: Retrieve all logs in the system
+      description: ''
+      operationId: getLogs
+      parameters:
+        - name: code
+          in: query
+          description: code of log type to filter
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Logs'
+      security:
+        - UEAuth: []
+  '/logs/{id}':
+    get:
+      tags:
+        - logs
+      summary: Find a log with its ID
+      description: 'Codes should be "error", "notify", or "success".'
+      operationId: getLog
+      parameters:
+        - name: id
+          in: path
+          description: id of log type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLog'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: Health check
+      responses:
+        '200':
+          description: GET successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/success'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/defaultError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/defaultError'
+
+servers:
+  - url: http://localhost:3000/api
+components:
+  securitySchemes:
+    UEAuth:
+      type: http
+      scheme: bearer
+      name: Authorization
+      description: 'For both UEAuth and other Bearer based tokens, simply enter the token (prefixing with "bearer" is not required).'
+    basicAuth:
+      type: http
+      scheme: basic
+    OpenID:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            admin: Grants access to admin operations
+  schemas:
+    success:
+      required:
+        - err
+        - message
+      properties:
+        err:
+          type: string
+        message:
+          type: object
+    defaultError:
+      required:
+        - err
+        - message
+      properties:
+        err:
+          type: integer
+          format: int32
+        message:
+          type: string
+    Log:
+      type: object
+      required:
+        - logCode
+        - logTimestamp
+      properties:
+        logCode:
+          type: string
+          description: 'This is your hashKey. This should only be ERROR, NOTIFY, or SUCCESS'
+        logTimestamp:
+          type: string
+          format: date-time
+          description: This is your rangeKey. This is a timestamp.
+        message:
+          type: string
+          description: This should be any brief summary data in string format.
+        details:
+          type: object
+          description: You can directly pipe any error message objects to here.
+        id:
+          type: string
+          description: guid for this log
+    ApiResponseLog:
+      properties:
+        type:
+          type: string
+          default: Log
+        data:
+          $ref: '#/components/schemas/Log'
+    Logs:
+      properties:
+        type:
+          type: string
+          default: Log
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Log'
