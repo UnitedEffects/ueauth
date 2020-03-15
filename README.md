@@ -12,3 +12,4 @@ WIP - NOT READY FOR USE
 4. Break out biz from dal in logging examples
 5. Update readme
 6. Test docker and lambda
+7. Within Readme, explain how the ODM can be swapped out for a different persistence if preferred
