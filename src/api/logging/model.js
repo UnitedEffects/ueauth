@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 mongoose.Promise = Promise;
 import moment from 'moment';
-import uuid from 'uuidv4';
+import { uuid } from 'uuidv4';
 
 mongoose.set('useCreateIndex', true);
 const logSchema = new mongoose.Schema({
@@ -22,11 +22,11 @@ const logSchema = new mongoose.Schema({
         type: Object,
         required: false
     },
-    id: {
+    _id: {
         type: String,
         default: uuid
     }
-});
+},{ _id: false });
 
 // Execute before each user.save() call
 logSchema.pre('save', callback => //console.log('log saved');

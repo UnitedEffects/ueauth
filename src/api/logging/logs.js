@@ -9,10 +9,10 @@ export default {
         logData.logCode = data.logCode.toUpperCase();
         const log = new Log(logData);
         if (write === true) {
-            console.log(log);
+            console.info('persisted');
             return log.save();
         }
-        return console.log(log);
+        return log;
     },
 
     async getLogs(query) {

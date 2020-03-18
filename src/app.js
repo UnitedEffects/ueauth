@@ -4,8 +4,7 @@ import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 
-import index from './routes/index';
-import api from './routes/api';
+import { Root, Api } from './routes';
 import middle from './middleware';
 
 const config = require('./config');
@@ -25,8 +24,8 @@ app.use(middle.responseIntercept);
 //content and APIs
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/swagger', express.static(path.join(__dirname, '../public/swagger')));
-app.use('/', index);
-app.use('/api', api);
+app.use('/', Root);
+app.use('/api', Api);
 
 // catch 404 and other errors
 app.use(middle.catch404);

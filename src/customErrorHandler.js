@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom';
 import log from './api/logging/logs';
+const config = require('./config');
 
 export default {
     catch404 (req, res, next) {
@@ -10,7 +11,9 @@ export default {
             return Boom.conflict(error.errmsg.split('E11000 duplicate key error collection: ').join(''));
         }
         if (!Boom.isBoom(error)) return Boom.boomify(error);
-        await log.record(error, false);
-        return error;
+        const err = error.output.payload;
+        const nE = await log.record(error.output.payload, config.PERSIST_HTTP_ERRORS);
+        err.id = nE._id;
+        return err;
     }
 }
