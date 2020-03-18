@@ -7,7 +7,7 @@ const TYPE = 'LOG';
 const api = {
     async writeLog(req, res, next) {
         try {
-            if (!req.body.logCode) return next(Boom.preconditionRequired('logCode is required'));
+            if (!req.body.message) return next(Boom.preconditionRequired('message is required'));
             const result = await logs.writeLog(req.body);
             return res.respond(say.created(result, TYPE));
         } catch (error) {
@@ -27,6 +27,7 @@ const api = {
         try {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             const result = await logs.getLog(req.params.id);
+            if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, TYPE));
         } catch (error) {
             next(error);

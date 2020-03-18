@@ -157,12 +157,11 @@ components:
     Log:
       type: object
       required:
-        - logCode
+        - code
         - logTimestamp
       properties:
-        logCode:
+        code:
           type: string
-          description: 'This is your hashKey. This should only be ERROR, NOTIFY, or SUCCESS'
         logTimestamp:
           type: string
           format: date-time

@@ -12,7 +12,8 @@ const logSchema = new mongoose.Schema({
     },
     code: {
         type: String,
-        required: false
+        default: 'ERROR',
+        enum: ['ERROR', 'NOTIFY', 'SUCCESS', 'LOG']
     },
     message: {
         type: String,
@@ -31,6 +32,20 @@ const logSchema = new mongoose.Schema({
 // Execute before each user.save() call
 logSchema.pre('save', callback => //console.log('log saved');
     callback());
+
+logSchema.virtual('id').get(function(){
+    return this._id.toString();
+});
+
+logSchema.set('toJSON', {
+    virtuals: true
+});
+
+logSchema.options.toJSON.transform = function (doc, ret, options) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+};
 
 // Export the Mongoose model
 export default mongoose.model('Log', logSchema);

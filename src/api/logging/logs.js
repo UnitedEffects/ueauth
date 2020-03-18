@@ -6,13 +6,16 @@ export default {
     async writeLog(data, write=true) {
         const logData = data;
         if(!logData.logTimestamp) logData.logTimestamp = moment().format();
-        logData.logCode = data.logCode.toUpperCase();
+        if(logData.code) logData.code = data.code.toUpperCase();
         const log = new Log(logData);
         if (write === true) {
-            console.info('persisted');
+            console.log(JSON.parse(JSON.stringify(log)));
             return log.save();
         }
-        return log;
+        const out = JSON.parse(JSON.stringify(log));
+        out.persisted = false;
+        console.info(out);
+        return out;
     },
 
     async getLogs(query) {
@@ -20,7 +23,7 @@ export default {
     },
 
     async getLog(id) {
-        return Log.findOne( { id });
+        return Log.findOne( { _id: id });
     },
 
     async record(data, write=false) {
