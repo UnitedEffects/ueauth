@@ -22,7 +22,7 @@ export default {
     },
 
     async getLogs(q) {
-        const query = await helper.parseQuery(q);
+        const query = await helper.parseOdataQuery(q);
         return dal.getLogs(query);
     },
 

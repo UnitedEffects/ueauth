@@ -15,7 +15,7 @@ export default {
             return el[property] === check;
         });
     },
-    async parseQuery (data) {
+    async parseOdataQuery (data) {
         try {
             let query = null;
             if (data.$filter) {
