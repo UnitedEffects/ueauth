@@ -4359,6 +4359,24 @@ object.values@^1.1.0, object.values@^1.1.1:
     function-bind "^1.1.1"
     has "^1.0.3"
 
+odata-v4-literal@^0.1.0:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/odata-v4-literal/-/odata-v4-literal-0.1.1.tgz#47c017b11294c0fc40c9d87d9266425a5671168f"
+  integrity sha512-xX9IrLywUmFI6In/AgT0Yy0DpBgW/Y7N9Q3iSfbqOjVyE2z8PvWflx9kgPBiCGmpZFw4dG2TKGlVRd2jgD8+vg==
+
+odata-v4-mongodb@^0.1.12:
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/odata-v4-mongodb/-/odata-v4-mongodb-0.1.12.tgz#dfd7517c0a3b573453d4c70e873323a14d103d51"
+  integrity sha512-XMR/+U3Xow+oWmK1815iNStoFEJuiQNICrBETSrpZe3A5V9dZ+/UVW/fytxD4qQ6VddCZe0gi07OuAh4EBJ1Yw==
+  dependencies:
+    odata-v4-literal "^0.1.0"
+    odata-v4-parser "^0.1.18"
+
+odata-v4-parser@^0.1.18:
+  version "0.1.29"
+  resolved "https://registry.yarnpkg.com/odata-v4-parser/-/odata-v4-parser-0.1.29.tgz#49e466037dbc4fc088572a2deae822fc14e6c137"
+  integrity sha512-7ZsqxcMbGAqKSBme0+lul7g9K52RadGYU3WvYwDdduJNfnduSL59w4OEskvEzWHZMcPRqPnD9XtuO7Rpl+B3jA==
+
 on-finished@~2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.3.0.tgz#20f1336481b083cd75337992a16971aa2d906947"

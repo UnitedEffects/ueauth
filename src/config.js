@@ -11,6 +11,7 @@ const config = {
     SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',
     REPLICA: process.env.REPLICA || envVars.REPLICA || 'rs0',
     PERSIST_HTTP_ERRORS: process.env.PERSIST_HTTP_ERRORS || envVars.PERSIST_HTTP_ERRORS || false,
+    WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false,
     /**
      * The Below can be delete, it is for legacy functionality in United Effects
      */

@@ -29,6 +29,7 @@ async function doParse(error) {
     if (tE.output.payload.message !== error.message) {
         tE.output.payload.message = `${tE.output.payload.message} -details: ${error.message}`;
     }
+    if (tE.data) tE.output.payload.data = tE.data;
     return tE;
 }
 

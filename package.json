@@ -45,6 +45,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.9.4",
     "morgan": "^1.9.1",
+    "odata-v4-mongodb": "^0.1.12",
     "passport": "^0.4.1",
     "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",

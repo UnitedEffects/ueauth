@@ -6,11 +6,13 @@ info:
 tags:
   - name: Health
     description: Service Status
+  - name: Logs
+    description: Logging Resource
 paths:
   /logs:
     post:
       tags:
-        - logs
+        - Logs
       summary: Write a new log to the console and the db
       description: This is unlikely to be used with frequency.
       operationId: writeLog
@@ -20,7 +22,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseLog'
+                $ref: '#/components/schemas/oneLog'
         '405':
           description: Invalid input
         '500':
@@ -31,19 +33,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Log'
+              $ref: '#/components/schemas/writeLog'
         description: Log data to be written
         required: true
     get:
       tags:
-        - logs
+        - Logs
       summary: Retrieve all logs in the system
       description: ''
       operationId: getLogs
       parameters:
-        - name: code
+        - name: $filter
           in: query
-          description: code of log type to filter
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
           required: false
           schema:
             type: string
@@ -59,7 +85,7 @@ paths:
   '/logs/{id}':
     get:
       tags:
-        - logs
+        - Logs
       summary: Find a log with its ID
       description: 'Codes should be "error", "notify", or "success".'
       operationId: getLog
@@ -76,7 +102,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseLog'
+                $ref: '#/components/schemas/oneLog'
         '400':
           description: Invalid code supplied
         '404':
@@ -86,7 +112,7 @@ paths:
   /health:
     get:
       tags:
-        - health
+        - Health
       summary: Health check
       description: Health check
       responses:
@@ -156,6 +182,14 @@ components:
           type: string
     Log:
       type: object
+      properties:
+        id:
+          type: string
+          description: guid for this log
+      allOf:
+        - $ref: '#/components/schemas/writeLog'
+    writeLog:
+      type: object
       required:
         - code
         - logTimestamp
@@ -172,10 +206,7 @@ components:
         details:
           type: object
           description: You can directly pipe any error message objects to here.
-        id:
-          type: string
-          description: guid for this log
-    ApiResponseLog:
+    oneLog:
       properties:
         type:
           type: string

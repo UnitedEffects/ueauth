@@ -1,3 +1,6 @@
+import { createQuery } from 'odata-v4-mongodb'
+import Boom from '@hapi/boom';
+
 export default {
     isJson(check) {
         try {
@@ -11,5 +14,29 @@ export default {
         return arr.some(function(el) {
             return el[property] === check;
         });
+    },
+    async parseQuery (data) {
+        try {
+            let query = null;
+            if (data.$filter) {
+                query = (query === null) ? `$filter=${data.$filter}` : `${query}&$filter=${data.$filter}`;
+            }
+            if (data.$select) {
+                query = (query === null) ? `$select=${data.$select}` : `${query}&$select=${data.$select}`;
+            }
+            if (data.$skip) {
+                query = (query === null) ? `$skip=${data.$skip}` : `${query}&$skip=${data.$skip}`;
+            }
+            if (data.$top) {
+                query = (query === null) ? `$top=${data.$top}` : `${query}&$top=${data.$top}`;
+            }
+            if (data.$orderby) {
+                query = (query === null) ? `$orderby=${data.$orderby}` : `${query}&$orderby=${data.$orderby}`;
+            }
+            return createQuery(query);
+        } catch (error) {
+            throw Boom.badRequest('Check your oData inputs', data);
+        }
+
     }
 };
