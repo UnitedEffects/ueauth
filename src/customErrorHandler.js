@@ -3,8 +3,8 @@ import log from './api/logging/logs';
 const config = require('./config');
 
 export default {
-    catch404 (req, res, next) {
-        next(Boom.notFound('Resource not found.'));
+    catch404() {
+        return Boom.notFound('Resource not found');
     },
     async parse(error) {
         try {
@@ -26,6 +26,13 @@ export default {
 async function doParse(error) {
     let tE = error;
     if (!Boom.isBoom(error)) tE = Boom.boomify(error);
+    // openApi adjustment
+    if(error.name === 'ValidationError') {
+        tE.output.statusCode = error.statusCode;
+        tE.output.payload.statusCode = error.statusCode;
+        tE.output.payload.error = error.name;
+        tE.output.payload.message = error.message;
+    }
     if (tE.output.payload.message !== error.message) {
         tE.output.payload.message = `${tE.output.payload.message} -details: ${error.message}`;
     }

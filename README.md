@@ -8,6 +8,7 @@ A boilerplate micro service that runs as docker or lambda. WIP - NOT READY FOR U
 * Mongoose -> MongoDB
 * Serverless-http
 * openAPI/Swagger
+* Express-OpenAPI-Validate
 * @hapi/boom
 * oData API query
 * JSON Patch
@@ -23,10 +24,15 @@ https://www.odata.org/documentation/
 
 http://jsonpatch.com/
 
+### DB
+
+If you'd rather use a different database or ODM, the following modifications are necessary:
+
+* change connection.js to the appropriate DB
+* validate that slsapp and start both correctly implement connection.js
+* in each of your api/resources, change the dal.js file to access the new DB using the new ODM/ORM
+
+
 ## Initial Todo
 
-3. Complete the automatic schema check system with openApi - ensure performance
-4. Complete the unit testing framework
-5. Update readme
-6. Test docker and lambda
-7. Within Readme, explain how the ODM can be swapped out for a different persistence if preferred
+* fix public settings

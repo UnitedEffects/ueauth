@@ -4,15 +4,13 @@ info:
   title: Boilerplate Service
   description: A Boilerplate for services that run in docker or lambda
 tags:
-  - name: Health
-    description: Service Status
-  - name: Logs
-    description: Logging Resource
+  - name: System
+    description: Basic System Functionality
 paths:
   /logs:
     post:
       tags:
-        - Logs
+        - System
       summary: Write a new log to the console and the db
       description: This is unlikely to be used with frequency.
       operationId: writeLog
@@ -38,7 +36,7 @@ paths:
         required: true
     get:
       tags:
-        - Logs
+        - System
       summary: Retrieve all logs in the system
       description: 'Uses oData filtering to retrieve logs. You will need to use oData syntax.'
       operationId: getLogs
@@ -85,7 +83,7 @@ paths:
   '/logs/{id}':
     get:
       tags:
-        - Logs
+        - System
       summary: Find a log with its ID
       description: 'Codes should be "error", "notify", or "success".'
       operationId: getLog
@@ -111,7 +109,7 @@ paths:
         - UEAuth: []
     patch:
       tags:
-        - Logs
+        - System
       summary: Patch an existing Log
       description: Patch an existing Log - This is not a normal action for logs, used here as an example of JSON Patch only.
       operationId: patchLog
@@ -145,7 +143,7 @@ paths:
   /health:
     get:
       tags:
-        - Health
+        - System
       summary: Health check
       description: Health check
       responses:
@@ -219,20 +217,20 @@ components:
         id:
           type: string
           description: guid for this log
+        logTimestamp:
+          type: string
+          format: date-time
+          description: This is your rangeKey. This is a timestamp.
       allOf:
         - $ref: '#/components/schemas/writeLog'
     writeLog:
       type: object
       required:
-        - code
-        - logTimestamp
+        - message
       properties:
         code:
           type: string
-        logTimestamp:
-          type: string
-          format: date-time
-          description: This is your rangeKey. This is a timestamp.
+          enum: ["ERROR", "SUCCESS", "NOTIFY", "LOG"]
         message:
           type: string
           description: This should be any brief summary data in string format.
@@ -263,7 +261,10 @@ components:
         type: object
         description: Reference the update model for the full paths to update
         oneOf:
-          - properties:
+          - required:
+              - op
+              - path
+            properties:
               op:
                 type: string
                 enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
@@ -273,7 +274,10 @@ components:
               value:
                 type: object
                 description: 'The object, array or object to set the property at the above path to'
-          - properties:
+          - required:
+              - op
+              - path
+            properties:
               op:
                 type: string
                 enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
@@ -283,7 +287,10 @@ components:
               value:
                 type: string
                 description: 'The string, array or object to set the property at the above path to'
-          - properties:
+          - required:
+              - op
+              - path
+            properties:
               op:
                 type: string
                 enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']

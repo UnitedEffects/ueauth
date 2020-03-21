@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 const config = require('../config');
-const swagger = require('./swagger').default;
+const swagger = require('../swagger').default;
 const pJson = require('../../package.json');
 
 router.get('/', function(req, res, next) {

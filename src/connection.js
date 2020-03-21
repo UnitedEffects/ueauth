@@ -20,7 +20,7 @@ const connect = {
             console.error(`******** DB attempted and failed:  ${mongoConnect} ********`);
             console.error(err);
             console.error('Retrying Connection');
-            // todo add a retry limit
+            // may want to add retry limit
             await connect.create(mongoConnect, replica);
         }
     }
