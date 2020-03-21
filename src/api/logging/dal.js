@@ -16,5 +16,8 @@ export default {
     },
     async getLog(id) {
         return Log.findOne( { _id: id });
+    },
+    async patchLog(id, data) {
+        return Log.findOneAndUpdate({ _id: id }, data, { new: true, overwrite: true })
     }
 };

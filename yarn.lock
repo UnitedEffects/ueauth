@@ -3788,6 +3788,11 @@ json5@^2.1.0:
   dependencies:
     minimist "^1.2.0"
 
+jsonpatch@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/jsonpatch/-/jsonpatch-3.0.1.tgz#97225367c1c3c5bf1641be59b2f73be19759f06f"
+  integrity sha1-lyJTZ8HDxb8WQb5Zsvc74ZdZ8G8=
+
 jsprim@^1.2.2:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/jsprim/-/jsprim-1.4.1.tgz#313e66bc1e5cc06e438bc1b7499c2e5c56acb6a2"

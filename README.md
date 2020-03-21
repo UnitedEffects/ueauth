@@ -25,7 +25,6 @@ http://jsonpatch.com/
 
 ## Initial Todo
 
-2. Finish testing updated implementation - include oData & JSON Patch
 3. Complete the automatic schema check system with openApi - ensure performance
 4. Complete the unit testing framework
 5. Update readme

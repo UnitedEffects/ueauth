@@ -8,6 +8,7 @@ const connect = {
                 connectTimeoutMS: 10000,
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
+                useFindAndModify: false,
                 useCreateIndex: true,
                 promiseLibrary: Promise,
                 replicaSet: null

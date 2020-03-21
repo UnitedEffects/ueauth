@@ -19,6 +19,8 @@ router.get('/version', (req, res) => {
 router.get('/logs', log.getLogs);
 router.get('/logs/:id', log.getLog);
 router.post('/logs', log.writeLog);
+router.patch('/logs/:id', log.patchLog); //For Example Only
+
 router.get('/health', (req, res) => {
     res.json({data: {server: 'running'}});
 });

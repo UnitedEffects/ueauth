@@ -40,7 +40,7 @@ paths:
       tags:
         - Logs
       summary: Retrieve all logs in the system
-      description: ''
+      description: 'Uses oData filtering to retrieve logs. You will need to use oData syntax.'
       operationId: getLogs
       parameters:
         - name: $filter
@@ -109,6 +109,39 @@ paths:
           description: Log not found
       security:
         - UEAuth: []
+    patch:
+      tags:
+        - Logs
+      summary: Patch an existing Log
+      description: Patch an existing Log - This is not a normal action for logs, used here as an example of JSON Patch only.
+      operationId: patchLog
+      parameters:
+        - name: id
+          in: path
+          description: id of log type to update
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oneLog'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your log object
+        required: true
   /health:
     get:
       tags:
@@ -222,3 +255,41 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Log'
+    jsonPatch:
+      additionalProperties: false
+      description: Details for JSONPatch can be found at http://jsonpatch.com/
+      type: array
+      items:
+        type: object
+        description: Reference the update model for the full paths to update
+        oneOf:
+          - properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: object
+                description: 'The object, array or object to set the property at the above path to'
+          - properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: string
+                description: 'The string, array or object to set the property at the above path to'
+          - properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: integer
+                description: 'The integer, array or object to set the property at the above path to'

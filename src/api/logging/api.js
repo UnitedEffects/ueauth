@@ -31,6 +31,14 @@ const api = {
         } catch (error) {
             next(error);
         }
+    },
+    async patchLog(req, res, next) {
+        try {
+            const result = await logs.patchLog(req.params.id, req.body);
+            return res.respond(say.ok(result, RESOURCE));
+        } catch (error) {
+            next(error);
+        }
     }
 };
 

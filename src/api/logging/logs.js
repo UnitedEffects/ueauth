@@ -1,4 +1,5 @@
 import moment from 'moment';
+import jsonPatch from 'jsonpatch';
 import dal from './dal';
 import helper from '../../helper';
 const config = require('../../config');
@@ -28,6 +29,12 @@ export default {
 
     async getLog(id) {
         return dal.getLog(id);
+    },
+
+    async patchLog(id, update) {
+        const log = await dal.getLog(id);
+        const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(log)), update);
+        return dal.patchLog(id, patched);
     },
 
     async record(data, write=WRITE_BEHAVIOR) {
