@@ -2,6 +2,11 @@ import { createQuery } from 'odata-v4-mongodb'
 import Boom from '@hapi/boom';
 
 export default {
+    /**
+     * Checks string to see if its JSON
+     * @param check
+     * @returns {boolean}
+     */
     isJson(check) {
         try {
             JSON.parse(check);
@@ -11,7 +16,7 @@ export default {
         }
     },
     elementExists(property, check, arr) {
-        return arr.some(function(el) {
+        return arr.some((el) => {
             return el[property] === check;
         });
     },

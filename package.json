@@ -75,6 +75,7 @@
     "yarn": ">= 1.0.0"
   },
   "jest": {
-    "verbose": true
+    "verbose": true,
+    "testEnvironment": "node"
   }
 }

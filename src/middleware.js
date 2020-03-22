@@ -1,4 +1,5 @@
 import { OpenApiValidator } from 'express-openapi-validate';
+import Boom from '@hapi/boom';
 import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import swag from './swagger';
