@@ -11,8 +11,7 @@
     "build": "yarn && babel src -d dist",
     "package": "yarn && babel src -d dist && sls package",
     "deploy": "yarn && babel src -d dist && sls deploy",
-    "test": "jest",
-    "lintFix": "eslint . --fix"
+    "test": "jest"
   },
   "keywords": [
     "docker",
@@ -64,6 +63,7 @@
     "eslint-plugin-react": "^7.17.0",
     "eslint-plugin-react-hooks": "^1.7.0",
     "jest": "^25.1.0",
+    "nodemon": "^2.0.2",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-domain-manager": "^2.6.6",
     "supertest": "^4.0.2"
