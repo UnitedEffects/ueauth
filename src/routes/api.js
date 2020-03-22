@@ -7,8 +7,7 @@ const date = new Date();
 
 router.get('/version', (req, res) => {
     res.json( {
-        err: null,
-        message: {
+        data: {
             api: 'Boilerplate',
             version: p.version,
             baseURL: '/api',
