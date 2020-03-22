@@ -44,5 +44,5 @@ dist/
 node_modules/
 public-old/
 **/src/ueAuth/
-**/src/ueAuth2/
+*/src/*/ueAuth2/
 *.icloud
