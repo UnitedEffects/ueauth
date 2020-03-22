@@ -43,5 +43,6 @@ dist/
 .serverless/
 node_modules/
 public-old/
-src/ueAuth/
+**/src/ueAuth/
+**/src/ueAuth2/
 *.icloud
