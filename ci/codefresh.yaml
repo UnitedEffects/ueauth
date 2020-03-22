@@ -1,0 +1,17 @@
+version: '1.0'
+mode: sequential
+
+steps:
+  MAIN_CLONE:
+    title: Cloning main repository...
+    type: git-clone
+    repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
+    revision: '${{CF_REVISION}}'
+
+  BUILD_AND_TEST:
+    image: jch254/docker-node-serverless
+    title: Build Application
+    working_directory: ./
+    commands:
+      - yarn
+      - yarn test
