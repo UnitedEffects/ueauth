@@ -65,5 +65,4 @@ If you'd rather use a different database or ODM, the following modifications are
 ## Todo
 
 * add full test coverage for base boilerplate
-* automate a project builder using this template
 * more documentation
