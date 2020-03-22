@@ -3,6 +3,8 @@ info:
   version: 1.0.0
   title: Boilerplate Service
   description: A Boilerplate for services that run in docker or lambda
+  x-logo:
+    url: https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png
 tags:
   - name: System
     description: Basic System Functionality

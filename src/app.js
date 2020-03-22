@@ -23,7 +23,7 @@ app.use(middle.responseIntercept);
 
 //content and APIs
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/swagger', express.static(path.join(__dirname, '../public/swagger')));
+//app.use('/swagger', express.static(path.join(__dirname, '../public/swagger')));
 app.use('/', Root);
 app.use('/api', Api);
 

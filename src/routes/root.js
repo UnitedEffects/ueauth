@@ -4,8 +4,16 @@ const config = require('../config');
 const swagger = require('../swagger').default;
 const pJson = require('../../package.json');
 
-router.get('/', function(req, res, next) {
-    res.render('index', {title: 'Boilerplate Service'})
+router.get('/', (req, res) => {
+    res.render('index', { title: config.NAME })
+});
+
+router.get('/api', (req, res) => {
+    res.render('api', { title: config.NAME })
+});
+
+router.get('/swagger', (req, res) => {
+    res.render('swagger', { title: config.NAME })
 });
 
 router.get('/swagger.json', (req, res) =>  {

@@ -20,10 +20,6 @@ body {
     font-weight: normal;
 }
 
-
-/********************************************************/
-/*                    Navigation bar                    */
-/********************************************************/
 .mainmenu { z-index: 999999; width:100%;  padding: 30px 0 0 0;}
 @media (min-width: 768px) {
     .mainmenu { position: fixed; }
@@ -99,11 +95,6 @@ body {
     padding:10px 8px 10px 12px;
 }
 
-
-
-/********************************************************/
-/*             Sections - universal classes             */
-/********************************************************/
 .section {
     z-index: 1;
     min-height:420px;
@@ -119,15 +110,10 @@ body {
     .section { padding-top:160px;}
 }
 
-/* Show one of sections */
 #head {
     display: block;
 }
 
-
-/********************************************************/
-/*                      Typography                      */
-/********************************************************/
 a { color:#fff; text-decoration: none; }
 a:hover, a:active { color:#fff; text-decoration: underline; }
 .lead {
@@ -165,10 +151,6 @@ a:hover, a:active { color:#fff; text-decoration: underline; }
     }
 }
 
-
-/********************************************************/
-/*                   UI - Buttons                       */
-/********************************************************/
 .btn{
     color:#333;
     text-shadow: none;
@@ -208,11 +190,6 @@ a:hover, a:active { color:#fff; text-decoration: underline; }
     background: rgba(255,255,255,.5);
 }
 
-
-
-/********************************************************/
-/*                 UI - Thumbnails                      */
-/********************************************************/
 .thumbnail {
     background-color: rgba(255,255,255,.2);
     border: 0 none;
@@ -225,12 +202,6 @@ a:hover, a:active { color:#fff; text-decoration: underline; }
     color: inherit;
 }
 
-
-
-/********************************************************/
-/*                 Everything else                      */
-/********************************************************/
-
 .list-social .btn {
     font-size:1.3em;
 }
@@ -238,8 +209,6 @@ a:hover, a:active { color:#fff; text-decoration: underline; }
     text-decoration: none;
 }
 
-
-/* Social buttons in the footer */
 #social {
     margin-top:50px;
     margin-bottom:50px;
@@ -296,11 +265,6 @@ a:hover, a:active { color:#fff; text-decoration: underline; }
     text-shadow:none;
 }
 
-
-
-/***********************************************************/
-/*                   Inverted theme                        */
-/***********************************************************/
 .theme-invert {
     color:#222;
     color:rgba(0,0,0,.8);

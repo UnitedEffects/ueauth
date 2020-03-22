@@ -5,6 +5,7 @@ const envVars = require(`../${dir}/env.${env}`);
 
 const config = {
     ENV: process.env.NODE_ENV || envVars.NODE_ENV || 'dev',
+    NAME: process.env.NAME || envVars.NAME || 'Boilerplate Service',
     PROTOCOL: process.env.PROTOCOL || envVars.PROTOCOL || 'http',
     IMPLEMENTER: process.env.IMPLEMENTER || envVars.IMPLEMENTER || 'theBoEffect',
     MONGO: process.env.MONGO || envVars.MONGO || 'mongodb://localhost:27017/your-db',

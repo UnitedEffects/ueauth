@@ -33,6 +33,6 @@ If you'd rather use a different database or ODM, the following modifications are
 * in each of your api/resources, change the dal.js file to access the new DB using the new ODM/ORM
 
 
-## Initial Todo
+## Todo
 
-* fix public settings
+* add full test coverage for base boilerplate
