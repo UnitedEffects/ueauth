@@ -36,6 +36,7 @@ If you'd rather use a different database or ODM, the following modifications are
 
 * Clone this repo
 * Copy the contents to your own repo save the .git data
+* Copy ./.env_ci to ./.env and modify env.dev.json to set configuration data
 * yarn
 * yarn test
 * yarn run dev
