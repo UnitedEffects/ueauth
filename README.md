@@ -1,6 +1,6 @@
 # Boilerplate Service
 
-A boilerplate micro service that runs as docker or lambda. WIP - NOT READY FOR USE
+A boilerplate micro service that runs as docker or lambda. Click "Use this Template" to utilize - note, WIP.
 
 ## Key Stack Components
 
