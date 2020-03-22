@@ -62,6 +62,10 @@ If you'd rather use a different database or ODM, the following modifications are
 * yarn run dev
 * add src/api resources using the logging example
 
+### CI
+
+* To use Codefresh CI you'll need to add a deploy stage to the ci/codefresh.yaml file
+
 ## Todo
 
 * add full test coverage for base boilerplate
