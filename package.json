@@ -14,10 +14,6 @@
     "test": "jest",
     "lintFix": "eslint . --fix"
   },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
   "keywords": [
     "docker",
     "lambda",
@@ -25,10 +21,9 @@
     "microservice",
     "boilerplate"
   ],
-  "author": "Bo Motlagh <borzou@theboeffect.com>",
-  "bugs": {
-    "url": ""
-  },
+  "author": "theBoEffect",
+  "url": "https://theboeffect.com",
+  "logo": "https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png",
   "dependencies": {
     "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.6.3",
