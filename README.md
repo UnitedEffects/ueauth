@@ -16,6 +16,21 @@ A boilerplate micro service that runs as docker or lambda. WIP - NOT READY FOR U
 * Passport (see libs in package.json)
 * Jest
 
+## Features
+
+* Configurable MongoDB connection to stand-alone or replica (or atlas)
+* oData support for queries
+* JSON Patch implemented for updates with mongodb
+* OpenAPI (swagger) and Swagger UI (/swagger)
+* Automatic API Documentation Generated via ReDoc (/api)
+* Automatic schema validation using the OpenAPI spec built in as middleware
+* Error handling via @hapi/Boom
+* Configurable logging with optional DB persistence
+* Works with Docker or Lambda
+* Jest test harness
+
+Have other ideas? Feel free to PR!
+
 ### oData Spec
 
 https://www.odata.org/documentation/
@@ -46,3 +61,4 @@ If you'd rather use a different database or ODM, the following modifications are
 
 * add full test coverage for base boilerplate
 * automate a project builder using this template
+* more documentation
