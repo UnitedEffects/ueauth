@@ -64,7 +64,7 @@ If you'd rather use a different database or ODM, the following modifications are
 
 ### CI
 
-* To use Codefresh CI you'll need to add a deploy stage to the ci/codefresh.yaml file
+* To use Codefresh CI to deploy to lambda you'll need to uncomment that line from ci/codefresh.yaml
 
 ## Todo
 
