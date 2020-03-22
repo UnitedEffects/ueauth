@@ -5,22 +5,22 @@ const swagger = require('../swagger').default;
 const pJson = require('../../package.json');
 
 router.get('/', (req, res) => {
-    res.render('index', { title: config.NAME, description: pJson.description, by: pJson.author, url: pJson.url  })
+    res.render('index', { title: pJson.name, description: pJson.description, by: pJson.author, url: pJson.url  })
 });
 
 router.get('/api', (req, res) => {
-    res.render('api', { title: config.NAME })
+    res.render('api', { title: pJson.name })
 });
 
 router.get('/swagger', (req, res) => {
-    res.render('swagger', { title: config.NAME })
+    res.render('swagger', { title: pJson.name })
 });
 
 router.get('/swagger.json', (req, res) =>  {
     try{
         const swag = swagger;
         swag.info.version = pJson.version;
-        swag.info.title = config.NAME;
+        swag.info.title = pJson.name;
         swag.info.description = `${pJson.description} by: <a href="${pJson.url}">${pJson.author}</a>`;
         swag.info['x-logo'].url = pJson.logo;
         if (config.SWAGGER) swag.servers = [{url: `${config.PROTOCOL}://${config.SWAGGER}/api`}];

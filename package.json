@@ -1,5 +1,5 @@
 {
-  "name": "boilerpate",
+  "name": "boilerplate-service",
   "version": "1.0.0",
   "description": "A microservice boilerplate that runs optionally as docker or lambda",
   "private": false,

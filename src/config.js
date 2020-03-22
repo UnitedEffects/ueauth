@@ -5,7 +5,6 @@ const envVars = require(`../${dir}/env.${env}`);
 
 const config = {
     ENV: process.env.NODE_ENV || envVars.NODE_ENV || 'dev',
-    NAME: process.env.NAME || envVars.NAME || 'Boilerplate Service',
     PROTOCOL: process.env.PROTOCOL || envVars.PROTOCOL || 'http',
     MONGO: process.env.MONGO || envVars.MONGO || 'mongodb://localhost:27017/your-db',
     SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',

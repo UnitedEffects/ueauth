@@ -49,9 +49,14 @@ If you'd rather use a different database or ODM, the following modifications are
 
 ## Instruction
 
-* Clone this repo
-* Copy the contents to your own repo save the .git data
-* Copy ./.env_ci to ./.env and modify env.dev.json to set configuration data
+* Click "Use this Template" at the top  of the repository and setup your project
+* Update the following in package.json
+    * name
+    * author
+    * description
+    * url (your website or project website)
+    * logo (your logo or project logo url)
+* Copy ./.env_ci to ./.env and modify env.dev.json to set runtime configuration data
 * yarn
 * yarn test
 * yarn run dev

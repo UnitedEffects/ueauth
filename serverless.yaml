@@ -1,4 +1,4 @@
-service: ${env:NAME, file(./.env/env.${self:provider.env}.json):NAME}
+service: ${env:NAME, file(./package.json):name}
 
 provider:
   name: aws
