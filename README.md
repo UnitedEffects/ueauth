@@ -1,6 +1,11 @@
 # Boilerplate Service
 
-A boilerplate micro service that runs as docker or lambda. Click "Use this Template" to utilize - note, WIP.
+A boilerplate micro service that runs as docker or lambda. Click "Use this Template" to use this for your service.
+
+#### follow me:
+* [twitter](https://twitter.com/theboeffect)
+* [linkedIn](https://www.linkedin.com/in/bmotlagh/)
+* [instagram](https://www.instagram.com/theboeffect/)
 
 ## Key Stack Components
 
@@ -65,8 +70,3 @@ If you'd rather use a different database or ODM, the following modifications are
 ### CI
 
 * To use Codefresh CI to deploy to lambda you'll need to uncomment that line from ci/codefresh.yaml
-
-## Todo
-
-* add full test coverage for base boilerplate
-* more documentation

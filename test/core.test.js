@@ -13,6 +13,8 @@ import errorHandler from '../src/customErrorHandler';
 import m from '../src/middleware';
 import helper from '../src/helper';
 import connect from "../src/connection";
+import model from "../src/api/logging/model";
+import mockingoose from "mockingoose/lib/index";
 
 describe('Error handler tests', () => {
     test('make sure error handler returns 404', async () => {

@@ -7,6 +7,10 @@ const config = require('../src/config');
 const pJson = require('../package');
 
 describe('API tests', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     it('should return 404', async () => {
         try {
             const res = await request(app)

@@ -3,6 +3,10 @@ import "regenerator-runtime/runtime";
 import { say, sayMiddleware } from '../src/say';
 
 describe('Say library tests', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     it('say created', async () => {
         expect(say.created({success: 'ok'}, 'TEST')).toStrictEqual({
             statusCode: 201,

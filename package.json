@@ -63,6 +63,7 @@
     "eslint-plugin-react": "^7.17.0",
     "eslint-plugin-react-hooks": "^1.7.0",
     "jest": "^25.1.0",
+    "mockingoose": "^2.13.2",
     "nodemon": "^2.0.2",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-domain-manager": "^2.6.6",

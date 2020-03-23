@@ -23,7 +23,6 @@ const connect = {
         try {
             let mongoOptions = this.connectOptions();
             mongoOptions = this.replicaCheck(mongoOptions, replica, 'production');
-            console.info(mongoOptions);
             console.error('mongo connecting');
             return await mongoose.connect(`${mongoConnect}?authSource=admin`, mongoOptions);
         } catch (err) {
