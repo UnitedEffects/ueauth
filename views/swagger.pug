@@ -1,0 +1,44 @@
+doctype html
+
+head
+    meta(charset='UTF-8')
+    title=title
+    link(rel='stylesheet' type='text/css' href='https://unpkg.com/swagger-ui-dist@3/swagger-ui.css')
+    link(rel='icon' type='image/png' href="https://s3.amazonaws.com/ue-platform-content/ue-favicon.png" sizes="100x100")
+    style.
+        html
+        {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *,
+        *:before,
+        *:after
+        {
+            box-sizing: inherit;
+        }
+        body
+        {
+            margin:0;
+            background: #fafafa;
+        }
+#swagger-ui
+script(src='https://unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js')
+script(src='https://unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js')
+script.
+    window.onload = function() {
+        window.ui = SwaggerUIBundle({
+            url: "/swagger.json",
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "StandaloneLayout"
+        })
+    }

@@ -1,0 +1,304 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Boilerplate Service
+  description: A Boilerplate for services that run in docker or lambda
+  x-logo:
+    url: https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png
+tags:
+  - name: System
+    description: Basic System Functionality
+paths:
+  /logs:
+    post:
+      tags:
+        - System
+      summary: Write a new log to the console and the db
+      description: This is unlikely to be used with frequency.
+      operationId: writeLog
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oneLog'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeLog'
+        description: Log data to be written
+        required: true
+    get:
+      tags:
+        - System
+      summary: Retrieve all logs in the system
+      description: 'Uses oData filtering to retrieve logs. You will need to use oData syntax.'
+      operationId: getLogs
+      parameters:
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Logs'
+      security:
+        - UEAuth: []
+  '/logs/{id}':
+    get:
+      tags:
+        - System
+      summary: Find a log with its ID
+      description: 'Codes should be "error", "notify", or "success".'
+      operationId: getLog
+      parameters:
+        - name: id
+          in: path
+          description: id of log type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oneLog'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
+    patch:
+      tags:
+        - System
+      summary: Patch an existing Log
+      description: Patch an existing Log - This is not a normal action for logs, used here as an example of JSON Patch only.
+      operationId: patchLog
+      parameters:
+        - name: id
+          in: path
+          description: id of log type to update
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oneLog'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your log object
+        required: true
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Health check
+      responses:
+        '200':
+          description: GET successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/success'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/defaultError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/defaultError'
+
+servers:
+  - url: http://localhost:3000/api
+components:
+  securitySchemes:
+    UEAuth:
+      type: http
+      scheme: bearer
+      name: Authorization
+      description: 'For both UEAuth and other Bearer based tokens, simply enter the token (prefixing with "bearer" is not required).'
+    basicAuth:
+      type: http
+      scheme: basic
+    OpenID:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            admin: Grants access to admin operations
+  schemas:
+    success:
+      required:
+        - err
+        - message
+      properties:
+        err:
+          type: string
+        message:
+          type: object
+    defaultError:
+      required:
+        - err
+        - message
+      properties:
+        err:
+          type: integer
+          format: int32
+        message:
+          type: string
+    Log:
+      type: object
+      properties:
+        id:
+          type: string
+          description: guid for this log
+        logTimestamp:
+          type: string
+          format: date-time
+          description: This is your rangeKey. This is a timestamp.
+      allOf:
+        - $ref: '#/components/schemas/writeLog'
+    writeLog:
+      type: object
+      required:
+        - message
+      properties:
+        code:
+          type: string
+          enum: ["ERROR", "SUCCESS", "NOTIFY", "LOG"]
+        message:
+          type: string
+          description: This should be any brief summary data in string format.
+        details:
+          type: object
+          description: You can directly pipe any error message objects to here.
+    oneLog:
+      properties:
+        type:
+          type: string
+          default: Log
+        data:
+          $ref: '#/components/schemas/Log'
+    Logs:
+      properties:
+        type:
+          type: string
+          default: Log
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Log'
+    jsonPatch:
+      additionalProperties: false
+      description: Details for JSONPatch can be found at http://jsonpatch.com/
+      type: array
+      items:
+        type: object
+        description: Reference the update model for the full paths to update
+        oneOf:
+          - required:
+              - op
+              - path
+            properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: object
+                description: 'The object, array or object to set the property at the above path to'
+          - required:
+              - op
+              - path
+            properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: string
+                description: 'The string, array or object to set the property at the above path to'
+          - required:
+              - op
+              - path
+            properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: integer
+                description: 'The integer, array or object to set the property at the above path to'
