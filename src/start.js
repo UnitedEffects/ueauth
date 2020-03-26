@@ -43,7 +43,6 @@ function onError(error) {
 }
 
 function onListening() {
-    console.error('connected');
     const addr = server.address();
     const bind = typeof addr === 'string'
         ? 'pipe ' + addr
