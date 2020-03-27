@@ -68,7 +68,5 @@ If you'd rather use a different database or ODM, the following modifications are
 * yarn test
 * yarn run dev
 * add src/api resources using the logging example
-
-### CI
-
-* To use Codefresh CI to deploy to lambda you'll need to uncomment that line from ci/codefresh.yaml
+    * You will also want to update the ci/codefresh.yaml file to point to your repo
+    * Note that my CI only tests, there is no deploy stage, you'll need to add it
