@@ -14,11 +14,10 @@ const connect = {
         }
     },
     replicaCheck(options, replica, env) {
-        const out = JSON.parse(JSON.stringify(options));
         if (config.ENV !== env) {
             options.replicaSet = replica;
         }
-        return out;
+        return options;
     },
     async create (mongoConnect, replica) {
         try {
