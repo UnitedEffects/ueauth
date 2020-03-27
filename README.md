@@ -2,7 +2,9 @@
 
 A boilerplate micro service that runs as docker or lambda. Click "Use this Template" to use this for your service.
 
-[![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/theboeffect/Boilerplate%2FBoilerplate%20Validate?type=cf-1)]( https%3A%2F%2Fg.codefresh.io%2Fpublic%2Faccounts%2Ftheboeffect%2Fpipelines%2F5e7d486f66ad133bda1c9c8a)
+<a href="https://g.codefresh.io/public/accounts/theboeffect/pipelines/new/5e7d486f66ad133bda1c9c8a?filter=page:1;pageSize:10;timeFrameStart:week">
+	<img alt="Codefresh build status" src="https://g.codefresh.io/api/badges/pipeline/theboeffect/Boilerplate%2FBoilerplate%20Validate?type=cf-1">
+</a>
 
 #### follow me:
 * [twitter](https://twitter.com/theboeffect)
