@@ -244,7 +244,7 @@ describe('Test connectjs', () => {
                 replicaSet: 'rs0'
             };
 
-            const result = connect.replicaCheck(mongoOptions, 'rs0', 'qa');
+            const result = connect.replicaCheck(mongoOptions, 'rs0', `${process.env.NODE_ENV}x`);
             expect(result).toStrictEqual(copy);
         } catch (error) {
             console.info(error);
@@ -274,7 +274,7 @@ describe('Test connectjs', () => {
                 promiseLibrary: Promise,
             };
 
-            const result = connect.replicaCheck(mongoOptions, 'rs0', 'test');
+            const result = connect.replicaCheck(mongoOptions, 'rs0', process.env.NODE_ENV);
             expect(result).toStrictEqual(copy);
         } catch (error) {
             console.info(error);
