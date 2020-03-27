@@ -2,7 +2,9 @@
 
 A boilerplate micro service that runs as docker or lambda. Click "Use this Template" to use this for your service.
 
-[![Codefresh build status](https://g.codefresh.io/api/badges/pipeline/theboeffect/Boilerplate%2FBoilerplate%20Validate?branch=master&key=eyJhbGciOiJIUzI1NiJ9.NWM5ZjllOTZhMDg1Y2U4Y2NjZjc0ZTJk.vqyjrxOGid6-GptYbV-d5_hzZ9UcK96DhMCo3q3PbGc&type=cf-1)](https%3A%2F%2Fg.codefresh.io%2Fpipelines%2FBoilerplate%20Validate%2Fbuilds%3FrepoOwner%3DtheBoEffect%26repoName%3Dboilerplate%26serviceName%3DtheBoEffect%252Fboilerplate%26filter%3Dtrigger%3Abuild~Build%3Bbranch%3Amaster%3Bpipeline%3A5e7d486f66ad133bda1c9c8a~Boilerplate%20Validate)
+<a href="https%3A%2F%2Fg.codefresh.io%2Fpipelines%2FBoilerplate%20Validate%2Fbuilds%3FrepoOwner%3DtheBoEffect%26repoName%3Dboilerplate%26serviceName%3DtheBoEffect%252Fboilerplate%26filter%3Dtrigger%3Abuild~Build%3Bbranch%3Amaster%3Bpipeline%3A5e7d486f66ad133bda1c9c8a~Boilerplate%20Validate">
+	<img alt="Codefresh build status" src="https://g.codefresh.io/api/badges/pipeline/theboeffect/Boilerplate%2FBoilerplate%20Validate?branch=master&key=eyJhbGciOiJIUzI1NiJ9.NWM5ZjllOTZhMDg1Y2U4Y2NjZjc0ZTJk.vqyjrxOGid6-GptYbV-d5_hzZ9UcK96DhMCo3q3PbGc&type=cf-1">
+</a>
 
 #### follow me:
 * [twitter](https://twitter.com/theboeffect)
