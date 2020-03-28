@@ -6,6 +6,7 @@ import bodyParser from 'body-parser';
 
 import { Root, Api } from './routes';
 import middle from './middleware';
+import oidc from './oidc';
 
 const config = require('./config');
 const app = express();
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 //app.use('/swagger', express.static(path.join(__dirname, '../public/swagger')));
 app.use('/', Root);
 app.use('/api', Api);
+app.use('/oidc', oidc.callback);
 
 // catch 404 and other errors
 app.use(middle.catch404);
