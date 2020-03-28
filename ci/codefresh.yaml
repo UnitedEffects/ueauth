@@ -1,18 +1,21 @@
-version: '1.0'
-mode: sequential
+version: "1.0"
+stages:
+  - "clone"
+  - "test"
 
 steps:
-  MAIN_CLONE:
-    title: Cloning main repository...
-    type: git-clone
-    repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'
-    revision: '${{CF_REVISION}}'
+  clone:
+    title: "Cloning repository"
+    type: "git-clone"
+    repo: "theBoEffect/boilerplate"
+    revision: "${{CF_BRANCH}}"
+    git: "github"
+    stage: "clone"
 
-  BUILD_AND_DEPLOY:
+  test:
     image: jch254/docker-node-serverless
-    title: Build Application
-    working_directory: ./
+    title: Build and Test Service
+    working_directory: "${{clone}}"
     commands:
       - yarn
       - yarn test
-#      - yarn run deploy

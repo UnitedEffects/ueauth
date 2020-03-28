@@ -2,6 +2,10 @@
 
 A boilerplate micro service that runs as docker or lambda. Click "Use this Template" to use this for your service.
 
+<a href="https://g.codefresh.io/public/accounts/theboeffect/pipelines/new/5e7d486f66ad133bda1c9c8a?filter=page:1;pageSize:10;timeFrameStart:week">
+	<img alt="Codefresh build status" src="https://g.codefresh.io/api/badges/pipeline/theboeffect/Boilerplate%2FBoilerplate%20Validate?type=cf-1">
+</a>
+
 #### follow me:
 * [twitter](https://twitter.com/theboeffect)
 * [linkedIn](https://www.linkedin.com/in/bmotlagh/)
@@ -66,7 +70,5 @@ If you'd rather use a different database or ODM, the following modifications are
 * yarn test
 * yarn run dev
 * add src/api resources using the logging example
-
-### CI
-
-* To use Codefresh CI to deploy to lambda you'll need to uncomment that line from ci/codefresh.yaml
+    * You will also want to update the ci/codefresh.yaml file to point to your repo
+    * Note that my CI only tests, there is no deploy stage, you'll need to add it
