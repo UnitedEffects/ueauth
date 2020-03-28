@@ -1,9 +1,8 @@
 {
-  "name": "boilerplate-service",
+  "name": "UE-Auth",
   "version": "1.0.0",
-  "description": "A microservice boilerplate that runs optionally as docker or lambda",
-  "private": false,
-  "license": "MIT",
+  "description": "An OIDC authorization and access service",
+  "private": true,
   "scripts": {
     "start": "node ./src/start.js",
     "dev": "NODE_ENV=dev nodemon ./src/start.js",
@@ -17,11 +16,10 @@
     "docker",
     "lambda",
     "service",
-    "microservice",
-    "boilerplate"
+    "microservice"
   ],
-  "author": "theBoEffect",
-  "url": "https://theboeffect.com",
+  "author": "United Effects LLC",
+  "url": "https://unitedeffects.com",
   "logo": "https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png",
   "dependencies": {
     "@babel/core": "^7.6.4",

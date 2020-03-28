@@ -1,21 +1,22 @@
 version: "1.0"
 stages:
   - "clone"
-  - "test"
+  - "test_and_deploy"
 
 steps:
   clone:
     title: "Cloning repository"
     type: "git-clone"
-    repo: "theBoEffect/boilerplate"
+    repo: "unitedeffects/ueauth"
     revision: "${{CF_BRANCH}}"
     git: "github"
     stage: "clone"
 
-  test:
+  test_and_deploy:
     image: jch254/docker-node-serverless
     title: Build and Test Service
     working_directory: "${{clone}}"
     commands:
       - yarn
       - yarn test
+      - yarn deploy
