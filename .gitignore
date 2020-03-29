@@ -45,3 +45,4 @@ node_modules/
 public-old/
 src/api/ueAuth/
 *.icloud
+src/jwks.json

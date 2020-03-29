@@ -1,0 +1,31 @@
+import mongoose from 'mongoose';
+mongoose.Promise = Promise;
+import { uuid } from 'uuidv4';
+
+mongoose.set('useCreateIndex', true);
+
+const payloadSchema = new mongoose.Schema({
+    uid: {
+        type: String,
+        unique: true
+    }
+}, { _id: false, strict: false });
+
+const sessionSchema = new mongoose.Schema({
+    expiresAt: {
+        type: Date,
+        expires: 0
+    },
+    _id: {
+        type: String,
+        default: uuid
+    },
+    payload: payloadSchema
+},{ _id: false, collection: 'session' });
+
+sessionSchema.pre('save', callback => {
+    //console.log('session saved');
+    callback();
+});
+
+export default mongoose.model('session', sessionSchema);

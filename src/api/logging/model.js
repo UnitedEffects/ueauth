@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-mongoose.Promise = Promise;
 import moment from 'moment';
 import { uuid } from 'uuidv4';
 
