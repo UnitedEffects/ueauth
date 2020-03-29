@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-mongoose.Promise = Promise;
 import { uuid } from 'uuidv4';
 
 mongoose.set('useCreateIndex', true);
@@ -21,7 +20,7 @@ const sessionSchema = new mongoose.Schema({
         default: uuid
     },
     payload: payloadSchema
-},{ _id: false, collection: 'session' });
+},{ _id: false, strict: false, collection: 'session' });
 
 sessionSchema.pre('save', callback => {
     //console.log('session saved');
