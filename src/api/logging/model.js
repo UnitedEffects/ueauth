@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-import moment from 'moment';
 import { uuid } from 'uuidv4';
 
 mongoose.set('useCreateIndex', true);
 const logSchema = new mongoose.Schema({
     logTimestamp: {
         type: Date,
-        default: moment().format(),
+        default: Date.now(),
         expires: '30d'
     },
     code: {

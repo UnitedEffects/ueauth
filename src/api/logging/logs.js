@@ -1,4 +1,3 @@
-import moment from 'moment';
 import jsonPatch from 'jsonpatch';
 import dal from './dal';
 import helper from '../../helper';
@@ -9,7 +8,7 @@ const WRITE_BEHAVIOR = config.WRITE_LOGS_TO_DB;
 export default {
     async writeLog(data, write=true) {
         const logData = data;
-        if(!logData.logTimestamp) logData.logTimestamp = moment().format();
+        if(!logData.logTimestamp) logData.logTimestamp = Date.now();
         if(logData.code) logData.code = data.code.toUpperCase();
         const log = await dal.logObject(logData);
         if (write === true) {
@@ -49,7 +48,7 @@ export default {
     error(message, write=WRITE_BEHAVIOR) {
         const data = {
             logCode: 'ERROR',
-            message: `Caught Error at ${moment().format('LLLL')}. See details.`,
+            message: `Caught Error at ${Date.now()}. See details.`,
             details: message
         };
         try {
@@ -62,7 +61,7 @@ export default {
     notify(message, write=WRITE_BEHAVIOR) {
         const data = {
             logCode: 'NOTIFY',
-            logTimestamp: moment().format(),
+            logTimestamp: Date.now(),
             message: (helper.isJson(message)) ? JSON.stringify(message) : message
         };
         try {
@@ -75,7 +74,7 @@ export default {
     success(message, write=WRITE_BEHAVIOR) {
         const data = {
             logCode: 'SUCCESS',
-            logTimestamp: moment().format(),
+            logTimestamp: Date.now(),
             message: (helper.isJson(message)) ? JSON.stringify(message) : message
         };
         try {
@@ -88,7 +87,7 @@ export default {
     detail(code, message, detail, write=WRITE_BEHAVIOR) {
         const data = {
             logCode: code,
-            logTimestamp: moment().format(),
+            logTimestamp: Date.now(),
             message: (helper.isJson(message)) ? JSON.stringify(message) : message,
             details: detail
         };

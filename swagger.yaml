@@ -8,6 +8,8 @@ info:
 tags:
   - name: System
     description: Basic System Functionality
+  - name: Users
+    description: User Accounts
 paths:
   /logs:
     post:
@@ -168,6 +170,139 @@ paths:
               schema:
                 $ref: '#/components/schemas/defaultError'
 
+  /account:
+    post:
+      tags:
+        - Users
+      summary: Register a new user
+      description: Register a new user
+      operationId: writeAccount
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeAccount'
+        description: Account data to be written
+        required: true
+    get:
+      tags:
+        - Users
+      summary: Retrieve all users (CRUD operation)
+      description: 'Uses oData filtering to retrieve Accounts. This will need permissions.'
+      operationId: getAccounts
+      parameters:
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccounts'
+      security:
+        - UEAuth: []
+  '/account/{id}':
+    get:
+      tags:
+        - Users
+      summary: Find a User with ID
+      description: Identify a single user. Will require permissions
+      operationId: getAccount
+      parameters:
+        - name: id
+          in: path
+          description: id of account type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
+    patch:
+      tags:
+        - Users
+      summary: Patch an existing User
+      description: Patch an existing User. This will require permissions.
+      operationId: patchAccount
+      parameters:
+        - name: id
+          in: path
+          description: id of account to update
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your account object
+        required: true
 servers:
   - url: http://localhost:3000/api
 components:
@@ -250,11 +385,70 @@ components:
       properties:
         type:
           type: string
-          default: Log
+          enum: ['Log']
         data:
           type: array
           items:
             $ref: '#/components/schemas/Log'
+    getAccounts:
+      properties:
+        type:
+          type: string
+          enum: ['Account']
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/accountObject'
+    getAccount:
+      properties:
+        type:
+          type: string
+          enum: ['Account']
+        data:
+          type: object
+          $ref: '#/components/schemas/accountObject'
+    accountObject:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: guid for this account
+        createdAt:
+          type: string
+          format: date-time
+          description: when the account was created
+        verified:
+          type: boolean
+          description: whether or not the account was verified
+      allOf:
+        - $ref: '#/components/schemas/writeAccount'
+    writeAccount:
+      type: object
+      additionalProperties: false
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: any username you wish
+        password:
+          type: string
+          description: this is a password
+        email:
+          type: string
+          description: email address
+        verificationForm:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: ['email', 'txt']
+              description: form of verification
+            value:
+              type: string
+              description: phone number or email address
     jsonPatch:
       additionalProperties: false
       description: Details for JSONPatch can be found at http://jsonpatch.com/

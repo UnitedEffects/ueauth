@@ -1,0 +1,27 @@
+import mongoose from 'mongoose';
+import { uuid } from 'uuidv4';
+
+mongoose.set('useCreateIndex', true);
+
+const payloadSchema = new mongoose.Schema({
+
+}, { _id: false, strict: false });
+
+const pushedAuthorizationRequest = new mongoose.Schema({
+    expiresAt: {
+        type: Date,
+        expires: 0
+    },
+    _id: {
+        type: String,
+        default: uuid
+    },
+    payload: payloadSchema
+},{ _id: false, strict: false, collection: 'pushed_authorization_request' });
+
+pushedAuthorizationRequest.pre('save', callback => {
+    //console.log('session saved');
+    callback();
+});
+
+export default mongoose.model('pushed_authorization_request', pushedAuthorizationRequest);

@@ -9,7 +9,8 @@ export default {
     async parse(error) {
         try {
             if(error.code === 11000) {
-                return Boom.conflict(error.errmsg.split('E11000 duplicate key error collection: ').join(''));
+                const conflict = Boom.conflict(error.errmsg.split('E11000 duplicate key error collection: ').join(''));
+                return conflict.output.payload;
             }
             const tE = await doParse(error);
             const err = tE.output.payload;

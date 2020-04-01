@@ -1,8 +1,8 @@
 import express from 'express';
 import log from '../api/logging/api';
+import account from '../api/accounts/api';
 import m from '../middleware';
-import oidc from '../oidc/oidc';
-import app from "../app";
+import oidc from '../api/oidc/oidc';
 
 const router = express.Router();
 const p = require('../../package.json');
@@ -28,6 +28,12 @@ router.patch('/logs/:id', [m.schemaCheck], log.patchLog); //For Example Only
 router.get('/health', (req, res) => {
     res.json({data: {server: 'running'}});
 });
+
+// Accounts
+router.get('/account', account.getAccounts);
+router.get('/account/:id', account.getAccount);
+router.post('/account', [m.schemaCheck], account.writeAccount);
+router.patch('/account/:id', [m.schemaCheck], account.patchAccount);
 
 // OIDC Auth
 oidc.proxy = true;

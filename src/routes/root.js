@@ -1,5 +1,6 @@
 import express from 'express';
 import swagger from '../swagger';
+import interactions from "../api/oidc/interactions_api";
 
 const router = express.Router();
 const config = require('../config');
@@ -32,5 +33,17 @@ router.get('/swagger.json', (req, res) =>  {
         res.json(swagger);
     }
 });
+
+// Interactions
+function setNoCache(req, res, next) {
+    res.set('Pragma', 'no-cache');
+    res.set('Cache-Control', 'no-cache, no-store');
+    next();
+}
+
+router.get('/interaction/:uid', setNoCache, interactions.getInt);
+router.post('/interaction/:uid/login', setNoCache, interactions.login);
+router.post('/interaction/:uid/confirm', setNoCache, interactions.confirm);
+router.get('/interaction/:uid/abort', setNoCache, interactions.abort);
 
 export default router;

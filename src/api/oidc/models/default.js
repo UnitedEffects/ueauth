@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { uuid } from 'uuidv4';
-import log from '../../api/logging/logs';
+import log from '../../logging/logs';
 
 mongoose.set('useCreateIndex', true);
 
@@ -10,7 +10,10 @@ function dynamic(name) {
         return mongoose.models[name];
     }
     const defaultSchema = new mongoose.Schema({
-        expiresAt: Date,
+        expiresAt: {
+            type: Date,
+            expires: 0
+        },
         _id: {
             type: String,
             default: uuid
