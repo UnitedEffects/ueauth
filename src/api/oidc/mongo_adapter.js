@@ -1,48 +1,7 @@
 import getModel from './models/model';
 const snakeCase = require('lodash.snakecase');
 
-/*
-const grantable = new Set([
-    'access_token',
-    'authorization_code',
-    'refresh_token',
-    'device_code',
-]);
-
-class CollectionSet extends Set {
-    add(name) {
-        const nu = this.has(name);
-        console.info(nu);
-        super.add(name);
-        if (!nu) {
-            console.info('adding collection and indexes');
-            DB.collection(name).createIndexes([
-                ...(grantable.has(name)
-                    ? [{
-                        key: { 'payload.grantId': 1 },
-                    }] : []),
-                ...(name === 'device_code'
-                    ? [{
-                        key: { 'payload.userCode': 1 },
-                        unique: true,
-                    }] : []),
-                ...(name === 'session'
-                    ? [{
-                        key: { 'payload.uid': 1 },
-                        unique: true,
-                    }] : []),
-                {
-                    key: { expiresAt: 1 },
-                    expireAfterSeconds: 0,
-                },
-            ]).catch(console.error); // eslint-disable-line no-console
-        } else console.info('already exists');
-
-    }
-}
-
-const collections = new CollectionSet();
-*/
+//todo need to update login to account for userGroup
 
 class MongoAdapter {
     constructor(name) {

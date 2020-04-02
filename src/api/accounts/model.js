@@ -15,21 +15,17 @@ const accountSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        unique: true, // todo ultimately, this should only be unique within a user group
         required: true
     },
-    /**
-     * todo create a tenant model with userGroups
-     * userGroup: {
-     *  type: String,
-     *  required: true
-     * }
-     */
+    userGroup: {
+        type: String,
+        required: true
+    },
     password: {
         type: String,
         required: true
     },
-    txt: String, //todo format phone number?
+    txt: String,
     verified: {
         type: Boolean,
         default: false
@@ -40,6 +36,7 @@ const accountSchema = new mongoose.Schema({
     }
 },{ _id: false });
 
+accountSchema.index({ email: 1, userGroup: 1}, { unique: true });
 
 accountSchema.pre('save', function(callback) {
     const account = this;
