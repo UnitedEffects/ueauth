@@ -4,7 +4,7 @@ import helper from '../../helper';
 
 export default {
     async writeAccount(data) {
-        data.username = data.username.toLowerCase();
+        data.email = data.email.toLowerCase();
         return dal.writeAccount(data);
     },
 
@@ -23,12 +23,12 @@ export default {
         return dal.patchAccount(id, patched);
     },
 
-    async getAccountByUsername(un) {
+    async getAccountByEmail(em) {
         console.info('here too');
-        console.info(un);
-        console.info(typeof un);
-        const username = String(un).toLowerCase();
-        console.info(username);
-        return dal.getAccountByUsername(username);
+        console.info(em);
+        console.info(typeof em);
+        const email = String(em).toLowerCase();
+        console.info(email);
+        return dal.getAccountByEmail(email);
     }
 };

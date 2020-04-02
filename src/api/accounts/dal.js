@@ -12,10 +12,11 @@ export default {
         return Account.findOne( { _id: id });
     },
     async patchAccount(id, data) {
+        data.modifiedAt = Date.now();
         return Account.findOneAndUpdate({ _id: id }, data, { new: true, overwrite: true })
     },
-    async getAccountByUsername(username) {
+    async getAccountByEmail(email) {
         console.info('inside');
-        return Account.findOne( { username });
+        return Account.findOne( { email });
     }
 };

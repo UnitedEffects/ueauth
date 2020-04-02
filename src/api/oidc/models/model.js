@@ -1,5 +1,6 @@
 import Default from "./default";
 import Session from "./session";
+import AccessToken from './accessToken';
 import AuthorizationCode from './authorizationCode';
 import Client from './client';
 import ClientCredentials from './clientCredentials';
@@ -15,6 +16,8 @@ function getModel (name) {
     switch (name) {
         case Session.modelName:
             return Session;
+        case AccessToken.modelName:
+            return AccessToken;
         case AuthorizationCode.modelName:
             return AuthorizationCode;
         case Client.modelName:

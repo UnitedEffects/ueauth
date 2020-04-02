@@ -3,33 +3,33 @@ import { uuid } from 'uuidv4';
 import bcrypt from 'bcryptjs';
 
 mongoose.set('useCreateIndex', true);
-const verificationForm = new mongoose.Schema({
-    type: {
-        type: String,
-        enum: ['email', 'txt'],
-        required: true
-    },
-    value: String
-},{ _id: false });
+
 const accountSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now()
     },
-    username: {
+    modifiedAt: {
+        type: Date,
+        default: Date.now()
+    },
+    email: {
         type: String,
-        unique: true,
+        unique: true, // todo ultimately, this should only be unique within a user group
         required: true
     },
+    /**
+     * todo create a tenant model with userGroups
+     * userGroup: {
+     *  type: String,
+     *  required: true
+     * }
+     */
     password: {
         type: String,
         required: true
     },
-    email: String,
-    verificationForm: {
-        type: verificationForm,
-        required: false
-    },
+    txt: String, //todo format phone number?
     verified: {
         type: Boolean,
         default: false

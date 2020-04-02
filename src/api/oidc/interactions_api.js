@@ -1,5 +1,5 @@
 import oidc from './oidc';
-import Account from '../accounts/account_oidc_interface';
+import Account from '../accounts/accountOidcInterface';
 
 export default {
     async getInt(req, res, next) {
@@ -32,7 +32,7 @@ export default {
             return next(err);
         }
     },
-    //todo convert to username...
+
     async login(req, res, next) {
         try {
             const { uid, prompt, params } = await oidc.interactionDetails(req, res);

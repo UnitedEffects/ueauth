@@ -23,12 +23,15 @@ class Account {
     }
 
     // This can be anything you need to authenticate a user
-    static async authenticate(username, password) {
+    static async authenticate(email, password) {
         console.info('here');
         try {
-            const account = await acct.getAccountByUsername(username);
+            const account = await acct.getAccountByEmail(email);
             console.info(account);
-            if(account.verifyPassword(password)) return account.id;
+            if(account.verifyPassword(password)) {
+                console.info('SUCCESS!!!');
+                return account.id;
+            }
             throw undefined
         } catch (err) {
             return undefined;

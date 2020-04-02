@@ -1,5 +1,5 @@
 import { Provider } from 'oidc-provider';
-import Account from '../accounts/account_oidc_interface';
+import Account from '../accounts/accountOidcInterface';
 
 const config = require('../../config');
 const jwks = require('../../jwks.json');

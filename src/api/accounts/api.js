@@ -7,7 +7,7 @@ const RESOURCE = 'Account';
 const api = {
     async writeAccount(req, res, next) {
         try {
-            if (!req.body.username) return next(Boom.preconditionRequired('username is required'));
+            if (!req.body.email) return next(Boom.preconditionRequired('username is required'));
             if (!req.body.password) return next(Boom.preconditionRequired('password is required'));
             const result = await acct.writeAccount(req.body);
             return res.respond(say.created(result, RESOURCE));

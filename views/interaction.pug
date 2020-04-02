@@ -103,27 +103,29 @@ html
             }
     body
         .login-card
-            h1 title
+            h1=title
             .login-client-image
             if client.logoUri
                 img(src=client.logoUri)
             ul
-                if [details.scopes.accepted, details.scopes.rejected, details.claims.accepted, details.claims.rejected].every(({ length }) >= length === 0)
+                - var detailsExpression1 = [details.scopes.accepted, details.scopes.rejected, details.claims.accepted, details.claims.rejected].every(({ length }) => length === 0);
+                if detailsExpression1
                     li this is a new authorization
-                if [details.scopes.new, details.claims.new].every(({ length }) >= length === 0)
+                - var detailsExpression2 = [details.scopes.new, details.claims.new].every(({ length }) => length === 0);
+                if detailsExpression2
                     li the client is asking you to confirm previously given authorization
                 - var newScopes = new Set(details.scopes.new); newScopes.delete('openid'); newScopes.delete('offline_access');
                 if newScopes.size
                     li scopes:
                     ul
                         each scope in newScopes
-                            li= scope
+                            li=scope
                 - var newClaims = new Set(details.claims.new); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(newClaims));
                 if newClaims.size
                     li claims:
                     ul
                         each claim in newClaims
-                            li= claim
+                            li=claim
 
                 if params.scope && params.scope.includes('offline_access')
                     li the client is asking to have offline access to this authorization

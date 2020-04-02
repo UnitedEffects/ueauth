@@ -418,6 +418,10 @@ components:
           type: string
           format: date-time
           description: when the account was created
+        modifiedAt:
+          type: string
+          format: date-time
+          description: when was the account last modified
         verified:
           type: boolean
           description: whether or not the account was verified
@@ -427,28 +431,19 @@ components:
       type: object
       additionalProperties: false
       required:
-        - username
+        - email
         - password
       properties:
-        username:
-          type: string
-          description: any username you wish
-        password:
-          type: string
-          description: this is a password
         email:
           type: string
           description: email address
-        verificationForm:
-          type: object
-          properties:
-            type:
-              type: string
-              enum: ['email', 'txt']
-              description: form of verification
-            value:
-              type: string
-              description: phone number or email address
+        password:
+          type: string
+          description: this is a password
+        txt:
+          type: string
+          pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
+          description: optionally used for verifying account
     jsonPatch:
       additionalProperties: false
       description: Details for JSONPatch can be found at http://jsonpatch.com/
