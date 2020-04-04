@@ -17,7 +17,7 @@ const accountSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    userGroup: {
+    authGroup: {
         type: String,
         required: true
     },
@@ -36,7 +36,7 @@ const accountSchema = new mongoose.Schema({
     }
 },{ _id: false });
 
-accountSchema.index({ email: 1, userGroup: 1}, { unique: true });
+accountSchema.index({ email: 1, authGroup: 1}, { unique: true });
 
 accountSchema.pre('save', function(callback) {
     const account = this;

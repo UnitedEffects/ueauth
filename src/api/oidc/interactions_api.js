@@ -5,14 +5,16 @@ export default {
     async getInt(req, res, next) {
         try {
             const details = await oidc.interactionDetails(req, res);
-            console.log('see what else is available to you for interaction views', details);
+            console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
             const { uid, prompt, params } = details;
 
+            //todo client should be specific to authGroup as well...
             const client = await oidc.Client.find(params.client_id);
 
             if (prompt.name === 'login') {
                 return res.render('login', {
                     client,
+                    authGroup: req.params.authGroup,
                     uid,
                     details: prompt.details,
                     params,
@@ -24,6 +26,7 @@ export default {
             return res.render('interaction', {
                 client,
                 uid,
+                authGroup: req.params.authGroup,
                 details: prompt.details,
                 params,
                 title: 'Authorize',
@@ -38,12 +41,13 @@ export default {
             const { uid, prompt, params } = await oidc.interactionDetails(req, res);
             const client = await oidc.Client.find(params.client_id);
 
-            const accountId = await Account.authenticate(req.body.email, req.body.password);
+            const accountId = await Account.authenticate(req.params.authGroup, req.body.email, req.body.password);
 
             if (!accountId) {
                 res.render('login', {
                     client,
                     uid,
+                    authGroup: req.params.authGroup,
                     details: prompt.details,
                     params: {
                         ...params,
@@ -70,10 +74,11 @@ export default {
         try {
             const result = {
                 consent: {
-                    // rejectedScopes: [], // < uncomment and add rejections here
-                    // rejectedClaims: [], // < uncomment and add rejections here
+                    rejectedScopes: [], // < uncomment and add rejections here
+                    rejectedClaims: [], // < uncomment and add rejections here
                 },
             };
+
             await oidc.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
         } catch (err) {
             next(err);

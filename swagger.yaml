@@ -197,6 +197,7 @@ paths:
               $ref: '#/components/schemas/writeAccount'
         description: Account data to be written
         required: true
+  /account/{authGroup}:
     get:
       tags:
         - Users
@@ -204,6 +205,12 @@ paths:
       description: 'Uses oData filtering to retrieve Accounts. This will need permissions.'
       operationId: getAccounts
       parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
         - name: $filter
           in: query
           description: oData filter Query
@@ -243,7 +250,7 @@ paths:
                 $ref: '#/components/schemas/getAccounts'
       security:
         - UEAuth: []
-  '/account/{id}':
+  '/account/{authGroup}/{id}':
     get:
       tags:
         - Users
@@ -251,6 +258,12 @@ paths:
       description: Identify a single user. Will require permissions
       operationId: getAccount
       parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
         - name: id
           in: path
           description: id of account type to return
@@ -277,6 +290,12 @@ paths:
       description: Patch an existing User. This will require permissions.
       operationId: patchAccount
       parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
         - name: id
           in: path
           description: id of account to update
@@ -433,7 +452,7 @@ components:
       required:
         - email
         - password
-        - userGroup
+        - authGroup
       properties:
         email:
           type: string
@@ -441,9 +460,9 @@ components:
         password:
           type: string
           description: this is a password
-        userGroup:
+        authGroup:
           type: string
-          description: user group for this account. email addresses are unique to user groups.
+          description: group ID for this account. email addresses are unique to auth groups.
         txt:
           type: string
           pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'

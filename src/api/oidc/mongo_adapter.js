@@ -1,8 +1,6 @@
 import getModel from './models/model';
 const snakeCase = require('lodash.snakecase');
 
-//todo need to update login to account for userGroup
-
 class MongoAdapter {
     constructor(name) {
         this.name = snakeCase(name);

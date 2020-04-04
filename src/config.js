@@ -10,7 +10,13 @@ const config = {
     SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',
     REPLICA: process.env.REPLICA || envVars.REPLICA || 'rs0',
     PERSIST_HTTP_ERRORS: process.env.PERSIST_HTTP_ERRORS || envVars.PERSIST_HTTP_ERRORS || false,
-    WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false
+    WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false,
+    COOKIE_KEYS () {
+        console.info('called?');
+        if (process.env.COOKIE_KEYS) return process.env.COOKIE_KEYS.toString().split(',');
+        if (envVars.COOKIE_KEYS) return envVars.COOKIE_KEYS.toString().split(',');
+        return ['secret1', 'secret2']
+    }
 };
 
 module.exports = config;

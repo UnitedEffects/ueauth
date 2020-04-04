@@ -5,18 +5,18 @@ export default {
         const account =  new Account(data);
         return account.save();
     },
-    async getAccounts(query) {
+    async getAccounts(g, query) {
+        if (g.toLowerCase() !== 'all') query.query.authGroup = g;
         return Account.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
     },
-    async getAccount(id) {
-        return Account.findOne( { _id: id });
+    async getAccount(authGroup, id) {
+        return Account.findOne( { _id: id, authGroup });
     },
-    async patchAccount(id, data) {
+    async patchAccount(authGroup, id, data) {
         data.modifiedAt = Date.now();
-        return Account.findOneAndUpdate({ _id: id }, data, { new: true, overwrite: true })
+        return Account.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true })
     },
-    async getAccountByEmail(email) {
-        console.info('inside');
-        return Account.findOne( { email });
+    async getAccountByEmail(authGroup, email) {
+        return Account.findOne( { authGroup, email });
     }
 };

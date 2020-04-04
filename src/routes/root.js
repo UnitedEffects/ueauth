@@ -41,9 +41,9 @@ function setNoCache(req, res, next) {
     next();
 }
 
-router.get('/interaction/:uid', setNoCache, interactions.getInt);
-router.post('/interaction/:uid/login', setNoCache, interactions.login);
-router.post('/interaction/:uid/confirm', setNoCache, interactions.confirm);
-router.get('/interaction/:uid/abort', setNoCache, interactions.abort);
+router.get('/interaction/:authGroup/:uid', setNoCache, interactions.getInt);
+router.post('/interaction/:authGroup/:uid/login', setNoCache, interactions.login);
+router.post('/interaction/:authGroup/:uid/confirm', setNoCache, interactions.confirm);
+router.get('/interaction/:authGroup/:uid/abort', setNoCache, interactions.abort);
 
 export default router;

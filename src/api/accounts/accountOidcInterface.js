@@ -2,9 +2,12 @@ import acct from './account';
 
 class Account {
     // This interface is required by oidc-provider
-    static async findAccount(ctx, id) {
+    static async findAccount(ctx, id, token) {
         // This would ideally be just a check whether the account is still in your storage
-        const account = await acct.getAccount(id);
+        console.info('findAccount '+id);
+        console.info('findAccount Token '+token);
+        console.info(ctx.req.params.authGroup);
+        const account = await acct.getAccount(ctx.req.params.authGroup, id);
         if (!account) {
             return undefined;
         }
@@ -15,6 +18,7 @@ class Account {
             async claims() {
                 return {
                     sub: id,
+                    group: account.authGroup,
                     email: account.email,
                     verified: account.verified,
                 };
@@ -23,13 +27,10 @@ class Account {
     }
 
     // This can be anything you need to authenticate a user
-    static async authenticate(email, password) {
-        console.info('here');
+    static async authenticate(authGroup, email, password) {
         try {
-            const account = await acct.getAccountByEmail(email);
-            console.info(account);
+            const account = await acct.getAccountByEmail(authGroup, email);
             if(account.verifyPassword(password)) {
-                console.info('SUCCESS!!!');
                 return account.id;
             }
             throw undefined

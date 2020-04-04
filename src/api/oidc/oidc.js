@@ -10,7 +10,7 @@ const configuration = {
     clients: [
         {
             client_id: 'foo',
-            redirect_uris: ['https://example.com'],
+            redirect_uris: ['https://unitedeffects.com'],
             response_types: ['id_token'],
             grant_types: ['implicit'],
             token_endpoint_auth_method: 'none',
@@ -27,7 +27,8 @@ const configuration = {
     // email_verified claims
     claims: {
         openid: ['sub'],
-        email: ['email', 'email_verified'],
+        email: ['email', 'verified'],
+        group: ['group']
     },
 
     // let's tell oidc-provider where our own interactions will be
@@ -36,15 +37,18 @@ const configuration = {
     // at a time.
     interactions: {
         url(ctx) {
-            return `/interaction/${ctx.oidc.uid}`;
+            return `/interaction/${ctx.req.params.authGroup}/${ctx.oidc.uid}`;
         },
     },
     features: {
         // disable the packaged interactions
         devInteractions: { enabled: false },
-
         introspection: { enabled: true },
         revocation: { enabled: true },
+        clientCredentials: { enabled: true }
+    },
+    cookies: {
+        keys: config.COOKIE_KEYS()
     },
 };
 

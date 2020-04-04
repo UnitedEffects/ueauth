@@ -8,27 +8,24 @@ export default {
         return dal.writeAccount(data);
     },
 
-    async getAccounts(q) {
+    async getAccounts(authGroup, q) {
         const query = await helper.parseOdataQuery(q);
-        return dal.getAccounts(query);
+        return dal.getAccounts(authGroup, query);
     },
 
-    async getAccount(id) {
-        return dal.getAccount(id);
+    async getAccount(authGroup, id) {
+        return dal.getAccount(authGroup, id);
     },
 
-    async patchAccount(id, update) {
-        const account = await dal.getAccount(id);
+    async patchAccount(authGroup, id, update) {
+        const account = await dal.getAccount(authGroup, id);
         const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(account)), update);
-        return dal.patchAccount(id, patched);
+        return dal.patchAccount(authGroup, id, patched);
     },
 
-    async getAccountByEmail(em) {
-        console.info('here too');
-        console.info(em);
-        console.info(typeof em);
+    async getAccountByEmail(g, em) {
         const email = String(em).toLowerCase();
-        console.info(email);
-        return dal.getAccountByEmail(email);
+        const authGroup = String(g).toLowerCase();
+        return dal.getAccountByEmail(authGroup, email);
     }
 };

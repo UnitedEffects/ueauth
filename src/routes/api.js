@@ -30,13 +30,13 @@ router.get('/health', (req, res) => {
 });
 
 // Accounts
-router.get('/account', account.getAccounts);
-router.get('/account/:id', account.getAccount);
 router.post('/account', [m.schemaCheck], account.writeAccount);
-router.patch('/account/:id', [m.schemaCheck], account.patchAccount);
+router.get('/account/:authGroup', account.getAccounts);
+router.get('/account/:authGroup/:id', account.getAccount);
+router.patch('/account/:authGroup/:id', [m.schemaCheck], account.patchAccount);
 
 // OIDC Auth
 oidc.proxy = true;
-router.use(oidc.callback);
+router.use('/:authGroup', oidc.callback);
 
 module.exports = router;

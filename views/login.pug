@@ -108,9 +108,10 @@ html
     body
         .login-card
             h1=title
+            h2=authGroup
                 if flash
                     p= flash
-            form(autocomplete='off', action='/interaction/'+uid+'/login', method='post')
+            form(autocomplete='off', action='/interaction/'+authGroup+'/'+uid+'/login', method='post')
                 if !params.login_hint
                     input(required='', type='email', name='email', placeholder='Enter an email', autofocus='on')
                 else
@@ -121,7 +122,7 @@ html
                     input(required='', type='password', name='password', placeholder='and password')
                 button.login.login-submit(type='submit') Sign-in
             .login-help
-                a(href='/interaction/'+uid+'/abort') [ Cancel ]
+                a(href='/interaction/'+authGroup+'/'+uid+'/abort') [ Cancel ]
                 if client.tosUri
                     a(href=client.tosUri) [ Terms of Service ]
                 if client.policyUri
