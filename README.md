@@ -33,12 +33,14 @@ http://jsonpatch.com/
 
 ## TODO
 
-* figure out client auth
 * figure out client registration / adapter
+    * whats the registration access token for?
+    * authgroup is added through payload... build it into adapter
+* keys jwks???
 * how do I make oidc multtenant by authGroup???
     * options by tenant - including wellknown url
-    * Different views by tenant
-    * Custom error view
+    * Different views by tenant ?
+    * Custom error view ?
 * figure out logout
 * different grant types - with/without confirmation
 * go feature by feature on the options...

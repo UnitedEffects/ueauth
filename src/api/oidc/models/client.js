@@ -4,14 +4,14 @@ import { uuid } from 'uuidv4';
 mongoose.set('useCreateIndex', true);
 
 const payloadSchema = new mongoose.Schema({
-
+    auth_group: {
+        type: String,
+        required: true,
+        index: true
+    }
 }, { _id: false, strict: false });
 
 const client = new mongoose.Schema({
-    expiresAt: {
-        type: Date,
-        expires: 0
-    },
     _id: {
         type: String,
         default: uuid

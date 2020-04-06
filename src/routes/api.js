@@ -35,8 +35,4 @@ router.get('/account/:authGroup', account.getAccounts);
 router.get('/account/:authGroup/:id', account.getAccount);
 router.patch('/account/:authGroup/:id', [m.schemaCheck], account.patchAccount);
 
-// OIDC Auth
-oidc.proxy = true;
-router.use('/:authGroup', oidc.callback);
-
 module.exports = router;

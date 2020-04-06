@@ -1,9 +1,14 @@
 import { Provider } from 'oidc-provider';
+import { uuid } from 'uuidv4';
+import Boom from '@hapi/boom';
 import Account from '../accounts/accountOidcInterface';
 
 const config = require('../../config');
 const jwks = require('../../jwks.json');
 const MongoAdapter = require('./mongo_adapter');
+const {
+    errors: { InvalidClientMetadata },
+} = require('oidc-provider');
 
 const configuration = {
     adapter: MongoAdapter,
@@ -15,6 +20,13 @@ const configuration = {
             grant_types: ['implicit'],
             token_endpoint_auth_method: 'none',
         },
+        {
+            client_id: 'test_oauth_app',
+            client_secret: 'super_secret',
+            grant_types: ['client_credentials'],
+            redirect_uris: [],
+            response_types: [],
+        }
     ],
     jwks,
 
@@ -45,11 +57,44 @@ const configuration = {
         devInteractions: { enabled: false },
         introspection: { enabled: true },
         revocation: { enabled: true },
-        clientCredentials: { enabled: true }
+        clientCredentials: { enabled: true },
+        //sessionManagement: { enabled: true},
+        registration: {
+            enabled: true,
+            idFactory: uuid,
+            initialAccessToken: false, //work this out later to true
+        },
+        registrationManagement: {
+            enabled: true,
+            rotateRegistrationAccessToken: true
+        }
+    },
+    extraClientMetadata: { //todo - now we can add this to the adapter...
+        properties: ['auth_group'],
+        validator(key, value, metadata) {
+            if (key === 'auth_group') {
+                try {
+                    if (value === undefined || value === null) throw new InvalidClientMetadata(`${key} is required`);
+                } catch (error) {
+                    if (error.name === 'InvalidClientMetadata') throw error;
+                    throw new InvalidClientMetadata('test');
+                }
+            }
+        }
+    },
+    clientDefaults: {
+        grant_types: [
+            'authorization_code'
+        ],
+        id_token_signed_response_alg: 'RS256',
+        response_types: [
+            'code'
+        ],
+        token_endpoint_auth_method: 'client_secret_basic'
     },
     cookies: {
         keys: config.COOKIE_KEYS()
     },
 };
-
+//new (Provider.InitialAccessToken)({ policies: ['my-policy'] }).save().then(console.log);
 export default new Provider(`${config.PROTOCOL}://${config.SWAGGER}`, configuration);
