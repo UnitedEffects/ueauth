@@ -36,7 +36,7 @@ const mid = {
     async validateAuthGroup (ctx, next) {
         try {
             //todo you need a service for this and then query it, replace the below once you ahve it
-            if (ctx.req.params.authGroup !== 'unitedeffects' && ctx.req.params.authGroup !== 'test') throw Boom.badRequest('No such Auth Group');
+            if (ctx.req.params.authGroup !== 'unitedeffects' && ctx.req.params.authGroup !== 'test') throw Boom.notFound('auth group not found');
             if (ctx.request.body && ctx.path === '/reg') {
                 const check = await clients.validateUniqueNameGroup(ctx.request.body.auth_group, ctx.request.body.client_name);
                 if  (check===false) {
@@ -62,7 +62,8 @@ const mid = {
         await next();
         if (ctx.path === '/token') {
             if(ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
-                return mid.koaErrorOut(ctx, Boom.notFound('Check your Auth Group'));
+                // returning a 404 rather than indicating that the auth group may exist but is not theirs
+                return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
             }
         }
     }
