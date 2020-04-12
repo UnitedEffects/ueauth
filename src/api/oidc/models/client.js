@@ -8,6 +8,10 @@ const payloadSchema = new mongoose.Schema({
         type: String,
         required: true,
         index: true
+    },
+    client_name: {
+        type: String,
+        required: true
     }
 }, { _id: false, strict: false });
 
@@ -18,6 +22,8 @@ const client = new mongoose.Schema({
     },
     payload: payloadSchema
 },{ _id: false, strict: false, collection: 'client' });
+
+client.index({ 'payload.client_name': 1, 'payload.auth_group': 1}, { unique: true });
 
 client.pre('save', callback => {
     //console.log('session saved');

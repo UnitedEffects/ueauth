@@ -322,6 +322,93 @@ paths:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
         required: true
+
+  /client/{authGroup}:
+    get:
+      tags:
+        - Clients
+      summary: Retrieve all clients (CRUD operation)
+      description: 'Uses oData filtering to retrieve Clients. This will need permissions.'
+      operationId: get
+      parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccounts'
+      security:
+        - UEAuth: []
+  '/client/{authGroup}/{id}':
+    get:
+      tags:
+        - Clients
+      summary: Find a client with ID
+      description: Identify a single client. Will require permissions
+      operationId: getOne
+      parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of account type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
 servers:
   - url: http://localhost:3000/api
 components:

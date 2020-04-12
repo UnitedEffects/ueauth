@@ -33,19 +33,18 @@ http://jsonpatch.com/
 
 ## TODO
 
-* figure out client registration / adapter
-    * whats the registration access token for?
-    * authgroup is added through payload... build it into adapter
+* authGroup API
+* go feature by feature on the options...
 * keys jwks???
-* how do I make oidc multtenant by authGroup???
-    * options by tenant - including wellknown url
+* figure out logout
+* translate oidc errors to local format in the oidc post middleware
+* different grant types - with/without confirmation
+* Permissions
+    * ensure only tokens associated to auth group are respected for registration
+* Views
     * Different views by tenant ?
     * Custom error view ?
-* figure out logout
-* different grant types - with/without confirmation
-* go feature by feature on the options...
 * implement with a client/app
-* authGroup API
 * Add oidc endpoints to swagger
 
 ## TESTING TODO

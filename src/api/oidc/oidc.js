@@ -1,6 +1,5 @@
 import { Provider } from 'oidc-provider';
 import { uuid } from 'uuidv4';
-import Boom from '@hapi/boom';
 import Account from '../accounts/accountOidcInterface';
 
 const config = require('../../config');
@@ -19,13 +18,17 @@ const configuration = {
             response_types: ['id_token'],
             grant_types: ['implicit'],
             token_endpoint_auth_method: 'none',
+            auth_group: 'test',
+            client_name: 'admin'
         },
         {
             client_id: 'test_oauth_app',
             client_secret: 'super_secret',
             grant_types: ['client_credentials'],
+            auth_group: 'test',
             redirect_uris: [],
             response_types: [],
+            client_name: 'first'
         }
     ],
     jwks,
@@ -69,15 +72,25 @@ const configuration = {
             rotateRegistrationAccessToken: true
         }
     },
-    extraClientMetadata: { //todo - now we can add this to the adapter...
-        properties: ['auth_group'],
+    extraClientMetadata: {
+        properties: ['auth_group', 'client_name'],
         validator(key, value, metadata) {
             if (key === 'auth_group') {
+                try {
+                    if (value === undefined || value === null) {
+                        throw new InvalidClientMetadata(`${key} is required`);
+                    }
+                } catch (error) {
+                    if (error.name === 'InvalidClientMetadata') throw error;
+                    throw new InvalidClientMetadata(error.message);
+                }
+            }
+            if (key === 'client_name') {
                 try {
                     if (value === undefined || value === null) throw new InvalidClientMetadata(`${key} is required`);
                 } catch (error) {
                     if (error.name === 'InvalidClientMetadata') throw error;
-                    throw new InvalidClientMetadata('test');
+                    throw new InvalidClientMetadata(error.message);
                 }
             }
         }
@@ -96,5 +109,5 @@ const configuration = {
         keys: config.COOKIE_KEYS()
     },
 };
-//new (Provider.InitialAccessToken)({ policies: ['my-policy'] }).save().then(console.log);
+
 export default new Provider(`${config.PROTOCOL}://${config.SWAGGER}`, configuration);

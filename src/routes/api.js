@@ -1,8 +1,8 @@
 import express from 'express';
 import log from '../api/logging/api';
 import account from '../api/accounts/api';
+import client from '../api/oidc/client/api';
 import m from '../middleware';
-import oidc from '../api/oidc/oidc';
 
 const router = express.Router();
 const p = require('../../package.json');
@@ -31,8 +31,12 @@ router.get('/health', (req, res) => {
 
 // Accounts
 router.post('/account', [m.schemaCheck], account.writeAccount);
-router.get('/account/:authGroup', account.getAccounts);
-router.get('/account/:authGroup/:id', account.getAccount);
-router.patch('/account/:authGroup/:id', [m.schemaCheck], account.patchAccount);
+router.get('/account/:authGroup', [m.validateAuthGroup], account.getAccounts);
+router.get('/account/:authGroup/:id', [m.validateAuthGroup], account.getAccount);
+router.patch('/account/:authGroup/:id', [m.schemaCheck, m.validateAuthGroup], account.patchAccount);
+
+// Clients
+router.get('/client/:authGroup', [m.validateAuthGroup], client.get);
+router.get('/client/:authGroup/:id', [m.validateAuthGroup], client.getOne);
 
 module.exports = router;

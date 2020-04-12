@@ -3,9 +3,11 @@ import Boom from '@hapi/boom';
 import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import swag from './swagger';
+import clients from "./api/oidc/client/clients";
+
 const schema = new OpenApiValidator(swag);
 
-export default {
+const mid = {
     cores (req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, DELETE, PUT, PATCH, OPTIONS');
@@ -30,5 +32,40 @@ export default {
         } catch (error) {
             next(Boom.expectationFailed('OpenAPI Schema Validation'));
         }
+    },
+    async validateAuthGroup (ctx, next) {
+        try {
+            //todo you need a service for this and then query it, replace the below once you ahve it
+            if (ctx.req.params.authGroup !== 'unitedeffects' && ctx.req.params.authGroup !== 'test') throw Boom.badRequest('No such Auth Group');
+            if (ctx.request.body && ctx.path === '/reg') {
+                const check = await clients.validateUniqueNameGroup(ctx.request.body.auth_group, ctx.request.body.client_name);
+                if  (check===false) {
+                    throw Boom.conflict('This client name already exists in your auth group');
+                }
+            }
+            return next();
+        } catch (error) {
+            return mid.koaErrorOut(ctx, error);
+        }
+    },
+    async koaErrorOut(ctx, error) {
+        if (!Boom.isBoom(error)) tE = Boom.boomify(error);
+        const output = error.output.payload;
+        delete output.statusCode;
+        ctx.type = 'json';
+        ctx.status = error.output.statusCode;
+        ctx.body = output;
+        ctx.app.emit('error', error, ctx);
+    },
+    async parseKoaOIDC(ctx, next) {
+        if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.authGroup;
+        await next();
+        if (ctx.path === '/token') {
+            if(ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
+                return mid.koaErrorOut(ctx, Boom.notFound('Check your Auth Group'));
+            }
+        }
     }
-}
+};
+
+export default mid;
