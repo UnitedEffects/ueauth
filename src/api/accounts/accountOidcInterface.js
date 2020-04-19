@@ -4,9 +4,9 @@ class Account {
     // This interface is required by oidc-provider
     static async findAccount(ctx, id, token) {
         // This would ideally be just a check whether the account is still in your storage
-        console.info('findAccount '+id);
-        console.info('findAccount Token '+token);
-        console.info(ctx.req.params.authGroup);
+        //console.info('findAccount '+id);
+        //console.info('findAccount Token '+token);
+        //console.info(ctx.req.params.authGroup);
         const account = await acct.getAccount(ctx.req.params.authGroup, id);
         if (!account) {
             return undefined;
@@ -29,7 +29,7 @@ class Account {
     // This can be anything you need to authenticate a user
     static async authenticate(authGroup, email, password) {
         try {
-            const account = await acct.getAccountByEmail(authGroup, email);
+            const account = await acct.getAccountByEmailOrUsername(authGroup, email);
             if(account.verifyPassword(password)) {
                 return account.id;
             }

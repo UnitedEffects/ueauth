@@ -33,12 +33,17 @@ http://jsonpatch.com/
 
 ## TODO
 
-* authGroup API
+* jwt for clients?
 * go feature by feature on the options...
-* keys jwks???
-* figure out logout
+    * keys jwks???
+    * use Auth0 as guide and try diff flows
+    * different grant types - with/without confirmation
+    * figure out logout
 * translate oidc errors to local format in the oidc post middleware
-* different grant types - with/without confirmation
+* audit system
+* clean up babel build and dev dependencies - no more src/start outside dev
+* swagger status code cleanup
+* todos
 * Permissions
     * ensure only tokens associated to auth group are respected for registration
 * Views
@@ -50,6 +55,10 @@ http://jsonpatch.com/
 ## TESTING TODO
 
 * all account
+* clients
+* auth Groups
+* middleware
+* oidcMiddleware
 * interactions_api
 * mongo_adapter
 * oidc options validate

@@ -5,6 +5,7 @@ import helper from '../../helper';
 export default {
     async writeAccount(data) {
         data.email = data.email.toLowerCase();
+        if(!data.username) data.username = data.email;
         return dal.writeAccount(data);
     },
 

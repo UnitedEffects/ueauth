@@ -1,5 +1,5 @@
 import express from 'express';
-import middle from  '../middleware';
+import middle from  '../oidcMiddleware';
 import oidc from '../api/oidc/oidc';
 const bodyParser = require('koa-bodyparser');
 

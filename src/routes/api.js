@@ -1,6 +1,7 @@
 import express from 'express';
 import log from '../api/logging/api';
 import account from '../api/accounts/api';
+import group from '../api/authGroup/api';
 import client from '../api/oidc/client/api';
 import m from '../middleware';
 
@@ -23,11 +24,18 @@ router.get('/version', (req, res) => {
 router.get('/logs', log.getLogs);
 router.get('/logs/:id', log.getLog);
 router.post('/logs', [m.schemaCheck], log.writeLog);
-router.patch('/logs/:id', [m.schemaCheck], log.patchLog); //For Example Only
-
 router.get('/health', (req, res) => {
     res.json({data: {server: 'running'}});
 });
+
+// Auth Groups
+router.post('/group', [m.schemaCheck], group.write);
+router.get('/group', group.get);
+router.get('/group/:id', group.getOne);
+router.patch('/group/:id', [m.schemaCheck], group.patch);
+
+// Auth Group Functional
+router.get('/groupcheck/:prettyName', group.check);
 
 // Accounts
 router.post('/account', [m.schemaCheck], account.writeAccount);

@@ -60,6 +60,7 @@ describe('Log DAL tests', () => {
             expect(Model.prototype.save).toHaveBeenCalled();
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
+            expect(res.persisted).toBe(true);
         } catch (error) {
             console.error(error);
             fail();
@@ -86,7 +87,6 @@ describe('Log DAL tests', () => {
             expect(res.code).toBe(expected.code);
             expect(res.message).toBe(expected.message);
             expect(res.details).toStrictEqual(expected.details);
-            expect(res.persisted).toBe(false);
         } catch (error) {
             console.error(error);
             fail();
@@ -129,6 +129,8 @@ describe('Log DAL tests', () => {
         }
     });
 
+    /*
+    //todo leaving this as example only, remove from final
     it('patch log', async () => {
         try {
             const expected = JSON.parse(JSON.stringify(oneLog));
@@ -155,7 +157,7 @@ describe('Log DAL tests', () => {
             fail();
         }
     });
-
+*/
     it('record a log', async () => {
         try {
             mockingoose(Model).toReturn({}, 'save');
@@ -165,7 +167,6 @@ describe('Log DAL tests', () => {
             expect(res.code).toBe('ERROR');
             expect(res.message).toBe('Error recorded and sent out as http response.');
             expect(res.details).toStrictEqual({ info: 'testing http errors'});
-            expect(res.persisted).toBe(false);
         } catch (error) {
             console.error(error);
             fail();

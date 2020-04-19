@@ -16,7 +16,10 @@ export default {
         data.modifiedAt = Date.now();
         return Account.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true })
     },
-    async getAccountByEmail(authGroup, email) {
-        return Account.findOne( { authGroup, email });
+    async getAccountByEmailOrUsername(authGroup, email) {
+        return Account.findOne( { authGroup, blocked: false, $or: [
+                { email },
+                { username: email }
+            ]});
     }
 };

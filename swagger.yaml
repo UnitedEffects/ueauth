@@ -8,8 +8,13 @@ info:
 tags:
   - name: System
     description: Basic System Functionality
+  - name: Auth Groups
+    description: Auth Groups
   - name: Users
     description: User Accounts
+  - name: Clients
+    description: Registered Clients
+
 paths:
   /logs:
     post:
@@ -111,39 +116,6 @@ paths:
           description: Log not found
       security:
         - UEAuth: []
-    patch:
-      tags:
-        - System
-      summary: Patch an existing Log
-      description: Patch an existing Log - This is not a normal action for logs, used here as an example of JSON Patch only.
-      operationId: patchLog
-      parameters:
-        - name: id
-          in: path
-          description: id of log type to update
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/oneLog'
-        '405':
-          description: Invalid input
-        '500':
-          description: Unknown error
-      security:
-        - UEAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/jsonPatch'
-        description: JSON Patch specific to your log object
-        required: true
   /health:
     get:
       tags:
@@ -169,6 +141,167 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/defaultError'
+
+  /groupcheck/{prettyName}:
+    get:
+      tags:
+        - Auth Groups
+      summary: Check if a pretty name is available to save to a group
+      description: Check if a pretty name is available to save to a group
+      parameters:
+        - name: prettyName
+          in: path
+          description: check to see if this prettyName is available
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - Auth Group
+                  available:
+                    type: boolean
+        '400':
+          description: Invalid code supplied
+      security:
+        - UEAuth: []
+  /group:
+    post:
+      tags:
+        - Auth Groups
+      summary: Register a new auth group
+      description: Register a new auth group
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGroup'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeAuthGroup'
+        description: Account data to be written
+        required: true
+    get:
+      tags:
+        - Auth Groups
+      summary: Retrieve all auth groups (CRUD operation) - THIS SHOULD BE SYSTEM ADMIN ONLY
+      description: 'Uses oData filtering to retrieve Accounts. This will need permissions.'
+      parameters:
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGroups'
+      security:
+        - UEAuth: []
+  '/group/{id}':
+    get:
+      tags:
+        - Auth Groups
+      summary: Find an Auth Group with ID
+      description: Identify a single auth group. Will require permissions
+      parameters:
+        - name: id
+          in: path
+          description: id of group type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGroup'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
+    patch:
+      tags:
+        - Auth Groups
+      summary: Patch an existing Auth Group - Owner or SYSTEM ADMIN
+      description: Patch an existing Auth Group. This will require permissions.
+      parameters:
+        - name: id
+          in: path
+          description: id of group to update
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGroup'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your account object
+        required: true
 
   /account:
     post:
@@ -436,24 +569,20 @@ components:
             admin: Grants access to admin operations
   schemas:
     success:
-      required:
-        - err
-        - message
       properties:
-        err:
-          type: string
-        message:
+        data:
           type: object
+
     defaultError:
       required:
-        - err
+        - error
         - message
       properties:
         err:
-          type: integer
-          format: int32
+          type: string
         message:
           type: string
+
     Log:
       type: object
       properties:
@@ -466,6 +595,7 @@ components:
           description: This is your rangeKey. This is a timestamp.
       allOf:
         - $ref: '#/components/schemas/writeLog'
+
     writeLog:
       type: object
       required:
@@ -480,6 +610,7 @@ components:
         details:
           type: object
           description: You can directly pipe any error message objects to here.
+
     oneLog:
       properties:
         type:
@@ -487,6 +618,7 @@ components:
           default: Log
         data:
           $ref: '#/components/schemas/Log'
+
     Logs:
       properties:
         type:
@@ -496,6 +628,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Log'
+
     getAccounts:
       properties:
         type:
@@ -505,6 +638,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/accountObject'
+
     getAccount:
       properties:
         type:
@@ -513,6 +647,7 @@ components:
         data:
           type: object
           $ref: '#/components/schemas/accountObject'
+
     accountObject:
       type: object
       additionalProperties: false
@@ -528,11 +663,18 @@ components:
           type: string
           format: date-time
           description: when was the account last modified
+        modifiedBy:
+          type: string
+          description: Id of last modifier
         verified:
           type: boolean
           description: whether or not the account was verified
+        blocked:
+          type: boolean
+          description: root level block of the user from access to the authGroup
       allOf:
         - $ref: '#/components/schemas/writeAccount'
+
     writeAccount:
       type: object
       additionalProperties: false
@@ -541,6 +683,9 @@ components:
         - password
         - authGroup
       properties:
+        username:
+          type: string
+          description: optional identifier, must be unique in the authGroup. If not provided, set to email.
         email:
           type: string
           description: email address
@@ -554,6 +699,74 @@ components:
           type: string
           pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
           description: optionally used for verifying account
+        metadata:
+          type: object
+          description: additional context provided by the implementer
+
+    writeAuthGroup:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: name of the entity, org, or company creating this group
+        prettyName:
+          type: string
+          description: URL friendly alternative name that can be used instead of the id when referencing the group
+          pattern: '^[a-zA-Z0-9-_]*$'
+        metadata:
+          type: object
+          description: extend this with additional data if needed
+
+    authGroup:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: nanoid for this account
+        createdAt:
+          type: string
+          format: date-time
+          description: when the account was created
+        modifiedAt:
+          type: string
+          format: date-time
+          description: when was the account last modified
+        modifiedBy:
+          type: string
+          description: id of last modifier
+        active:
+          type: string
+        owner:
+          type: string
+          description: Id of the creator of the auth group - can be transfered by admin
+      allOf:
+        - $ref: '#/components/schemas/writeAuthGroup'
+
+    getGroup:
+      properties:
+        type:
+          type: string
+          enum:
+            - Auth Group
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/authGroup'
+
+    getGroups:
+      properties:
+        type:
+          type: string
+          enum:
+            - Auth Group
+        data:
+          type: object
+          $ref: '#/components/schemas/authGroup'
+
     jsonPatch:
       additionalProperties: false
       description: Details for JSONPatch can be found at http://jsonpatch.com/

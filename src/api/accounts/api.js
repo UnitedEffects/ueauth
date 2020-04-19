@@ -37,6 +37,7 @@ const api = {
     },
     async patchAccount(req, res, next) {
         try {
+            //todo add modifiedBy
             if(!req.params.authGroup) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             const result = await acct.patchAccount(req.params.authGroup, req.params.id, req.body);

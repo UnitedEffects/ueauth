@@ -13,11 +13,10 @@ export default {
             data
         }
     },
-    noContent(data='No Content', type='object') {
+    noContent(type='object') {
         return {
             statusCode: 204,
-            type,
-            data
+            type
         }
     },
     accepted(data='Accepted', type='object') {

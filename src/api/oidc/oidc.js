@@ -21,6 +21,7 @@ const configuration = {
             auth_group: 'test',
             client_name: 'admin'
         },
+        /*
         {
             client_id: 'test_oauth_app',
             client_secret: 'super_secret',
@@ -29,7 +30,7 @@ const configuration = {
             redirect_uris: [],
             response_types: [],
             client_name: 'first'
-        }
+        }*/
     ],
     jwks,
 

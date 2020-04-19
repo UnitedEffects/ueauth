@@ -10,6 +10,7 @@ export default {
 
             //todo client should be specific to authGroup as well...
             const client = await oidc.Client.find(params.client_id);
+            console.info(client); //can we use our own call???
 
             if (prompt.name === 'login') {
                 return res.render('login', {
@@ -41,6 +42,7 @@ export default {
             const { uid, prompt, params } = await oidc.interactionDetails(req, res);
             const client = await oidc.Client.find(params.client_id);
 
+            // email will check against username as well... todo do we want to control that?
             const accountId = await Account.authenticate(req.params.authGroup, req.body.email, req.body.password);
 
             if (!accountId) {

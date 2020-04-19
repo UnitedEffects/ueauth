@@ -22,10 +22,9 @@ describe('Say library tests', () => {
         })
     });
     it('say no content', async () => {
-        expect(say.noContent({ info: 'no content'}, 'TEST')).toStrictEqual({
+        expect(say.noContent('TEST')).toStrictEqual({
             statusCode: 204,
             type: 'TEST',
-            data: { info: 'no content' }
         })
     });
     it('say accepted', async () => {
