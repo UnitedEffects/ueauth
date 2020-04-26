@@ -35,17 +35,21 @@ http://jsonpatch.com/
 
 ## TODO
 
-* jwt for clients?
+* need to modify iss on jwts to include auth-group, breaking .wellknown
+    * For this to work we'd need to figure out a way to keep the single instance of issuer up to date on the requests... might require a fork of nodde-oidc
+* how do you change a client secret? (or anything)
+* figure out dynamic scopes - tenant based if possible
 * go feature by feature on the options...
     * keys jwks???
     * use Auth0 as guide and try diff flows
     * different grant types - with/without confirmation
     * figure out logout
 * translate oidc errors to local format in the oidc post middleware
+* need to have a plan for securing db or hashing client secret
 * audit system
 * clean up babel build and dev dependencies - no more src/start outside dev
 * swagger status code cleanup
-* todos
+* inline todos
 * Permissions
     * ensure only tokens associated to auth group are respected for registration
 * Views
@@ -66,3 +70,4 @@ http://jsonpatch.com/
 * oidc options validate
 * error handling - duplicate mongo error
 * config cookie secrets
+* jwks keys

@@ -33,9 +33,11 @@ const mid = {
         if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.authGroup;
         await next();
         if (ctx.path === '/token') {
-            if(ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
-                // returning a 404 rather than indicating that the auth group may exist but is not theirs
-                return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
+            if (ctx.oidc){
+                if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
+                    // returning a 404 rather than indicating that the auth group may exist but is not theirs
+                    return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
+                }
             }
         }
     }

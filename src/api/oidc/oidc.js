@@ -20,17 +20,7 @@ const configuration = {
             token_endpoint_auth_method: 'none',
             auth_group: 'test',
             client_name: 'admin'
-        },
-        /*
-        {
-            client_id: 'test_oauth_app',
-            client_secret: 'super_secret',
-            grant_types: ['client_credentials'],
-            auth_group: 'test',
-            redirect_uris: [],
-            response_types: [],
-            client_name: 'first'
-        }*/
+        }
     ],
     jwks,
 
@@ -46,7 +36,10 @@ const configuration = {
         email: ['email', 'verified'],
         group: ['group']
     },
-
+    scopes: ['api1'],
+    dynamicScopes: [
+        '/read:^[a-zA-Z0-9]*/'
+    ],
     // let's tell oidc-provider where our own interactions will be
     // setting a nested route is just good practice so that users
     // don't run into weird issues with multiple interactions open
@@ -62,6 +55,7 @@ const configuration = {
         introspection: { enabled: true },
         revocation: { enabled: true },
         clientCredentials: { enabled: true },
+        //jwtResponseModes: { enabled: true },
         //sessionManagement: { enabled: true},
         registration: {
             enabled: true,
@@ -96,19 +90,23 @@ const configuration = {
             }
         }
     },
-    clientDefaults: {
-        grant_types: [
-            'authorization_code'
-        ],
-        id_token_signed_response_alg: 'RS256',
-        response_types: [
-            'code'
-        ],
-        token_endpoint_auth_method: 'client_secret_basic'
+    formats: {
+        ClientCredentials(ctx, token) {
+            const types = ['jwt', 'legacy', 'opaque', 'paseto'];
+            if (ctx.oidc) {
+                if (ctx.oidc.body){
+                    if (types.includes(ctx.oidc.body.format))
+                        return ctx.oidc.body.format;
+                }
+            }
+            return 'jwt';
+        },
+        AccessToken: 'jwt'
     },
     cookies: {
         keys: config.COOKIE_KEYS()
     },
 };
 
-export default new Provider(`${config.PROTOCOL}://${config.SWAGGER}`, configuration);
+//todo this wont' work...
+export default new Provider(`${config.PROTOCOL}://${config.SWAGGER}/oidc/`, configuration);
