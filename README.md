@@ -35,10 +35,10 @@ http://jsonpatch.com/
 
 ## TODO
 
-* need to modify iss on jwts to include auth-group, breaking .wellknown
-    * For this to work we'd need to figure out a way to keep the single instance of issuer up to date on the requests... might require a fork of nodde-oidc
+
 * how do you change a client secret? (or anything)
 * figure out dynamic scopes - tenant based if possible
+* create config collection with default set in app
 * go feature by feature on the options...
     * keys jwks???
     * use Auth0 as guide and try diff flows

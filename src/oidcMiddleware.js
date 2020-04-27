@@ -36,6 +36,8 @@ const mid = {
             if (ctx.oidc){
                 if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
                     // returning a 404 rather than indicating that the auth group may exist but is not theirs
+                    console.info(ctx.oidc.entities.Client.auth_group);
+                    console.info(ctx.req.params.authGroup)
                     return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
                 }
             }

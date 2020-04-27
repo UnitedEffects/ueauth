@@ -5,13 +5,11 @@ const bodyParser = require('koa-bodyparser');
 
 const router = express.Router();
 
-// OIDC Auth
-oidc.proxy = true;
-oidc.use(bodyParser());
-oidc.use(middle.parseKoaOIDC);
-oidc.use(middle.validateAuthGroup);
-
-router.use('/:authGroup', oidc.callback);
+router.use('/:authGroup', (req, res, next) => {
+    if (!req.params.authGroup) next();
+    const prefix = req.params.authGroup;
+    return oidc(prefix).callback(req, res, next);
+});
 
 
 module.exports = router;
