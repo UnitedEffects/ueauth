@@ -72,7 +72,7 @@ const configuration = {
     // at a time.
     interactions: {
         url(ctx) {
-            return `/interaction/${ctx.req.params.authGroup}/${ctx.oidc.uid}`;
+            return `/${ctx.req.params.authGroup}/interaction/${ctx.oidc.uid}`;
         },
     },
     features: {
@@ -134,8 +134,8 @@ const configuration = {
     },
 };
 
-function oidcWrapper(prefix) {
-    const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/oidc/${prefix}`, configuration);
+function oidcWrapper(tenant) {
+    const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/${tenant}`, configuration);
     oidc.proxy = true;
     oidc.use(bodyParser());
     oidc.use(middle.parseKoaOIDC);
@@ -143,4 +143,4 @@ function oidcWrapper(prefix) {
     return oidc;
 }
 
-export default oidcWrapper; //new Provider(`${config.PROTOCOL}://${config.SWAGGER}/oidc`, configuration);
+export default oidcWrapper;

@@ -1,14 +1,14 @@
 import express from 'express';
-import middle from  '../oidcMiddleware';
+import helper from '../helper';
 import oidc from '../api/oidc/oidc';
-const bodyParser = require('koa-bodyparser');
 
 const router = express.Router();
 
 router.use('/:authGroup', (req, res, next) => {
-    if (!req.params.authGroup) next();
-    const prefix = req.params.authGroup;
-    return oidc(prefix).callback(req, res, next);
+    if (!req.params.authGroup) return next();
+    if (helper.protectedNames(req.params.authGroup)) return next();
+    const tenant = req.params.authGroup;
+    return oidc(tenant).callback(req, res, next);
 });
 
 

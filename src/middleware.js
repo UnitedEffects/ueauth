@@ -2,6 +2,7 @@ import { OpenApiValidator } from 'express-openapi-validate';
 import Boom from '@hapi/boom';
 import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
+import helper from './helper';
 import group from './api/authGroup/aGroup';
 import swag from './swagger';
 
@@ -36,6 +37,7 @@ const mid = {
     async validateAuthGroup (req, res, next) {
         try {
             if (!req.params.authGroup) throw Boom.preconditionRequired('authGroup is required');
+            if (helper.protectedNames(req.params.authGroup)) throw Boom.notFound('auth group not found');
             const result = await group.getOneByEither(req.params.authGroup);
             if (!result) throw Boom.notFound('auth group not found');
             return next();

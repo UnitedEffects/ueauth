@@ -1,5 +1,6 @@
 import express from 'express';
 import swagger from '../swagger';
+import m from '../middleware';
 import interactions from "../api/oidc/interactions_api";
 
 const router = express.Router();
@@ -41,9 +42,10 @@ function setNoCache(req, res, next) {
     next();
 }
 
-router.get('/interaction/:authGroup/:uid', setNoCache, interactions.getInt);
-router.post('/interaction/:authGroup/:uid/login', setNoCache, interactions.login);
-router.post('/interaction/:authGroup/:uid/confirm', setNoCache, interactions.confirm);
-router.get('/interaction/:authGroup/:uid/abort', setNoCache, interactions.abort);
+//todo - might need to render error pages here instead of just throwing the error...
+router.get('/:authGroup/interaction/:uid', [setNoCache, m.validateAuthGroup], interactions.getInt);
+router.post('/:authGroup/interaction/:uid/login', [setNoCache, m.validateAuthGroup], interactions.login);
+router.post('/:authGroup/interaction/:uid/confirm', [setNoCache, m.validateAuthGroup], interactions.confirm);
+router.get('/:authGroup/interaction/:uid/abort', [setNoCache, m.validateAuthGroup], interactions.abort);
 
 export default router;

@@ -43,5 +43,45 @@ export default {
             throw Boom.badRequest('Check your oData inputs', data);
         }
 
+    },
+    protectedNames(x) {
+        const protecedNamespaces = [
+            'api',
+            'swagger',
+            'swagger.json',
+            'ueauth',
+            'auth',
+            'ue-auth',
+            'authenticate',
+            'authorize',
+            'oidc',
+            'oauth',
+            'oauth2',
+            'group',
+            'authgroup',
+            'auth-group',
+            'usergroup',
+            'user-group',
+            'account',
+            'logs',
+            'client',
+            'interaction',
+            'health',
+            'version',
+            'groupcheck',
+            'group-check',
+            'login',
+            'logout',
+            'access',
+            'token',
+            'reg',
+            'registration',
+            'certs',
+            'session',
+            'me',
+            'device',
+            'introspection'
+        ];
+        return protecedNamespaces.includes(x.toLowerCase());
     }
 };

@@ -36,25 +36,30 @@ http://jsonpatch.com/
 ## TODO
 
 
-* how do you change a client secret? (or anything)
-* figure out dynamic scopes - tenant based if possible
-* create config collection with default set in app
+* Client setup
+    * how do you change a client secret? (or anything)
+    * enable token required for client - ensure only tokens associated to auth group are respected for registration
+* Permissions
+    * implemented auth middleware on API
+* create config collection with default set in app - part of authGroup
+    * figure out dynamic scopes - tenant based if possible
+    * Store keys in DB???
+* Views
+    * Different views by tenant ?
+    * Custom error view ?
 * go feature by feature on the options...
     * keys jwks???
     * use Auth0 as guide and try diff flows
     * different grant types - with/without confirmation
     * figure out logout
 * translate oidc errors to local format in the oidc post middleware
+    * You can probably do this with a try catch on the route
 * need to have a plan for securing db or hashing client secret
 * audit system
+    * Event emitter... possibility of something being missed though in a lambda env
 * clean up babel build and dev dependencies - no more src/start outside dev
 * swagger status code cleanup
 * inline todos
-* Permissions
-    * ensure only tokens associated to auth group are respected for registration
-* Views
-    * Different views by tenant ?
-    * Custom error view ?
 * implement with a client/app
 * Add oidc endpoints to swagger
 

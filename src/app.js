@@ -26,8 +26,8 @@ app.use(middle.responseIntercept);
 //content and APIs
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/', Root);
+app.use('/', OIDC);
 app.use('/api', Api);
-app.use('/oidc', OIDC);
 
 // catch 404 and other errors
 app.use(middle.catch404);

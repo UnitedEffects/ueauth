@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import group from './aGroup';
+import helper from '../../helper';
 
 const RESOURCE = 'Auth Group';
 
@@ -8,6 +9,7 @@ const api = {
     async check(req, res, next) {
         try {
             if(!req.params.prettyName) return next(Boom.preconditionRequired('Need the Pretty Name you want to check'));
+            if(helper.protectedNames(req.params.prettyName)) return  res.respond(say.accepted({ available: false }, RESOURCE));
             const result = await group.check(req.params.prettyName);
             if(result === true) return res.respond(say.accepted({ available: true }, RESOURCE));
             return res.respond(say.accepted({ available: false}, RESOURCE));
@@ -18,6 +20,9 @@ const api = {
     async write(req, res, next) {
         try {
             if (!req.body.name) return next(Boom.preconditionRequired('name is required'));
+            if (req.body.prettyName) {
+                if(helper.protectedNames(req.params.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
+            }
             const result = await group.write(req.body);
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
