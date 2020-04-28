@@ -2,14 +2,18 @@
 
 [![Codefresh build status]( https://g.codefresh.io/api/badges/pipeline/theboeffect/UE%20Auth%2Fmain?type=cf-2)]( https%3A%2F%2Fg.codefresh.io%2Fpublic%2Faccounts%2Ftheboeffect%2Fpipelines%2F5e9cc14dc2b7b0dc4bc11e79)
 
-An OIDC Authorization and Access Service
+A Multi-tenant OIDC Authorization and Access service built on top of [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider), which is the only [openid.net](https://openid.net/developers/certified/) certified javascript library currently listed. Multi-tenancy in this context means functionality similar to that provided by SaaS vendors such as Auth0 and Okta. Each tenant is an "authGroup" and all artifacts such as accounts (users) and clients are unique and locked to the authGroup.
+
+This service based on this [boilerplate template](https://github.com/theBoEffect/boilerplate).
 
 ## Run
 
 * yarn
 * yarn test
 * yarn run dev
-* http://localhost:3000/api/testGroup/.well-known/openid-configuration
+* http://localhost:3000/swagger
+* create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
+* http://localhost:3000/testGroup/.well-known/openid-configuration
 
 ## Key Stack Components
 
