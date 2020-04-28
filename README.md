@@ -8,12 +8,28 @@ This service based on this [boilerplate template](https://github.com/theBoEffect
 
 ## Run
 
-* yarn
-* yarn test
-* yarn run dev
-* http://localhost:3000/swagger
-* create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
-* http://localhost:3000/testGroup/.well-known/openid-configuration
+This implementation is built with MongoDB as a dependency; however [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider) itself does not have a specific persistence technology dependency and this service could be refactored to operate with any [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider) supported DB with minimal effort. Having said that, if you are using this service as is, you'll need MongoDB. For development purposes, I suggest you use docker for a quick test instance as follows:
+
+* DB
+    * docker run -p 27017:27017 mongo
+* Service
+    * yarn
+    * yarn test
+    * yarn run dev
+    * http://localhost:3000/swagger
+    * create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
+    * http://localhost:3000/testGroup/.well-known/openid-configuration
+* Recommended setup for dev and manual deployment
+    * Do not update .env_ci directly
+    * copy .env_ci to .env
+    * update the json files pertaining to your desired deployment or NODE_ENV configuration
+    * Add new deployment/env configurations as desired using the naming "env.NODE_ENV_NAME.json"
+
+### Manual Deployment
+
+* Ensure you have your .env correctly configured. Lets assume we want to deploy QA which pertains to json file env.qa.json
+* Ensure that [Serverless](https://serverless.com/) is installed and configured to deploy to aws for your account
+* SLS_ENV=qa yarn deploy
 
 ## Key Stack Components
 
