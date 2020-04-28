@@ -15,8 +15,8 @@ export default {
         return undefined;
     },
 
-    async validateUniqueNameGroup(authGroup, clientName) {
-        const results = await dal.getCount(authGroup, { query: { 'payload.client_name': clientName } });
+    async validateUniqueNameGroup(authGroup, clientName, id) {
+        const results = await dal.getCount(authGroup, id, { query: { 'payload.client_name': clientName } });
         return results === 0;
     }
 };

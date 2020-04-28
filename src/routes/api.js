@@ -45,7 +45,9 @@ router.get('/:authGroup/account/:id', [m.validateAuthGroup], account.getAccount)
 router.patch('/:authGroup/account/:id', [m.validateAuthGroup, m.schemaCheck], account.patchAccount);
 
 // Clients
+//todo user based access only on all clients
 router.get('/:authGroup/client', [m.validateAuthGroup], client.get);
+//todo must validate client request access token as bearer
 router.get('/:authGroup/client/:id', [m.validateAuthGroup], client.getOne);
 
 module.exports = router;

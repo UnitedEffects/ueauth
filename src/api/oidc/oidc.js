@@ -101,6 +101,9 @@ const configuration = {
                     if (value === undefined || value === null) {
                         throw new InvalidClientMetadata(`${key} is required`);
                     }
+                    if (value !== metadata.auth_group) {
+                        throw new InvalidClientMetadata(`You can not move a client from one auth group to another`);
+                    }
                 } catch (error) {
                     if (error.name === 'InvalidClientMetadata') throw error;
                     throw new InvalidClientMetadata(error.message);

@@ -8,8 +8,9 @@ const mid = {
             if (!ctx.req.params.authGroup) throw Boom.preconditionRequired('authGroup is required');
             const result = await group.getOneByEither(ctx.req.params.authGroup);
             if (!result) throw Boom.notFound('auth group not found');
-            if (ctx.request.body && ctx.path === '/reg') {
-                const check = await clients.validateUniqueNameGroup(ctx.request.body.auth_group, ctx.request.body.client_name);
+            const checkMethods = ['PUT', 'POST', 'PATCH'];
+            if (ctx.request.body && checkMethods.includes(ctx.method) && ctx.path.includes('/reg')) {
+                const check = await clients.validateUniqueNameGroup(ctx.request.body.auth_group, ctx.request.body.client_name, ctx.request.body.client_id);
                 if  (check===false) {
                     throw Boom.conflict('This client name already exists in your auth group');
                 }
@@ -32,7 +33,7 @@ const mid = {
     async parseKoaOIDC(ctx, next) {
         if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.authGroup;
         await next();
-        if (ctx.path === '/token') {
+        //if (ctx.path === '/token') {
             if (ctx.oidc){
                 if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
                     // returning a 404 rather than indicating that the auth group may exist but is not theirs
@@ -41,7 +42,7 @@ const mid = {
                     return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
                 }
             }
-        }
+        //}
     }
 };
 

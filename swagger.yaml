@@ -367,7 +367,7 @@ paths:
     get:
       tags:
         - Clients
-      summary: Retrieve all clients (CRUD operation)
+      summary: Retrieve all clients (CRUD operation) - ADMIN
       description: 'Uses oData filtering to retrieve Clients. This will need permissions.'
       operationId: get
       parameters:
@@ -420,7 +420,7 @@ paths:
     get:
       tags:
         - Clients
-      summary: Find a client with ID
+      summary: Sanitized Response (no secrets) - Find a client with ID
       description: Identify a single client. Will require permissions
       operationId: getOne
       parameters:

@@ -16,8 +16,9 @@ export default {
         pipeline.push({ $project: { 'client_secret': 0 } });
         return Client.aggregate(pipeline);
     },
-    async getCount(authGroup, query) {
+    async getCount(authGroup, id, query) {
         if (authGroup.toLowerCase() !== 'all') query.query['payload.auth_group'] = authGroup;
+        if (id) query.query['_id'] = { "$ne": id };
         return Client.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit).countDocuments();
     },
     async getOne(authGroup, id) {

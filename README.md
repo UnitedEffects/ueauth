@@ -57,13 +57,14 @@ http://jsonpatch.com/
 
 
 * Client setup
-    * how do you change a client secret? (or anything)
-    * enable token required for client - ensure only tokens associated to auth group are respected for registration
+    * how do you change a client secret?
+    * enable initial token required for client - ensure only tokens associated to auth group are respected for registration
 * Permissions
     * implemented auth middleware on API
 * create config collection with default set in app - part of authGroup
     * figure out dynamic scopes - tenant based if possible
     * Store keys in DB???
+* Plugins and hooks?
 * Views
     * Different views by tenant ?
     * Custom error view ?
@@ -96,3 +97,9 @@ http://jsonpatch.com/
 * error handling - duplicate mongo error
 * config cookie secrets
 * jwks keys
+
+## TODO SWAGGER API
+
+* /REG - GET, POST, PUT (client control)
+* /TOKEN
+* other routes
