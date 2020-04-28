@@ -21,9 +21,10 @@ router.get('/version', (req, res) => {
 });
 
 // Log and Health
-router.get('/logs', log.getLogs);
-router.get('/logs/:id', log.getLog);
-router.post('/logs', [m.schemaCheck], log.writeLog);
+//router.get('/logs', log.getLogs);
+//router.get('/logs/:id', log.getLog);
+//router.post('/logs', [m.schemaCheck], log.writeLog);
+
 router.get('/health', (req, res) => {
     res.json({data: {server: 'running'}});
 });
@@ -38,13 +39,13 @@ router.patch('/group/:id', [m.schemaCheck], group.patch);
 router.get('/groupcheck/:prettyName', group.check);
 
 // Accounts
-router.post('/account', [m.schemaCheck], account.writeAccount);
-router.get('/account/:authGroup', [m.validateAuthGroup], account.getAccounts);
-router.get('/account/:authGroup/:id', [m.validateAuthGroup], account.getAccount);
-router.patch('/account/:authGroup/:id', [m.schemaCheck, m.validateAuthGroup], account.patchAccount);
+router.post('/:authGroup/account', [m.validateAuthGroup, m.schemaCheck, m.captureAuthGroupInBody], account.writeAccount);
+router.get('/:authGroup/account', [m.validateAuthGroup], account.getAccounts);
+router.get('/:authGroup/account/:id', [m.validateAuthGroup], account.getAccount);
+router.patch('/:authGroup/account/:id', [m.validateAuthGroup, m.schemaCheck], account.patchAccount);
 
 // Clients
-router.get('/client/:authGroup', [m.validateAuthGroup], client.get);
-router.get('/client/:authGroup/:id', [m.validateAuthGroup], client.getOne);
+router.get('/:authGroup/client', [m.validateAuthGroup], client.get);
+router.get('/:authGroup/client/:id', [m.validateAuthGroup], client.getOne);
 
 module.exports = router;

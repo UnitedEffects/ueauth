@@ -16,106 +16,6 @@ tags:
     description: Registered Clients
 
 paths:
-  /logs:
-    post:
-      tags:
-        - System
-      summary: Write a new log to the console and the db
-      description: This is unlikely to be used with frequency.
-      operationId: writeLog
-      responses:
-        '201':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/oneLog'
-        '405':
-          description: Invalid input
-        '500':
-          description: Unknown error
-      security:
-        - UEAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/writeLog'
-        description: Log data to be written
-        required: true
-    get:
-      tags:
-        - System
-      summary: Retrieve all logs in the system
-      description: 'Uses oData filtering to retrieve logs. You will need to use oData syntax.'
-      operationId: getLogs
-      parameters:
-        - name: $filter
-          in: query
-          description: oData filter Query
-          required: false
-          schema:
-            type: string
-        - name: $select
-          in: query
-          description: oData select Query
-          required: false
-          schema:
-            type: string
-        - name: $orderby
-          in: query
-          description: oData orderby Query
-          required: false
-          schema:
-            type: string
-        - name: $skip
-          in: query
-          description: oData skip Query
-          required: false
-          schema:
-            type: string
-        - name: $top
-          in: query
-          description: oData top Query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Logs'
-      security:
-        - UEAuth: []
-  '/logs/{id}':
-    get:
-      tags:
-        - System
-      summary: Find a log with its ID
-      description: 'Codes should be "error", "notify", or "success".'
-      operationId: getLog
-      parameters:
-        - name: id
-          in: path
-          description: id of log type to return
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/oneLog'
-        '400':
-          description: Invalid code supplied
-        '404':
-          description: Log not found
-      security:
-        - UEAuth: []
   /health:
     get:
       tags:
@@ -173,6 +73,7 @@ paths:
           description: Invalid code supplied
       security:
         - UEAuth: []
+
   /group:
     post:
       tags:
@@ -303,13 +204,20 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  /account:
+  /{authGroup}/account:
     post:
       tags:
         - Users
       summary: Register a new user
       description: Register a new user
       operationId: writeAccount
+      parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
       responses:
         '201':
           description: successful operation
@@ -330,7 +238,6 @@ paths:
               $ref: '#/components/schemas/writeAccount'
         description: Account data to be written
         required: true
-  /account/{authGroup}:
     get:
       tags:
         - Users
@@ -383,7 +290,7 @@ paths:
                 $ref: '#/components/schemas/getAccounts'
       security:
         - UEAuth: []
-  '/account/{authGroup}/{id}':
+  '/{authGroup}/account/{id}':
     get:
       tags:
         - Users
@@ -456,7 +363,7 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  /client/{authGroup}:
+  /{authGroup}/client:
     get:
       tags:
         - Clients
@@ -509,7 +416,7 @@ paths:
                 $ref: '#/components/schemas/getAccounts'
       security:
         - UEAuth: []
-  '/client/{authGroup}/{id}':
+  '/{authGroup}/client/{id}':
     get:
       tags:
         - Clients
@@ -666,6 +573,9 @@ components:
         modifiedBy:
           type: string
           description: Id of last modifier
+        authGroup:
+          type: string
+          description: group ID for this account. email addresses are unique to auth groups.
         verified:
           type: boolean
           description: whether or not the account was verified
@@ -692,9 +602,6 @@ components:
         password:
           type: string
           description: this is a password
-        authGroup:
-          type: string
-          description: group ID for this account. email addresses are unique to auth groups.
         txt:
           type: string
           pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'

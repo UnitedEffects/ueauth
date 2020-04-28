@@ -44,6 +44,18 @@ const mid = {
         } catch (error) {
             next(error);
         }
+    },
+    async captureAuthGroupInBody (req, res, next) {
+        try {
+            // assumes you've done the validation
+            if (!req.params.authGroup) throw Boom.preconditionRequired('authGroup is required');
+            if (req.body) {
+                req.body.authGroup = req.params.authGroup;
+            }
+            return next();
+        } catch (error) {
+            next(error);
+        }
     }
 };
 
