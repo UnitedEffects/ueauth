@@ -33,10 +33,6 @@ paths:
                 $ref: '#/components/schemas/success'
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/defaultError'
         '500':
           description: Internal server error
           content:
@@ -72,7 +68,7 @@ paths:
                   available:
                     type: boolean
         '400':
-          description: Invalid code supplied
+          description: Bad Request
       security:
         - UEAuth: []
 
@@ -145,6 +141,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getGroups'
+        '400':
+          description: Bad Request
       security:
         - UEAuth: []
   '/group/{id}':
@@ -168,9 +166,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/getGroup'
         '400':
-          description: Invalid code supplied
+          description: Bad Request
         '404':
-          description: Log not found
+          description: Not Found
       security:
         - UEAuth: []
     patch:
@@ -206,7 +204,7 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  /{authGroup}/account:
+  /{group}/account:
     post:
       tags:
         - Users
@@ -214,7 +212,7 @@ paths:
       description: Register a new user
       operationId: writeAccount
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -247,7 +245,7 @@ paths:
       description: 'Uses oData filtering to retrieve Accounts. This will need permissions.'
       operationId: getAccounts
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -290,9 +288,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getAccounts'
+        '400':
+          description: Bad Request
       security:
         - UEAuth: []
-  '/{authGroup}/account/{id}':
+  '/{group}/account/{id}':
     get:
       tags:
         - Users
@@ -300,7 +300,7 @@ paths:
       description: Identify a single user. Will require permissions
       operationId: getAccount
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -320,9 +320,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/getAccount'
         '400':
-          description: Invalid code supplied
+          description: Bad Request
         '404':
-          description: Log not found
+          description: Not Found
       security:
         - UEAuth: []
     delete:
@@ -332,7 +332,7 @@ paths:
       description: Hard delete a user - only authGroup owner
       operationId: deleteAccount
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -352,9 +352,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/getAccount'
         '400':
-          description: Invalid code supplied
+          description: Bad Request
         '404':
-          description: Log not found
+          description: Not Found
       security:
         - UEAuth: []
     patch:
@@ -364,7 +364,7 @@ paths:
       description: Patch an existing User. This will require permissions.
       operationId: patchAccount
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -397,7 +397,7 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  /{authGroup}/client:
+  /{group}/client:
     get:
       tags:
         - Clients
@@ -405,7 +405,7 @@ paths:
       description: 'Uses oData filtering to retrieve Clients. This will need permissions.'
       operationId: get
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -448,9 +448,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getClients'
+        '400':
+          description: Bad Request
       security:
         - UEAuth: []
-  '/{authGroup}/client/{id}':
+  '/{group}/client/{id}':
     get:
       tags:
         - Clients
@@ -458,7 +460,7 @@ paths:
       description: Identify a single client. Will require permissions
       operationId: getOne
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -478,9 +480,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/getClient'
         '400':
-          description: Invalid code supplied
+          description: Bad Request
         '404':
-          description: Log not found
+          description: Not Fou d
+      security:
+        - UEAuth: []
+    patch:
+      tags:
+        - Clients
+      summary: Limited update capability from outside normal oidc api - auth group owner
+      description: Limited update capability from outside normal oidc api - auth group owner
+      operationId: patchOne
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of account type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getClient'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not found
+        '405':
+          description: Invalid input
+        '417':
+          description: Expectation Failed
+        '500':
+          description: Unknown error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your account object
+        required: true
       security:
         - UEAuth: []
     delete:
@@ -490,7 +537,7 @@ paths:
       description: Hard delete - authGroup owners only
       operationId: deleteOne
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -510,14 +557,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/getClient'
         '400':
-          description: Invalid code supplied
+          description: Bad Request
         '404':
-          description: Log not found
+          description: Not found
       security:
         - UEAuth: []
 
 
-  /{authGroup}/operations/client/{id}:
+  /{group}/operations/client/{id}:
     post:
       tags:
         - Operations
@@ -525,7 +572,7 @@ paths:
       description: Execute operations against a client (only rotate_secret currently supported)
       operationId: clientOperations
       parameters:
-        - name: authGroup
+        - name: group
           in: path
           description: the auth group ID associated to your business account
           schema:
@@ -546,6 +593,8 @@ paths:
                 $ref: '#/components/schemas/getClient'
         '405':
           description: Invalid input
+        '417':
+          description: Expectation Failed
         '500':
           description: Unknown error
       security:
@@ -565,7 +614,6 @@ components:
     UEAuth:
       type: http
       scheme: bearer
-      name: Authorization
       description: 'For both UEAuth and other Bearer based tokens, simply enter the token (prefixing with "bearer" is not required).'
     basicAuth:
       type: http
@@ -684,6 +732,7 @@ components:
           type: array
           items:
             type: object
+            $ref: '#/components/schemas/clientObject'
 
     getClient:
       type: object
@@ -693,6 +742,95 @@ components:
           enum: ['Client']
         data:
           type: object
+          $ref: '#/components/schemas/clientObject'
+
+    writeClientObject:
+      type: object
+      required:
+      - grant_types
+      - response_types
+      - redirect_uris
+      properties:
+        application_type:
+          type: string
+        grant_types:
+          type: array
+          default: []
+          items:
+            type: string
+        id_token_signed_response_alg:
+          type: string
+        post_logout_redirect_uris:
+          type: array
+          default: []
+          items:
+            type: string
+        require_auth_time:
+          type: boolean
+          default: false
+        response_types:
+          type: array
+          default: []
+          items:
+            type: string
+        subject_type:
+          type: string
+        token_endpoint_auth_method:
+          type: string
+        introspection_endpoint_auth_method:
+          type: string
+        revocation_endpoint_auth_method:
+          type: string
+        client_name:
+          type: string
+          description: A name for the client that is unique within the authGroup
+        redirect_uris:
+          type: array
+          default: []
+          items:
+            type: string
+
+    clientObject:
+      type: object
+      required:
+      - application_type
+      - grant_types
+      - response_types
+      - client_id
+      - client_name
+      - client_secret
+      - redirect_uris
+      - auth_group
+      description: this may not be all inclusive, consult the most current oidc specification
+      allOf:
+        - $ref: '#/components/schemas/writeClientObject'
+      properties:
+        request_uris:
+          type: array
+          default: []
+          items:
+            type: string
+        client_id_issued_at:
+          type: integer
+        client_id:
+          type: string
+          description: GUID
+        client_secret_expires_at:
+          type: integer
+          default: 0
+        client_secret:
+          type: string
+          description: Auto Generated Secret
+        auth_group:
+          type: string
+          description: the tenant ID (or prettyName) for the authorization group of clients, accounts and oidc configs
+        registration_client_uri:
+          type: string
+          description: the oidc spec client access url for api calls
+        registration_access_token:
+          type: string
+          description: Required to POST or PUT updates to clients if not the authGroup owner. Rotates on each call.
+
 
     accountObject:
       type: object

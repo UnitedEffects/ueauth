@@ -4,10 +4,10 @@ import oidc from '../api/oidc/oidc';
 
 const router = express.Router();
 
-router.use('/:authGroup', (req, res, next) => {
-    if (!req.params.authGroup) return next();
-    if (helper.protectedNames(req.params.authGroup)) return next();
-    const tenant = req.params.authGroup;
+router.use('/:group', (req, res, next) => {
+    if (!req.params.group) return next();
+    if (helper.protectedNames(req.params.group)) return next();
+    const tenant = req.params.group;
     return oidc(tenant).callback(req, res, next);
 });
 

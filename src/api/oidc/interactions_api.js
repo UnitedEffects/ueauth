@@ -15,7 +15,7 @@ export default {
             if (prompt.name === 'login') {
                 return res.render('login', {
                     client,
-                    authGroup: req.params.authGroup,
+                    authGroup: req.params.group,
                     uid,
                     details: prompt.details,
                     params,
@@ -27,7 +27,7 @@ export default {
             return res.render('interaction', {
                 client,
                 uid,
-                authGroup: req.params.authGroup,
+                authGroup: req.params.group,
                 details: prompt.details,
                 params,
                 title: 'Authorize',
@@ -43,13 +43,13 @@ export default {
             const client = await oidc.Client.find(params.client_id);
 
             // email will check against username as well... todo do we want to control that?
-            const accountId = await Account.authenticate(req.params.authGroup, req.body.email, req.body.password);
+            const accountId = await Account.authenticate(req.params.group, req.body.email, req.body.password);
 
             if (!accountId) {
                 res.render('login', {
                     client,
                     uid,
-                    authGroup: req.params.authGroup,
+                    authGroup: req.params.group,
                     details: prompt.details,
                     params: {
                         ...params,

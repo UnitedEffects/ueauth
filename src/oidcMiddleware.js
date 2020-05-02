@@ -5,11 +5,11 @@ import group from "./api/authGroup/aGroup";
 const mid = {
     async validateAuthGroup (ctx, next) {
         try {
-            if (!ctx.req.params.authGroup) throw Boom.preconditionRequired('authGroup is required');
-            const result = await group.getOneByEither(ctx.req.params.authGroup);
+            if (!ctx.req.params.group) throw Boom.preconditionRequired('authGroup is required');
+            const result = await group.getOneByEither(ctx.req.params.group);
             if (!result) throw Boom.notFound('auth group not found');
             ctx.authGroup = result;
-            ctx.req.params.authGroup = result._id;
+            ctx.req.params.group = result._id;
             return next();
         } catch (error) {
             return mid.koaErrorOut(ctx, error);
@@ -17,7 +17,7 @@ const mid = {
     },
     async uniqueClientRegCheck(ctx, next) {
         try {
-            if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.authGroup;
+            if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.group;
             const checkMethods = ['PUT', 'POST', 'PATCH'];
             if (ctx.request.body && checkMethods.includes(ctx.method) && ctx.path.includes('/reg')) {
                 const check = await clients.validateUniqueNameGroup(ctx.authGroup, ctx.request.body.client_name, ctx.request.body.client_id);
@@ -44,7 +44,7 @@ const mid = {
     async parseKoaOIDC(ctx, next) {
         await next();
         if (ctx.oidc){
-            if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.authGroup) {
+            if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.group) {
                 // returning a 404 rather than indicating that the auth group may exist but is not theirs
                 return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
             }

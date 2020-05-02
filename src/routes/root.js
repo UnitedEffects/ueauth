@@ -43,9 +43,9 @@ function setNoCache(req, res, next) {
 }
 
 //todo - might need to render error pages here instead of just throwing the error...
-router.get('/:authGroup/interaction/:uid', [setNoCache, m.validateAuthGroup], interactions.getInt);
-router.post('/:authGroup/interaction/:uid/login', [setNoCache, m.validateAuthGroup], interactions.login);
-router.post('/:authGroup/interaction/:uid/confirm', [setNoCache, m.validateAuthGroup], interactions.confirm);
-router.get('/:authGroup/interaction/:uid/abort', [setNoCache, m.validateAuthGroup], interactions.abort);
+router.get('/:group/interaction/:uid', [setNoCache, m.validateAuthGroup], interactions.getInt);
+router.post('/:group/interaction/:uid/login', [setNoCache, m.validateAuthGroup], interactions.login);
+router.post('/:group/interaction/:uid/confirm', [setNoCache, m.validateAuthGroup], interactions.confirm);
+router.get('/:group/interaction/:uid/abort', [setNoCache, m.validateAuthGroup], interactions.abort);
 
 export default router;

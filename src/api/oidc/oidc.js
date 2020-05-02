@@ -72,7 +72,7 @@ const configuration = {
     // at a time.
     interactions: {
         url(ctx) {
-            return `/${ctx.req.params.authGroup}/interaction/${ctx.oidc.uid}`;
+            return `/${ctx.req.params.group}/interaction/${ctx.oidc.uid}`;
         },
     },
     features: {

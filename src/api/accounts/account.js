@@ -28,9 +28,9 @@ export default {
         return dal.patchAccount(authGroup, id, patched);
     },
 
-    async getAccountByEmail(g, em) {
+    async getAccountByEmailOrUsername(g, em) {
         const email = String(em).toLowerCase();
         const authGroup = String(g).toLowerCase();
-        return dal.getAccountByEmail(authGroup, email);
+        return dal.getAccountByEmailOrUsername(authGroup, email);
     }
 };

@@ -81,7 +81,8 @@ export default {
             'me',
             'device',
             'introspection',
-            'operation'
+            'operation',
+            'group'
         ];
         return protecedNamespaces.includes(x.toLowerCase());
     }

@@ -2,7 +2,7 @@ import Client from '../models/client';
 
 export default {
     async get(authGroup, query) {
-        if (authGroup.toLowerCase() !== 'all') query.query['payload.auth_group'] = authGroup;
+        query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
         query.projection['payload'] = 1;
         // todo need to compensate query and projection for payload in the query params...
         const pipeline = [
@@ -22,10 +22,16 @@ export default {
         return Client.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit).countDocuments();
     },
     async getOne(authGroup, id) {
-        return Client.findOne( { _id: id, 'payload.auth_group': authGroup }).select({ 'payload.client_secret': 0 });
+        return Client.findOne( { _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }] }).select({ 'payload.client_secret': 0 });
+    },
+    async patchOne(authGroup, id, data) {
+        return Client.findOneAndUpdate({
+            _id: id,
+            $or: [{'payload.auth_group': authGroup._id}, {'payload.auth_group': authGroup.prettyName}]
+        }, data, {new: true, overwrite: true}).select({payload: 1});
     },
     async deleteOne(authGroup, id) {
-        return Client.findOneAndRemove({ _id: id, 'payload.auth_group': authGroup });
+        return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }] });
     },
     async rotateSecret(query, update) {
         return Client.findOneAndUpdate(query, update, {new: true}).select({payload: 1});

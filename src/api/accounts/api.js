@@ -17,8 +17,8 @@ const api = {
     },
     async getAccounts(req, res, next) {
         try {
-            if(!req.params.authGroup) return next(Boom.preconditionRequired('Must provide authGroup'));
-            const result = await acct.getAccounts(req.params.authGroup, req.query);
+            if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+            const result = await acct.getAccounts(req.params.group, req.query);
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -26,9 +26,9 @@ const api = {
     },
     async getAccount(req, res, next) {
         try {
-            if(!req.params.authGroup) return next(Boom.preconditionRequired('Must provide authGroup'));
+            if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            const result = await acct.getAccount(req.params.authGroup, req.params.id);
+            const result = await acct.getAccount(req.params.group, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
@@ -38,9 +38,9 @@ const api = {
     async patchAccount(req, res, next) {
         try {
             //todo add modifiedBy
-            if(!req.params.authGroup) return next(Boom.preconditionRequired('Must provide authGroup'));
+            if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            const result = await acct.patchAccount(req.params.authGroup, req.params.id, req.body);
+            const result = await acct.patchAccount(req.params.group, req.params.id, req.body);
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -48,9 +48,9 @@ const api = {
     },
     async deleteAccount(req, res, next) {
         try {
-            if(!req.params.authGroup) return next(Boom.preconditionRequired('Must provide authGroup'));
+            if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            const result = await acct.deleteAccount(req.params.authGroup, req.params.id);
+            const result = await acct.deleteAccount(req.params.group, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {

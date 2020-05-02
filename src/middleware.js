@@ -29,19 +29,20 @@ const mid = {
             await Promise.all(Object.keys(req.params).map((p)=>{
                 path = path.replace(`:${p}`, `{${p}}`);
             }));
-            schema.validate(req.method.toString().toLowerCase(), path.toLowerCase())(req, res, next);
+            return schema.validate(req.method.toString().toLowerCase(), path.toLowerCase())(req, res, next);
         } catch (error) {
+            console.info(error);
             next(Boom.expectationFailed('OpenAPI Schema Validation'));
         }
     },
     async validateAuthGroup (req, res, next) {
         try {
-            if (!req.params.authGroup) throw Boom.preconditionRequired('authGroup is required');
-            if (helper.protectedNames(req.params.authGroup)) throw Boom.notFound('auth group not found');
-            const result = await group.getOneByEither(req.params.authGroup);
+            if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
+            if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
+            const result = await group.getOneByEither(req.params.group);
             if (!result) throw Boom.notFound('auth group not found');
             req.authGroup = result;
-            req.params.authGroup = result._id;
+            req.params.group = result._id;
             return next();
         } catch (error) {
             next(error);
@@ -50,9 +51,9 @@ const mid = {
     async captureAuthGroupInBody (req, res, next) {
         try {
             // assumes you've done the validation
-            if (!req.params.authGroup) throw Boom.preconditionRequired('authGroup is required');
+            if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
             if (req.body) {
-                req.body.authGroup = req.params.authGroup;
+                req.body.authGroup = req.params.group;
             }
             return next();
         } catch (error) {
