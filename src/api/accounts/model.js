@@ -42,6 +42,10 @@ const accountSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    active: {
+        type: Boolean,
+        default: true
+    },
     metadata: Object,
     _id: {
         type: String,

@@ -45,7 +45,18 @@ const api = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+    async deleteAccount(req, res, next) {
+        try {
+            if(!req.params.authGroup) return next(Boom.preconditionRequired('Must provide authGroup'));
+            if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            const result = await acct.deleteAccount(req.params.authGroup, req.params.id);
+            if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+            return res.respond(say.ok(result, RESOURCE));
+        } catch (error) {
+            next(error);
+        }
+    },
 };
 
 export default api;

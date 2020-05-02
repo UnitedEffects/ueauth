@@ -63,7 +63,7 @@ const configuration = {
         api: ['client_name', 'client_id']
     },
     scopes: ['api'],
-    dynamicScopes: [
+    dynamicScopes: [ //todo, read,write,update,delete "read:client_id" (for systems calling this service, they can use "ueauth" as the client_id)
         '/read:^[a-zA-Z0-9]*/'
     ],
     // let's tell oidc-provider where our own interactions will be
@@ -143,6 +143,7 @@ function oidcWrapper(tenant) {
     oidc.use(bodyParser());
     oidc.use(middle.parseKoaOIDC);
     oidc.use(middle.validateAuthGroup);
+    oidc.use(middle.uniqueClientRegCheck);
     return oidc;
 }
 

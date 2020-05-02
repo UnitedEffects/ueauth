@@ -40,6 +40,8 @@ const mid = {
             if (helper.protectedNames(req.params.authGroup)) throw Boom.notFound('auth group not found');
             const result = await group.getOneByEither(req.params.authGroup);
             if (!result) throw Boom.notFound('auth group not found');
+            req.authGroup = result;
+            req.params.authGroup = result._id;
             return next();
         } catch (error) {
             next(error);

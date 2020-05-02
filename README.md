@@ -57,8 +57,10 @@ http://jsonpatch.com/
 
 
 * Client setup
-    * how do you change a client secret?
+    * limited patch
+    * retest accounts
     * enable initial token required for client - ensure only tokens associated to auth group are respected for registration
+    * client scope requests within authGroup
 * Permissions
     * implemented auth middleware on API
 * create config collection with default set in app - part of authGroup

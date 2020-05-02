@@ -14,6 +14,8 @@ tags:
     description: User Accounts
   - name: Clients
     description: Registered Clients
+  - name: Operations
+    description: Commands
 
 paths:
   /health:
@@ -323,6 +325,38 @@ paths:
           description: Log not found
       security:
         - UEAuth: []
+    delete:
+      tags:
+        - Users
+      summary: Hard delete a user - only authGroup owner
+      description: Hard delete a user - only authGroup owner
+      operationId: deleteAccount
+      parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of account type to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
     patch:
       tags:
         - Users
@@ -413,7 +447,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getAccounts'
+                $ref: '#/components/schemas/getClients'
       security:
         - UEAuth: []
   '/{authGroup}/client/{id}':
@@ -442,13 +476,88 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getAccount'
+                $ref: '#/components/schemas/getClient'
         '400':
           description: Invalid code supplied
         '404':
           description: Log not found
       security:
         - UEAuth: []
+    delete:
+      tags:
+        - Clients
+      summary: Hard delete - authGroup owners only
+      description: Hard delete - authGroup owners only
+      operationId: deleteOne
+      parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of account type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getClient'
+        '400':
+          description: Invalid code supplied
+        '404':
+          description: Log not found
+      security:
+        - UEAuth: []
+
+
+  /{authGroup}/operations/client/{id}:
+    post:
+      tags:
+        - Operations
+      summary: Execute operations against a client (only rotate_secret currently supported)
+      description: Execute operations against a client (only rotate_secret currently supported)
+      operationId: clientOperations
+      parameters:
+        - name: authGroup
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the client id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getClient'
+        '405':
+          description: Invalid input
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operations'
+        description: Account data to be written
+        required: true
+
 servers:
   - url: http://localhost:3000/api
 components:
@@ -489,6 +598,16 @@ components:
           type: string
         message:
           type: string
+
+    operations:
+      type: object
+      required:
+        - operation
+      properties:
+        operation:
+          type: string
+          enum:
+            - rotate_secret
 
     Log:
       type: object
@@ -555,6 +674,26 @@ components:
           type: object
           $ref: '#/components/schemas/accountObject'
 
+    getClients:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['Client']
+        data:
+          type: array
+          items:
+            type: object
+
+    getClient:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['Client']
+        data:
+          type: object
+
     accountObject:
       type: object
       additionalProperties: false
@@ -582,6 +721,9 @@ components:
         blocked:
           type: boolean
           description: root level block of the user from access to the authGroup
+        active:
+          type: boolean
+          description: status of the account
       allOf:
         - $ref: '#/components/schemas/writeAccount'
 

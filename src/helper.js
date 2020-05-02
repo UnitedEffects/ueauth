@@ -80,7 +80,8 @@ export default {
             'session',
             'me',
             'device',
-            'introspection'
+            'introspection',
+            'operation'
         ];
         return protecedNamespaces.includes(x.toLowerCase());
     }
