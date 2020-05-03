@@ -57,10 +57,10 @@ http://jsonpatch.com/
 
 
 * Client setup
-    * limited patch - incorporate detailed json schema check using your swagger
     * retest accounts
     * enable initial token required for client - ensure only tokens associated to auth group are respected for registration
     * client scope requests within authGroup
+* FIX BOILERPLATE JSONSCHEMA MODEL
 * Permissions
     * implemented auth middleware on API
 * create config collection with default set in app - part of authGroup

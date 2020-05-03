@@ -753,11 +753,20 @@ components:
       properties:
         application_type:
           type: string
+          default: web
+          enum:
+            - web
+            - native
         grant_types:
           type: array
           default: []
           items:
             type: string
+            enum:
+             - authorization_code
+             - implicit
+             - refresh_token
+             - client_credentials
         id_token_signed_response_alg:
           type: string
         post_logout_redirect_uris:
@@ -765,6 +774,7 @@ components:
           default: []
           items:
             type: string
+            format: uri
         require_auth_time:
           type: boolean
           default: false
@@ -773,6 +783,11 @@ components:
           default: []
           items:
             type: string
+            default: code
+            enum:
+              - code
+              - id_token
+              - token
         subject_type:
           type: string
         token_endpoint_auth_method:
@@ -789,6 +804,7 @@ components:
           default: []
           items:
             type: string
+            format: uri
 
     clientObject:
       type: object
@@ -810,6 +826,7 @@ components:
           default: []
           items:
             type: string
+            format: uri
         client_id_issued_at:
           type: integer
         client_id:
@@ -820,6 +837,7 @@ components:
           default: 0
         client_secret:
           type: string
+          format: password
           description: Auto Generated Secret
         auth_group:
           type: string
@@ -827,6 +845,7 @@ components:
         registration_client_uri:
           type: string
           description: the oidc spec client access url for api calls
+          format: uri
         registration_access_token:
           type: string
           description: Required to POST or PUT updates to clients if not the authGroup owner. Rotates on each call.
@@ -965,6 +984,7 @@ components:
           - required:
               - op
               - path
+              - value
             properties:
               op:
                 type: string
@@ -978,6 +998,7 @@ components:
           - required:
               - op
               - path
+              - value
             properties:
               op:
                 type: string
@@ -991,6 +1012,7 @@ components:
           - required:
               - op
               - path
+              - value
             properties:
               op:
                 type: string
@@ -1001,3 +1023,13 @@ components:
               value:
                 type: integer
                 description: 'The integer, array or object to set the property at the above path to'
+          - required:
+              - op
+              - path
+            properties:
+              op:
+                type: string
+                enum: ['remove']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'

@@ -16,13 +16,23 @@ export default {
         pipeline.push({ $project: { 'client_secret': 0 } });
         return Client.aggregate(pipeline);
     },
-    async getCount(authGroup, id, query) {
+    async getCount(authGroup, id, clientName) {
+        const query = { query: { 'payload.client_name': clientName } };
         query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
         if (id) query.query['_id'] = { "$ne": id };
         return Client.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit).countDocuments();
     },
     async getOne(authGroup, id) {
-        return Client.findOne( { _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }] }).select({ 'payload.client_secret': 0 });
+        return Client.findOne({
+            _id: id,
+            $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
+        }).select({ 'payload.client_secret': 0 });
+    },
+    async getOneFull(authGroup, id) {
+        return Client.findOne({
+            _id: id,
+            $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
+        });
     },
     async patchOne(authGroup, id, data) {
         return Client.findOneAndUpdate({
@@ -33,7 +43,10 @@ export default {
     async deleteOne(authGroup, id) {
         return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }] });
     },
-    async rotateSecret(query, update) {
-        return Client.findOneAndUpdate(query, update, {new: true}).select({payload: 1});
+    async rotateSecret(id, authGroup, client_secret) {
+        return Client.findOneAndUpdate({
+            _id: id,
+            $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
+        }, { 'payload.client_secret': client_secret }, {new: true}).select({payload: 1});
     }
 };

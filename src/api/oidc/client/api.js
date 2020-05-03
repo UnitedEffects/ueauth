@@ -29,19 +29,34 @@ const api = {
 
     async patchOne(req, res, next) {
         try {
-            //todo metadata for modifiedBy?
+            //todo metadata for modifiedBy...
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             const pre = await client.getOneFull(req.authGroup, req.params.id);
             if(!pre) throw Boom.notFound(req.params.id);
             let patched = JSON.parse(JSON.stringify(pre));
+            const tempSecret = patched.payload.client_secret;
             patched.payload = await client.preparePatch(pre.payload, req.body);
-            // todo - add swagger validation here
-            // ...
+            patched.payload.client_secret = tempSecret;
+            // this depends on the swagger.yaml file to define the correct object and requirements
+            const schemaErrors = await client.checkSchema(patched);
+            if(schemaErrors.length !== 0) {
+                throw Boom.badRequest(schemaErrors);
+            }
             if(await client.checkAllowed(pre, patched) === false) {
                 throw Boom.forbidden(`Patch not supported for requested properties on this api. Use PUT /${req.authGroup.prettyName}/reg/${req.params.id}`);
             }
+            const checkOIDCErrors = await client.validateOIDC(patched.payload);
+            switch (checkOIDCErrors) {
+                case 'CODE':
+                    throw Boom.badRequest('If response_type includes "code" grant_type must include "authorization_code"');
+                case 'ID_TOKEN':
+                    throw Boom.badRequest('If response_type includes "id_token" grant_type must include "implicit"');
+                case 'TOKEN':
+                    throw Boom.badRequest('If response_type includes "token" grant_type must include "implicit"');
+            }
             const result = await client.patchOne(req.authGroup, req.params.id, patched);
+            delete result.client_secret;
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);

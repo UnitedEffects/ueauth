@@ -3,6 +3,8 @@ import jsonPatch from 'jsonpatch';
 import dal from './dal';
 import helper from '../../../helper';
 
+const Validator = require('jsonschema').Validator;
+
 const cryptoRandomString = require('crypto-random-string');
 
 export default {
@@ -20,11 +22,19 @@ export default {
     },
 
     async getOneFull(authGroup, id) {
-        return dal.getOne(authGroup, id);
+        return dal.getOneFull(authGroup, id);
     },
 
     async preparePatch(client, update) {
         return jsonPatch.apply_patch(JSON.parse(JSON.stringify(client)), update);
+    },
+
+    async checkSchema(client) {
+        const v = new Validator();
+        const swag = require('../../../swagger');
+        const schema = swag.default.components.schemas.clientObject;
+        const result = v.validate(client.payload, schema);
+        return result.errors;
     },
 
     async checkAllowed(client, patched) {
@@ -34,10 +44,17 @@ export default {
         return validateDiff(jDiff);
     },
 
+    async validateOIDC(client) {
+        if (client.response_types.includes('code') && !client.grant_types.includes('authorization_code')) return 'CODE';
+        if (client.response_types.includes('id_token') && !client.grant_types.includes('implicit')) return 'ID_TOKEN';
+        if (client.response_types.includes('token') && !client.grant_types.includes('implicit')) return 'TOKEN';
+        return null;
+    },
+
     async patchOne(authGroup, id, patched) {
         const result = await dal.patchOne(authGroup, id, patched);
         if (result && result.payload) {
-            return result.payload;
+            return JSON.parse(JSON.stringify(result.payload));
         }
         return undefined;
     },
@@ -51,13 +68,13 @@ export default {
     },
 
     async validateUniqueNameGroup(authGroup, clientName, id) {
-        const results = await dal.getCount(authGroup, id, { query: { 'payload.client_name': clientName } });
+        const results = await dal.getCount(authGroup, id, clientName);
         return results === 0;
     },
 
     async rotateSecret(id, authGroup) {
         const client_secret = cryptoRandomString({length: 86, type: 'url-safe'});
-        const result = dal.rotateSecret( { _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }] }, { 'payload.client_secret': client_secret });
+        const result = await dal.rotateSecret(id, authGroup, client_secret);
         if (result && result.payload) {
             return result.payload;
         }
@@ -72,6 +89,7 @@ async function validateDiff(diff) {
         'client_name',
         'grant_types',
         'redirect_uris',
+        'response_types',
         'request_uris',
         'subject_type',
         'application_type',
@@ -81,9 +99,7 @@ async function validateDiff(diff) {
         'revocation_endpoint_auth_method'
     ];
     await Promise.all(Object.keys(diff).map((key) => {
-        console.info(key);
         if (!props.includes(key)) allowed = false;
     }));
-    console.info('done');
     return allowed;
 }

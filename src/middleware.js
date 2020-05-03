@@ -31,7 +31,6 @@ const mid = {
             }));
             return schema.validate(req.method.toString().toLowerCase(), path.toLowerCase())(req, res, next);
         } catch (error) {
-            console.info(error);
             next(Boom.expectationFailed('OpenAPI Schema Validation'));
         }
     },

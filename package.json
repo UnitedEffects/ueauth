@@ -39,6 +39,7 @@
     "json-schema-ref-parser": "^7.1.2",
     "json-schema-resolve-allof": "^1.5.0",
     "jsonpatch": "^3.0.1",
+    "jsonschema": "^1.2.6",
     "koa-bodyparser": "^4.3.0",
     "lodash.snakecase": "^4.1.1",
     "moment": "^2.24.0",
