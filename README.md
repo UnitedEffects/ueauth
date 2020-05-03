@@ -55,12 +55,11 @@ http://jsonpatch.com/
 
 ## TODO
 
-
 * Client setup
-    * retest accounts
     * enable initial token required for client - ensure only tokens associated to auth group are respected for registration
     * client scope requests within authGroup
 * FIX BOILERPLATE JSONSCHEMA MODEL
+* retest accounts
 * Permissions
     * implemented auth middleware on API
 * create config collection with default set in app - part of authGroup
