@@ -45,7 +45,7 @@ export default {
 
     },
     protectedNames(x) {
-        const protecedNamespaces = [
+        const protectedNamespaces = [
             'api',
             'swagger',
             'swagger.json',
@@ -84,6 +84,6 @@ export default {
             'operation',
             'group'
         ];
-        return protecedNamespaces.includes(x.toLowerCase());
+        return protectedNamespaces.includes(x.toLowerCase());
     }
 };

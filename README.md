@@ -56,10 +56,13 @@ http://jsonpatch.com/
 ## TODO
 
 * Client setup
-    * enable initial token required for client - ensure only tokens associated to auth group are respected for registration
-    * client scope requests within authGroup
+    * client scope requests within authGroup (read, write, etc plus client id)
+* Group requires activation code and is active false to start
+    * only when active is true can updates be written or API endpoints work (middleware should throw 404)
+    * Account post to an inactive group with the activation code sets it active, sets the account as the owner, and probably creates a client, but we'll figure that out
+    * retest accounts
 * FIX BOILERPLATE JSONSCHEMA MODEL
-* retest accounts
+
 * Permissions
     * implemented auth middleware on API
 * create config collection with default set in app - part of authGroup

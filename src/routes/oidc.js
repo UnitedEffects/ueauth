@@ -1,15 +1,12 @@
 import express from 'express';
-import helper from '../helper';
-import oidc from '../api/oidc/oidc';
+import api from '../api/oidc/api';
+import m from "../middleware";
 
 const router = express.Router();
 
-router.use('/:group', (req, res, next) => {
-    if (!req.params.group) return next();
-    if (helper.protectedNames(req.params.group)) return next();
-    const tenant = req.params.group;
-    return oidc(tenant).callback(req, res, next);
-});
+//todo authorization to use this required
+router.post('/:group/token/initial-access', [m.validateAuthGroup, m.captureAuthGroupInBody], api.getInitialAccessToken);
+router.use('/:group', api.oidcCaller);
 
 
 module.exports = router;

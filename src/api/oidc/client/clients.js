@@ -73,7 +73,7 @@ export default {
     },
 
     async rotateSecret(id, authGroup) {
-        const client_secret = cryptoRandomString({length: 86, type: 'url-safe'});
+        const client_secret = cryptoRandomString({length: 86, type: 'url-safe'}); //todo base64url.encodeBuffer(crypto.randomBytes(64));
         const result = await dal.rotateSecret(id, authGroup, client_secret);
         if (result && result.payload) {
             return result.payload;

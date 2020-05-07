@@ -3,12 +3,16 @@ import { uuid } from 'uuidv4';
 import Account from '../accounts/accountOidcInterface';
 import middle from "../../oidcMiddleware";
 
+
+import IAT from './models/initialAccessToken';
+
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const jwks = require('../../jwks.json');
 const MongoAdapter = require('./mongo_adapter');
+
 const {
-    errors: { InvalidClientMetadata },
+    errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError },
 } = require('oidc-provider');
 
 const configuration = {
@@ -86,7 +90,37 @@ const configuration = {
         registration: {
             enabled: true,
             idFactory: uuid,
-            initialAccessToken: false, //work this out later to true
+            initialAccessToken: true,
+            policies: {
+                'remove_iat': async function (ctx, properties) {
+                    try {
+                        await IAT.findOneAndRemove({ _id: ctx.oidc.entities.InitialAccessToken.jti })
+                    } catch (error) {
+                        throw new OIDCProviderError(error.message);
+                    }
+                },
+                'auth_group': async function (ctx, properties) {
+                    try {
+                        if (!ctx.oidc.entities.InitialAccessToken.jti) {
+                            throw new AccessDenied();
+                        }
+                        const iatAg = await IAT.findOne({ _id: ctx.oidc.entities.InitialAccessToken.jti }).select( { 'payload.auth_group': 1 });
+                        if (!iatAg) {
+                            throw new AccessDenied();
+                        }
+                        if (!iatAg.payload) {
+                            throw new AccessDenied();
+                        }
+                        if (iatAg.payload.auth_group !== properties.auth_group) {
+                            throw new AccessDenied();
+                        }
+                    } catch (error) {
+                        if (error.name === 'AccessDenied') throw error;
+                        throw new OIDCProviderError(error.message);
+                    }
+
+                }
+            }
         },
         registrationManagement: {
             enabled: true,
@@ -135,6 +169,11 @@ const configuration = {
     cookies: {
         keys: config.COOKIE_KEYS()
     },
+    async extraAccessTokenClaims(ctx, token) {
+        return {
+            foo: 'bar'
+        }
+    }
 };
 
 function oidcWrapper(tenant) {

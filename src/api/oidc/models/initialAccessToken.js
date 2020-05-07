@@ -4,7 +4,10 @@ import { uuid } from 'uuidv4';
 mongoose.set('useCreateIndex', true);
 
 const payloadSchema = new mongoose.Schema({
-
+    auth_group: {
+        type: String,
+        index: true
+    }
 }, { _id: false, strict: false });
 
 const initialAccessToken = new mongoose.Schema({

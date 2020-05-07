@@ -6,21 +6,38 @@ import helper from './helper';
 import group from './api/authGroup/aGroup';
 import swag from './swagger';
 
+const config = require('./config');
+
 const schema = new OpenApiValidator(swag);
 
 const mid = {
     cores (req, res, next) {
-        res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, DELETE, PUT, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, api_key, Authorization');
-        next();
+        try {
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, DELETE, PUT, PATCH, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, api_key, Authorization');
+            next();
+        } catch (error) {
+            next(error);
+        }
+
     },
     catch404 (req, res, next) {
-        next(handleErrors.catch404());
+        try {
+            next(handleErrors.catch404());
+        } catch (error) {
+            next(error);
+        }
     },
     async catchErrors (err, req, res, next) {
-        const error = await handleErrors.parse(err);
-        return res.respond(error);
+        try {
+            if(config.ENV !== 'production') console.info(err);
+            const error = await handleErrors.parse(err);
+            return res.respond(error);
+        } catch (error) {
+            console.info('MIDDLEWARE - ERROR HANDLER ISSUE');
+            console.info(error);
+        }
     },
     responseIntercept: sayMiddleware.responseIntercept,
     async schemaCheck(req, res, next) {

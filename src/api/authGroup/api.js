@@ -21,7 +21,7 @@ const api = {
         try {
             if (!req.body.name) return next(Boom.preconditionRequired('name is required'));
             if (req.body.prettyName) {
-                if(helper.protectedNames(req.params.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
+                if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
             }
             const result = await group.write(req.body);
             return res.respond(say.created(result, RESOURCE));
