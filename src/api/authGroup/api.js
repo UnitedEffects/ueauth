@@ -2,6 +2,8 @@ import Boom from '@hapi/boom';
 import { say } from '../../say';
 import group from './aGroup';
 import helper from '../../helper';
+import iat from '../oidc/initialAccess/iat';
+
 
 const RESOURCE = 'Auth Group';
 
@@ -18,14 +20,28 @@ const api = {
         }
     },
     async write(req, res, next) {
+        let result;
         try {
             if (!req.body.name) return next(Boom.preconditionRequired('name is required'));
             if (req.body.prettyName) {
                 if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
             }
-            const result = await group.write(req.body);
+            req.body.securityExpiration = new Date(Date.now() + (86400 * 30 * 1000));
+            result = JSON.parse(JSON.stringify(await group.write(req.body)));
+            const expiresIn = 86400 * 31;
+            const token = await iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], result._id);
+            console.info(token);
+            result.initialAccessToken = token.jti;
+            console.info(result);
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
+            if (result && result._id) {
+                try {
+                    await group.deleteOne(result._id);
+                } catch (error) {
+                    console.error('Attempted and failed cleanup');
+                }
+            }
             next(error);
         }
     },

@@ -9,7 +9,7 @@ import IAT from './models/initialAccessToken';
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const jwks = require('../../jwks.json');
-const MongoAdapter = require('./mongo_adapter');
+const MongoAdapter = require('./dal');
 
 const {
     errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError },
@@ -64,11 +64,9 @@ const configuration = {
     claims: {
         openid: ['sub', 'group'],
         email: ['email', 'verified'],
-        api: ['client_name', 'client_id']
     },
-    scopes: ['api'],
-    dynamicScopes: [ //todo, read,write,update,delete "read:client_id" (for systems calling this service, they can use "ueauth" as the client_id)
-        '/read:^[a-zA-Z0-9]*/'
+    dynamicScopes: [
+        /api:access:[a-zA-Z0-9_-]*$/
     ],
     // let's tell oidc-provider where our own interactions will be
     // setting a nested route is just good practice so that users
@@ -94,7 +92,8 @@ const configuration = {
             policies: {
                 'remove_iat': async function (ctx, properties) {
                     try {
-                        await IAT.findOneAndRemove({ _id: ctx.oidc.entities.InitialAccessToken.jti })
+                        //todo use this as default but otherwise use persisted authGroup config
+                        if (config.SINGLE_USE_IAT === true) await IAT.findOneAndRemove({ _id: ctx.oidc.entities.InitialAccessToken.jti })
                     } catch (error) {
                         throw new OIDCProviderError(error.message);
                     }
@@ -170,9 +169,11 @@ const configuration = {
         keys: config.COOKIE_KEYS()
     },
     async extraAccessTokenClaims(ctx, token) {
-        return {
-            foo: 'bar'
-        }
+        const claims = {
+            ag: ctx.authGroup._id
+        };
+        //todo add hooks here?
+        return claims;
     }
 };
 
@@ -183,6 +184,7 @@ function oidcWrapper(tenant) {
     oidc.use(middle.parseKoaOIDC);
     oidc.use(middle.validateAuthGroup);
     oidc.use(middle.uniqueClientRegCheck);
+    oidc.use(middle.clientCredentialApiAccessScope);
     return oidc;
 }
 

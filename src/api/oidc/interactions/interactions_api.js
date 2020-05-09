@@ -1,5 +1,5 @@
-import oidc from './oidc';
-import Account from '../accounts/accountOidcInterface';
+import oidc from '../oidc';
+import Account from '../../accounts/accountOidcInterface';
 
 export default {
     async getInt(req, res, next) {

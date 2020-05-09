@@ -55,38 +55,36 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Client setup
-    * client scope requests within authGroup (read, write, etc plus client id)
 * Group requires activation code and is active false to start
-    * only when active is true can updates be written or API endpoints work (middleware should throw 404)
-    * Account post to an inactive group with the activation code sets it active, sets the account as the owner, and probably creates a client, but we'll figure that out
+    * create is security code + active=false + email (done)
+    * dal respects active (done)
+    * Account post to an inactive group with the initialAccessToken sets it active, and sets the account ID as the owner
     * retest accounts
 * FIX BOILERPLATE JSONSCHEMA MODEL
-
 * Permissions
-    * implemented auth middleware on API
+    * implement auth middleware on API
 * create config collection with default set in app - part of authGroup
     * figure out dynamic scopes - tenant based if possible
     * Store keys in DB???
-* Plugins and hooks?
-* Views
-    * Different views by tenant ?
-    * Custom error view ?
 * go feature by feature on the options...
     * keys jwks???
     * use Auth0 as guide and try diff flows
     * different grant types - with/without confirmation
     * figure out logout
+* Plugins and hooks?
+* Views
+    * Different views by tenant ?
+    * Custom error view ?
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * need to have a plan for securing db or hashing client secret
 * audit system
     * Event emitter... possibility of something being missed though in a lambda env
 * clean up babel build and dev dependencies - no more src/start outside dev
-* swagger status code cleanup
+* swagger & status code cleanup
+    * Add oidc endpoints to swagger
 * inline todos
 * implement with a client/app
-* Add oidc endpoints to swagger
 
 ## TESTING TODO
 
@@ -97,13 +95,27 @@ http://jsonpatch.com/
 * oidcMiddleware
 * interactions_api
 * mongo_adapter
+* initial access token
 * oidc options validate
 * error handling - duplicate mongo error
 * config cookie secrets
 * jwks keys
 
 ## TODO SWAGGER API
-
-* /REG - GET, POST, PUT (client control)
-* /TOKEN
-* other routes
+```
+{
+  authorization: '/auth',
+  check_session: '/session/check',
+  code_verification: '/device',
+  device_authorization: '/device/auth',
+  end_session: '/session/end',
+  introspection: '/token/introspection',
+  initial_access: '/token/initial_access', //custom
+  jwks: '/jwks',
+  pushed_authorization_request: '/request',
+  registration: '/reg',
+  revocation: '/token/revocation',
+  token: '/token',
+  userinfo: '/me'
+}
+```

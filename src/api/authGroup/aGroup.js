@@ -21,6 +21,10 @@ export default {
         return dal.getOne(id);
     },
 
+    async deleteOne(id) {
+        return dal.deleteOne(id);
+    },
+
     async getOneByEither(q) {
         return dal.getOneByEither(q);
     },

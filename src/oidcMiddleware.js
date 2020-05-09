@@ -31,6 +31,30 @@ const mid = {
         }
 
     },
+    async clientCredentialApiAccessScope(ctx, next) {
+        try {
+            if (ctx.method.toLowerCase() === 'post' && ctx.path.toLowerCase() === '/token' && ctx.request.body && ctx.request.body.grant_type === 'client_credentials'); {
+                const authGroup = ctx.authGroup;
+                const scopes = ctx.request.body.scope;
+                const splitScopes = scopes.split(' ');
+                let access;
+                let clientId;
+                let cl;
+                await Promise.all(splitScopes.map(async (scope) => {
+                    if (scope.includes('api:access:')) {
+                        access = scope.split(':');
+                        if (access.length !== 3) throw Boom.badRequest('api:access scope request requires the clientId you are requesting access to');
+                        clientId = access[2];
+                        cl = await clients.getOne(authGroup, clientId);
+                        if (!cl) throw Boom.badRequest(`client with ID ${clientId} not found in authGroup with ID ${authGroup._id} (a.k.a. ${authGroup.prettyName}). Can not grant token.`)
+                    }
+                }))
+            }
+            return next();
+        } catch (error) {
+            return mid.koaErrorOut(ctx, error);
+        }
+    },
     async koaErrorOut(ctx, error) {
         let tE = error;
         if (!Boom.isBoom(error)) tE = Boom.boomify(error);

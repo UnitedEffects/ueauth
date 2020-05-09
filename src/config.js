@@ -11,6 +11,7 @@ const config = {
     REPLICA: process.env.REPLICA || envVars.REPLICA || 'rs0',
     PERSIST_HTTP_ERRORS: process.env.PERSIST_HTTP_ERRORS || envVars.PERSIST_HTTP_ERRORS || false,
     WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false,
+    SINGLE_USE_IAT: process.env.SINGLE_USE_IAT || envVars.SINGLE_USE_IAT || true,
     COOKIE_KEYS () {
         if (process.env.COOKIE_KEYS) return process.env.COOKIE_KEYS.toString().split(',');
         if (envVars.COOKIE_KEYS) return envVars.COOKIE_KEYS.toString().split(',');

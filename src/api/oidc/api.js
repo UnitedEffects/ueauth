@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom';
 import IAT from './models/initialAccessToken';
+import iat from './initialAccess/iat';
 import oidc from './oidc';
 import helper from "../../helper";
 
@@ -15,14 +16,9 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             const tenant = req.params.group;
-            let response;
-            new (oidc(tenant).InitialAccessToken)({ expiresIn: 1800, policies: ['auth_group', 'remove_iat'] }).save().then(async (x) => {
-                const iat = await IAT.findOneAndUpdate( { _id: x }, { 'payload.auth_group': req.params.group }, {new: true});
-                response = JSON.parse(JSON.stringify(iat.payload));
-                delete response.auth_group;
-                delete response.policies;
-                return res.json(response);
-            });
+            const expiresIn = req.body.expiresIn || 604800; // 7 days default
+            const response = iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], tenant);
+            return res.json(response);
         } catch (error) {
             next(error);
         }

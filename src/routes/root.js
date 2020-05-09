@@ -1,7 +1,7 @@
 import express from 'express';
 import swagger from '../swagger';
 import m from '../middleware';
-import interactions from "../api/oidc/interactions_api";
+import interactions from "../api/oidc/interactions/interactions_api";
 
 const router = express.Router();
 const config = require('../config');

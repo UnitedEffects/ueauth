@@ -84,7 +84,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getGroup'
+                $ref: '#/components/schemas/authGroupInitial'
         '405':
           description: Invalid input
         '500':
@@ -922,9 +922,16 @@ components:
           type: string
           description: URL friendly alternative name that can be used instead of the id when referencing the group
           pattern: '^[a-zA-Z0-9-_]*$'
+        owner:
+          type: string
+          format: email
+          description: Required to match to the first account added. Will be changed to account uuid after connection.
         metadata:
           type: object
           description: extend this with additional data if needed
+        config:
+          type: object
+          description: oidc configurations (wip)
 
     authGroup:
       type: object
@@ -946,11 +953,22 @@ components:
           description: id of last modifier
         active:
           type: string
-        owner:
-          type: string
-          description: Id of the creator of the auth group - can be transfered by admin
       allOf:
         - $ref: '#/components/schemas/writeAuthGroup'
+
+    authGroupInitial:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/authGroup'
+      properties:
+        securityExpiration:
+          type: string
+          format: date-time
+          description: when this auth group will expire if it is not connected to the owner account and activated
+        initialAccessToken:
+          type: string
+          description: bearer token to use when first connecting an account
+
 
     getGroup:
       properties:

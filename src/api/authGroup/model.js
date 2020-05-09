@@ -11,17 +11,21 @@ const authGroup = new mongoose.Schema({
         type: Date,
         default: Date.now()
     },
+    securityExpiration: {
+        type: Date,
+        expires: 0
+    },
     modifiedBy: {
         type: String,
         default: 'SYSTEM_ADMIN'
     },
     active: {
         type: Boolean,
-        default: true
+        default: false
     },
     owner: {
         type: String,
-        default: 'SYSTEM_ADMIN'
+        required: true
     },
     prettyName: {
         type: String,
@@ -32,6 +36,7 @@ const authGroup = new mongoose.Schema({
         required: true
     },
     metadata: Object,
+    config: Object,
     _id: {
         type: String,
         default: nanoid
