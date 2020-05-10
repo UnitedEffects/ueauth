@@ -10,5 +10,9 @@ export default {
             delete response.policies;
             return response;
         });
+    },
+
+    async getOne(id, authGroupId) {
+        return dal.getOne(id, authGroupId);
     }
 }

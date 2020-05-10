@@ -33,5 +33,13 @@ export default {
         const group = await dal.getOne(id);
         const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(group)), update);
         return dal.patch(id, patched);
+    },
+
+    async activateNewAuthGroup(authGroup, account) {
+        const copy = JSON.parse(JSON.stringify(authGroup));
+        copy.owner = account._id;
+        copy.active = true;
+        delete copy.securityExpiration;
+        return dal.patch(authGroup._id, copy);
     }
 };

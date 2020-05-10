@@ -41,7 +41,7 @@ router.get('/groupcheck/:prettyName', group.check);
 
 // Accounts
 // todo client access - if authGroup matches, let them in
-router.post('/:group/account', [m.validateAuthGroup, m.schemaCheck, m.captureAuthGroupInBody], account.writeAccount);
+router.post('/:group/account', [m.validateAuthGroup, m.schemaCheck, m.groupIatVerify, m.captureAuthGroupInBody], account.writeAccount);
 router.get('/:group/account', [m.validateAuthGroup], account.getAccounts);
 router.get('/:group/account/:id', [m.validateAuthGroup], account.getAccount);
 router.patch('/:group/account/:id', [m.validateAuthGroup, m.schemaCheck], account.patchAccount);

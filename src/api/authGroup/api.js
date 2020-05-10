@@ -26,13 +26,11 @@ const api = {
             if (req.body.prettyName) {
                 if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
             }
-            req.body.securityExpiration = new Date(Date.now() + (86400 * 30 * 1000));
+            req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
             result = JSON.parse(JSON.stringify(await group.write(req.body)));
-            const expiresIn = 86400 * 31;
+            const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
             const token = await iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], result._id);
-            console.info(token);
             result.initialAccessToken = token.jti;
-            console.info(result);
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
             if (result && result._id) {

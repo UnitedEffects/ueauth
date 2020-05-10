@@ -58,7 +58,7 @@ http://jsonpatch.com/
 * Group requires activation code and is active false to start
     * create is security code + active=false + email (done)
     * dal respects active (done)
-    * Account post to an inactive group with the initialAccessToken sets it active, and sets the account ID as the owner
+    * Account post to an inactive group with the initialAccessToken sets it active, and sets the account ID as the owner (TODO TEST)
     * retest accounts
 * FIX BOILERPLATE JSONSCHEMA MODEL
 * Permissions

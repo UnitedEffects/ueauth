@@ -2,8 +2,10 @@ import { OpenApiValidator } from 'express-openapi-validate';
 import Boom from '@hapi/boom';
 import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
+import auth from './auth/auth';
 import helper from './helper';
 import group from './api/authGroup/aGroup';
+import account from './api/accounts/account';
 import swag from './swagger';
 
 const config = require('./config');
@@ -75,7 +77,31 @@ const mid = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+    async groupIatVerify (req, res, next) {
+        try {
+            if (!req.authGroup) throw Boom.preconditionRequired('authGroup is required');
+            if (req.authGroup.active === false) {
+                // verify that owner is an email
+                const pattern = /^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$/;
+                const owner = req.authGroup.owner;
+                if(pattern.test(owner)) {
+                    // verify there are no other members
+                    const members = account.getAccounts(req.authGroup._id, { $top: 1 });
+                    if (!members) {
+                        // set flag
+                        req.groupActivationEvent = true;
+                        // do authorization
+                        console.info('this happened');
+                        return auth.iatGroupAuth(req, res, next);
+                    }
+                }
+            }
+            return next ();
+        } catch (error) {
+            next(error);
+        }
+    },
 };
 
 export default mid;

@@ -9,28 +9,27 @@ export default {
         return dal.writeAccount(data);
     },
 
-    async getAccounts(authGroup, q) {
+    async getAccounts(authGroupId, q) {
         const query = await helper.parseOdataQuery(q);
-        return dal.getAccounts(authGroup, query);
+        return dal.getAccounts(authGroupId, query);
     },
 
-    async getAccount(authGroup, id) {
-        return dal.getAccount(authGroup, id);
+    async getAccount(authGroupId, id) {
+        return dal.getAccount(authGroupId, id);
     },
 
-    async deleteAccount(authGroup, id) {
-        return dal.deleteAccount(authGroup, id);
+    async deleteAccount(authGroupId, id) {
+        return dal.deleteAccount(authGroupId, id);
     },
 
-    async patchAccount(authGroup, id, update) {
-        const account = await dal.getAccount(authGroup, id);
+    async patchAccount(authGroupId, id, update) {
+        const account = await dal.getAccount(authGroupId, id);
         const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(account)), update);
-        return dal.patchAccount(authGroup, id, patched);
+        return dal.patchAccount(authGroupId, id, patched);
     },
 
-    async getAccountByEmailOrUsername(g, em) {
+    async getAccountByEmailOrUsername(authGroupId, em) {
         const email = String(em).toLowerCase();
-        const authGroup = String(g).toLowerCase();
-        return dal.getAccountByEmailOrUsername(authGroup, email);
+        return dal.getAccountByEmailOrUsername(authGroupId, email);
     }
 };

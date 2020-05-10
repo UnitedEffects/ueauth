@@ -1,4 +1,5 @@
 import acct from './account';
+import group from '../authGroup/aGroup';
 
 class Account {
     // This interface is required by oidc-provider
@@ -29,7 +30,8 @@ class Account {
     // This can be anything you need to authenticate a user
     static async authenticate(authGroup, email, password) {
         try {
-            const account = await acct.getAccountByEmailOrUsername(authGroup, email);
+            const group = await group.getOneByEither(authGroup);
+            const account = await acct.getAccountByEmailOrUsername(group._id, email);
             if(account.verifyPassword(password)) {
                 return account.id;
             }
