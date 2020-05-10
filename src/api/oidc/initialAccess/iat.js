@@ -14,5 +14,9 @@ export default {
 
     async getOne(id, authGroupId) {
         return dal.getOne(id, authGroupId);
+    },
+
+    async deleteOne(id, authGroupId) {
+        return dal.deleteOne(id, authGroupId);
     }
 }

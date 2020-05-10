@@ -24,10 +24,10 @@ const api = {
             if (!req.body.email) return next(Boom.preconditionRequired('username is required'));
             if (!req.body.password) return next(Boom.preconditionRequired('password is required'));
             account = await acct.writeAccount(req.body);
-            const group = await group.activateNewAuthGroup(req.authGroup, account);
+            const g = await group.activateNewAuthGroup(req.authGroup, account);
             const out = {
                 account,
-                authGroup: group
+                authGroup: g
             };
             return res.respond(say.created(out, RESOURCE));
         } catch (error) {

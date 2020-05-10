@@ -11,13 +11,14 @@ export default {
     async getOne(id) {
         return Group.findOne( { _id: id });
     },
-    async getOneByEither(q) {
-        return Group.findOne({
-            active: true,
+    async getOneByEither(q, onlyIncludeActive=true) {
+        const query = {
             $or: [
                 { _id: q },
                 { prettyName: q }
-            ]});
+            ]};
+        if(onlyIncludeActive === true) query.active = true;
+        return Group.findOne(query);
     },
     async patch(id, data) {
         data.modifiedAt = Date.now();

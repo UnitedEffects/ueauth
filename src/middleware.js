@@ -2,7 +2,7 @@ import { OpenApiValidator } from 'express-openapi-validate';
 import Boom from '@hapi/boom';
 import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
-import auth from './auth/auth';
+import authorizer from './auth/auth';
 import helper from './helper';
 import group from './api/authGroup/aGroup';
 import account from './api/accounts/account';
@@ -66,6 +66,19 @@ const mid = {
             next(error);
         }
     },
+    async validateAuthGroupAllowInactive (req, res, next) {
+        try {
+            if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
+            if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
+            const result = await group.getOneByEither(req.params.group, false);
+            if (!result) throw Boom.notFound('auth group not found');
+            req.authGroup = result;
+            req.params.group = result._id;
+            return next();
+        } catch (error) {
+            next(error);
+        }
+    },
     async captureAuthGroupInBody (req, res, next) {
         try {
             // assumes you've done the validation
@@ -78,22 +91,21 @@ const mid = {
             next(error);
         }
     },
-    async groupIatVerify (req, res, next) {
+    async setGroupActivationEvent (req, res, next) {
         try {
             if (!req.authGroup) throw Boom.preconditionRequired('authGroup is required');
             if (req.authGroup.active === false) {
                 // verify that owner is an email
-                const pattern = /^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$/;
+                const pattern = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/;
                 const owner = req.authGroup.owner;
                 if(pattern.test(owner)) {
                     // verify there are no other members
-                    const members = account.getAccounts(req.authGroup._id, { $top: 1 });
-                    if (!members) {
+                    const members = await account.getAccounts(req.authGroup._id, { $top: 1 });
+                    if (members.length === 0) {
                         // set flag
                         req.groupActivationEvent = true;
                         // do authorization
-                        console.info('this happened');
-                        return auth.iatGroupAuth(req, res, next);
+                        return next();
                     }
                 }
             }
@@ -102,6 +114,7 @@ const mid = {
             next(error);
         }
     },
+    isIatGroupActivationAuthorized: authorizer.authenticate('group-iat', { session: false })
 };
 
 export default mid;

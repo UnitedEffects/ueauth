@@ -890,7 +890,6 @@ components:
       required:
         - email
         - password
-        - authGroup
       properties:
         username:
           type: string

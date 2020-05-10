@@ -25,8 +25,8 @@ export default {
         return dal.deleteOne(id);
     },
 
-    async getOneByEither(q) {
-        return dal.getOneByEither(q);
+    async getOneByEither(q, onlyIncludeActive=true) {
+        return dal.getOneByEither(q, onlyIncludeActive);
     },
 
     async patch(id, update) {
@@ -38,6 +38,7 @@ export default {
     async activateNewAuthGroup(authGroup, account) {
         const copy = JSON.parse(JSON.stringify(authGroup));
         copy.owner = account._id;
+        copy.modifiedBy = account._id;
         copy.active = true;
         delete copy.securityExpiration;
         return dal.patch(authGroup._id, copy);
