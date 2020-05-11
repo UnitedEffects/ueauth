@@ -18,6 +18,8 @@ This implementation is built with MongoDB as a dependency; however [NODE OIDC PR
     * yarn run dev
     * http://localhost:3000/swagger
     * create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
+        * make note of the initialAccessToken (IAT)
+    * Using the IAT as a bearer token, create an account for this authGroup to activate POST http://localhost:3000/api/testGroup/account
     * http://localhost:3000/testGroup/.well-known/openid-configuration
 * Recommended setup for dev and manual deployment
     * Do not update .env_ci directly
@@ -55,17 +57,11 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Group requires activation code and is active false to start
-    * create is security code + active=false + email (done)
-    * dal respects active (done)
-     - this is broken... can't get passport auth to work
-    * Account post to an inactive group with the initialAccessToken sets it active, and sets the account ID as the owner (TODO TEST)
-    * retest accounts
 * FIX BOILERPLATE JSONSCHEMA MODEL
 * Permissions
     * implement auth middleware on API
 * create config collection with default set in app - part of authGroup
-    * figure out dynamic scopes - tenant based if possible
+    * scopes by tenant?
     * Store keys in DB???
 * go feature by feature on the options...
     * keys jwks???
@@ -92,6 +88,7 @@ http://jsonpatch.com/
 * all account
 * clients
 * auth Groups
+* iat for authGroups
 * middleware
 * oidcMiddleware
 * interactions_api

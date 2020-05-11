@@ -40,7 +40,8 @@ export default {
         copy.owner = account._id;
         copy.modifiedBy = account._id;
         copy.active = true;
+        copy.__v = authGroup.__v;
         delete copy.securityExpiration;
-        return dal.patch(authGroup._id, copy);
+        return dal.activatePatch(authGroup._id, copy);
     }
 };

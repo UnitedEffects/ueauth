@@ -4,6 +4,8 @@ import group from './aGroup';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
 
+const config = require('../../config');
+
 
 const RESOURCE = 'Auth Group';
 
@@ -29,13 +31,13 @@ const api = {
             req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
             result = JSON.parse(JSON.stringify(await group.write(req.body)));
             const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
-            const token = await iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], result._id);
+            const token = await iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], result.id);
             result.initialAccessToken = token.jti;
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
-            if (result && result._id) {
+            if (result && result.id) {
                 try {
-                    await group.deleteOne(result._id);
+                    await group.deleteOne(result.id);
                 } catch (error) {
                     console.error('Attempted and failed cleanup');
                 }

@@ -1,5 +1,4 @@
 import express from 'express';
-import log from '../api/logging/api';
 import account from '../api/accounts/api';
 import group from '../api/authGroup/api';
 import client from '../api/oidc/client/api';

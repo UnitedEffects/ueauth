@@ -2,6 +2,7 @@ import Boom from '@hapi/boom';
 import { say } from '../../say';
 import acct from './account';
 import group from '../authGroup/aGroup';
+import iat from '../oidc/initialAccess/iat';
 
 const RESOURCE = 'Account';
 
@@ -21,14 +22,19 @@ const api = {
     async activateGroupWithAccount(req, res, next) {
         let account;
         try {
-            if (!req.body.email) return next(Boom.preconditionRequired('username is required'));
-            if (!req.body.password) return next(Boom.preconditionRequired('password is required'));
             account = await acct.writeAccount(req.body);
+            if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
             const g = await group.activateNewAuthGroup(req.authGroup, account);
+            if(!g) throw Boom.expectationFailed('Auth Group Not Activated! Rolling back.');
             const out = {
                 account,
                 authGroup: g
             };
+            try {
+                await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
+            } catch (error) {
+                console.error('could not clean token');
+            }
             return res.respond(say.created(out, RESOURCE));
         } catch (error) {
             if (account) {

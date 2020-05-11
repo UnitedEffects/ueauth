@@ -104,7 +104,6 @@ const mid = {
                     if (members.length === 0) {
                         // set flag
                         req.groupActivationEvent = true;
-                        // do authorization
                         return next();
                     }
                 }
@@ -114,7 +113,7 @@ const mid = {
             next(error);
         }
     },
-    isIatGroupActivationAuthorized: authorizer.authenticate('group-iat', { session: false })
+    isIatGroupActivationAuthorized: authorizer.isIatAuthenticated
 };
 
 export default mid;
