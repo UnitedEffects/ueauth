@@ -57,17 +57,18 @@ http://jsonpatch.com/
 
 ## TODO
 
-* FIX BOILERPLATE JSONSCHEMA MODEL
 * Permissions
+    * read up on flows and work out some tokens... then implement client lib
     * implement auth middleware on API
-* create config collection with default set in app - part of authGroup
-    * scopes by tenant?
-    * Store keys in DB???
+    * Set owner permissions... be careful as we want to be able to override with external permissions
 * go feature by feature on the options...
     * keys jwks???
     * use Auth0 as guide and try diff flows
     * different grant types - with/without confirmation
     * figure out logout
+* create config collection with default set in app - part of authGroup
+    * scopes by tenant?
+    * Store keys in DB???
 * Plugins and hooks?
 * Views
     * Different views by tenant ?
@@ -77,7 +78,7 @@ http://jsonpatch.com/
 * need to have a plan for securing db or hashing client secret
 * audit system
     * Event emitter... possibility of something being missed though in a lambda env
-* clean up babel build and dev dependencies - no more src/start outside dev
+* clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
 * swagger & status code cleanup
     * Add oidc endpoints to swagger
 * inline todos
