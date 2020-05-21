@@ -1,7 +1,8 @@
 import { Provider } from 'oidc-provider';
 import { uuid } from 'uuidv4';
 import Account from '../accounts/accountOidcInterface';
-import middle from "../../oidcMiddleware";
+import Client from './client/clients';
+import middle from '../../oidcMiddleware';
 
 
 import IAT from './models/initialAccessToken';
@@ -12,7 +13,7 @@ const jwks = require('../../jwks.json');
 const MongoAdapter = require('./dal');
 
 const {
-    errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError },
+    errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
 } = require('oidc-provider');
 
 const configuration = {
@@ -66,7 +67,7 @@ const configuration = {
         email: ['email', 'verified'],
     },
     dynamicScopes: [
-        /api:access:[a-zA-Z0-9_-]*$/
+        /api:[a-zA-Z0-9_-]*$/
     ],
     // let's tell oidc-provider where our own interactions will be
     // setting a nested route is just good practice so that users
@@ -155,15 +156,16 @@ const configuration = {
     formats: {
         ClientCredentials(ctx, token) {
             const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-            if (ctx.oidc) {
-                if (ctx.oidc.body){
-                    if (types.includes(ctx.oidc.body.format))
-                        return ctx.oidc.body.format;
-                }
+            if (ctx.oidc && ctx.oidc.body) {
+                if (types.includes(ctx.oidc.body.format))
+                    return ctx.oidc.body.format;
+
             }
-            return 'jwt';
+            return token.aud ? 'jwt' : 'opaque';
         },
-        AccessToken: 'jwt'
+        AccessToken (ctx, token) {
+            return token.aud ? 'jwt' : 'opaque';
+        }
     },
     cookies: {
         keys: config.COOKIE_KEYS()
@@ -174,6 +176,25 @@ const configuration = {
         };
         //todo add hooks here?
         return claims;
+    },
+    async audiences(ctx, sub, token, use) {
+        if (ctx.oidc && ctx.oidc.body) {
+            if (ctx.oidc.body.audience) {
+                const reqAud = ctx.oidc.body.audience.split(',');
+                const aud = [];
+                let check;
+                aud.push(token.clientId);
+                await Promise.all(reqAud.map(async (id) => {
+                    if(!aud.includes(id)){
+                        check = await Client.getOne(ctx.authGroup, id);
+                        if (check) aud.push(id);
+                        else throw new InvalidRequest(`audience not registered: ${ctx.oidc.body.audience}`);
+                    }
+                }));
+                return aud;
+            }
+        }
+        return undefined;
     }
 };
 
