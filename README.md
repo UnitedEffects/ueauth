@@ -62,17 +62,19 @@ http://jsonpatch.com/
     * work through access middleware and get it working correctly for all resources
     * ensure endpoints using middleware correctly - do some negative tests
 * go feature by feature on the options...
-    * keys jwks???
-    * use Auth0 as guide and try diff flows
+    * keys jwks? Is this as simple as it seems?
     * different grant types - with/without confirmation
+    * Setup CORS options
     * figure out logout
 * create config collection with default set in app - part of authGroup
     * scopes by tenant?
     * Store keys in DB???
 * Plugins and hooks?
 * Views
+    * need login errors to rendor as a view rather than json
     * Different views by tenant ?
     * Custom error view ?
+
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * need to have a plan for securing db or hashing client secret

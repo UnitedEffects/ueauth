@@ -13,7 +13,7 @@ const config = {
     WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false,
     SINGLE_USE_IAT: process.env.SINGLE_USE_IAT || envVars.SINGLE_USE_IAT || true,
     GROUP_SECURE_EXPIRES: parseInt(process.env.GROUP_SECURE_EXPIRES) || envVars.GROUP_SECURE_EXPIRES || 86400 * 31,
-    THIS_CLIENT_ID: '4ed6f780-2942-4432-bbe1-c5d32c45d19b',
+    EXPECTED_AUDIENCE_LIST: '4ed6f780-2942-4432-bbe1-c5d32c45d19b',
     COOKIE_KEYS () {
         if (process.env.COOKIE_KEYS) return process.env.COOKIE_KEYS.toString().split(',');
         if (envVars.COOKIE_KEYS) return envVars.COOKIE_KEYS.toString().split(',');
