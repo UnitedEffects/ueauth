@@ -1,7 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import acct from './account';
-import group from '../authGroup/aGroup';
+import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
 
 const RESOURCE = 'Account';

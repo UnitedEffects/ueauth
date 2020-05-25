@@ -1,6 +1,9 @@
 import Boom from '@hapi/boom';
 import clients from "./api/oidc/client/clients";
-import group from "./api/authGroup/aGroup";
+import group from "./api/authGroup/group";
+import IAT from "./api/oidc/initialAccess/iat";
+
+const config = require('./config');
 
 const mid = {
     async validateAuthGroup (ctx, next) {
@@ -31,32 +34,6 @@ const mid = {
         }
 
     },
-    async clientCredentialApiAccessScope(ctx, next) {
-        try {
-            if (ctx.method.toLowerCase() === 'post' && ctx.path.toLowerCase() === '/token') {
-                if (ctx.request.body && ctx.request.body.grant_type === 'client_credentials') {
-                    const authGroup = ctx.authGroup;
-                    const scopes = ctx.request.body.scope;
-                    const splitScopes = scopes.split(' ');
-                    let access;
-                    let clientId;
-                    let cl;
-                    await Promise.all(splitScopes.map(async (scope) => {
-                        if (scope.includes('api:')) {
-                            access = scope.split(':');
-                            if (access.length !== 2) throw Boom.badRequest('api:[clientId] scope request requires the clientId to which you are requesting access');
-                            clientId = access[1];
-                            cl = await clients.getOne(authGroup, clientId);
-                            if (!cl) throw Boom.badRequest(`client with ID ${clientId} not found in authGroup with ID ${authGroup._id} (a.k.a. ${authGroup.prettyName}). Can not grant token.`)
-                        }
-                    }))
-                }
-            }
-            return next();
-        } catch (error) {
-            return mid.koaErrorOut(ctx, error);
-        }
-    },
     async koaErrorOut(ctx, error) {
         let tE = error;
         if (!Boom.isBoom(error)) tE = Boom.boomify(error);
@@ -73,6 +50,14 @@ const mid = {
             if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.group) {
                 // returning a 404 rather than indicating that the auth group may exist but is not theirs
                 return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
+            }
+
+            if (config.SINGLE_USE_IAT === true) {
+                if (ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.InitialAccessToken) {
+                    if (ctx.response.status === 201) {
+                        await IAT.deleteOne(ctx.oidc.entities.InitialAccessToken.jti, ctx.authGroup._id);
+                    }
+                }
             }
         }
     }

@@ -104,7 +104,7 @@ html
     body
         .login-card
             h1=title
-            h2=authGroup
+            h2=authGroupName
             .login-client-image
             if client.logoUri
                 img(src=client.logoUri)
@@ -133,10 +133,10 @@ html
                         if !details.scopes.new.includes('offline_access')
                             | (which you've previously granted)
 
-            form(autocomplete='off', action='/interaction/'+authGroup+'/'+uid+'/confirm', method='post')
+            form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
                 button.login.login-submit(autofocus='', type='submit') Continue
             .login-help
-                a(href='/interaction/'+authGroup+'/'+uid+'/abort') [ Cancel ]
+                a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
                 if client.tosUri
                     a(href=client.tosUri) [ Terms of Service ]
                 if client.policyUri

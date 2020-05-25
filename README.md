@@ -23,8 +23,8 @@ This implementation is built with MongoDB as a dependency; however [NODE OIDC PR
     * http://localhost:3000/testGroup/.well-known/openid-configuration
 * Recommended setup for dev and manual deployment
     * Do not update .env_ci directly
-    * copy .env_ci to .env
-    * update the json files pertaining to your desired deployment or NODE_ENV configuration
+    * Copy .env_ci to .env
+    * Update the json files pertaining to your desired deployment or NODE_ENV configuration
     * Add new deployment/env configurations as desired using the naming "env.NODE_ENV_NAME.json"
 
 ### Manual Deployment
@@ -58,9 +58,9 @@ http://jsonpatch.com/
 ## TODO
 
 * Permissions
-    * read up on flows and work out some tokens... then implement client lib
-    * implement auth middleware on API
-    * Set owner permissions... be careful as we want to be able to override with external permissions
+    * finish all jwt checks required for OIDC
+    * work through access middleware and get it working correctly for all resources
+    * ensure endpoints using middleware correctly - do some negative tests
 * go feature by feature on the options...
     * keys jwks???
     * use Auth0 as guide and try diff flows

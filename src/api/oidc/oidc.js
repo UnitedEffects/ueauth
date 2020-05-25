@@ -19,15 +19,19 @@ const {
 const configuration = {
     adapter: MongoAdapter,
     clients: [
-        {
-            client_id: 'foo',
-            redirect_uris: ['https://unitedeffects.com'],
-            response_types: ['id_token'],
-            grant_types: ['implicit'],
-            token_endpoint_auth_method: 'none',
-            auth_group: 'test',
-            client_name: 'admin'
-        }
+/*        {
+            client_id: '976c3b85-8094-4ded-b031-b31a2601966e',
+            client_secret: 'fJCVX6sTq_5Ebpk2K8JqHrP9AiGdETpS43SPaNAKUhb9cGXo4jrxxMoc9UP3Ks90pCifZSUp9lfgGX93nx5DBw',
+            redirect_uris: [],
+            response_types: [],
+            grant_types: ['client_credentials'],
+            token_endpoint_auth_method: 'client_secret_base',
+            subject_type: "public",
+            introspection_endpoint_auth_method: "client_secret_basic",
+            revocation_endpoint_auth_method: "client_secret_basic",
+            auth_group: 'ue-root',
+            client_name: 'Root'
+        }*/
     ],
     jwks,
 
@@ -37,7 +41,6 @@ const configuration = {
     findAccount: Account.findAccount,
 
     async findById(ctx, sub, token) {
-        console.info('here');
         // @param ctx - koa request context
         // @param sub {string} - account identifier (subject)
         // @param token - is a reference to the token used for which a given account is being loaded,
@@ -65,9 +68,10 @@ const configuration = {
     claims: {
         openid: ['sub', 'group'],
         email: ['email', 'verified'],
+        username: ['username'],
     },
     dynamicScopes: [
-        /api:[a-zA-Z0-9_-]*$/
+        ///api:[a-zA-Z0-9_-]*$/
     ],
     // let's tell oidc-provider where our own interactions will be
     // setting a nested route is just good practice so that users
@@ -91,14 +95,6 @@ const configuration = {
             idFactory: uuid,
             initialAccessToken: true,
             policies: {
-                'remove_iat': async function (ctx, properties) {
-                    try {
-                        //todo use this as default but otherwise use persisted authGroup config
-                        if (config.SINGLE_USE_IAT === true) await IAT.findOneAndRemove({ _id: ctx.oidc.entities.InitialAccessToken.jti })
-                    } catch (error) {
-                        throw new OIDCProviderError(error.message);
-                    }
-                },
                 'auth_group': async function (ctx, properties) {
                     try {
                         if (!ctx.oidc.entities.InitialAccessToken.jti) {
@@ -164,6 +160,12 @@ const configuration = {
             return token.aud ? 'jwt' : 'opaque';
         },
         AccessToken (ctx, token) {
+            const types = ['jwt', 'legacy', 'opaque', 'paseto'];
+            if (ctx.oidc && ctx.oidc.body) {
+                if (types.includes(ctx.oidc.body.format))
+                    return ctx.oidc.body.format;
+
+            }
             return token.aud ? 'jwt' : 'opaque';
         }
     },
@@ -205,7 +207,6 @@ function oidcWrapper(tenant) {
     oidc.use(middle.parseKoaOIDC);
     oidc.use(middle.validateAuthGroup);
     oidc.use(middle.uniqueClientRegCheck);
-    oidc.use(middle.clientCredentialApiAccessScope);
     return oidc;
 }
 

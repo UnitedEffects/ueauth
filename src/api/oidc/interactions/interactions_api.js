@@ -4,18 +4,18 @@ import Account from '../../accounts/accountOidcInterface';
 export default {
     async getInt(req, res, next) {
         try {
-            const details = await oidc.interactionDetails(req, res);
+            const details = await oidc(req.authGroup._id).interactionDetails(req, res);
             console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
             const { uid, prompt, params } = details;
 
             //todo client should be specific to authGroup as well...
-            const client = await oidc.Client.find(params.client_id);
-            console.info(client); //can we use our own call???
+            const client = await oidc(req.authGroup._id).Client.find(params.client_id);
 
             if (prompt.name === 'login') {
                 return res.render('login', {
                     client,
-                    authGroup: req.params.group,
+                    authGroup: req.authGroup._id,
+                    authGroupName: req.authGroup.name,
                     uid,
                     details: prompt.details,
                     params,
@@ -27,7 +27,8 @@ export default {
             return res.render('interaction', {
                 client,
                 uid,
-                authGroup: req.params.group,
+                authGroup: req.authGroup._id,
+                authGroupName: req.authGroup.name,
                 details: prompt.details,
                 params,
                 title: 'Authorize',
@@ -39,17 +40,18 @@ export default {
 
     async login(req, res, next) {
         try {
-            const { uid, prompt, params } = await oidc.interactionDetails(req, res);
-            const client = await oidc.Client.find(params.client_id);
+            const { uid, prompt, params } = await oidc(req.authGroup._id).interactionDetails(req, res);
+            const client = await oidc(req.authGroup._id).Client.find(params.client_id);
 
             // email will check against username as well... todo do we want to control that?
-            const accountId = await Account.authenticate(req.params.group, req.body.email, req.body.password);
+            const accountId = await Account.authenticate(req.authGroup._id, req.body.email, req.body.password);
 
             if (!accountId) {
                 res.render('login', {
                     client,
                     uid,
-                    authGroup: req.params.group,
+                    authGroup: req.authGroup._id,
+                    authGroupName: req.authGroup.name,
                     details: prompt.details,
                     params: {
                         ...params,
@@ -67,21 +69,21 @@ export default {
                 },
             };
 
-            await oidc.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+            await oidc(req.authGroup._id).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
         } catch (err) {
             next(err);
         }
     },
     async confirm (req, res, next) {
         try {
+            console.info(req.body);
             const result = {
                 consent: {
-                    rejectedScopes: [], // < uncomment and add rejections here
-                    rejectedClaims: [], // < uncomment and add rejections here
+                    rejectedScopes: req.body.rejectedScopes || [],
+                    rejectedClaims: req.body.rejectedClaims || [],
                 },
             };
-
-            await oidc.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
+            await oidc(req.authGroup._id).interactionFinished(req, res, result, { mergeWithLastSubmission: true });
         } catch (err) {
             next(err);
         }
@@ -92,7 +94,7 @@ export default {
                 error: 'access_denied',
                 error_description: 'End-User aborted interaction',
             };
-            await oidc.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+            await oidc(req.authGroup._id).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
         } catch (err) {
             next(err);
         }

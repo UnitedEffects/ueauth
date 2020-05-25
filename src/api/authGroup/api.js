@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
-import group from './aGroup';
+import group from './group';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
 
@@ -31,7 +31,7 @@ const api = {
             req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
             result = JSON.parse(JSON.stringify(await group.write(req.body)));
             const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
-            const token = await iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], result.id);
+            const token = await iat.generateIAT(expiresIn, ['auth_group'], result.id);
             result.initialAccessToken = token.jti;
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {

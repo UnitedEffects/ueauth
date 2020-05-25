@@ -17,7 +17,7 @@ const api = {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             const tenant = req.params.group;
             const expiresIn = req.body.expiresIn || 604800; // 7 days default
-            const response = await iat.generateIAT(expiresIn, ['auth_group', 'remove_iat'], tenant);
+            const response = await iat.generateIAT(expiresIn, ['auth_group'], tenant);
             return res.json(response);
         } catch (error) {
             next(error);

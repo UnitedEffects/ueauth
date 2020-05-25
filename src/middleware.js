@@ -4,7 +4,7 @@ import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import authorizer from './auth/auth';
 import helper from './helper';
-import group from './api/authGroup/aGroup';
+import group from './api/authGroup/group';
 import account from './api/accounts/account';
 import swag from './swagger';
 
@@ -66,6 +66,35 @@ const mid = {
             next(error);
         }
     },
+    async permissions( req, res, next) {
+        try {
+            req.permissions = {
+                user: req.user,
+                owner: false
+            };
+            if(req.authGroup.owner === req.user.sub) {
+                req.permissions.owner = true;
+            }
+            return next();
+        } catch (error) {
+            next(error);
+        }
+    },
+    async access( req, res, next) {
+        try {
+            //todo will have to make this cofigurable and robust later
+            if (req.permissions.owner !== true) {
+                //validate access rules here...
+                //will need to be able to validate by resource...
+
+                throw Boom.forbidden('You do not have the right permissions');
+            }
+
+            return next();
+        } catch (error) {
+            next(error);
+        }
+    },
     async validateAuthGroupAllowInactive (req, res, next) {
         try {
             if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
@@ -113,7 +142,13 @@ const mid = {
             next(error);
         }
     },
-    isIatGroupActivationAuthorized: authorizer.isIatAuthenticated
+    setNoCache(req, res, next) {
+        res.set('Pragma', 'no-cache');
+        res.set('Cache-Control', 'no-cache, no-store');
+        next();
+    },
+    isIatGroupActivationAuthorized: authorizer.isIatAuthenticated,
+    isAuthenticated: authorizer.isAuthenticated
 };
 
 export default mid;
