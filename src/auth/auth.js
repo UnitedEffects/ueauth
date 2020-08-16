@@ -4,11 +4,8 @@ import axios from 'axios';
 import jwksClient from 'jwks-rsa';
 import Boom from '@hapi/boom';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
-import * as oc from 'openid-client';
 import iat from '../api/oidc/initialAccess/iat';
 
-const OIDCStrategy = oc.Strategy;
-const Issuer = oc.Issuer;
 const config = require('../config');
 
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
