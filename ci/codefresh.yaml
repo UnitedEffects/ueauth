@@ -18,6 +18,7 @@ steps:
     working_directory: "${{clone}}"
     commands:
       - yarn
-      - yarn run ci-test
+      - yarn run keys
+      - yarn test
       - rm ./src/jwks.json
 #      - yarn deploy
