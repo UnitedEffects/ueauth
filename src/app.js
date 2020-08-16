@@ -14,6 +14,7 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
 if(config.ENV!=='production') app.use(logger('tiny'));
 
+app.use(middle.responseIntercept);
 app.use('/api/**', bodyParser.json({ type: ['json', '+json'] }));
 app.use('/api/**', bodyParser.urlencoded({
     extended: false
@@ -21,7 +22,6 @@ app.use('/api/**', bodyParser.urlencoded({
 
 app.use(cookieParser());
 app.use(middle.cores);
-app.use(middle.responseIntercept);
 
 //content and APIs
 app.use(express.static(path.join(__dirname, '../public')));

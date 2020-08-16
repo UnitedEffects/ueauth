@@ -174,7 +174,7 @@ const configuration = {
     },
     async extraAccessTokenClaims(ctx, token) {
         const claims = {
-            ag: ctx.authGroup._id
+            group: ctx.authGroup._id
         };
         //todo add hooks here?
         return claims;

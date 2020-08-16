@@ -59,8 +59,11 @@ http://jsonpatch.com/
 
 * Permissions
     * finish all jwt checks required for OIDC
-    * work through access middleware and get it working correctly for all resources
-    * ensure endpoints using middleware correctly - do some negative tests
+        * When id_token has sub????
+        * when not a jwt???
+    * work through access middleware and get it working correctly for all endpoints
+        * ensure endpoints using middleware correctly - do some negative tests
+* Add Associated client to group creation
 * go feature by feature on the options...
     * keys jwks? Is this as simple as it seems?
     * different grant types - with/without confirmation
@@ -101,6 +104,7 @@ http://jsonpatch.com/
 * error handling - duplicate mongo error
 * config cookie secrets
 * jwks keys
+* auth layer and permissions
 
 ## TODO SWAGGER API
 ```

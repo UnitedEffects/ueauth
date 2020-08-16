@@ -37,6 +37,7 @@ const authGroup = new mongoose.Schema({
     },
     metadata: Object,
     config: Object,
+    associatedClient: String, //todo <-- this isn't anything yet
     _id: {
         type: String,
         default: nanoid

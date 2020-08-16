@@ -49,23 +49,23 @@ router.post('/:group/account', [
     m.captureAuthGroupInBody], account.writeAccount);
 router.get('/:group/account', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], account.getAccounts);
 //todo update access to account for own account
-router.get('/:group/account/:id', [m.validateAuthGroup, m.permissions, m.access], account.getAccount);
-router.patch('/:group/account/:id', [m.validateAuthGroup, m.schemaCheck, m.permissions, m.access], account.patchAccount);
+router.get('/:group/account/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], account.getAccount);
+router.patch('/:group/account/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], account.patchAccount);
 //todo no client access, only user and authGroup owner for delete
-router.delete('/:group/account/:id', [m.validateAuthGroup, m.permissions, m.access], account.deleteAccount);
+router.delete('/:group/account/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], account.deleteAccount);
 
 // Clients
 //todo user based access only on all clients - admin
-router.get('/:group/client', [m.validateAuthGroup, m.permissions, m.access], client.get);
+router.get('/:group/client', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);
 //todo allow client but must validate client request access token as bearer first - otherwise admin
-router.get('/:group/client/:id', [m.validateAuthGroup, m.permissions, m.access], client.getOne);
+router.get('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.getOne);
 //todo limited patch for admin or client request access token as bearer
-router.patch('/:group/client/:id', [m.validateAuthGroup, m.schemaCheck, m.permissions, m.access], client.patchOne);
+router.patch('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
 //todo hard delete - admin or client request access token as bearer
-router.delete('/:group/client/:id', [m.validateAuthGroup, m.permissions, m.access], client.deleteOne);
+router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.deleteOne);
 
 // Operations
 //todo allow admin or client request access token as bearer (update access for this)
-router.post('/:group/operations/client/:id', [m.validateAuthGroup, m.schemaCheck, m.permissions, m.access], client.clientOperations);
+router.post('/:group/operations/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.clientOperations);
 
 module.exports = router;

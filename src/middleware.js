@@ -68,12 +68,14 @@ const mid = {
     },
     async permissions( req, res, next) {
         try {
-            req.permissions = {
-                user: req.user,
-                owner: false
-            };
-            if(req.authGroup.owner === req.user.sub) {
-                req.permissions.owner = true;
+            if(req.user && req.user.sub) {
+                req.permissions = {
+                    user: req.user,
+                    owner: false
+                };
+                if(req.authGroup.owner === req.user.sub) {
+                    req.permissions.owner = true;
+                }
             }
             return next();
         } catch (error) {
@@ -83,7 +85,7 @@ const mid = {
     async access( req, res, next) {
         try {
             //todo will have to make this cofigurable and robust later
-            if (req.permissions.owner !== true) {
+            if (!req.permissions || req.permissions.owner !== true) {
                 //validate access rules here...
                 //will need to be able to validate by resource...
 
