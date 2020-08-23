@@ -3,6 +3,7 @@ import { say } from '../../say';
 import acct from './account';
 import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
+import cl from "../oidc/client/clients";
 
 const RESOURCE = 'Account';
 
@@ -21,14 +22,18 @@ const api = {
     },
     async activateGroupWithAccount(req, res, next) {
         let account;
+        let client;
         try {
             account = await acct.writeAccount(req.body);
             if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
-            const g = await group.activateNewAuthGroup(req.authGroup, account);
+            client = await cl.generateClient(req.authGroup._id);
+            if(!client) throw Boom.expectationFailed('Auth Group Client Not Created! Rolling back.');
+            const g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);
             if(!g) throw Boom.expectationFailed('Auth Group Not Activated! Rolling back.');
             const out = {
                 account,
-                authGroup: g
+                authGroup: g,
+                client
             };
             try {
                 await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
@@ -41,7 +46,14 @@ const api = {
                 try {
                     await acct.deleteAccount(req.authGroup, account._id);
                 } catch (error) {
-                    console.info('There was a problem and you may need the admin to finish setup');
+                    console.info('Account Rollback: There was a problem and you may need the admin to finish setup');
+                }
+            }
+            if (client) {
+                try {
+                    await client.deleteOne(req.authGroup, client.client_id);
+                } catch (error) {
+                    console.info('Client Rollback: There was a problem and you may need the admin to finish setup');
                 }
             }
             next(error);

@@ -10,6 +10,7 @@ provider:
   environment:
     NODE_ENV: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
     SWAGGER: ${env:SWAGGER, file(./.env/env.${self:provider.env}.json):SWAGGER}
+    UI_URL: ${env:UI_URL, file(./.env/env.${self:provider.env}.json):UI_URL}
     PROTOCOL: ${env:PROTOCOL, file(./.env/env.${self:provider.env}.json):PROTOCOL}
     MONGO: ${env:MONGO, file(./.env/env.${self:provider.env}.json):MONGO}
     REPLICA: ${env:REPLICA, file(./.env/env.${self:provider.env}.json):REPLICA}

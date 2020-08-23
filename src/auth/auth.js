@@ -55,6 +55,15 @@ passport.use('oidc', new BearerStrategy({
 },
     async (req, token, next) => {
         try {
+            // DO EVERYTHING GENERALLY FIRST THEN MAKE COPY FOR ELSEWHERE AND OPTIMISE HERE FOR THIS SERVICE
+            /*
+            1. has sub buy is id_token?
+            2. how to check things when not a jwt?
+            3. not jwt and not access token?
+            4. copy this for use elsewhere
+            5. use oidc lib to get user instead of /me API
+            6. skip wellknown and get keys from group lookup (after implementing that)
+             */
             const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${req.params.group}`;
             if(isJWT(token)){
                 // todo autodetect from wellknown if this is a uri or the keys themselves

@@ -35,12 +35,13 @@ export default {
         return dal.patch(id, patched);
     },
 
-    async activateNewAuthGroup(authGroup, account) {
+    async activateNewAuthGroup(authGroup, account, clientId) {
         const copy = JSON.parse(JSON.stringify(authGroup));
         copy.owner = account._id;
         copy.modifiedBy = account._id;
         copy.active = true;
         copy.__v = authGroup.__v;
+        copy.associatedClient = clientId;
         delete copy.securityExpiration;
         return dal.activatePatch(authGroup._id, copy);
     }

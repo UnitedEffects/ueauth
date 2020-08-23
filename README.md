@@ -59,11 +59,14 @@ http://jsonpatch.com/
 
 * Permissions
     * finish all jwt checks required for OIDC
+        * make sure client used was the client associated to the group
         * When id_token has sub????
         * when not a jwt???
+* cleanup
+    * swagger & status code cleanup
+        * Add oidc endpoints to swagger
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
-* Add Associated client to group creation
 * go feature by feature on the options...
     * keys jwks? Is this as simple as it seems?
     * different grant types - with/without confirmation
@@ -72,20 +75,17 @@ http://jsonpatch.com/
 * create config collection with default set in app - part of authGroup
     * scopes by tenant?
     * Store keys in DB???
-* Plugins and hooks?
 * Views
     * need login errors to rendor as a view rather than json
     * Different views by tenant ?
     * Custom error view ?
-
+* Plugins and hooks?
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * need to have a plan for securing db or hashing client secret
 * audit system
     * Event emitter... possibility of something being missed though in a lambda env
 * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
-* swagger & status code cleanup
-    * Add oidc endpoints to swagger
 * inline todos
 * implement with a client/app
 

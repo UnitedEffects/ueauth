@@ -8,6 +8,7 @@ const config = {
     PROTOCOL: process.env.PROTOCOL || envVars.PROTOCOL || 'http',
     MONGO: process.env.MONGO || envVars.MONGO || 'mongodb://localhost:27017/your-db',
     SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',
+    UI_URL: process.env.UI_URL || envVars.UI_URL || 'example.com',
     REPLICA: process.env.REPLICA || envVars.REPLICA || 'rs0',
     PERSIST_HTTP_ERRORS: process.env.PERSIST_HTTP_ERRORS || envVars.PERSIST_HTTP_ERRORS || false,
     WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false,

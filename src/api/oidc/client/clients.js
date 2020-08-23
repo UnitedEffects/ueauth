@@ -2,12 +2,50 @@ import { diff } from 'json-diff';
 import jsonPatch from 'jsonpatch';
 import dal from './dal';
 import helper from '../../../helper';
+import oidc from "../oidc";
+import Adapter from '../dal';
+import { uuid } from 'uuidv4';
+import { snakeCase } from 'lodash';
 
+const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
-
 const cryptoRandomString = require('crypto-random-string');
 
+const snakeKeys = (obj) => {
+    if (Array.isArray(obj)) {
+        return obj.map(v => snakeKeys(v));
+    } else if (obj !== null && obj.constructor === Object) {
+        return Object.keys(obj).reduce(
+            (result, key) => ({
+                ...result,
+                [snakeCase(key)]: snakeKeys(obj[key]),
+            }),
+            {},
+        );
+    }
+    return obj;
+};
+
 export default {
+    async generateClient(authGroup) {
+        const client = new (oidc(authGroup).Client)({
+            "client_secret": cryptoRandomString({length: 86, type: 'url-safe'}),
+            "client_secret_expires_at": 0,
+            "client_id_issued_at": Date.now(),
+            "client_id": uuid(),
+            "client_name": `${authGroup}-client`,
+            "grant_types": ["client_credentials", "authorization_code", "implicit"],
+            "response_types": ["code id_token"],
+            "redirect_uris": [`https://${config.UI_URL}`],
+            "auth_group": authGroup
+        });
+        const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
+        const add = new Adapter('client');
+        await add.upsert(client.clientId, fixed);
+        return fixed;
+
+    },
+
     async get(authGroup, q) {
         const query = await helper.parseOdataQuery(q);
         return dal.get(authGroup, query);

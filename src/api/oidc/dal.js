@@ -1,5 +1,5 @@
 import getModel from './models/model';
-const snakeCase = require('lodash.snakecase');
+import { snakeCase } from 'lodash';
 
 class MongoAdapter {
     constructor(name) {

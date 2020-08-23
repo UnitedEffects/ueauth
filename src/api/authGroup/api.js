@@ -3,6 +3,7 @@ import { say } from '../../say';
 import group from './group';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
+import client from '../oidc/client/clients';
 
 const config = require('../../config');
 
@@ -28,6 +29,7 @@ const api = {
             if (req.body.prettyName) {
                 if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
             }
+            //move this logic to group.js
             req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
             result = JSON.parse(JSON.stringify(await group.write(req.body)));
             const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
