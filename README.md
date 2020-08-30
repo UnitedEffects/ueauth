@@ -62,6 +62,8 @@ http://jsonpatch.com/
         * make sure client used was the client associated to the group
         * When id_token has sub????
         * when not a jwt???
+* need an initial setup endpoint
+    * should tie into permissions
 * cleanup
     * swagger & status code cleanup
         * Add oidc endpoints to swagger

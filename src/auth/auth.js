@@ -36,6 +36,7 @@ passport.use('iat-group', new BearerStrategy({
     async (req, token, next) => {
         try {
             if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+            if (req.authGroup.active === true) return next(null, true);
             if (!req.body.email) throw Boom.preconditionRequired('username is required');
             if (!req.body.password) throw Boom.preconditionRequired('password is required');
             if (req.body.email !== req.authGroup.owner) throw Boom.preconditionFailed('Activating account email must match new auth group owner email');
