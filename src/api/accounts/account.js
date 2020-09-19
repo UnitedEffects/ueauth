@@ -3,33 +3,33 @@ import dal from './dal';
 import helper from '../../helper';
 
 export default {
-    async writeAccount(data) {
-        data.email = data.email.toLowerCase();
-        if(!data.username) data.username = data.email;
-        return dal.writeAccount(data);
-    },
+	async writeAccount(data) {
+		data.email = data.email.toLowerCase();
+		if(!data.username) data.username = data.email;
+		return dal.writeAccount(data);
+	},
 
-    async getAccounts(authGroupId, q) {
-        const query = await helper.parseOdataQuery(q);
-        return dal.getAccounts(authGroupId, query);
-    },
+	async getAccounts(authGroupId, q) {
+		const query = await helper.parseOdataQuery(q);
+		return dal.getAccounts(authGroupId, query);
+	},
 
-    async getAccount(authGroupId, id) {
-        return dal.getAccount(authGroupId, id);
-    },
+	async getAccount(authGroupId, id) {
+		return dal.getAccount(authGroupId, id);
+	},
 
-    async deleteAccount(authGroupId, id) {
-        return dal.deleteAccount(authGroupId, id);
-    },
+	async deleteAccount(authGroupId, id) {
+		return dal.deleteAccount(authGroupId, id);
+	},
 
-    async patchAccount(authGroupId, id, update) {
-        const account = await dal.getAccount(authGroupId, id);
-        const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(account)), update);
-        return dal.patchAccount(authGroupId, id, patched);
-    },
+	async patchAccount(authGroupId, id, update) {
+		const account = await dal.getAccount(authGroupId, id);
+		const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(account)), update);
+		return dal.patchAccount(authGroupId, id, patched);
+	},
 
-    async getAccountByEmailOrUsername(authGroupId, em) {
-        const email = String(em).toLowerCase();
-        return dal.getAccountByEmailOrUsername(authGroupId, email);
-    }
+	async getAccountByEmailOrUsername(authGroupId, em) {
+		const email = String(em).toLowerCase();
+		return dal.getAccountByEmailOrUsername(authGroupId, email);
+	}
 };

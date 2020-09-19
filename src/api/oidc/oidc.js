@@ -18,26 +18,8 @@ const {
 
 const configuration = {
     adapter: MongoAdapter,
-    clients: [
-/*        {
-            client_id: '976c3b85-8094-4ded-b031-b31a2601966e',
-            client_secret: 'fJCVX6sTq_5Ebpk2K8JqHrP9AiGdETpS43SPaNAKUhb9cGXo4jrxxMoc9UP3Ks90pCifZSUp9lfgGX93nx5DBw',
-            redirect_uris: [],
-            response_types: [],
-            grant_types: ['client_credentials'],
-            token_endpoint_auth_method: 'client_secret_base',
-            subject_type: "public",
-            introspection_endpoint_auth_method: "client_secret_basic",
-            revocation_endpoint_auth_method: "client_secret_basic",
-            auth_group: 'ue-root',
-            client_name: 'Root'
-        }*/
-    ],
+    clients: [],
     jwks,
-
-    // oidc-provider only looks up the accounts by their ID when it has to read the claims,
-    // passing it our Account model method is sufficient, it should return a Promise that resolves
-    // with an object with accountId property and a claims method.
     findAccount: Account.findAccount,
 
     async findById(ctx, sub, token) {

@@ -57,11 +57,11 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Permissions
-    * finish all jwt checks required for OIDC
-        * make sure client used was the client associated to the group
-        * When id_token has sub????
-        * when not a jwt???
+* Auth
+    * Use OIDC instead of http calls...?
+* create config collection with default set in app - part of authGroup
+    * scopes by tenant?
+    * Store keys in DB???
 * need an initial setup endpoint
     * should tie into permissions
 * cleanup
@@ -74,9 +74,6 @@ http://jsonpatch.com/
     * different grant types - with/without confirmation
     * Setup CORS options
     * figure out logout
-* create config collection with default set in app - part of authGroup
-    * scopes by tenant?
-    * Store keys in DB???
 * Views
     * need login errors to rendor as a view rather than json
     * Different views by tenant ?
@@ -97,6 +94,7 @@ http://jsonpatch.com/
 * clients
 * auth Groups
 * iat for authGroups
+* auth functions
 * middleware
 * oidcMiddleware
 * interactions_api

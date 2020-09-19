@@ -6,6 +6,7 @@ import oidc from "../oidc";
 import Adapter from '../dal';
 import { uuid } from 'uuidv4';
 import { snakeCase } from 'lodash';
+import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
