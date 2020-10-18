@@ -92,6 +92,8 @@ http://jsonpatch.com/
 * all account
 * clients
 * auth Groups
+* auth Group jwks and Config Generation
+* jwks keys
 * iat for authGroups
 * auth functions
 * middleware
@@ -102,7 +104,6 @@ http://jsonpatch.com/
 * oidc options validate
 * error handling - duplicate mongo error
 * config cookie secrets
-* jwks keys
 * auth layer and permissions
 
 ## TODO SWAGGER API
