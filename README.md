@@ -57,11 +57,10 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Auth
-    * Use OIDC instead of http calls...?
 * create config collection with default set in app - part of authGroup
-    * scopes by tenant?
-    * Store keys in DB???
+    * configure keys creation if not using defaults...
+    * create keys rotation operation
+    * remaining configs --- scopes by tenant?
 * need an initial setup endpoint
     * should tie into permissions
 * cleanup

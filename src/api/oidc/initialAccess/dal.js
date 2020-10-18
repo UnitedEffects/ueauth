@@ -1,5 +1,4 @@
 import IAT from '../models/initialAccessToken';
-import auth from "../../../auth/auth";
 
 export default {
     async updateAuthGroup(id, authGroupId) {

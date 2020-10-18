@@ -33,7 +33,7 @@ const api = {
             req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
             result = JSON.parse(JSON.stringify(await group.write(req.body)));
             const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
-            const token = await iat.generateIAT(expiresIn, ['auth_group'], result.id);
+            const token = await iat.generateIAT(expiresIn, ['auth_group'], result);
             result.initialAccessToken = token.jti;
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {

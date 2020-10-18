@@ -10,7 +10,6 @@
     "build": "yarn && babel src -d dist",
     "package": "yarn && babel src -d dist && sls package",
     "deploy": "yarn && babel src -d dist && sls deploy",
-    "keys": "node ./generate-keys.js",
     "test": "jest"
   },
   "keywords": [

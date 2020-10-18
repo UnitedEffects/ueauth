@@ -21,12 +21,13 @@ const api = {
         }
     },
     async activateGroupWithAccount(req, res, next) {
+        console.info('inside');
         let account;
         let client;
         try {
             account = await acct.writeAccount(req.body);
             if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
-            client = await cl.generateClient(req.authGroup._id);
+            client = await cl.generateClient(req.authGroup);
             if(!client) throw Boom.expectationFailed('Auth Group Client Not Created! Rolling back.');
             const g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);
             if(!g) throw Boom.expectationFailed('Auth Group Not Activated! Rolling back.');

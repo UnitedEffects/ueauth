@@ -6,7 +6,6 @@ import oidc from "../oidc";
 import Adapter from '../dal';
 import { uuid } from 'uuidv4';
 import { snakeCase } from 'lodash';
-import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
@@ -34,11 +33,11 @@ export default {
             "client_secret_expires_at": 0,
             "client_id_issued_at": Date.now(),
             "client_id": uuid(),
-            "client_name": `${authGroup}-client`,
+            "client_name": `${authGroup.id}-client`,
             "grant_types": ["client_credentials", "authorization_code", "implicit"],
             "response_types": ["code id_token"],
             "redirect_uris": [`https://${config.UI_URL}`],
-            "auth_group": authGroup
+            "auth_group": authGroup.id
         });
         const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
         const add = new Adapter('client');

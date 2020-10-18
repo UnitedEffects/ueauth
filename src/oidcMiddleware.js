@@ -2,12 +2,17 @@ import Boom from '@hapi/boom';
 import clients from "./api/oidc/client/clients";
 import group from "./api/authGroup/group";
 import IAT from "./api/oidc/initialAccess/iat";
+import helper from "./helper";
 
 const config = require('./config');
 
 const mid = {
     async validateAuthGroup (ctx, next) {
         try {
+            if(ctx.authGroup && ctx.authGroup.active === true) {
+                ctx.req.params.group = ctx.authGroup.id;
+                return next();
+            }
             if (!ctx.req.params.group) throw Boom.preconditionRequired('authGroup is required');
             const result = await group.getOneByEither(ctx.req.params.group);
             if (!result) throw Boom.notFound('auth group not found');

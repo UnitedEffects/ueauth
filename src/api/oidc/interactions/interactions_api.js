@@ -4,12 +4,12 @@ import Account from '../../accounts/accountOidcInterface';
 export default {
     async getInt(req, res, next) {
         try {
-            const details = await oidc(req.authGroup._id).interactionDetails(req, res);
+            const details = await oidc(req.authGroup).interactionDetails(req, res);
             console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
             const { uid, prompt, params } = details;
 
             //todo client should be specific to authGroup as well...
-            const client = await oidc(req.authGroup._id).Client.find(params.client_id);
+            const client = await oidc(req.authGroup).Client.find(params.client_id);
 
             if (prompt.name === 'login') {
                 return res.render('login', {
@@ -40,8 +40,8 @@ export default {
 
     async login(req, res, next) {
         try {
-            const { uid, prompt, params } = await oidc(req.authGroup._id).interactionDetails(req, res);
-            const client = await oidc(req.authGroup._id).Client.find(params.client_id);
+            const { uid, prompt, params } = await oidc(req.authGroup).interactionDetails(req, res);
+            const client = await oidc(req.authGroup).Client.find(params.client_id);
 
             // email will check against username as well... todo do we want to control that?
             const accountId = await Account.authenticate(req.authGroup._id, req.body.email, req.body.password);
@@ -69,7 +69,7 @@ export default {
                 },
             };
 
-            await oidc(req.authGroup._id).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+            await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
         } catch (err) {
             next(err);
         }
@@ -83,7 +83,7 @@ export default {
                     rejectedClaims: req.body.rejectedClaims || [],
                 },
             };
-            await oidc(req.authGroup._id).interactionFinished(req, res, result, { mergeWithLastSubmission: true });
+            await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: true });
         } catch (err) {
             next(err);
         }
@@ -94,7 +94,7 @@ export default {
                 error: 'access_denied',
                 error_description: 'End-User aborted interaction',
             };
-            await oidc(req.authGroup._id).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+            await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
         } catch (err) {
             next(err);
         }
