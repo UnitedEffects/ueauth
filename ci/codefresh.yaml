@@ -18,6 +18,5 @@ steps:
     working_directory: "${{clone}}"
     commands:
       - yarn
-      - yarn run keys
       - yarn test
 #      - yarn deploy
