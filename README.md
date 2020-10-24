@@ -58,7 +58,6 @@ http://jsonpatch.com/
 ## TODO
 
 * create config collection with default set in app - part of authGroup
-    * configure keys creation if not using defaults...
     * create keys rotation operation
     * remaining configs --- scopes by tenant?
 * need an initial setup endpoint
@@ -124,3 +123,7 @@ http://jsonpatch.com/
   userinfo: '/me'
 }
 ```
+
+## Scoped For Next Version
+
+* Define custom jwks key configuration rather than using default for AuthGroups

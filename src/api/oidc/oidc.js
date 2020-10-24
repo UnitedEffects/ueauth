@@ -10,7 +10,6 @@ import group from "../authGroup/group";
 
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
-const jwks2 = require('../../jwks.json');
 const MongoAdapter = require('./dal');
 
 const {

@@ -20,5 +20,4 @@ steps:
       - yarn
       - yarn run keys
       - yarn test
-      - rm ./src/jwks.json
 #      - yarn deploy
