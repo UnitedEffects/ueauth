@@ -55,7 +55,6 @@ const mid = {
     },
     async validateAuthGroup (req, res, next) {
         try {
-            console.info('authGroup middleware validation called');
             if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
             if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
             const result = await group.getOneByEither(req.params.group);

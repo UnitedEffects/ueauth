@@ -57,21 +57,19 @@ http://jsonpatch.com/
 
 ## TODO
 
-* create config collection with default set in app - part of authGroup
-    * create keys rotation operation
-    * remaining configs --- scopes by tenant?
-* need an initial setup endpoint
-    * should tie into permissions
 * cleanup
     * swagger & status code cleanup
         * Add oidc endpoints to swagger
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
+        * figure out permissions per endpoint required...
 * go feature by feature on the options...
     * keys jwks? Is this as simple as it seems?
     * different grant types - with/without confirmation
     * Setup CORS options
     * figure out logout
+* need an initial setup endpoint
+    * should tie into permissions
 * Views
     * need login errors to rendor as a view rather than json
     * Different views by tenant ?
@@ -127,3 +125,4 @@ http://jsonpatch.com/
 ## Scoped For Next Version
 
 * Define custom jwks key configuration rather than using default for AuthGroups
+* Move remaining configurations to authGroup

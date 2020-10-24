@@ -22,8 +22,11 @@ export default {
     },
     async patch(id, data) {
         data.modifiedAt = Date.now();
-        const updated = await Group.findOneAndUpdate({ _id: id, active: true }, data, { new: true, overwrite: true });
-        return updated;
+        return Group.findOneAndUpdate({ _id: id, active: true }, data, { new: true, overwrite: true });
+    },
+    async patchNoOverwrite(id, data) {
+        data.modifiedAt = Date.now();
+        return Group.findOneAndUpdate({ _id: id, active: true }, data, { new: true });
     },
     async activatePatch(id, data) {
         data.modifiedAt = Date.now();

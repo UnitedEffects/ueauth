@@ -563,6 +563,42 @@ paths:
       security:
         - UEAuth: []
 
+  /{group}/operations:
+    post:
+      tags:
+        - Operations
+      summary: Execute operations against a auth group (only rotate_keys currently supported)
+      description: Execute operations against a auth group (only rotate_keys currently supported)
+      operationId: groupOperations
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGroup'
+        '405':
+          description: Invalid input
+        '417':
+          description: Expectation Failed
+        '500':
+          description: Unknown error
+      security:
+        - UEAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operations'
+        description: Account data to be written
+        required: true
 
   /{group}/operations/client/{id}:
     post:
@@ -656,6 +692,7 @@ components:
           type: string
           enum:
             - rotate_secret
+            - rotate_keys
 
     Log:
       type: object

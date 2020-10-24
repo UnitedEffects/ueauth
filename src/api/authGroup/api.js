@@ -73,6 +73,18 @@ const api = {
         } catch (error) {
             next(error);
         }
+    },
+
+    async operations(req, res, next) {
+        try {
+            //todo add modifiedBy
+            const body = req.body;
+            if(!body.operation) next(Boom.badData('must specify operation'));
+            const result = await group.operations(req.authGroup.id, body.operation);
+            return res.respond(say.ok(result, RESOURCE));
+        } catch (error) {
+            next(error);
+        }
     }
 };
 

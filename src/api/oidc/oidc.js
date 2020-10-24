@@ -16,6 +16,7 @@ const {
     errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
 } = require('oidc-provider');
 
+
 function oidcConfig(g) {
     // todo - create fallback that uses hard coded...
     const jwks = JSON.parse(JSON.stringify({
@@ -66,7 +67,7 @@ function oidcConfig(g) {
         // at a time.
         interactions: {
             url(ctx) {
-                return `/${ctx.req.params.group}/interaction/${ctx.oidc.uid}`;
+                return `/${ctx.authGroup._id}/interaction/${ctx.oidc.uid}`;
             },
         },
         features: {
@@ -189,13 +190,14 @@ function oidcConfig(g) {
 }
 
 function oidcWrapper(tenant) {
-    const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`, oidcConfig(tenant));
+    const options = oidcConfig(tenant);
+    const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`, options);
     oidc.proxy = true;
     oidc.use(bodyParser());
     oidc.use(middle.parseKoaOIDC);
     oidc.use(async (ctx, next) => {
         ctx.authGroup = tenant;
-        next();
+        return next();
     })
     oidc.use(middle.validateAuthGroup);
     oidc.use(middle.uniqueClientRegCheck);

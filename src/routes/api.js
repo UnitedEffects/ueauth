@@ -67,5 +67,7 @@ router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.p
 // Operations
 //todo allow admin or client request access token as bearer (update access for this)
 router.post('/:group/operations/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.clientOperations);
+// todo admin only...
+router.post('/:group/operations', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], group.operations);
 
 module.exports = router;

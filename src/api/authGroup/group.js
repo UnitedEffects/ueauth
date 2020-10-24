@@ -1,6 +1,8 @@
 import jsonPatch from 'jsonpatch';
+import Boom from '@hapi/boom';
 import dal from './dal';
 import helper from '../../helper';
+import k from './generate-keys';
 
 export default {
     async check(pName) {
@@ -44,5 +46,15 @@ export default {
         copy.associatedClient = clientId;
         delete copy.securityExpiration;
         return dal.activatePatch(authGroup._id, copy);
+    },
+
+    async operations(id, operation) {
+        switch (operation) {
+            case 'rotate_keys':
+                const keys = await k.write();
+                return dal.patchNoOverwrite(id, { config: { keys }});
+            default:
+                throw Boom.badData('Unknown operation specified');
+        }
     }
 };

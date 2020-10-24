@@ -1,6 +1,6 @@
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import jwksClient from 'jwks-rsa';
+import njwk from 'node-jwk';
 import Boom from '@hapi/boom';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
 import iat from '../api/oidc/initialAccess/iat';
@@ -132,28 +132,15 @@ passport.use('oidc', new BearerStrategy({
 },
 async (req, token, next) => {
 	try {
-		/*
-        1. skip wellknown and get keys from group lookup (after implementing that)
-         */
-		const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}` ];
+		let issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}` ];
 		if(isJWT(token)){
-			// todo autodetect from wellknown if this is a uri or the keys themselves - or skip this and use group lookup
-			const wellKnownJwksUrl = `${issuer[0]}/jwks`;
-			const client = jwksClient({
-				jwksUri: wellKnownJwksUrl
-			});
+			const preDecoded = jwt.decode(token, {complete: true});
+			const pub = { keys: req.authGroup.config.keys };
+			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
+			const jwk = myKeySet.findKeyById(preDecoded.header.kid);
+			const myPubKey = jwk.key.toPublicKeyPEM();
 
-			// check expiration
-			function getKey(header, done) {
-				// todo, when authGroup oidc config is setup, query that for the keys instead of this
-				client.getSigningKey(header.kid, function(err, key) {
-					if(err) return done(err);
-					const signingKey = key.publicKey || key.rsaPublicKey;
-					return done(null, signingKey);
-				});
-			}
-
-			return jwt.verify(token, getKey, async (err, decoded) => {
+			return jwt.verify(token, myPubKey, async (err, decoded) => {
 				if(err) {
 					console.error(err);
 					return next(null, false);
