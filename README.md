@@ -85,6 +85,7 @@ http://jsonpatch.com/
     * review inline todos
 * Write high risk area Tests!!!!
 * implement with a client/app (mmv api portal)
+* Open Source this Library (add link in spec)
 * MVP release
 
 ## TESTING TODO
