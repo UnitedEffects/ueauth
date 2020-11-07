@@ -1,3 +1,4 @@
+import Boom from '@hapi/boom';
 import express from 'express';
 import account from '../api/accounts/api';
 import group from '../api/authGroup/api';
@@ -19,20 +20,21 @@ router.get('/version', (req, res) => {
     });
 });
 
-// Log and Health
-//router.get('/logs', log.getLogs);
-//router.get('/logs/:id', log.getLog);
-//router.post('/logs', [m.schemaCheck], log.writeLog);
 //todo make health a little more robust
 router.get('/health', (req, res) => {
     res.json({data: {server: 'running'}});
 });
 
+// todo - delete this later, temp access blocker
+async function noGo(req, res, next) {
+    return next(Boom.unauthorized());
+}
+
 // Auth Groups
 // todo access... owner and client?
 router.post('/group', [m.schemaCheck], group.write);
 //todo - only a super admin should be able to do this... thats a permission not yet created
-router.get('/group', group.get);
+router.get('/group', noGo, group.get);
 router.get('/group/:id', group.getOne);
 router.patch('/group/:id', [m.schemaCheck], group.patch);
 
