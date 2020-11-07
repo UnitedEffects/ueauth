@@ -16,6 +16,7 @@ export default {
 
     async get(q) {
         const query = await helper.parseOdataQuery(q);
+        query.projection['config.keys'] = 0;
         return dal.get(query);
     },
 

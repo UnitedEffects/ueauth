@@ -6,6 +6,10 @@ A Multi-tenant OIDC Authorization and Access service built on top of [NODE OIDC 
 
 This service based on this [boilerplate template](https://github.com/theBoEffect/boilerplate).
 
+## Live (test env)
+
+https://qa.ueauth.io
+
 ## Run
 
 This implementation is built with MongoDB as a dependency; however [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider) itself does not have a specific persistence technology dependency and this service could be refactored to operate with any [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider) supported DB with minimal effort. Having said that, if you are using this service as is, you'll need MongoDB. For development purposes, I suggest you use docker for a quick test instance as follows:
@@ -57,32 +61,31 @@ http://jsonpatch.com/
 
 ## TODO
 
-* cleanup
-    * swagger & status code cleanup
-        * Add oidc endpoints to swagger
+* cleanup 1
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
         * figure out permissions per endpoint required...
-* go feature by feature on the options...
-    * keys jwks? Is this as simple as it seems?
-    * different grant types - with/without confirmation
-    * Setup CORS options
-    * figure out logout
-* need an initial setup endpoint
-    * should tie into permissions
+        * read/write/admin scopes?
+        * update modifiedby data
+* Setup CD to QA
 * Views
     * need login errors to rendor as a view rather than json
     * Different views by tenant ?
     * Custom error view ?
-* Plugins and hooks?
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
-* need to have a plan for securing db or hashing client secret
 * audit system
     * Event emitter... possibility of something being missed though in a lambda env
-* clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
-* inline todos
-* implement with a client/app
+* Cleanup 2
+    * go feature by feature on the options...
+        * different grant types - with/without confirmation
+        * Setup CORS options
+        * figure out logout
+    * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
+    * review inline todos
+* Write high risk area Tests!!!!
+* implement with a client/app (mmv api portal)
+* MVP release
 
 ## TESTING TODO
 
@@ -103,26 +106,10 @@ http://jsonpatch.com/
 * config cookie secrets
 * auth layer and permissions
 
-## TODO SWAGGER API
-```
-{
-  authorization: '/auth',
-  check_session: '/session/check',
-  code_verification: '/device',
-  device_authorization: '/device/auth',
-  end_session: '/session/end',
-  introspection: '/token/introspection',
-  initial_access: '/token/initial_access', //custom
-  jwks: '/jwks',
-  pushed_authorization_request: '/request',
-  registration: '/reg',
-  revocation: '/token/revocation',
-  token: '/token',
-  userinfo: '/me'
-}
-```
+## Roadmap
 
-## Scoped For Next Version
-
+* Define a system for Plugins and Hooks (allows permissions, MFA, etc)
+* Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups
-* Move remaining configurations to authGroup
+* Create Account Validation and default to false until complete
+* Move remaining OIDC configurations to authGroup

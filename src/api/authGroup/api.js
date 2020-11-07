@@ -3,7 +3,6 @@ import { say } from '../../say';
 import group from './group';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
-import client from '../oidc/client/clients';
 
 const config = require('../../config');
 
@@ -35,6 +34,7 @@ const api = {
             const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
             const token = await iat.generateIAT(expiresIn, ['auth_group'], result);
             result.initialAccessToken = token.jti;
+            if(result.config) delete result.config.keys;
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
             if (result && result.id) {
@@ -60,6 +60,7 @@ const api = {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             const result = await group.get(req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+            if(result.config) delete result.config.keys;
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -69,6 +70,7 @@ const api = {
         try {
             //todo add modifiedBy
             const result = await group.patch(req.params.id, req.body);
+            if(result.config) delete result.config.keys;
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -81,6 +83,7 @@ const api = {
             const body = req.body;
             if(!body.operation) next(Boom.badData('must specify operation'));
             const result = await group.operations(req.authGroup.id, body.operation);
+            if(result.config) delete result.config.keys;
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);

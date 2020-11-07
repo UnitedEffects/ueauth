@@ -2,7 +2,7 @@ service: ${env:NAME, file(./package.json):name}
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   stage: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
   env: ${env:SLS_ENV, 'test'}
   region: us-east-1
@@ -16,6 +16,9 @@ provider:
     REPLICA: ${env:REPLICA, file(./.env/env.${self:provider.env}.json):REPLICA}
     PERSIST_HTTP_ERRORS: ${env:PERSIST_HTTP_ERRORS, file(./.env/env.${self:provider.env}.json):PERSIST_HTTP_ERRORS}
     WRITE_LOGS_TO_DB: ${env:WRITE_LOGS_TO_DB, file(./.env/env.${self:provider.env}.json):WRITE_LOGS_TO_DB}
+    SINGLE_USE_IAT: ${env:SINGLE_USE_IAT, file(./.env/env.${self:provider.env}.json):SINGLE_USE_IAT}
+    GROUP_SECURE_EXPIRES: ${env:GROUP_SECURE_EXPIRES, file(./.env/env.${self:provider.env}.json):GROUP_SECURE_EXPIRES}
+    COOKIE_KEYS: ${env:COOKIE_KEYS, file(./.env/env.${self:provider.env}.json):COOKIE_KEYS}
 
 package:
   exclude:

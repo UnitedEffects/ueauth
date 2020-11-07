@@ -2,12 +2,22 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: Boilerplate Service
-  description: A Boilerplate for services that run in docker or lambda
+  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects LLC</a>. Copyright &#169; 2021, all rights reserved.<br><br>UE Auth is a multi-tenant OIDC Provider intended to serve small to midsize organization that require functionality similar to those provided by enterprise Identity and Access SaaS providers but without the costs associated to the full scale of those solutions.<br><br>This OIDC Provider is provided in two parts. First, at its core, we are implementing the OIDC API via a certified OIDC provider library called <a href='https://github.com/panva/node-oidc-provider'>node-oidc-provider</a> by <a href='https://github.com/panva'>Panva</a>. This OpenAPI specification does not detail the entirety of that API. Instead, you can reference the official Open ID Connect documentation for the API (<a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>) or Panva's amazingly detailed documentation in <a href='https://github.com/panva/node-oidc-provider'>GitHub</a>. These endpoints are distinguished by being available directly from the root domain with the Auth Group context: e.g. <code>/{group}/token</code>. Second, in addition to the supported OIDC API, there are a series of UEAuth specific wrappers that provide Auth Group functionality (secured and segregated user groups), Account creation and management, Client queries, and Security Operations. These APIs are defined and documented below for your convenience. These APIs are distinguished in the service with prefix <code>/api</code>, to which this OpenAPI spec is defaulted. Additionally, as a general reference, this provider implements the following OIDC endpoints, which you will find specific contract documentation for in the above mentioned <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>.<br><code><br>authorization: '/{group}/auth',<br>
+  check_session: '/{group}/session/check',<br>
+  code_verification: '/{group}/device',<br>
+  device_authorization: '/{group}/device/auth',<br>
+  end_session: '/{group}/session/end',<br>
+  introspection: '/{group}/token/introspection',<br>
+  initial_access: '/{group}/token/initial_access', <strong><i><-- Non-standard, but available from /{group} with the rest, see below</i></strong><br>
+  jwks: '/{group}/jwks',<br>
+  pushed_authorization_request: '/{group}/request',<br>
+  registration: '/{group}/reg',<br>
+  revocation: '/{group}/token/revocation',<br>
+  token: '/{group}/token',<br>
+  userinfo: '/{group}/me'</code><br><br>The <code>'/{group}/token/initial_access'</code> allows you to create an initial access token for client registration. You must have a User Access token associated to the group specified. Use a POST method to retrieve the token. It can then be used as a Bearer token."
   x-logo:
     url: https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png
 tags:
-  - name: System
-    description: Basic System Functionality
   - name: Auth Groups
     description: Auth Groups
   - name: Users
@@ -16,30 +26,10 @@ tags:
     description: Registered Clients
   - name: Operations
     description: Commands
+  - name: System
+    description: Basic System Functionality
 
 paths:
-  /health:
-    get:
-      tags:
-        - System
-      summary: Health check
-      description: Health check
-      responses:
-        '200':
-          description: GET successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/success'
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/defaultError'
-
   /groupcheck/{prettyName}:
     get:
       tags:
@@ -68,9 +58,15 @@ paths:
                   available:
                     type: boolean
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
 
   /group:
     post:
@@ -85,12 +81,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/authGroupInitial'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '405':
-          description: Invalid input
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
       requestBody:
         content:
           application/json:
@@ -142,9 +142,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getGroups'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
   '/group/{id}':
     get:
       tags:
@@ -166,11 +174,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getGroup'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Not Found
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
     patch:
       tags:
         - Auth Groups
@@ -190,12 +204,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '405':
-          description: Invalid input
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
       requestBody:
         content:
           application/json:
@@ -224,13 +244,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getAccount'
+                oneOf:
+                  - $ref: '#/components/schemas/getAccount'
+                  - $ref: '#/components/schemas/firstAccountWrite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '405':
-          description: Invalid input
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
       requestBody:
         content:
           application/json:
@@ -289,9 +317,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getAccounts'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
   '/{group}/account/{id}':
     get:
       tags:
@@ -320,11 +356,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getAccount'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Not Found
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
     delete:
       tags:
         - Users
@@ -352,11 +394,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getAccount'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Not Found
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
     patch:
       tags:
         - Users
@@ -383,12 +431,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '405':
-          description: Invalid input
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
       requestBody:
         content:
           application/json:
@@ -449,9 +503,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getClients'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
   '/{group}/client/{id}':
     get:
       tags:
@@ -480,11 +542,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getClient'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Not Fou d
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
     patch:
       tags:
         - Clients
@@ -512,15 +580,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/getClient'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Not found
+          $ref: '#/components/responses/NotFound'
         '405':
-          description: Invalid input
+          $ref: '#/components/responses/InvalidInput'
         '417':
-          description: Expectation Failed
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/ExpectationFailed'
       requestBody:
         content:
           application/json:
@@ -529,7 +597,7 @@ paths:
         description: JSON Patch specific to your account object
         required: true
       security:
-        - UEAuth: []
+        - bearer: []
     delete:
       tags:
         - Clients
@@ -557,11 +625,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/getClient'
         '400':
-          description: Bad Request
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Not found
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
 
   /{group}/operations:
     post:
@@ -584,14 +658,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '405':
-          description: Invalid input
+          $ref: '#/components/responses/InvalidInput'
         '417':
-          description: Expectation Failed
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
       requestBody:
         content:
           application/json:
@@ -627,14 +705,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/getClient'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '405':
-          description: Invalid input
+          $ref: '#/components/responses/InvalidInput'
         '417':
-          description: Expectation Failed
-        '500':
-          description: Unknown error
+          $ref: '#/components/responses/ExpectationFailed'
       security:
-        - UEAuth: []
+        - bearer: []
       requestBody:
         content:
           application/json:
@@ -643,45 +725,100 @@ paths:
         description: Account data to be written
         required: true
 
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Health check
+      responses:
+        '200':
+          description: GET successful
+        '500':
+          $ref: '#/components/responses/UnknownError'
+
 servers:
   - url: http://localhost:3000/api
 components:
+  responses:
+    BadRequest:
+      description: Bad Request, try again
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/defaultError'
+    NotFound:
+      description: Requested object not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/defaultError'
+    InvalidInput:
+      description: Request is correct but one of your inputs is wrong
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/defaultError'
+    ExpectationFailed:
+      description: An expectation associated to the request failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/defaultError'
+    Unauthorized:
+      description: Unauthorized Access
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/defaultError'
+    UnknownError:
+      description: Unknown Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/defaultError'
+
   securitySchemes:
-    UEAuth:
+    bearer:
       type: http
       scheme: bearer
-      description: 'For both UEAuth and other Bearer based tokens, simply enter the token (prefixing with "bearer" is not required).'
-    basicAuth:
-      type: http
-      scheme: basic
-    OpenID:
+      description: 'For Bearer based tokens, simply enter the token (prefixing with "bearer" is not required). Until Swagger UI supports OIDC directly, you can use this security field with OIDC tokens as well.'
+#    basicAuth:
+#      type: http
+#      scheme: basic
+    openId:
       type: openIdConnect
-      openIdConnectUrl: https://example.com/.well-known/openid-configuration
-    OAuth2:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://example.com/oauth/authorize
-          tokenUrl: https://example.com/oauth/token
-          scopes:
-            read: Grants read access
-            write: Grants write access
-            admin: Grants access to admin operations
-  schemas:
-    success:
-      properties:
-        data:
-          type: object
+      description: OIDC specific OAuth2 implementation
+      openIdConnectUrl: http://example.com/group/.well-known/openid-configuration
+#    OAuth2:
+#      type: oauth2
+#      description: If you have your client_id and client_secret, you can use this as well.
+#      flows:
+#        authorizationCode:
+#          authorizationUrl: https://example.com/oauth/authorize
+#          tokenUrl: https://example.com/oauth/token
+#          scopes:
+#            openid: General access
+#            read: Grants read access
+#            write: Grants write access
+#            admin: Grants access to admin operations
 
+  schemas:
     defaultError:
       required:
         - error
         - message
+        - id
       properties:
-        err:
+        error:
           type: string
+          description: Type of error
         message:
           type: string
+          description: Additional information regarding the error
+        id:
+          type: string
+          description: Unique ID to help find the error in a logging stack
 
     operations:
       type: object
@@ -694,52 +831,6 @@ components:
             - rotate_secret
             - rotate_keys
 
-    Log:
-      type: object
-      properties:
-        id:
-          type: string
-          description: guid for this log
-        logTimestamp:
-          type: string
-          format: date-time
-          description: This is your rangeKey. This is a timestamp.
-      allOf:
-        - $ref: '#/components/schemas/writeLog'
-
-    writeLog:
-      type: object
-      required:
-        - message
-      properties:
-        code:
-          type: string
-          enum: ["ERROR", "SUCCESS", "NOTIFY", "LOG"]
-        message:
-          type: string
-          description: This should be any brief summary data in string format.
-        details:
-          type: object
-          description: You can directly pipe any error message objects to here.
-
-    oneLog:
-      properties:
-        type:
-          type: string
-          default: Log
-        data:
-          $ref: '#/components/schemas/Log'
-
-    Logs:
-      properties:
-        type:
-          type: string
-          enum: ['Log']
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Log'
-
     getAccounts:
       properties:
         type:
@@ -750,7 +841,25 @@ components:
           items:
             $ref: '#/components/schemas/accountObject'
 
+    firstAccountWrite:
+      description: the first account on a new auth group activates the group and creates a client
+      properties:
+        type:
+          type: string
+          enum: ['Account']
+        data:
+          type: object
+          $ref: '#/components/schemas/accountObject'
+        authGroup:
+          type: object
+          $ref: '#/components/schemas/authGroup'
+        client:
+          type: object
+          $ref: '#/components/schemas/clientObject'
+
+
     getAccount:
+      description: if the auth group is active, this is the response
       properties:
         type:
           type: string
@@ -887,7 +996,6 @@ components:
           type: string
           description: Required to POST or PUT updates to clients if not the authGroup owner. Rotates on each call.
 
-
     accountObject:
       type: object
       additionalProperties: false
@@ -940,7 +1048,7 @@ components:
         txt:
           type: string
           pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
-          description: optionally used for verifying account
+          description: optionally used for verifying account, requires country code. e.g. +1
         metadata:
           type: object
           description: additional context provided by the implementer
