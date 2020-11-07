@@ -14,7 +14,7 @@ info:
   registration: '/{group}/reg',<br>
   revocation: '/{group}/token/revocation',<br>
   token: '/{group}/token',<br>
-  userinfo: '/{group}/me'</code><br><br>The <code>'/{group}/token/initial_access'</code> allows you to create an initial access token for client registration. You must have a User Access token associated to the group specified. Use a POST method to retrieve the token. It can then be used as a Bearer token."
+  userinfo: '/{group}/me'</code><br><br>The <code>'/{group}/token/initial_access'</code> allows you to create an initial access token for client registration. You must have a User Access token associated to the group specified. Use a POST method to retrieve the token. It can then be used as a Bearer token.<br><br><h2>Getting Started</h2><br>You'll need an Auth Group to utilize the service.<ul><li>POST a new Auth Group making sure to save the Initial Access Token provided upon creation.</li><li>Once you have it, POST a new user account to the same auth group, making sure to use the same email address and the initial access token as a bearer token.</li><li>This will activate your auth group, create the account, and provide you with a client_id and secret to use for all interactions with this API.</li></ul><br><br><h3 style='color:red'>THIS IS A DEMO AND TEST ENVIRONMENT. ALL DATA IS EPHEMERAL AND SUBJECT TO DELETION</h3>"
   x-logo:
     url: https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png
 tags:
