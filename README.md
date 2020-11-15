@@ -61,12 +61,19 @@ http://jsonpatch.com/
 
 ## TODO
 
+* Need to set up initial setup with admin/root group and accounts - should be able to deactivate this route after first use. Check to see pretty name root exists or not. If not create. If other accounts exist something may be funky, so do the “I own this” protocol. Code must have a key deployed and that key must be used in the request. Instructions should recommend removing key after deployment.
+* Admin group gives full query but god mode (posts and updates) needs to be activated via flag
+* Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
+* Need way to transfer ownership of a group
+* Need a way to deactivate or delete (with warning) and reactivate accounts if I’m the owner (or in the future, an admin)
 * cleanup 1
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
         * figure out permissions per endpoint required...
         * read/write/admin scopes?
         * update modifiedby data
+* How do Invites work? Group setting for open registration vs invites. We should generate an initial long lived code. Both displayed and emailed. You can use it to create an account but it won’t activate until you click the confirmation email or until admin verifies you.
+    * For invites: Admin query pending accounts. Admin confirm pending accounts.
 * Setup CD to QA
 * Views
     * need login errors to rendor as a view rather than json
