@@ -41,6 +41,10 @@ const authGroup = new mongoose.Schema({
 	config: {
 		keys: Array
 	},
+	locked: {
+		type: Boolean,
+		default: false
+	},
 	associatedClient: String,
 	_id: {
 		type: String,

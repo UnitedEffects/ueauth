@@ -58,6 +58,24 @@ This implementation is built with MongoDB as a dependency; however [NODE OIDC PR
 * SLS_ENV=qa yarn deploy
 * KEEP THE ABOVE INIT SETUP INSTRUCTIONS IN MIND AND REDEPLOY WITH ROOT SETUP OFF
 
+## The Root Account
+
+The root group is the super admin for the entire service. Any account in the root group has super admin access to all other accounts. This should only be limited to a small number of service and infrastructure admins. The root group is locked, see below.
+
+## Locked Groups
+
+If you choose to lock your group upon creation, it means that users can not self register to the group. In this case, they must either be provided with an initial access token (option 1), or they must attempt to register which will trigger a access request which the admin (you) must confirm (option 2 - this second usecase is pending).
+
+For this example, we will assume you are adding a user to the root group.
+
+* Option 1
+    * As the creator of your group, you already have an account. Use one of the OIDC flows to receive a token
+    * Use this token as your bearer token to make an http request to 'POST /root/token/initial-access' making sure to include the email of the user you are inviting in the body { "userEmail": "yourfriend@email.com" }
+    * The resulting initial access token (the jti property) can now be used as a bearer token on the 'POST /api/root/account' with appropriate body { username, email, password }
+    * If the request is made within the iat expiration window (default 7 days) and the email matches userEmail above, the account will be created
+* Option 2
+    * PENDING FUNCTIONALITY
+
 ## Key Stack Components
 
 * Express
@@ -82,7 +100,7 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Admin group gives full query but god mode (posts and updates) needs to be activated via flag
+* Define permission-parse vs permission and update so root has control. Root group gives full query but god mode (posts and updates) needs to be activated via flag
 * Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
 * Need way to transfer ownership of a group
 * Need a way to deactivate or delete (with warning) and reactivate accounts if I’m the owner (or in the future, an admin)
@@ -92,8 +110,8 @@ http://jsonpatch.com/
         * figure out permissions per endpoint required...
         * read/write/admin scopes?
         * update modifiedby data
-* How do Invites work? Group setting for open registration vs invites. We should generate an initial long lived code. Both displayed and emailed. You can use it to create an account but it won’t activate until you click the confirmation email or until admin verifies you.
-    * For invites: Admin query pending accounts. Admin confirm pending accounts.
+* How do invites work? We set up iat with an email meta tag to lock it to a user for locked groups. We will want to figure out how to manage and track invites... maybe a complimentary collection?
+    * As an additional option, we should allow for access requests, meaning a user can creae an account and an admin can confirm. No access until confirmation.
 * Setup CD to QA
 * Views
     * need login errors to rendor as a view rather than json

@@ -149,7 +149,11 @@ const mid = {
         res.set('Cache-Control', 'no-cache, no-store');
         next();
     },
-    isIatGroupActivationAuthorized: authorizer.isIatAuthenticated,
+    isIatGroupActivationAuthorized(req, res, next) {
+        if(req.groupActivationEvent === true) return authorizer.isIatAuthenticated(req, res, next);
+        if(req.authGroup.locked === true) return authorizer.isLockedGroupIatAuth(req, res, next);
+        return next();
+    },
     isAuthenticated: authorizer.isAuthenticated
 };
 

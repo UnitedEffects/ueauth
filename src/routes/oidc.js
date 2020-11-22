@@ -12,7 +12,7 @@ const urlParser = bodyParser.urlencoded({
 const router = express.Router();
 
 //todo authorization to use this required
-router.post('/:group/token/initial-access', [jsonParser, m.validateAuthGroup, m.captureAuthGroupInBody], api.getInitialAccessToken);
+router.post('/:group/token/initial-access', [jsonParser, m.validateAuthGroup, m.captureAuthGroupInBody, m.isAuthenticated, m.permissions], api.getInitialAccessToken);
 
 // Interactions
 //todo - might need to render error pages here instead of just throwing the error...

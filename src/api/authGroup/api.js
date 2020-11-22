@@ -32,6 +32,7 @@ const api = {
             const gData = {
                 name: "root",
                 prettyName: "root",
+                locked: true,
                 owner: config.ROOT_EMAIL
             };
             const aData = {
@@ -131,7 +132,7 @@ const api = {
     async getOne(req, res, next) {
         try {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            const result = await group.get(req.params.id);
+            const result = JSON.parse(JSON.stringify(await group.getOne(req.params.id)));
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             if(result.config) delete result.config.keys;
             return res.respond(say.ok(result, RESOURCE));

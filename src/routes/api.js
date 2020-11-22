@@ -36,7 +36,7 @@ router.post('/init', group.initialize);
 // Auth Groups
 // todo access... owner and client?
 router.post('/group', [m.schemaCheck], group.write);
-//todo - only a super admin should be able to do this... thats a permission not yet created
+//todo - only a super admin should be able to do this... that's a permission not yet created
 router.get('/group', noGo, group.get);
 router.get('/group/:id', group.getOne);
 router.patch('/group/:id', [m.schemaCheck], group.patch);
@@ -52,12 +52,29 @@ router.post('/:group/account', [
     m.setGroupActivationEvent,
     m.isIatGroupActivationAuthorized,
     m.captureAuthGroupInBody], account.writeAccount);
-router.get('/:group/account', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], account.getAccounts);
+router.get('/:group/account', [
+    m.validateAuthGroup,
+    m.isAuthenticated,
+    m.permissions,
+    m.access], account.getAccounts);
 //todo update access to account for own account
-router.get('/:group/account/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], account.getAccount);
-router.patch('/:group/account/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], account.patchAccount);
+router.get('/:group/account/:id', [
+    m.validateAuthGroup,
+    m.isAuthenticated,
+    m.permissions,
+    m.access], account.getAccount);
+router.patch('/:group/account/:id', [
+    m.validateAuthGroup,
+    m.isAuthenticated,
+    m.schemaCheck,
+    m.permissions,
+    m.access], account.patchAccount);
 //todo no client access, only user and authGroup owner for delete
-router.delete('/:group/account/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], account.deleteAccount);
+router.delete('/:group/account/:id', [
+    m.validateAuthGroup,
+    m.isAuthenticated,
+    m.permissions,
+    m.access], account.deleteAccount);
 
 // Clients
 //todo user based access only on all clients - admin
