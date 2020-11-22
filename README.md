@@ -100,6 +100,7 @@ http://jsonpatch.com/
 
 ## TODO
 
+* For clarity, lets move iat endpoint to /api and add to swagger... its custom anyway
 * Define permission-parse vs permission and update so root has control. Root group gives full query but god mode (posts and updates) needs to be activated via flag
 * Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
 * Need way to transfer ownership of a group
