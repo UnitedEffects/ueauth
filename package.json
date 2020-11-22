@@ -7,9 +7,9 @@
     "start": "node ./src/start.js",
     "dev": "NODE_ENV=dev nodemon ./src/start.js",
     "dist": "nodemon ./dist/start.js",
-    "build": "yarn && babel src -d dist",
-    "package": "yarn && babel src -d dist && sls package",
-    "deploy": "yarn && babel src -d dist && sls deploy",
+    "build": "yarn && && yarn test && babel src -d dist",
+    "package": "yarn && && yarn test && babel src -d dist && sls package",
+    "deploy": "yarn && yarn test && babel src -d dist && sls deploy",
     "test": "jest"
   },
   "keywords": [

@@ -30,7 +30,7 @@ async function noGo(req, res, next) {
     return next(Boom.unauthorized());
 }
 
-// Initialize - ONLY FOR FIRST START
+// Initialize - ONLY FOR FIRST START - NOT INCLUDED IN SWAGGER
 router.post('/init', group.initialize);
 
 // Auth Groups

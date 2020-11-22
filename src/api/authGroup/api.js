@@ -20,6 +20,7 @@ const api = {
             // when not allowed, we'll just say not found. No need to point at a security feature.
             if(config.ALLOW_ROOT_CREATION!==true) return next(Boom.notFound());
             if(!config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY) return next(Boom.notFound());
+            if(config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY === "") return next(Boom.notFound());
             if(!req.body.setupCode) return next(Boom.notFound());
             // after here we assume they should know about the endpoint
             if(req.body.setupCode !== config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY) return next(Boom.unauthorized());
@@ -45,7 +46,7 @@ const api = {
             final = JSON.parse(JSON.stringify(await group.activateNewAuthGroup(g, account, client.client_id)));
             if(final.config) delete final.config.keys;
             const out = {
-                WARNING: 'NOW THAT YOU HAVE FINISHED INITIAL SETUP, REDEPLOY THIS SERVICE WITH ALLOW_ROOT_CREATION SET TO FALSE AND ONE_TIME_PERSONAL_ROOT_CREATION_KEY SET TO NULL',
+                WARNING: "NOW THAT YOU HAVE FINISHED INITIAL SETUP, REDEPLOY THIS SERVICE WITH ALLOW_ROOT_CREATION SET TO FALSE AND ONE_TIME_PERSONAL_ROOT_CREATION_KEY SET TO EMPTY STRING",
                 account,
                 authGroup: final,
                 client

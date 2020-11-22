@@ -36,7 +36,7 @@ This implementation is built with MongoDB as a dependency; however [NODE OIDC PR
         * Copy the resulting AuthGroup, Account, and Client data for future use
     * within .env/env.dev.json set the following and redeploy
         * ALLOW_ROOT_CREATION = false
-        * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = null
+        * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = ""
     * YOU HAVE JUST CREATED THE ROOT SUPER ADMIN ACCOUNT
     * http://localhost:3000/root/.well-known/openid-configuration
     * YOU MUST DO THIS IN ANY NEW DEPLOYED ENVIRONMENT AS WELL
