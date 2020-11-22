@@ -18,8 +18,11 @@ const config = {
     COOKIE_KEYS () {
         if (process.env.COOKIE_KEYS) return process.env.COOKIE_KEYS.toString().split(',');
         if (envVars.COOKIE_KEYS) return envVars.COOKIE_KEYS.toString().split(',');
-        return ['secret1', 'secret2']
-    }
+        return ['secret1', 'secret2'];
+    },
+    ALLOW_ROOT_CREATION: (process.env.ALLOW_ROOT_CREATION === 'true') || envVars.ALLOW_ROOT_CREATION || false,
+    ROOT_EMAIL: process.env.ROOT_EMAIL || envVars.ROOT_EMAIL || null,
+    ONE_TIME_PERSONAL_ROOT_CREATION_KEY: process.env.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || envVars.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || null
 };
 
 module.exports = config;

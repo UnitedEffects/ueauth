@@ -30,6 +30,9 @@ async function noGo(req, res, next) {
     return next(Boom.unauthorized());
 }
 
+// Initialize - ONLY FOR FIRST START
+router.post('/init', group.initialize);
+
 // Auth Groups
 // todo access... owner and client?
 router.post('/group', [m.schemaCheck], group.write);

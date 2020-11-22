@@ -46,7 +46,7 @@ export default {
         copy.__v = authGroup.__v;
         copy.associatedClient = clientId;
         delete copy.securityExpiration;
-        return dal.activatePatch(authGroup._id, copy);
+        return dal.activatePatch(authGroup._id || authGroup.id, copy);
     },
 
     async operations(id, operation) {

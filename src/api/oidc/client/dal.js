@@ -41,7 +41,7 @@ export default {
         }, data, {new: true, overwrite: true}).select({payload: 1});
     },
     async deleteOne(authGroup, id) {
-        return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }] });
+        return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.id }, { 'payload.auth_group': authGroup.prettyName }] });
     },
     async rotateSecret(id, authGroup, client_secret) {
         return Client.findOneAndUpdate({

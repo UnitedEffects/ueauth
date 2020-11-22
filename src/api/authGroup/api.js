@@ -3,13 +3,85 @@ import { say } from '../../say';
 import group from './group';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
-
+import cl from "../oidc/client/clients";
+import acct from "../accounts/account";
 const config = require('../../config');
 
 
 const RESOURCE = 'Auth Group';
 
 const api = {
+    async initialize(req, res, next) {
+        let g;
+        let account;
+        let client;
+        let final;
+        try {
+            // when not allowed, we'll just say not found. No need to point at a security feature.
+            if(config.ALLOW_ROOT_CREATION!==true) return next(Boom.notFound());
+            if(!config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY) return next(Boom.notFound());
+            if(!req.body.setupCode) return next(Boom.notFound());
+            // after here we assume they should know about the endpoint
+            if(req.body.setupCode !== config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY) return next(Boom.unauthorized());
+            if(!config.ROOT_EMAIL) return next(Boom.badData('Root Email Not Configured'));
+            if(!req.body.password) return next(Boom.badData('Need to provide a password for initial account'));
+            const check = await group.getOneByEither('root');
+            if(check) return next(Boom.forbidden('root is established, this action is forbidden'));
+            // finished security and data checks, proceeding
+            const gData = {
+                name: "root",
+                prettyName: "root",
+                owner: config.ROOT_EMAIL
+            };
+            const aData = {
+                username: config.ROOT_EMAIL,
+                email: config.ROOT_EMAIL,
+                password: req.body.password
+            }
+            g = await group.write(gData);
+            aData.authGroup = g.id;
+            account = await acct.writeAccount(aData);
+            client = await cl.generateClient(g);
+            final = JSON.parse(JSON.stringify(await group.activateNewAuthGroup(g, account, client.client_id)));
+            if(final.config) delete final.config.keys;
+            const out = {
+                WARNING: 'NOW THAT YOU HAVE FINISHED INITIAL SETUP, REDEPLOY THIS SERVICE WITH ALLOW_ROOT_CREATION SET TO FALSE AND ONE_TIME_PERSONAL_ROOT_CREATION_KEY SET TO NULL',
+                account,
+                authGroup: final,
+                client
+            };
+            return res.respond(say.created(out, RESOURCE));
+        } catch (error) {
+            if (g) {
+                try {
+                    const gDone = await group.deleteOne(g.id)
+                    if(!gDone) throw new Error('group delete not complete');
+                } catch (error) {
+                    console.error(error);
+                    console.error('Root Group Rollback: There was a problem and you may need to debug this install');
+                }
+            }
+            if (account) {
+                try {
+                    const aDone = await acct.deleteAccount(g.id, account._id);
+                    if(!aDone) throw new Error('account delete not complete');
+                } catch (error) {
+                    console.error(error);
+                    console.info('Account Rollback: There was a problem and you may need to debug this install');
+                }
+            }
+            if (client) {
+                try {
+                    const cDone = await cl.deleteOne(g, client.client_id);
+                    if(!cDone) throw new Error('client delete not complete');
+                } catch (error) {
+                    console.error(error);
+                    console.info('Client Rollback: There was a problem and you may need to debug this install');
+                }
+            }
+            next(error);
+        }
+    },
     async check(req, res, next) {
         try {
             if(!req.params.prettyName) return next(Boom.preconditionRequired('Need the Pretty Name you want to check'));

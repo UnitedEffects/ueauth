@@ -16,26 +16,47 @@ This implementation is built with MongoDB as a dependency; however [NODE OIDC PR
 
 * DB
     * docker run -p 27017:27017 mongo
-* Service
+    
+* Service - first run
+    * cp .env_ci to .env
+        * Do not update .env_ci directly
+        * Copy .env_ci to .env
+        * Update the json files pertaining to your desired deployment or NODE_ENV configuration
+        * Add new deployment/env configurations as desired using the naming "env.NODE_ENV_NAME.json"
+    * within .env/env.dev.json, set the following
+        * ALLOW_ROOT_CREATION = true
+        * ROOT_EMAIL = you@yourdomain.com
+        * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = YOUR_ONE_TIME_SECRET
+        * set other values as you like
     * yarn
     * yarn test
     * yarn run dev
-    * http://localhost:3000/swagger
+    * curl -X POST "http://localhost:3000/api/init" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"password\":\"YOURPASSWORD\",\"setupCode\":\"YOUR_ONE_TIME_SECRET\"}"
+        * NOTE, this is a one time setup action and is not represented in swagger
+        * Copy the resulting AuthGroup, Account, and Client data for future use
+    * within .env/env.dev.json set the following and redeploy
+        * ALLOW_ROOT_CREATION = false
+        * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = null
+    * YOU HAVE JUST CREATED THE ROOT SUPER ADMIN ACCOUNT
+    * http://localhost:3000/root/.well-known/openid-configuration
+    * YOU MUST DO THIS IN ANY NEW DEPLOYED ENVIRONMENT AS WELL
+    
+* Service - all subsequent usage
+    * Documentation here: http://localhost:3000/api
+    * Swagger here: http://localhost:3000/swagger
     * create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
         * make note of the initialAccessToken (IAT)
     * Using the IAT as a bearer token, create an account for this authGroup to activate POST http://localhost:3000/api/testGroup/account
+    * Make note of the returned data, this is your active Auth Group, Account and UeAuth Client data
+    * New users will simply create accounts and only see their account information
     * http://localhost:3000/testGroup/.well-known/openid-configuration
-* Recommended setup for dev and manual deployment
-    * Do not update .env_ci directly
-    * Copy .env_ci to .env
-    * Update the json files pertaining to your desired deployment or NODE_ENV configuration
-    * Add new deployment/env configurations as desired using the naming "env.NODE_ENV_NAME.json"
 
 ### Manual Deployment
 
 * Ensure you have your .env correctly configured. Lets assume we want to deploy QA which pertains to json file env.qa.json
 * Ensure that [Serverless](https://serverless.com/) is installed and configured to deploy to aws for your account
 * SLS_ENV=qa yarn deploy
+* KEEP THE ABOVE INIT SETUP INSTRUCTIONS IN MIND AND REDEPLOY WITH ROOT SETUP OFF
 
 ## Key Stack Components
 
@@ -61,7 +82,6 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Need to set up initial setup with admin/root group and accounts - should be able to deactivate this route after first use. Check to see pretty name root exists or not. If not create. If other accounts exist something may be funky, so do the “I own this” protocol. Code must have a key deployed and that key must be used in the request. Instructions should recommend removing key after deployment.
 * Admin group gives full query but god mode (posts and updates) needs to be activated via flag
 * Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
 * Need way to transfer ownership of a group

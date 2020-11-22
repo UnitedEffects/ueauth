@@ -19,6 +19,9 @@ provider:
     SINGLE_USE_IAT: ${env:SINGLE_USE_IAT, file(./.env/env.${self:provider.env}.json):SINGLE_USE_IAT}
     GROUP_SECURE_EXPIRES: ${env:GROUP_SECURE_EXPIRES, file(./.env/env.${self:provider.env}.json):GROUP_SECURE_EXPIRES}
     COOKIE_KEYS: ${env:COOKIE_KEYS, file(./.env/env.${self:provider.env}.json):COOKIE_KEYS}
+    ALLOW_ROOT_CREATION: ${env:ALLOW_ROOT_CREATION, file(./.env/env.${self:provider.env}.json):ALLOW_ROOT_CREATION}
+    ROOT_EMAIL: ${env:ROOT_EMAIL, file(./.env/env.${self:provider.env}.json):ROOT_EMAIL}
+    ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${env:ONE_TIME_PERSONAL_ROOT_CREATION_KEY, file(./.env/env.${self:provider.env}.json):ONE_TIME_PERSONAL_ROOT_CREATION_KEY}
 
 package:
   exclude:

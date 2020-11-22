@@ -21,7 +21,6 @@ const api = {
         }
     },
     async activateGroupWithAccount(req, res, next) {
-        console.info('inside');
         let account;
         let client;
         try {
@@ -45,15 +44,19 @@ const api = {
         } catch (error) {
             if (account) {
                 try {
-                    await acct.deleteAccount(req.authGroup, account._id);
+                    const aDone = await acct.deleteAccount(req.authGroup, account._id);
+                    if(!aDone) throw new Error('Account delete not complete');
                 } catch (error) {
+                    console.error(error);
                     console.info('Account Rollback: There was a problem and you may need the admin to finish setup');
                 }
             }
             if (client) {
                 try {
-                    await client.deleteOne(req.authGroup, client.client_id);
+                    const cDone = await client.deleteOne(req.authGroup, client.client_id);
+                    if(!cDone) throw new Error('Client delete not complete');
                 } catch (error) {
+                    console.error(error);
                     console.info('Client Rollback: There was a problem and you may need the admin to finish setup');
                 }
             }
