@@ -46,7 +46,7 @@ describe('API tests', () => {
             const res = await request(app)
                 .get('/api/health');
             expect(res.statusCode).toEqual(200);
-            expect(res.body).toStrictEqual({data: {server: 'running'}});
+            expect(res.body.server).toStrictEqual('running');
         } catch (error) {
             console.error(error);
             fail();
