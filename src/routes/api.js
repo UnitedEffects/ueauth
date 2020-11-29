@@ -27,7 +27,7 @@ router.post('/group', [m.schemaCheck], group.write);
 router.get('/group', [
 	m.isAuthenticated,
 	m.permissions,
-	m.access
+	m.access()
 ], group.get);
 router.get('/group/:id', [
 	m.validateAuthGroup,
