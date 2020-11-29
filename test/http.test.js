@@ -63,7 +63,6 @@ describe('API tests', () => {
                 data: {
                     api: pJson.name,
                     version: pJson.version,
-                    baseURL: '/api',
                     copyright: `Copyright (c) ${date.getFullYear()} United Effects LLC`
                 }
             });
