@@ -17,11 +17,11 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             const tenant = await group.getOneByEither(req.params.group, false);
-            const expiresIn = req.body.expiresIn || 604800; // 7 days default
+            const expires = req.body.expires || 604800; // 7 days default
             const meta = {};
-            if(req.body.userEmail) meta.userEmail = req.body.userEmail;
-            if(req.body.userId) meta.userId = req.body.userId;
-            const response = await iat.generateIAT(expiresIn, ['auth_group'], tenant, meta);
+            if(req.body.email) meta.email = req.body.email;
+            if(req.body.sub) meta.sub = req.body.sub;
+            const response = await iat.generateIAT(expires, ['auth_group'], tenant, meta);
             return res.json(response);
         } catch (error) {
             next(error);

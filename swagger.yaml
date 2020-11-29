@@ -8,13 +8,13 @@ info:
   device_authorization: '/{group}/device/auth',<br>
   end_session: '/{group}/session/end',<br>
   introspection: '/{group}/token/introspection',<br>
-  initial_access: '/{group}/token/initial_access', <strong><i><-- Non-standard, but available from /{group} with the rest, see below</i></strong><br>
+  initial_access: '/{group}/token/initial_access',<br>
   jwks: '/{group}/jwks',<br>
   pushed_authorization_request: '/{group}/request',<br>
   registration: '/{group}/reg',<br>
   revocation: '/{group}/token/revocation',<br>
   token: '/{group}/token',<br>
-  userinfo: '/{group}/me'</code><br><br>The <code>'/{group}/token/initial_access'</code> allows you to create an initial access token for client registration. You must have a User Access token associated to the group specified. Use a POST method to retrieve the token. It can then be used as a Bearer token.<br><br><h2>Getting Started</h2><br><i>If you are the service owner and deploying it for the first time, see the github README for initial setup instructions.</i><br><br>You'll need an Auth Group to utilize the service.<ul><li>POST a new Auth Group making sure to save the Initial Access Token provided upon creation.</li><li>Once you have it, POST a new user account to the same auth group, making sure to use the same email address and the initial access token as a bearer token.</li><li>This will activate your auth group, create the account, and provide you with a client_id and secret to use for all interactions with this API.</li></ul><br><br><h3 style='color:red'>THIS IS A DEMO AND TEST ENVIRONMENT. ALL DATA IS EPHEMERAL AND SUBJECT TO DELETION</h3>"
+  userinfo: '/{group}/me'</code><br><br><h2>Getting Started</h2><br><i>If you are the service owner and deploying it for the first time, see the github README for initial setup instructions.</i><br><br>You'll need an Auth Group to utilize the service.<ul><li>POST a new Auth Group making sure to save the Initial Access Token provided upon creation.</li><li>Once you have it, POST a new user account to the same auth group, making sure to use the same email address and the initial access token as a bearer token.</li><li>This will activate your auth group, create the account, and provide you with a client_id and secret to use for all interactions with this API.</li></ul><br><br><h3 style='color:red'>THIS IS A DEMO AND TEST ENVIRONMENT. ALL DATA IS EPHEMERAL AND SUBJECT TO DELETION</h3>"
   x-logo:
     url: https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png
 tags:
@@ -23,14 +23,16 @@ tags:
   - name: Users
     description: User Accounts
   - name: Clients
-    description: Registered Clients
+    description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Operations
-    description: Commands
-  - name: System
-    description: Basic System Functionality
+    description: Commands for Artifact/Security Updates
+  - name: OIDC
+    description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
+  - name: Health
 
 paths:
-  /groupcheck/{prettyName}:
+  # Group APIs
+  /api/groupcheck/{prettyName}:
     get:
       tags:
         - Auth Groups
@@ -67,8 +69,7 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
-
-  /group:
+  /api/group:
     post:
       tags:
         - Auth Groups
@@ -153,7 +154,7 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
-  '/group/{id}':
+  '/api/group/{id}':
     get:
       tags:
         - Auth Groups
@@ -224,7 +225,8 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  /{group}/account:
+  # Account APIs
+  /api/{group}/account:
     post:
       tags:
         - Users
@@ -328,7 +330,7 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
-  '/{group}/account/{id}':
+  '/api/{group}/account/{id}':
     get:
       tags:
         - Users
@@ -451,7 +453,8 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  /{group}/client:
+  # Non-OIDC Specific Client APIs
+  /api/{group}/client:
     get:
       tags:
         - Clients
@@ -514,7 +517,7 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
-  '/{group}/client/{id}':
+  '/api/{group}/client/{id}':
     get:
       tags:
         - Clients
@@ -637,7 +640,8 @@ paths:
       security:
         - bearer: []
 
-  /{group}/operations:
+  # Operation APIs for security update commands
+  /api/{group}/operations:
     post:
       tags:
         - Operations
@@ -677,8 +681,7 @@ paths:
               $ref: '#/components/schemas/operations'
         description: Account data to be written
         required: true
-
-  /{group}/operations/client/{id}:
+  /api/{group}/operations/client/{id}:
     post:
       tags:
         - Operations
@@ -725,10 +728,128 @@ paths:
         description: Account data to be written
         required: true
 
-  /health:
+  # A few of the OIDC specific API Endpoints
+  /{group}/token:
+    post:
+      tags:
+        - OIDC
+      summary: Request a token code provided via code authorization flow
+      description: Request a token code provided via code authorization flow
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/accessTokens'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/codeAuthorizationTokenRequest'
+        required: true
+  /{group}/token/initial-access:
+    post:
+      tags:
+        - OIDC
+      summary: Request an OIDC initial access token
+      description: Request an OIDC initial access token. You can use this to create a client or even provide it to someone so they can register to a locked auth group (a.k.a. user pool)
+      operationId: getInitialAccessToken
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/initialAccessToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/initialAccessTokenRequest'
+        required: false
+  /{group}/reg:
+    post:
+      tags:
+        - OIDC
+      summary: Register a new client - may require an initial access token depending on config
+      description: Register a new client - may require an initial access token depending on config
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/clientObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registerClient'
+        required: true
+
+  # Health Check Endpoint
+  /api/health:
     get:
       tags:
-        - System
+        - Health
       summary: Health check
       description: Health check
       responses:
@@ -737,8 +858,9 @@ paths:
         '500':
           $ref: '#/components/responses/UnknownError'
 
+
 servers:
-  - url: http://localhost:3000/api
+  - url: http://localhost:3000
 components:
   responses:
     BadRequest:
@@ -783,25 +905,10 @@ components:
       type: http
       scheme: bearer
       description: 'For Bearer based tokens, simply enter the token (prefixing with "bearer" is not required). Until Swagger UI supports OIDC directly, you can use this security field with OIDC tokens as well.'
-#    basicAuth:
-#      type: http
-#      scheme: basic
     openId:
       type: openIdConnect
       description: OIDC specific OAuth2 implementation
       openIdConnectUrl: http://example.com/group/.well-known/openid-configuration
-#    OAuth2:
-#      type: oauth2
-#      description: If you have your client_id and client_secret, you can use this as well.
-#      flows:
-#        authorizationCode:
-#          authorizationUrl: https://example.com/oauth/authorize
-#          tokenUrl: https://example.com/oauth/token
-#          scopes:
-#            openid: General access
-#            read: Grants read access
-#            write: Grants write access
-#            admin: Grants access to admin operations
 
   schemas:
     defaultError:
@@ -830,6 +937,100 @@ components:
           enum:
             - rotate_secret
             - rotate_keys
+
+    initialAccessTokenRequest:
+      properties:
+        email:
+          type: string
+          description: This adds an email address to the token, locking its use to a user with that email address only. useful when providing a token as part of an invite; however, this is not required in all cases. For example, you do not need this to use an IAT for OIDC client creation.
+        sub:
+          type: string
+          description: This adds a userId to the token, locking its use to a user with that id only.
+        expires:
+          type: number
+          description: Number of seconds after which this token expires. Default is 604800 (7 days).
+
+    initialAccessToken:
+      properties:
+        iat:
+          type: number
+          description: issue time
+        exp:
+          type: number
+          description: expiration time
+        kind:
+          type: string
+          default: "InitialAccessToken"
+        jti:
+          type: string
+          description: the token
+        email:
+          type: string
+          format: email
+          description: if provided, this is the locked user email
+        sub:
+          type: string
+          format: guid
+          description: if provided, this is the locked user id
+
+    codeAuthorizationTokenRequest:
+      properties:
+        grant_type:
+          type: string
+          description: Type of grant being requested, of which authorization_code is an example
+          default: "authorization_code"
+        client_secret:
+          type: string
+        redirect_uri:
+          type: string
+          format: url
+        format:
+          type: string
+          description: opaque or jwt
+        code:
+          type: string
+          description: code recieved from authorization redirect
+        client_id:
+          type: string
+
+    accessTokens:
+      properties:
+        access_token:
+          type: string
+          description: this is an access_token and is primarily used for API access
+        expires_in:
+          type: number
+          description: when tokens expire
+        id_token:
+          type: string
+          description: this is an id_token and is primarily used to idenitify a user via claims, not for use with APIs
+        scope:
+          type: string
+          description: requested scopes delimited by spaces
+        token_type:
+          type: string
+
+    registerClient:
+      properties:
+        client_name:
+          type: string
+          description: A recognizable name identifying what this client represents
+        grant_types:
+          type: array
+          items:
+            type: string
+            description: type of grant to enable - i.e. client_credentials, authorization_code or implicit
+        response_types:
+          type: array
+          items:
+            type: string
+            description: type of responses to enable - i.e. 'id_token code' or 'id_token'. restrictions to combinations apply, see official oidc docs
+        redirect_uris:
+          type: array
+          items:
+            type: string
+            format: url
+            description: urls that are valid for redirection upon authorization
 
     getAccounts:
       properties:

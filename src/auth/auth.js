@@ -5,6 +5,7 @@ import Boom from '@hapi/boom';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
 import iat from '../api/oidc/initialAccess/iat';
 import oidc from '../api/oidc/oidc';
+import group from "../api/authGroup/group";
 
 const config = require('../config');
 
@@ -89,7 +90,7 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 		if (!user.group && user.group !== decoded.group) {
 			throw Boom.unauthorized('User not associated with indicated auth group');
 		}
-		return { ...user, decoded };
+		return { ...user, decoded, subject_group: authGroup };
 	}
 	if(decoded.sub && !decoded.scope) {
 		//id_token
@@ -128,27 +129,27 @@ async (req, token, next) => {
 ));
 
 passport.use('iat-group-register', new BearerStrategy({
-		passReqToCallback: true
-	},
-	async (req, token, next) => {
-		try {
-			if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
-			if (req.authGroup.locked === false) return next(null, true);
-			if (!req.body.email) throw Boom.preconditionRequired('username is required');
-			if (!req.body.password) throw Boom.preconditionRequired('password is required');
-			const reqBody = req.body;
-			const authGroupId = req.authGroup._id;
-			const access = await iat.getOne(token, authGroupId);
-			if(!access) return next(null, false);
-			const payload = JSON.parse(JSON.stringify(access.payload));
-			if(payload.user_email === undefined) return next(null, false);
-			if(payload.user_email !== req.body.email) return next(null, false);
-			await iat.deleteOne(access._id, req.authGroup.id);
-			return next(null, true, { ...reqBody, authGroup: authGroupId, token: access });
-		} catch (error) {
-			return next(error);
-		}
+	passReqToCallback: true
+},
+async (req, token, next) => {
+	try {
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		if (req.authGroup.locked === false) return next(null, true);
+		if (!req.body.email) throw Boom.preconditionRequired('username is required');
+		if (!req.body.password) throw Boom.preconditionRequired('password is required');
+		const reqBody = req.body;
+		const authGroupId = req.authGroup._id;
+		const access = await iat.getOne(token, authGroupId);
+		if(!access) return next(null, false);
+		const payload = JSON.parse(JSON.stringify(access.payload));
+		if(payload.user_email === undefined) return next(null, false);
+		if(payload.user_email !== req.body.email) return next(null, false);
+		await iat.deleteOne(access._id, req.authGroup.id);
+		return next(null, true, { ...reqBody, authGroup: authGroupId, token: access });
+	} catch (error) {
+		return next(error);
 	}
+}
 ));
 
 passport.use('oidc', new BearerStrategy({
@@ -156,10 +157,31 @@ passport.use('oidc', new BearerStrategy({
 },
 async (req, token, next) => {
 	try {
-		let issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}` ];
+		// subject (user) auth group
+		// this is distinct from the authGroup which was specified in the request and now under req.authGroup
+		let subAG = req.authGroup;
+		let issuer;
+		if(!subAG) {
+			issuer = null;
+		} else {
+			issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
+		}
 		if(isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
-			const pub = { keys: req.authGroup.config.keys };
+			if(issuer !== null && preDecoded.payload.group !== subAG.id) {
+				// there is a problem with the token authgroup,
+				// we reset issuer here so we can check to see if this is a root account (super admin)
+				console.info('debug check (delete later) - issuer cleared');
+				issuer = null;
+			}
+			if(issuer === null) {
+				subAG = await group.getOneByEither(preDecoded.payload.group);
+				if(!subAG) return next(null, false);
+				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
+				if(!req.authGroup) req.authGroup = subAG;
+				issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
+			}
+			const pub = { keys: subAG.config.keys };
 			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
 			const jwk = myKeySet.findKeyById(preDecoded.header.kid);
 			const myPubKey = jwk.key.toPublicKeyPEM();
@@ -171,7 +193,7 @@ async (req, token, next) => {
 				}
 				if(decoded) {
 					try {
-						const result = await runDecodedChecks(token, issuer, decoded, req.authGroup);
+						const result = await runDecodedChecks(token, issuer, decoded, subAG);
 						return next(null, result, { token });
 					} catch (error) {
 						console.error(error);
@@ -181,11 +203,12 @@ async (req, token, next) => {
 			});
 		}
 		//opaque token
-		const inspect = await introspect(token, issuer[0], req.authGroup);
+		if(issuer === null) return next(null, false); // jwt only if authGroup is not defined
+		const inspect = await introspect(token, issuer[0], subAG);
 		if(inspect) {
 			if (inspect.active === false) return next(null, false);
 			try {
-				const result = await runDecodedChecks(token, issuer, inspect, req.authGroup);
+				const result = await runDecodedChecks(token, issuer, inspect, subAG);
 				return next(null, result, { token });
 			} catch (error) {
 				console.error(error);

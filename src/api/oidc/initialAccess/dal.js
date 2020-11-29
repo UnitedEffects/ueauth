@@ -5,8 +5,8 @@ export default {
         const update = {
             'payload.auth_group': meta.auth_group
         };
-        if(meta.user_id) update['payload.user_id'] = meta.user_id;
-        if(meta.user_email) update['payload.user_email'] = meta.user_email;
+        if(meta.sub) update['payload.sub'] = meta.sub;
+        if(meta.email) update['payload.email'] = meta.email;
 
         return IAT.findOneAndUpdate( { _id: id }, update, {new: true});
     },

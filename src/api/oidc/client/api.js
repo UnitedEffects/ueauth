@@ -7,8 +7,6 @@ const RESOURCE = 'Clients';
 const api = {
     async get(req, res, next) {
         try {
-            //todo
-            console.info(req.user);
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             const result = await client.get(req.authGroup, req.query);
             return res.respond(say.ok(result, RESOURCE));

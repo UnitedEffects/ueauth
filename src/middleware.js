@@ -6,10 +6,13 @@ import authorizer from './auth/auth';
 import helper from './helper';
 import group from './api/authGroup/group';
 import account from './api/accounts/account';
+import enforce from './permissions';
+import mongoose from 'mongoose';
 import swag from './swagger';
 
 const config = require('./config');
-
+const p = require('../package.json');
+const date = new Date();
 const schema = new OpenApiValidator(swag);
 
 const mid = {
@@ -42,6 +45,23 @@ const mid = {
         }
     },
     responseIntercept: sayMiddleware.responseIntercept,
+    async health (req, res) {
+        return res.json(
+            {
+                server: 'running',
+                db: mongoose.STATES[mongoose.connection.readyState]
+            }
+        );
+    },
+    async version (req, res) {
+        return res.json( {
+            data: {
+                api: p.name,
+                version: p.version,
+                copyright: `Copyright (c) ${date.getFullYear()} United Effects LLC`
+            }
+        });
+    },
     async schemaCheck(req, res, next) {
         try {
             let path  = req.route.path;
@@ -55,6 +75,12 @@ const mid = {
     },
     async validateAuthGroup (req, res, next) {
         try {
+            // special case for /group paths
+            if (req.path.includes('/group/')){
+                if (req.params.id) {
+                    req.params.group = req.params.id;
+                }
+            }
             if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
             if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
             const result = await group.getOneByEither(req.params.group);
@@ -68,33 +94,35 @@ const mid = {
     },
     async permissions( req, res, next) {
         try {
-            if(req.user && req.user.sub) {
-                req.permissions = {
-                    user: req.user,
-                    owner: false
-                };
-                if(req.authGroup.owner === req.user.sub) {
-                    req.permissions.owner = true;
+            if(!req.user) return next();
+            if(!req.authGroup) return next();
+            req.permissions = {
+                agent: req.user,
+                sub_group: req.user.subject_group.id,
+                req_group: req.authGroup.id,
+                roles: {
+                    member: (req.user.group === req.authGroup.id),
+                    owner: false,
+                    super: false
+                }
+            };
+            if(req.user.subject_group.prettyName === 'root') {
+                if(req.user.group === req.permissions.sub_group){
+                    req.permissions.roles.super = true;
                 }
             }
+            if(req.user.sub && req.authGroup.owner === req.user.sub) {
+                req.permissions.roles.owner = true;
+            }
+            // todo - plugin to capture permission claim or query external service
             return next();
         } catch (error) {
             next(error);
         }
     },
-    async access( req, res, next) {
-        try {
-            //todo will have to make this cofigurable and robust later
-            if (!req.permissions || req.permissions.owner !== true) {
-                //validate access rules here...
-                //will need to be able to validate by resource...
-
-                throw Boom.forbidden('You do not have the right permissions');
-            }
-
-            return next();
-        } catch (error) {
-            next(error);
+    access(roles) {
+        return (req, res, next) => {
+            return enforce.permissionEnforce(roles)(req, res, next);
         }
     },
     async validateAuthGroupAllowInactive (req, res, next) {

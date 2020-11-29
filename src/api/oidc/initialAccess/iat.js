@@ -8,8 +8,8 @@ export default {
         return new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies }).save().then(async (x) => {
             const metaData = {
                 auth_group: authGroup.id,
-                user_id: meta.userId,
-                user_email: meta.userEmail
+                sub: meta.sub,
+                email: meta.email
             };
             const iat = await dal.updateAuthGroup(x, metaData);
             const response = JSON.parse(JSON.stringify(iat.payload));

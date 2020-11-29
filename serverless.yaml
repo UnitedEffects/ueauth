@@ -22,6 +22,7 @@ provider:
     ALLOW_ROOT_CREATION: ${env:ALLOW_ROOT_CREATION, file(./.env/env.${self:provider.env}.json):ALLOW_ROOT_CREATION}
     ROOT_EMAIL: ${env:ROOT_EMAIL, file(./.env/env.${self:provider.env}.json):ROOT_EMAIL}
     ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${env:ONE_TIME_PERSONAL_ROOT_CREATION_KEY, file(./.env/env.${self:provider.env}.json):ONE_TIME_PERSONAL_ROOT_CREATION_KEY}
+    FULL_SUPER_CONTROL: ${env:FULL_SUPER_CONTROL, file(./.env/env.${self:provider.env}.json):FULL_SUPER_CONTROL}
 
 package:
   exclude:
