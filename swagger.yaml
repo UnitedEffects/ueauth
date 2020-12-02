@@ -99,6 +99,7 @@ paths:
               $ref: '#/components/schemas/writeAuthGroup'
         description: Account data to be written
         required: true
+  /api/groups:
     get:
       tags:
         - Auth Groups
@@ -268,6 +269,7 @@ paths:
               $ref: '#/components/schemas/writeAccount'
         description: Account data to be written
         required: true
+  /api/{group}/accounts:
     get:
       tags:
         - Users
@@ -454,7 +456,7 @@ paths:
         required: true
 
   # Non-OIDC Specific Client APIs
-  /api/{group}/client:
+  /api/{group}/clients:
     get:
       tags:
         - Clients

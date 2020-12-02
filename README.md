@@ -100,6 +100,7 @@ http://jsonpatch.com/
 
 ## TODO
 
+* enforce req.permissions.enforceOwn across all controllers
 * Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
 * Need way to transfer ownership of a group
 * Need a way to deactivate or delete (with warning) and reactivate accounts if I’m the owner (or in the future, an admin)

@@ -100,19 +100,27 @@ const mid = {
                 agent: req.user,
                 sub_group: req.user.subject_group.id,
                 req_group: req.authGroup.id,
+                enforceOwn: false,
+                roles: []
+                /*
                 roles: {
                     member: (req.user.group === req.authGroup.id),
                     owner: false,
                     super: false
-                }
+                }*/
             };
+            if (req.user.group === req.authGroup.id) {
+                req.permissions.roles.push('member');
+            }
             if(req.user.subject_group.prettyName === 'root') {
                 if(req.user.group === req.permissions.sub_group){
-                    req.permissions.roles.super = true;
+                    //req.permissions.roles.super = true;
+                    req.permissions.roles.push('super');
                 }
             }
             if(req.user.sub && req.authGroup.owner === req.user.sub) {
-                req.permissions.roles.owner = true;
+                //req.permissions.roles.owner = true;
+                req.permissions.roles.push('owner');
             }
             // todo - plugin to capture permission claim or query external service
             return next();
@@ -120,11 +128,13 @@ const mid = {
             next(error);
         }
     },
+    access: enforce.permissionEnforce,
+    /*
     access(roles) {
         return (req, res, next) => {
             return enforce.permissionEnforce(roles)(req, res, next);
         }
-    },
+    },*/
     async validateAuthGroupAllowInactive (req, res, next) {
         try {
             if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
