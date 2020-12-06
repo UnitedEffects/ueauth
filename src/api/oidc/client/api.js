@@ -34,6 +34,7 @@ const api = {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             const pre = await client.getOneFull(req.authGroup, req.params.id);
             if(!pre) throw Boom.notFound(req.params.id);
+            if(pre.client_id === req.authGroup.id) return next(Boom.badRequest('You can not edit your Auth Group primary client'));
             let patched = JSON.parse(JSON.stringify(pre));
             const tempSecret = patched.payload.client_secret;
             patched.payload = await client.preparePatch(pre.payload, req.body);
@@ -68,6 +69,9 @@ const api = {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             //todo check authGroup owner and req.user, must be the same
+            if(req.params.id === req.authGroup.associatedClient) {
+                return next(Boom.badRequest('You can not delete your Auth Group primary client'));
+            }
             const result = await client.deleteOne(req.authGroup, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));

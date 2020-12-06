@@ -22,11 +22,28 @@ const mid = {
 			return mid.koaErrorOut(ctx, error);
 		}
 	},
+	async noDeleteOnPrimaryClient(ctx, next) {
+		try {
+			if (ctx.method !== 'DELETE') return next();
+			if (!ctx.path.includes('/reg')) return next();
+			if (ctx.path.includes(ctx.authGroup.associatedClient)) {
+				throw Boom.badRequest('You can not delete the primary client of your auth group');
+			}
+			return next();
+		} catch (error) {
+			return mid.koaErrorOut(ctx, error);
+		}
+	},
 	async uniqueClientRegCheck(ctx, next) {
 		try {
 			if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.group;
 			const checkMethods = ['PUT', 'POST', 'PATCH'];
 			if (ctx.request.body && checkMethods.includes(ctx.method) && ctx.path.includes('/reg')) {
+				if(ctx.method === 'PUT' || ctx.method === 'PATCH') {
+					if(!ctx.request.body.client_id) {
+						throw Boom.badRequest('client_id should be included in the request body');
+					}
+				}
 				const check = await clients.validateUniqueNameGroup(ctx.authGroup, ctx.request.body.client_name, ctx.request.body.client_id);
 				if  (check===false) {
 					throw Boom.conflict('This client name already exists in your auth group');
@@ -36,7 +53,6 @@ const mid = {
 		} catch (error) {
 			return mid.koaErrorOut(ctx, error);
 		}
-
 	},
 	async koaErrorOut(ctx, error) {
 		let tE = error;

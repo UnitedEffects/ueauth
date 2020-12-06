@@ -846,6 +846,75 @@ paths:
             schema:
               $ref: '#/components/schemas/registerClient'
         required: true
+  /{group}/reg/{id}:
+    put:
+      tags:
+        - OIDC
+      summary: Update a new client - may require a registration access token
+      description: Update a new client - may require a registration access (RAI) token. If the RAI is required (configuration) it will rotate on each update and you will need to keep track of it. If you have lost your token, you can request a new one from the operations/client endpoint.
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/clientObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/clientObjectUpdate'
+        required: true
+    get:
+      tags:
+        - OIDC
+      summary: Get a registerd lient - may require a registration access token
+      description: Get a registered client - may require a registration access (RAI) token. If the RAI is required (configuration) it will rotate on each update and you will need to keep track of it. If you have lost your token, you can request a new one from the operations/client endpoint.
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/clientObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
 
   # Health Check Endpoint
   /api/health:
@@ -1158,14 +1227,14 @@ components:
     clientObject:
       type: object
       required:
-      - application_type
-      - grant_types
-      - response_types
-      - client_id
-      - client_name
-      - client_secret
-      - redirect_uris
-      - auth_group
+        - application_type
+        - grant_types
+        - response_types
+        - client_id
+        - client_name
+        - client_secret
+        - redirect_uris
+        - auth_group
       description: this may not be all inclusive, consult the most current oidc specification
       allOf:
         - $ref: '#/components/schemas/writeClientObject'
@@ -1198,6 +1267,42 @@ components:
         registration_access_token:
           type: string
           description: Required to POST or PUT updates to clients if not the authGroup owner. Rotates on each call.
+
+    clientObjectUpdate:
+      type: object
+      required:
+      - application_type
+      - grant_types
+      - response_types
+      - client_id
+      - client_name
+      - redirect_uris
+      - auth_group
+      description: this may not be all inclusive, consult the most current oidc specification
+      allOf:
+        - $ref: '#/components/schemas/writeClientObject'
+      properties:
+        request_uris:
+          type: array
+          default: []
+          items:
+            type: string
+            format: uri
+        client_id_issued_at:
+          type: integer
+        client_id:
+          type: string
+          description: GUID
+        client_secret_expires_at:
+          type: integer
+          default: 0
+        client_secret:
+          type: string
+          format: password
+          description: Auto Generated Secret
+        auth_group:
+          type: string
+          description: the tenant ID (or prettyName) for the authorization group of clients, accounts and oidc configs
 
     accountObject:
       type: object

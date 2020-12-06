@@ -85,20 +85,42 @@ function oidcConfig(g) {
                 policies: {
                     'auth_group': async function (ctx, properties) {
                         try {
-                            if (!ctx.oidc.entities.InitialAccessToken.jti) {
-                                throw new AccessDenied();
-                            }
-                            const iatAg = await IAT.findOne({_id: ctx.oidc.entities.InitialAccessToken.jti}).select({'payload.auth_group': 1});
-                            if (!iatAg) {
-                                throw new AccessDenied();
-                            }
-                            if (!iatAg.payload) {
-                                throw new AccessDenied();
-                            }
-                            if (iatAg.payload.auth_group !== properties.auth_group) {
-                                throw new AccessDenied();
+                            console.info('?????');
+                            if (ctx.method === 'POST') {
+                                if (!ctx.oidc.entities.InitialAccessToken.jti) {
+                                    throw new AccessDenied();
+                                }
+                                const iatAg = await IAT.findOne({_id: ctx.oidc.entities.InitialAccessToken.jti}).select({'payload.auth_group': 1});
+                                if (!iatAg) {
+                                    throw new AccessDenied();
+                                }
+                                if (!iatAg.payload) {
+                                    throw new AccessDenied();
+                                }
+                                if (iatAg.payload.auth_group !== properties.auth_group) {
+                                    throw new AccessDenied();
+                                }
+                            } else {
+                                const id = ctx.authGroup._id || ctx.authGroup.id;
+                                if(ctx.authGroup.associatedClient === ctx.oidc.entities.Client.clientId){
+                                    console.error('attempted to update client associated to auth-group');
+                                    throw new AccessDenied();
+                                }
+                                if (id !== ctx.oidc.entities.Client.auth_group) {
+                                    console.error('mismatch of request authgroup and client authgroup');
+                                    throw new AccessDenied();
+                                }
+                                if (id !== ctx.request.body.auth_group) {
+                                    console.error('mismatch of request authgroup and request-body authgroup');
+                                    throw new AccessDenied();
+                                }
+                                if (ctx.oidc.entities.Client.auth_group !== ctx.request.body.auth_group) {
+                                    console.error('mismatch of client authgroup and request-body authgroup');
+                                    throw new AccessDenied();
+                                }
                             }
                         } catch (error) {
+                            console.error(error);
                             if (error.name === 'AccessDenied') throw error;
                             throw new OIDCProviderError(error.message);
                         }
@@ -201,6 +223,7 @@ function oidcWrapper(tenant) {
     })
     oidc.use(middle.validateAuthGroup);
     oidc.use(middle.uniqueClientRegCheck);
+    oidc.use(middle.noDeleteOnPrimaryClient);
     return oidc;
 }
 

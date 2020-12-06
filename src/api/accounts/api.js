@@ -98,6 +98,7 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            if(req.authGroup.owner === req.params.id) return next(Boom.badRequest('You can not delete the owner of the auth group'));
             const result = await acct.deleteAccount(req.params.group, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));
