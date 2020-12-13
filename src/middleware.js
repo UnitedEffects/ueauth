@@ -64,7 +64,7 @@ const mid = {
     },
     async schemaCheck(req, res, next) {
         try {
-            let path  = req.route.path;
+            let path  = `/api${req.route.path}`;
             await Promise.all(Object.keys(req.params).map((p)=>{
                 path = path.replace(`:${p}`, `{${p}}`);
             }));

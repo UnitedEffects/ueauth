@@ -85,7 +85,6 @@ function oidcConfig(g) {
                 policies: {
                     'auth_group': async function (ctx, properties) {
                         try {
-                            console.info('?????');
                             if (ctx.method === 'POST') {
                                 if (!ctx.oidc.entities.InitialAccessToken.jti) {
                                     throw new AccessDenied();

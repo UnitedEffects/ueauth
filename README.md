@@ -100,13 +100,6 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Lock primary client and account associated with the group so we don't create orphans
-    * Protect oidc client update (code done - need to test)
-    * Protect oidc client delete (code done - need to test)
-    * Protect api client update (code done - need to test)
-    * Protect api client delete (code done - need to test)
-    * Protect account delete (code done - need to test)
-* Add a registered access token rotation operation
 * enforce req.permissions.enforceOwn across all controllers
 * Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
 * Need way to transfer ownership of a group

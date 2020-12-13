@@ -1,6 +1,5 @@
 import oidc from '../oidc';
 import dal from './dal';
-import auth from "../../../auth/auth";
 
 export default {
     async generateIAT(expiresIn, policies, authGroup, meta = {}) {

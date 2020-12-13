@@ -859,6 +859,12 @@ paths:
           schema:
             type: string
           required: true
+        - name: id
+          in: path
+          description: the client id
+          schema:
+            type: string
+          required: true
       responses:
         '200':
           description: successful operation
@@ -893,6 +899,12 @@ paths:
         - name: group
           in: path
           description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the client id
           schema:
             type: string
           required: true
@@ -1008,6 +1020,7 @@ components:
           enum:
             - rotate_secret
             - rotate_keys
+            - rotate_registration_access_token
 
     initialAccessTokenRequest:
       properties:

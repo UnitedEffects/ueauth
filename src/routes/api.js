@@ -85,7 +85,7 @@ router.delete('/:group/account/:id', [
 // todo - allow client_credential when from the client in question - this can be another role 'c'
 router.get('/:group/clients', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);
 router.get('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.getOne);
-router.patch('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
+router.patch('/:group/client/:id', [m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
 router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.deleteOne);
 
 // Operations

@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../../say';
 import client from './clients';
+import rat from '../regAccess/rat';
 
 const RESOURCE = 'Clients';
 
@@ -34,10 +35,14 @@ const api = {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             const pre = await client.getOneFull(req.authGroup, req.params.id);
             if(!pre) throw Boom.notFound(req.params.id);
-            if(pre.client_id === req.authGroup.id) return next(Boom.badRequest('You can not edit your Auth Group primary client'));
+            if(pre._id === req.authGroup.associatedClient) return next(Boom.badRequest('You can not edit your Auth Group primary client'));
             let patched = JSON.parse(JSON.stringify(pre));
             const tempSecret = patched.payload.client_secret;
-            patched.payload = await client.preparePatch(pre.payload, req.body);
+            try {
+                patched.payload = await client.preparePatch(pre.payload, req.body);
+            } catch (error) {
+                throw Boom.badRequest(error.message);
+            }
             patched.payload.client_secret = tempSecret;
             // this depends on the swagger.yaml file to define the correct object and requirements
             const schemaErrors = await client.checkSchema(patched);
@@ -84,15 +89,21 @@ const api = {
         try {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             if (!req.body.operation) return res.respond(say.noContent('Client Operation'));
+            let result;
             switch (req.body.operation) {
                 case "rotate_secret":
-                    const result = await client.rotateSecret(req.params.id, req.authGroup);
+                    result = await client.rotateSecret(req.params.id, req.authGroup);
+                    if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+                    return res.respond(say.ok(result, RESOURCE));
+                case "rotate_registration_access_token":
+                    result = await rat.regAccessToken(req.params.id, req.authGroup);
                     if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
                     return res.respond(say.ok(result, RESOURCE));
                 default:
                     throw Boom.badRequest('Unknown operation');
             }
         } catch (error) {
+            console.info(error);
             next(error);
         }
     }
