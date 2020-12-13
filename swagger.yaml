@@ -688,7 +688,7 @@ paths:
       tags:
         - Operations
       summary: Execute operations against a client
-      description: Execute operations against a client. Currently supports - rotate_keys & rotate_registration_access_token
+      description: Execute operations against a client. Currently supports - rotate_secret & rotate_registration_access_token
       operationId: clientOperations
       parameters:
         - name: group
