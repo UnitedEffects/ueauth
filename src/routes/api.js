@@ -47,7 +47,6 @@ router.patch('/group/:id', [
 router.get('/groupcheck/:prettyName', group.check);
 
 // Accounts
-// todo client access? - if authGroup matches, let them in - modify perms for this?
 router.post('/:group/account', [
 	m.validateAuthGroupAllowInactive,
 	m.schemaCheck,
@@ -65,20 +64,20 @@ router.get('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access //todo - restrict member to own
+	m.access
 ], account.getAccount);
 router.patch('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access //todo - restrict member to own
+	m.access
 ], account.patchAccount);
 router.delete('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access //todo - restrict member to own
+	m.access
 ], account.deleteAccount);
 
 // Clients

@@ -39,6 +39,16 @@ export default {
 		} catch (error) {
 			next(error);
 		}
+	},
+	async enforceOwn(p, resourceOwner) {
+		if(p.enforceOwn === true) {
+			if(!p.agent) throw Boom.forbidden();
+			if(!p.agent.sub) throw Boom.forbidden();
+			if(p.agent.sub !== resourceOwner) {
+				console.error('unauthorized resource request');
+				throw Boom.notFound(resourceOwner);
+			}
+		}
 	}
 };
 

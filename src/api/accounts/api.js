@@ -4,6 +4,7 @@ import acct from './account';
 import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
+import permissions from "../../permissions";
 
 const RESOURCE = 'Account';
 
@@ -28,8 +29,10 @@ const api = {
             if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
             client = await cl.generateClient(req.authGroup);
             if(!client) throw Boom.expectationFailed('Auth Group Client Not Created! Rolling back.');
-            const g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);
+            let g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);
             if(!g) throw Boom.expectationFailed('Auth Group Not Activated! Rolling back.');
+            g = JSON.parse(JSON.stringify(g));
+            if(g.config) delete g.config.keys;
             const out = {
                 account,
                 authGroup: g,
@@ -76,6 +79,7 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await acct.getAccount(req.params.group, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));
@@ -88,6 +92,7 @@ const api = {
             //todo add modifiedBy
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await acct.patchAccount(req.params.group, req.params.id, req.body);
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
@@ -98,6 +103,7 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            await permissions.enforceOwn(req.permissions, req.params.id);
             if(req.authGroup.owner === req.params.id) return next(Boom.badRequest('You can not delete the owner of the auth group'));
             const result = await acct.deleteAccount(req.params.group, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));

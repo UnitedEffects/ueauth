@@ -5,6 +5,8 @@ import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
 import acct from "../accounts/account";
+import permissions from "../../permissions";
+import dal from "./dal";
 const config = require('../../config');
 
 
@@ -132,10 +134,12 @@ const api = {
     async getOne(req, res, next) {
         try {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            const result = JSON.parse(JSON.stringify(await group.getOne(req.params.id)));
-            if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-            if(result.config) delete result.config.keys;
-            return res.respond(say.ok(result, RESOURCE));
+            const result = await group.getOne(req.params.id);
+            if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+            await permissions.enforceOwn(req.permissions, result.owner);
+            const output = JSON.parse(JSON.stringify(result));
+            if(output.config) delete output.config.keys;
+            return res.respond(say.ok(output, RESOURCE));
         } catch (error) {
             next(error);
         }
@@ -143,9 +147,13 @@ const api = {
     async patch(req, res, next) {
         try {
             //todo add modifiedBy
-            const result = await group.patch(req.params.id, req.body);
-            if(result.config) delete result.config.keys;
-            return res.respond(say.ok(result, RESOURCE));
+            const grp = await group.getOne(req.params.id);
+            if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
+            await permissions.enforceOwn(req.permissions, grp.owner);
+            const result = await group.patch(grp, req.body);
+            const output = JSON.parse(JSON.stringify(result));
+            if(output.config) delete output.config.keys;
+            return res.respond(say.ok(output, RESOURCE));
         } catch (error) {
             next(error);
         }

@@ -32,10 +32,9 @@ export default {
         return dal.getOneByEither(q, onlyIncludeActive);
     },
 
-    async patch(id, update) {
-        const group = await dal.getOne(id);
+    async patch(group, update) {
         const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(group)), update);
-        return dal.patch(id, patched);
+        return dal.patch(group.id, patched);
     },
 
     async activateNewAuthGroup(authGroup, account, clientId) {
