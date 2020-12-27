@@ -121,6 +121,14 @@ const Owner = [
 		actions: 'create update:all read:all delete:all'
 	},
 	{
+		target: 'invite',
+		actions: 'create read:all delete:all'
+	},
+	{
+		target: 'invites',
+		actions: 'read:all'
+	},
+	{
 		target: 'client',
 		actions: 'read:all update:all delete:all'
 	},
@@ -146,7 +154,11 @@ const Member = [
 	{
 		target: 'account',
 		actions: 'update:own read:own delete:own'
-	}
+	},
+	{
+		target: 'invite',
+		actions: 'read:own'
+	},
 ];
 
 const Developer = [
@@ -157,6 +169,10 @@ const Developer = [
 	{
 		target: 'account',
 		actions: 'create update:own read:all delete:own'
+	},
+	{
+		target: 'invite',
+		actions: 'read:all'
 	},
 	{
 		target: 'client',

@@ -1,6 +1,7 @@
 import express from 'express';
 import account from '../api/accounts/api';
 import group from '../api/authGroup/api';
+import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import m from '../middleware';
 
@@ -79,6 +80,33 @@ router.delete('/:group/account/:id', [
 	m.permissions,
 	m.access
 ], account.deleteAccount);
+
+// Invites
+router.post('/:group/invite',[
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], invite.createInvite);
+router.get('/:group/invites', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], invite.getInvites);
+router.get('/:group/invite/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], invite.getInvite);
+router.delete('/:group/invite/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], invite.deleteInvite);
 
 // Clients
 // todo - allow client_credential when from the client in question - this can be another role 'c'

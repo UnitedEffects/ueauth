@@ -70,7 +70,7 @@ const mid = {
             }));
             return schema.validate(req.method.toString().toLowerCase(), path.toLowerCase())(req, res, next);
         } catch (error) {
-            next(Boom.expectationFailed('OpenAPI Schema Validation'));
+            next(Boom.expectationFailed(error.message || 'Something unexpected went wrong validating OpenAPI Schema'));
         }
     },
     async validateAuthGroup (req, res, next) {

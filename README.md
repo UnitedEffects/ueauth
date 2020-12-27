@@ -101,15 +101,26 @@ http://jsonpatch.com/
 ## TODO
 
 * Need way to transfer ownership of a group
-* Need a way to deactivate or delete (with warning) and reactivate accounts if I’m the owner (or in the future, an admin)
+    * Invite creation is ready; next acceptance is required - POST /accept/group? Use IAT as bearer for this...
+    * Delete IAT and Invite when claimed
+    * Document how this should be interfaced...
+* Validate deactivate or delete (with warning) and reactivate accounts if I’m the owner or admin
+    * test super admin
+    * test owner
+    * test self
+* How do account invites work?
+    * create inactive account with auto generated password
+    * Use Invite type 'account'
+    * Claim invite? using associated IAT-JTI?
+        * Should you still be able to create an account with an IAT? I'm thinking no... only claim
+    * As an additional option, we should allow for access requests, meaning a user can creae an account and an admin can confirm. No access until confirmation.
+        * This should be a config flag on the group
 * cleanup 1
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
         * figure out permissions per endpoint required...
         * read/write/admin scopes?
         * update modifiedby data
-* How do invites work? We set up iat with an email meta tag to lock it to a user for locked groups. We will want to figure out how to manage and track invites... maybe a complimentary collection?
-    * As an additional option, we should allow for access requests, meaning a user can creae an account and an admin can confirm. No access until confirmation.
 * Setup CD to QA
 * Views
     * need login errors to rendor as a view rather than json

@@ -22,6 +22,8 @@ tags:
     description: Auth Groups
   - name: Users
     description: User Accounts
+  - name: Invites
+    description: Secure method of ownership and access exchange
   - name: Clients
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Operations
@@ -454,6 +456,188 @@ paths:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
         required: true
+
+  # Invite APIs
+  /api/{group}/invite:
+    post:
+      tags:
+        - Invites
+      summary: Create an invitiation for group transfer or account access
+      description: Create an invitiation for group transfer or account access.
+      operationId: createInvite
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inviteObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createInvite'
+        description: Invite data to be written
+        required: true
+  /api/{group}/invites:
+    get:
+      tags:
+        - Invites
+      summary: Retrieve all invites (CRUD operation)
+      description: 'Uses oData filtering to retrieve Invites. Admins and Owners only.'
+      operationId: getInvites
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getInvites'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+  '/api/{group}/invite/{id}':
+    get:
+      tags:
+        - Invites
+      summary: Find an Invite with ID
+      description: Identify a single Invite. Must be intended recipient or owner of auth group
+      operationId: getInvite
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of invite type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inviteObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+    delete:
+      tags:
+        - Invites
+      summary: Hard delete an Invite - only authGroup owner
+      description: Hard delete an Invite - only authGroup owner
+      operationId: deleteInvite
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of invite to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inviteObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
 
   # Non-OIDC Specific Client APIs
   /api/{group}/clients:
@@ -1459,6 +1643,82 @@ components:
         data:
           type: object
           $ref: '#/components/schemas/authGroup'
+
+    getInvites:
+      properties:
+        type:
+          type: string
+          enum:
+            - Invites
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/inviteObject'
+
+    inviteObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: guid
+          description: unique id of the invitiation
+        createdAt:
+          type: string
+          format: date-time
+          description: when the invite was created
+        expiresAt:
+          type: string
+          format: date-time
+          description: when the account was created
+        type:
+          type: string
+          enum:
+            - group
+            - account
+          description: is this to transfer a group or create a new account?
+        sub:
+          type: string
+          format: guid
+          description: Subject/User ID of the user for whom this is intended
+        email:
+          type: string
+          format: email
+          description: email assoicated to the subject id
+        txt:
+          type: string
+          description: phone number assocaited to the subject id - if available
+        passCode:
+          type: string
+          description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers. This will be hashed.
+        authGroup:
+          type: string
+          description: authGroup of the invite
+        accessToken:
+          type: string
+          description: Token associated to the invite. This will be hashed.
+    createInvite:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - sub
+      properties:
+        type:
+          type: string
+          enum:
+            - group
+            - account
+          description: is this to transfer a group or create a new account?
+        daysToExpire:
+          type: number
+          format: int32
+          description: how many days should the invite be active? Default is 7 days.
+        sub:
+          type: string
+          description: Subject/User ID of the user for whom this is intended
+        passCode:
+          type: string
+          description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers.
 
     jsonPatch:
       additionalProperties: false
