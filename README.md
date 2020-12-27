@@ -100,7 +100,6 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Group registration flag for open vs closed - closed means token from admin group such as client credential or user access
 * Need way to transfer ownership of a group
 * Need a way to deactivate or delete (with warning) and reactivate accounts if I’m the owner (or in the future, an admin)
 * cleanup 1
@@ -137,6 +136,7 @@ http://jsonpatch.com/
 * all account
 * clients
 * auth Groups
+* open group registration on/off
 * auth Group jwks and Config Generation
 * jwks keys
 * iat for authGroups

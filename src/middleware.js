@@ -102,12 +102,6 @@ const mid = {
                 req_group: req.authGroup.id,
                 enforceOwn: false,
                 roles: []
-                /*
-                roles: {
-                    member: (req.user.group === req.authGroup.id),
-                    owner: false,
-                    super: false
-                }*/
             };
             if (req.user.group === req.authGroup.id) {
                 req.permissions.roles.push('member');
@@ -129,12 +123,33 @@ const mid = {
         }
     },
     access: enforce.permissionEnforce,
-    /*
-    access(roles) {
-        return (req, res, next) => {
-            return enforce.permissionEnforce(roles)(req, res, next);
+    async openGroupRegAuth(req, res, next) {
+        try {
+            if (config.OPEN_GROUP_REG === true) return next();
+            return this.isAuthenticated(req, res, next);
+        } catch (error) {
+            next(error);
         }
-    },*/
+    },
+    async openGroupRegPermissions(req, res, next) {
+        try {
+            if (config.OPEN_GROUP_REG === true) return next();
+            return this.permissions(req, res, next);
+        } catch (error) {
+            next(error);
+        }
+    },
+    async openGroupRegAccess(req, res, next) {
+        try {
+            if (config.OPEN_GROUP_REG === true) return next();
+            if(req.permissions && req.permissions.roles && req.permissions.roles.length !== 0 && req.permissions.roles.includes('super')) {
+                return next();
+            }
+            throw Boom.badRequest('Public Group Registration is Disabled - Contact Admin to be Added');
+        } catch (error) {
+            next(error);
+        }
+    },
     async validateAuthGroupAllowInactive (req, res, next) {
         try {
             if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');

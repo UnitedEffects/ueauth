@@ -20,31 +20,31 @@ router.post('/init', group.initialize);
 router.get('/version', m.version);
 router.get('/health', m.health);
 
+// Auth Group Functional
+router.get('/groupcheck/:prettyName', group.check);
+
 // Auth Groups
-// todo access... owner and client?
-router.post('/group', [m.schemaCheck], group.write);
+router.post('/group', [
+	m.schemaCheck,
+	m.openGroupRegAuth,
+	m.openGroupRegPermissions,
+	m.openGroupRegAccess], group.write);
 
 router.get('/groups', [
 	m.isAuthenticated,
 	m.permissions,
-	m.access,
-], group.get);
+	m.access], group.get);
 router.get('/group/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access,
-], group.getOne);
+	m.access], group.getOne);
 router.patch('/group/:id', [
 	m.schemaCheck,
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access,
-], group.patch);
-
-// Auth Group Functional
-router.get('/groupcheck/:prettyName', group.check);
+	m.access], group.patch);
 
 // Accounts
 router.post('/:group/account', [
