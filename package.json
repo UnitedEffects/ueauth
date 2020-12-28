@@ -19,7 +19,16 @@
     "microservice"
   ],
   "author": "United Effects LLC",
-  "url": "https://unitedeffects.com",
+  "person": {
+    "name": "Bo Motlagh",
+    "email": "bmotlagh@unitedeffects.com",
+    "url": "https://unitedeffects.com"
+  },
+  "homepage": "https://github.com/UnitedEffects/ueauth",
+  "bugs": {
+    "url": "https://github.com/UnitedEffects/ueauth/issues",
+    "email": "team@unitedeffects.com"
+  },
   "logo": "https://cdn-images-1.medium.com/max/280/1*vuHoiLlmWjuTJ9zK98jFtQ@2x.png",
   "dependencies": {
     "@babel/core": "^7.6.4",
