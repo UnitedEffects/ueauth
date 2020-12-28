@@ -20,7 +20,7 @@ export default {
 	async deleteInvite(authGroup, id) {
 		return Invite.findOneAndRemove( { _id: id, authGroup });
 	},
-	async getInviteByEmail(authGroup, email) {
-		return Invite.findOne({email, authGroup});
+	async inviteAuthorizedLookup(authGroup, sub, type) {
+		return Invite.findOne({sub, authGroup, type});
 	}
 };

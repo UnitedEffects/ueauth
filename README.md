@@ -101,8 +101,7 @@ http://jsonpatch.com/
 ## TODO
 
 * Need way to transfer ownership of a group
-    * Invite creation is ready; next acceptance is required - POST /accept/group? Use IAT as bearer for this...
-    * Delete IAT and Invite when claimed
+    * code complete, must test...
     * Document how this should be interfaced...
 * Validate deactivate or delete (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin

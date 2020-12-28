@@ -37,5 +37,14 @@ export default {
 	},
 	async deleteOne(id) {
 		return Group.findOneAndRemove({ _id: id, active: false });
+	},
+	/**
+	 * REQUIRES AUTHORIZATION INVITE
+	 * @param id
+	 * @param owner
+	 * @returns {Promise<Query|void>}
+	 */
+	async switchGroupOwner(id, owner) {
+		return Group.findOneAndUpdate({ _id: id }, { owner }, { new: true });
 	}
 };

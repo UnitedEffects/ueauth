@@ -37,6 +37,10 @@ export default {
         return dal.patch(group.id, patched);
     },
 
+    async switchGroupOwner(group, owner) {
+        return dal.switchGroupOwner(group.id, owner);
+    },
+
     async activateNewAuthGroup(authGroup, account, clientId) {
         const copy = JSON.parse(JSON.stringify(authGroup));
         copy.owner = account._id;

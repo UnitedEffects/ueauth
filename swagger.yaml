@@ -638,6 +638,55 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
+  /api/{group}/accept/{inviteType}:
+    post:
+      tags:
+        - Invites
+      summary: Accept an invitiation of type "group" or "account"
+      description: Accept an invitiation of type "group" or "account". WIP - first target is group owner transfer
+      operationId: accept
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: inviteType
+          in: path
+          description: type of invite, group or account
+          schema:
+            type: string
+            enum:
+              - group
+              - account
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupOwnerChange'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/acceptInvite'
+        description: Invite data to be written
+        required: true
 
   # Non-OIDC Specific Client APIs
   /api/{group}/clients:
@@ -1260,6 +1309,32 @@ components:
           description: code recieved from authorization redirect
         client_id:
           type: string
+
+    acceptInvite:
+      type: object
+      required:
+        - inviteToken
+      additionalProperties: false
+      properties:
+        passCode:
+          type: string
+          description: optional passcode provided by invite creator
+        inviteToken:
+          type: string
+          description: required invite/access token created to identify invitation
+
+    groupOwnerChange:
+      type: object
+      properties:
+        message:
+          type: string
+          description: a confirmation of success
+        warning:
+          type: string
+          description: if there were any issues, they are defined here
+        group:
+          type: object
+          $ref: '#/components/schemas/authGroup'
 
     accessTokens:
       properties:

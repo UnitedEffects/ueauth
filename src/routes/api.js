@@ -108,6 +108,15 @@ router.delete('/:group/invite/:id', [
 	m.access
 ], invite.deleteInvite);
 
+// Accept Invites
+router.post('/:group/accept/:inviteType', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], invite.accept);
+
 // Clients
 // todo - allow client_credential when from the client in question - this can be another role 'c'
 router.get('/:group/clients', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);

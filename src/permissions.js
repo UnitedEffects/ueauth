@@ -106,7 +106,9 @@ function returnActions(method, path, role) {
  * Roles: owner, member, developer (dev is only through plugin)
  * Actions: create update:all|own read:all|own delete:all|own
  */
-const Targets = ['group', 'groups', 'accounts', 'account', 'clients', 'client', 'operation:client', 'operation', 'token:initial-access', 'token'];
+//todo can we derive these??
+const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operation:client', 'operation', 'token:initial-access', 'token'];
+
 const Owner = [
 	{
 		target: 'group',
@@ -127,6 +129,10 @@ const Owner = [
 	{
 		target: 'invites',
 		actions: 'read:all'
+	},
+	{
+		target: 'accept',
+		actions: 'create'
 	},
 	{
 		target: 'client',
@@ -159,6 +165,10 @@ const Member = [
 		target: 'invite',
 		actions: 'read:own'
 	},
+	{
+		target: 'accept',
+		actions: 'create'
+	}
 ];
 
 const Developer = [
@@ -173,6 +183,10 @@ const Developer = [
 	{
 		target: 'invite',
 		actions: 'read:all'
+	},
+	{
+		target: 'accept',
+		actions: 'create'
 	},
 	{
 		target: 'client',

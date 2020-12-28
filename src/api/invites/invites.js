@@ -40,8 +40,7 @@ export default {
 		return dal.deleteInvite(authGroupId, id);
 	},
 
-	async getInviteByEmail(authGroupId, em) {
-		const email = String(em).toLowerCase();
-		return dal.getInviteByEmail(authGroupId, email);
+	async inviteAuthorizedLookup(authGroupId, sub, type) {
+		return dal.inviteAuthorizedLookup(authGroupId, sub, type);
 	}
 };
