@@ -6,7 +6,8 @@ const config = require('../config');
 const pJson = require('../../package.json');
 
 router.get('/', (req, res) => {
-    return res.render('index', { title: pJson.name, description: pJson.description, by: pJson.author, url: pJson.url  })
+    const date = new Date();
+    return res.render('index', { title: pJson.name, version: pJson.version, description: pJson.description, by: pJson.author, url: pJson.url, year: date.getFullYear()  })
 });
 
 router.get('/api', (req, res) => {

@@ -145,6 +145,10 @@ a:hover, a:active { color:#fff; text-decoration: underline; }
     color:#666;
 }
 
+.version {
+    font-size: .7em;
+}
+
 @media (max-width: 767px) {
     .lead {
         font-size:1.3em;
