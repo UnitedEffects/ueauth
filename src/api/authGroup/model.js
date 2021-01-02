@@ -57,6 +57,7 @@ const authGroup = new mongoose.Schema({
 					default: false
 				},
 				url: String,
+				clientId: String,
 				customApiKey: {
 					enabled: Boolean,
 					key: String
