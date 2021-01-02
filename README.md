@@ -82,6 +82,9 @@ This is an interface to allow an external messaging service to handle emails or 
 
 * NOTIFICATION_PLUGIN_ENABLED = true
 * DEFAULT_NOTIFICATION_PLUGIN_URL = 'https://youremailortextservice.com/path'
+* DEFAULT_NOTIFICATION_API_IDENTIFIER = 'secret-id-used-to-identify-global-notifications-service'
+    * this is the audience requested in the client-credential jwt
+    * this should be rotated on some basis
 
 This will result in a POST http request to the DEFAULT_NOTIFICATION_PLUGIN_URL for the following interactions:
 * invitations (optional - will work without)
@@ -90,7 +93,7 @@ This will result in a POST http request to the DEFAULT_NOTIFICATION_PLUGIN_URL f
 
 A client credential token will be sent with the request issued using the group associated client_id. Your service should validate the following:
 * The token in general - iss, exp, etc...
-* That the nonce is equal to the notification id
+* That the audience is equal to the DEFAULT_NOTIFICATION_API_IDENTIFIER
 * That the notification iss is equal to the token iss
 * That you have not received the ID before
 
@@ -105,7 +108,7 @@ The body of the POST will be as follows - shown in JSON schema:
     "properties": {
         "id": {
           "type": "string",
-          "description": "unique id of the notification - save to prevent duplicate requests. Also used as nonce of the token to help validate authentic requests."
+          "description": "unique id of the notification - save to prevent duplicate requests."
         },
         "iss": {
           "type": "string",
