@@ -24,6 +24,8 @@ provider:
     ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${env:ONE_TIME_PERSONAL_ROOT_CREATION_KEY, file(./.env/env.${self:provider.env}.json):ONE_TIME_PERSONAL_ROOT_CREATION_KEY}
     FULL_SUPER_CONTROL: ${env:FULL_SUPER_CONTROL, file(./.env/env.${self:provider.env}.json):FULL_SUPER_CONTROL}
     OPEN_GROUP_REG: ${env:OPEN_GROUP_REG, file(./.env/env.${self:provider.env}.json):OPEN_GROUP_REG}
+    NOTIFICATION_PLUGIN_ENABLED: ${env:NOTIFICATION_PLUGIN_ENABLED, file(./.env/env.${self:provider.env}.json):NOTIFICATION_PLUGIN_ENABLED}
+    NOTIFICATION_PLUGIN_URL: ${env:NOTIFICATION_PLUGIN_URL, file(./.env/env.${self:provider.env}.json):NOTIFICATION_PLUGIN_URL}
 
 package:
   exclude:
