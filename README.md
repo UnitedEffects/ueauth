@@ -97,7 +97,7 @@ This will add a registered client with client-name "NOTIFICATION SERVICE-${clien
 
 If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased. You may also disable the feature via config, though this will not in and of itself delete the specified client.
 
-Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the DEFAULT_NOTIFICATION_PLUGIN_URL for the following interactions:
+Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions:
 * invitations (optional - will work without)
 * forgot password (plugin required)
 * passwordless access (plugin required)
