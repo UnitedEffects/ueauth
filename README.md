@@ -81,9 +81,9 @@ For this example, we will assume you are adding a user to the root group.
 This is an interface to allow an external messaging service to handle emails or sms messaging as needed. You must set the following environment variable or .env/env.production.json (or other environment) values.
 
 * NOTIFICATION_PLUGIN_ENABLED = true
-* NOTIFICATION_PLUGIN_URL = 'https://youremailortextservice.com/path'
+* DEFAULT_NOTIFICATION_PLUGIN_URL = 'https://youremailortextservice.com/path'
 
-This will result in a POST http request to the NOTIFICATION_PLUGIN_URL for the following interactions:
+This will result in a POST http request to the DEFAULT_NOTIFICATION_PLUGIN_URL for the following interactions:
 * invitations (optional - will work without)
 * forgot password (plugin required)
 * passwordless access (plugin required)
@@ -141,7 +141,7 @@ The body of the POST will be as follows - shown in JSON schema:
             },
             "name":{
               "type": "string"
-            }
+            },
           }   
         },
         "screenUrl": {
@@ -155,6 +155,7 @@ The body of the POST will be as follows - shown in JSON schema:
     }
 }
 ```
+In future iterations, there will be an option at an authGroup level to override the DEFAULT_NOTIFICATION_PLUGIN_URL with a customUrl to a different service per Group as desired by the owner.
 
 ## Key Stack Components
 

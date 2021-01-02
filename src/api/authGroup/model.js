@@ -41,6 +41,29 @@ const authGroup = new mongoose.Schema({
 	config: {
 		keys: Array
 	},
+	plugins: {
+		notification: {
+			enabled: {
+				type: Boolean,
+				default: false
+			},
+			ackRequiredOnOptional: {
+				type: Boolean,
+				default: false
+			},
+			customService: {
+				enabled: {
+					type: Boolean,
+					default: false
+				},
+				url: String,
+				customApiKey: {
+					enabled: Boolean,
+					key: String
+				}
+			},
+		}
+	},
 	locked: {
 		type: Boolean,
 		default: false
