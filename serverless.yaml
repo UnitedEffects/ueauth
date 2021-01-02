@@ -25,8 +25,6 @@ provider:
     FULL_SUPER_CONTROL: ${env:FULL_SUPER_CONTROL, file(./.env/env.${self:provider.env}.json):FULL_SUPER_CONTROL}
     OPEN_GROUP_REG: ${env:OPEN_GROUP_REG, file(./.env/env.${self:provider.env}.json):OPEN_GROUP_REG}
     NOTIFICATION_PLUGIN_ENABLED: ${env:NOTIFICATION_PLUGIN_ENABLED, file(./.env/env.${self:provider.env}.json):NOTIFICATION_PLUGIN_ENABLED}
-    DEFAULT_NOTIFICATION_PLUGIN_URL: ${env:DEFAULT_NOTIFICATION_PLUGIN_URL, file(./.env/env.${self:provider.env}.json):DEFAULT_NOTIFICATION_PLUGIN_URL}
-    DEFAULT_NOTIFICATION_API_IDENTIFIER: ${env:DEFAULT_NOTIFICATION_API_IDENTIFIER, file(./.env/env.${self:provider.env}.json):DEFAULT_NOTIFICATION_API_IDENTIFIER}
 
 package:
   exclude:

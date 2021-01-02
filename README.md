@@ -81,21 +81,34 @@ For this example, we will assume you are adding a user to the root group.
 This is an interface to allow an external messaging service to handle emails or sms messaging as needed. You must set the following environment variable or .env/env.production.json (or other environment) values.
 
 * NOTIFICATION_PLUGIN_ENABLED = true
-* DEFAULT_NOTIFICATION_PLUGIN_URL = 'https://youremailortextservice.com/path'
-* DEFAULT_NOTIFICATION_API_IDENTIFIER = 'secret-id-used-to-identify-global-notifications-service'
-    * this is the audience requested in the client-credential jwt
-    * this should be rotated on some basis
 
-This will result in a POST http request to the DEFAULT_NOTIFICATION_PLUGIN_URL for the following interactions:
+Next you must make the appropriate API requests to configure the notification service using a ROOT authgroup access-token. This only works with ROOT admins. The request return an error if the plugin is not enabled at a config level. Otherwise you must send:
+
+POST /global/plugin/notification (see swagger)
+
+```json
+{
+  "enable": true,
+  "url": "https://youremailortextservice.com/path"
+}
+```
+
+This will add a registered client with client-name "NOTIFICATION SERVICE-${clientId}". It will then return the client-id and client-secret of this new service in the request. Make note of these as your service will need them to request tokens or to validate incoming requests.
+
+If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased. You may also disable the feature via config, though this will not in and of itself delete the specified client.
+
+Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the DEFAULT_NOTIFICATION_PLUGIN_URL for the following interactions:
 * invitations (optional - will work without)
 * forgot password (plugin required)
 * passwordless access (plugin required)
 
-A client credential token will be sent with the request issued using the group associated client_id. Your service should validate the following:
+Regardless of the auth-group interacting with your service, all requests to the Notification Service will be via client-credential tokens agains the ROOT authgroup and clientId. Your service should validate the following:
 * The token in general - iss, exp, etc...
-* That the audience is equal to the DEFAULT_NOTIFICATION_API_IDENTIFIER
+* That the audience is equal to the Notification Service ClientId issued
 * That the notification iss is equal to the token iss
 * That you have not received the ID before
+
+As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests.
 
 NOTE: Notifications only have a 7-day life in service for an audit or query via API.
 
@@ -187,6 +200,8 @@ http://jsonpatch.com/
 * Build a general Notifications Interface
     * A library to handle sending requests for email or txt - simple req/res system with an established POST body
         * Requires a global service interface configured on config.js - see above
+    * As an alternative to the above configuration style, consider a ROOT only Global Plugins API where clients are registered to ROOT authgroup - this would remove the manual audience configurations and be generally more compatible when custom configs are in the picture
+        * Need a plugin API and mongo collection
     * Can be enabled or disabled at a group level depending on tenant preference
         * If not globally enabled, attempting to set it to true here will return error
         * always check global setting before doing anything so you can handled issues gracefully if there is a problem even though group is set to enabled
@@ -198,7 +213,7 @@ http://jsonpatch.com/
     * code complete, must test...
     * Document how this should be interfaced...
     * Invite should include a url to an accept screen - (configurable)
-    * Create central accept invitiation screen
+    * Create central accept invitation screen
 * Validate deactivate or delete (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
