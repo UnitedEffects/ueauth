@@ -75,6 +75,86 @@ For this example, we will assume you are adding a user to the root group.
     * If the request is made within the iat expiration window (default 7 days) and the email matches userEmail above, the account will be created
 * Option 2
     * PENDING FUNCTIONALITY
+    
+## Notification and Message Plugin
+
+This is an interface to allow an external messaging service to handle emails or sms messaging as needed. You must set the following environment variable or .env/env.production.json (or other environment) values.
+
+* NOTIFICATION_PLUGIN_ENABLED = true
+* NOTIFICATION_PLUGIN_URL = 'https://youremailortextservice.com/path'
+
+This will result in a POST http request to the NOTIFICATION_PLUGIN_URL for the following interactions:
+* invitations (optional - will work without)
+* forgot password (plugin required)
+* passwordless access (plugin required)
+
+A client credential token will be sent with the request issued using the group associated client_id. Your service should validate the following:
+* The token in general - iss, exp, etc...
+* That the nonce is equal to the notification id
+* That the notification iss is equal to the token iss
+* That you have not received the ID before
+
+NOTE: Notifications only have a 7-day life in service for an audit or query via API.
+
+The body of the POST will be as follows - shown in JSON schema:
+
+```json
+{
+    "type": "object",
+    "description": "Request sent to your notification plugin url as a POST method",
+    "properties": {
+        "id": {
+          "type": "string",
+          "description": "unique id of the notification - save to prevent duplicate requests. Also used as nonce of the token to help validate authentic requests."
+        },
+        "iss": {
+          "type": "string",
+          "description": "IdP issuer - make sure it matches the token"
+        },
+        "type": {
+          "type": "string",
+          "description": "kind of request this is",
+          "enum": ["invite", "forgotPassword", "passwordless"]
+        },
+        "formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["email", "sms"]
+          } 
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "email address of intended recipient"
+        },
+        "sms": {
+          "type": "string",
+          "description": "phone number of intended recipient"
+        },
+        "authGroup": {
+          "type": "object",
+          "description": "UE Auth Group to which the recipient is registered",
+          "properties": {
+            "id":{
+              "type": "string"
+            },
+            "name":{
+              "type": "string"
+            }
+          }   
+        },
+        "screenUrl": {
+          "type": "string",
+          "description": "Url of the screen required to process type of notification sent - includes encoded tokens and other query parameters associated to the request. For password related functionality, this is not sent to the API requester directly."
+        },
+        "meta": {
+          "type": "object",
+          "description": "Additional json structured data specific to the request that may be useful"
+        } 
+    }
+}
+```
 
 ## Key Stack Components
 
@@ -100,9 +180,21 @@ http://jsonpatch.com/
 
 ## TODO
 
+* Build a general Notifications Interface
+    * A library to handle sending requests for email or txt - simple req/res system with an established POST body
+        * Requires a global service interface configured on config.js - see above
+    * Can be enabled or disabled at a group level depending on tenant preference
+        * If not globally enabled, attempting to set it to true here will return error
+        * always check global setting before doing anything so you can handled issues gracefully if there is a problem even though group is set to enabled
+    * Needs an API - 7 day TTL
+    * client credential flow
 * Need way to transfer ownership of a group
+    * If notification interface is enbabled, send
+    * Group setting to require response or allow fire/forget
     * code complete, must test...
     * Document how this should be interfaced...
+    * Invite should include a url to an accept screen - (configurable)
+    * Create central accept invitiation screen
 * Validate deactivate or delete (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
@@ -110,10 +202,23 @@ http://jsonpatch.com/
 * How do account invites work?
     * create inactive account with auto generated password
     * Use Invite type 'account'
+        * Invite should include a url to an accept screen - (configurable)
+        * If notification interface is enbabled, send
+        * Group setting to require response or allow fire/forget
     * Claim invite? using associated IAT-JTI?
         * Should you still be able to create an account with an IAT? I'm thinking no... only claim
+        * Modify central accept invitiation screen
     * As an additional option, we should allow for access requests, meaning a user can creae an account and an admin can confirm. No access until confirmation.
         * This should be a config flag on the group
+* Forgot password (ONLY WORKS WITH NOTIFICATION INTERFACE)
+    * If no interface present, send 4xx
+    * Flag to enable/disable on group - should not be possible without notification interface
+    * Forgot password via link (domain configurable)
+    * Needs a custom screen
+* Passwordless Access (ONLY WORKS WITH NOTIFICATION INTERFACE)
+    * If no interface present, send 4xx
+    * Flag to enable/disable on group - should not be possible without notification interface
+    * Needs a custom screen
 * cleanup 1
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
@@ -124,6 +229,10 @@ http://jsonpatch.com/
 * Views
     * need login errors to rendor as a view rather than json
     * Different views by tenant ?
+        * login
+        * invites
+        * forgot password
+        * passwordless
     * Custom error view ?
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
@@ -162,10 +271,12 @@ http://jsonpatch.com/
 * error handling - duplicate mongo error
 * config cookie secrets
 * auth layer and permissions
+* notifications plugin
 
 ## Roadmap
 
 * Define a system for Plugins and Hooks (allows permissions, MFA, etc)
+* Allow custom notification url per group instead of global one
 * Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups
 * Create Account Validation and default to false until complete
