@@ -84,7 +84,7 @@ This is an interface to allow an external messaging service to handle emails or 
 
 Next you must make the appropriate API requests to configure the notification service using a ROOT authgroup access-token. This only works with ROOT admins. The request return an error if the plugin is not enabled at a config level. Otherwise you must send:
 
-POST /global/plugin/notification (see swagger)
+POST /plugin/global/notification (see swagger)
 
 ```json
 {
@@ -196,6 +196,18 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
+
+immediate todo
+- create endpoint for notifications setting
+    - make sure you create a client under root for this setting if true and delete the client if false
+    - lots todo there
+- create endpoint to return audit of plugin settings and get latest plugin settings
+- create internal api to get latest configs
+- create a library that can send https POST to notification url if enabled globally and in db
+- secure general endpoints above to ROOT only
+- secure http request by issuing client-credential token against root before sending
+- test that notification service can request tokens too
+- remove audience from config?
 
 * Build a general Notifications Interface
     * A library to handle sending requests for email or txt - simple req/res system with an established POST body

@@ -20,6 +20,8 @@ info:
 tags:
   - name: Auth Groups
     description: Auth Groups
+  - name: Plugins
+    description: Plugin configurations for the service
   - name: Users
     description: User Accounts
   - name: Invites
@@ -226,6 +228,53 @@ paths:
             schema:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
+        required: true
+
+  # Plugins
+  /api/plugins/global/notifications:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global Notifications Plugins as Service Owner
+      description: Configure Global Notifications Plugins as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  notificationServiceClientId:
+                    type: string
+                  notificationServiceClientName:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                notificationServiceUri:
+                  type: string
+                  format: url
+                  description: the url to the endpoint that will recieve http notification POST requests
+                  example: "https://youremailortextservice.com/path"
+        description: Setting for notification desired
         required: true
 
   # Account APIs
