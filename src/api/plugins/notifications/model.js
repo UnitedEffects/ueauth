@@ -17,10 +17,7 @@ const notificationSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-	iss: {
-		type: String,
-		required: true
-	},
+	iss: String,
 	type: {
 		type: String,
 		enum: ['invite', 'forgotPassword', 'passwordless']
@@ -36,6 +33,7 @@ const notificationSchema = new mongoose.Schema({
 	screenUrl: String,
 	subject: String,
 	message: String,
+    destinationUri: String,
 	processed: {
 	    type: Boolean,
 		default: false

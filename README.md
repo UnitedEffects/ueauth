@@ -110,7 +110,7 @@ Regardless of the auth-group interacting with your service, all requests to the 
 
 As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests.
 
-NOTE: Notifications only have a 7-day life in service for an audit or query via API.
+NOTE: Notifications only have a 30-day life in service for an audit or query via API.
 
 The body of the POST will be as follows - shown in JSON schema:
 
@@ -202,7 +202,7 @@ immediate todo
 - incorporate notification to invite (need to setup an authgroup with this config)
 - secure http request by issuing client-credential token against root before sending
 - secure global endpoints above to ROOT only and track req.user
-- test that notification service can request tokens too
+- test notification service can request tokens too
 - remove audience from config?
 - remove config.js global notification setting and just use db?
 
