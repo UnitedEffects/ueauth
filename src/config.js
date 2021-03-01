@@ -25,7 +25,7 @@ const config = {
 	ONE_TIME_PERSONAL_ROOT_CREATION_KEY: process.env.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || envVars.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || null,
 	FULL_SUPER_CONTROL: (process.env.FULL_SUPER_CONTROL === 'true') || envVars.FULL_SUPER_CONTROL || true,
 	OPEN_GROUP_REG: (process.env.OPEN_GROUP_REG === 'true') || envVars.OPEN_GROUP_REG || false,
-	NOTIFICATION_PLUGIN_ENABLED: (process.env.NOTIFICATION_PLUGIN_ENABLED === 'true') || envVars.NOTIFICATION_PLUGIN_ENABLED || false
+	//NOTIFICATION_PLUGIN_ENABLED: (process.env.NOTIFICATION_PLUGIN_ENABLED === 'true') || envVars.NOTIFICATION_PLUGIN_ENABLED || false
 };
 
 module.exports = config;

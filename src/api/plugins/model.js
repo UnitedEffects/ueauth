@@ -17,14 +17,7 @@ const pluginConfig = new mongoose.Schema({
 			default: false
 		},
 		notificationServiceUri: String,
-		registeredClientId: {
-			type: String,
-			required: true
-		},
-		registeredClientName: {
-			type: String,
-			required: true
-		}
+		registeredClientId: String
 	},
 	_id: {
 		type: String,

@@ -3,6 +3,7 @@ import account from '../api/accounts/api';
 import group from '../api/authGroup/api';
 import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
+import plugins from '../api/plugins/api';
 import m from '../middleware';
 
 /**
@@ -46,6 +47,11 @@ router.patch('/group/:id', [
 	m.isAuthenticated,
 	m.permissions,
 	m.access], group.patch);
+
+// Plugins
+router.post('/plugins/global/notifications', plugins.toggleGlobalNotifications);
+router.get('/plugins/global', plugins.getLatestPluginOptions);
+router.get('/plugins/global/audit', plugins.auditPluginOptions);
 
 // Accounts
 router.post('/:group/account', [

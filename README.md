@@ -93,7 +93,7 @@ POST /plugin/global/notification (see swagger)
 }
 ```
 
-This will add a registered client with client-name "NOTIFICATION SERVICE-${clientId}". It will then return the client-id and client-secret of this new service in the request. Make note of these as your service will need them to request tokens or to validate incoming requests.
+This will add a registered client with client-name "${ROOT_ID}_Global_Notification_Service". It will then return the client-id and client-secret of this new service in the request. Make note of these as your service will need them to request tokens or to validate incoming requests.
 
 If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased. You may also disable the feature via config, though this will not in and of itself delete the specified client.
 
@@ -198,27 +198,24 @@ http://jsonpatch.com/
 ## TODO
 
 immediate todo
-- create endpoint for notifications setting
-    - make sure you create a client under root for this setting if true and delete the client if false
-    - lots todo there
-- create endpoint to return audit of plugin settings and get latest plugin settings
-- create internal api to get latest configs
 - create a library that can send https POST to notification url if enabled globally and in db
-- secure general endpoints above to ROOT only
+- incorporate notification to invite (need to setup an authgroup with this config)
 - secure http request by issuing client-credential token against root before sending
+- secure global endpoints above to ROOT only and track req.user
 - test that notification service can request tokens too
 - remove audience from config?
+- remove config.js global notification setting and just use db?
 
 * Build a general Notifications Interface
-    * A library to handle sending requests for email or txt - simple req/res system with an established POST body
+    * IP - A library to handle sending requests for email or txt - simple req/res system with an established POST body
         * Requires a global service interface configured on config.js - see above
-    * As an alternative to the above configuration style, consider a ROOT only Global Plugins API where clients are registered to ROOT authgroup - this would remove the manual audience configurations and be generally more compatible when custom configs are in the picture
+    * IP - As an alternative to the above configuration style, consider a ROOT only Global Plugins API where clients are registered to ROOT authgroup - this would remove the manual audience configurations and be generally more compatible when custom configs are in the picture
         * Need a plugin API and mongo collection
-    * Can be enabled or disabled at a group level depending on tenant preference
+    * TODO - Can be enabled or disabled at a group level depending on tenant preference
         * If not globally enabled, attempting to set it to true here will return error
         * always check global setting before doing anything so you can handled issues gracefully if there is a problem even though group is set to enabled
-    * Needs an API - 7 day TTL
-    * client credential flow
+    * TODO - Needs an API - 7 day TTL
+    * TODO - client credential flow
 * Need way to transfer ownership of a group
     * If notification interface is enbabled, send
     * Group setting to require response or allow fire/forget

@@ -231,6 +231,60 @@ paths:
         required: true
 
   # Plugins
+  /api/plugins/global/audit:
+    get:
+      tags:
+        - Plugins
+      summary: Retrieves an audit of all plugin updates made and by who sorted from current/latest on back
+      description: Retrieves an audit of all plugin updates made and by who sorted from current/latest on back
+      operationId: auditPluginOptions
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+  /api/plugins/global:
+    get:
+      tags:
+        - Plugins
+      summary: Retrieve all global plugin configurations
+      description: Retrieve all global plugin configurations
+      operationId: getLatestPluginOptions
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
   /api/plugins/global/notifications:
     post:
       tags:
@@ -1843,6 +1897,28 @@ components:
         passCode:
           type: string
           description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers.
+
+    globalPlugins:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: User Id of the person who created latest update config
+        notifications:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            notificationServiceUri:
+              type: string
+              format: url
+            registeredClientId:
+              type: string
 
     jsonPatch:
       additionalProperties: false
