@@ -7,5 +7,8 @@ export default {
 	},
 	async markProcessed(id) {
 		return Notify.findOneAndUpdate({ _id: id}, { processed: true }, { new: true });
+	},
+	async getOne(id) {
+		return Notify.findOne({ _id: id });
 	}
 };

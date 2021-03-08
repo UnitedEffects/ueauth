@@ -11,7 +11,7 @@ const api = {
 			if (req.body.enabled === true && !req.body.notificationServiceUri) {
 				return next(Boom.preconditionRequired('notification service url is required'));
 			}
-			const user = 'UPDATELATER';
+			const user = 'UPDATELATER'; //todo
 			const result = await pins.toggleGlobalNotifications(req.body, user);
 			return res.respond(say.created(result, RESOURCE));
 		} catch (error) {
@@ -26,14 +26,14 @@ const api = {
 			next(error);
 		}
 	},
-    async auditPluginOptions(req, res, next) {
-        try {
-            const result = await pins.auditPluginOptions();
-            return res.respond(say.ok(result, RESOURCE));
-        } catch (error) {
-            next(error);
-        }
-    }
+	async auditPluginOptions(req, res, next) {
+		try {
+			const result = await pins.auditPluginOptions();
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	}
 /*
     // todo - create
     async getPluginHistory(req, res, next) {

@@ -1,5 +1,4 @@
 import Plugins from './model';
-import cl from '../oidc/client/clients';
 const config = require('../../config');
 
 export default {

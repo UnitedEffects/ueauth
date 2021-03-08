@@ -33,7 +33,10 @@ const notificationSchema = new mongoose.Schema({
 	screenUrl: String,
 	subject: String,
 	message: String,
-    destinationUri: String,
+    destinationUri: {
+		type: String,
+		required: true
+	},
 	processed: {
 	    type: Boolean,
 		default: false
