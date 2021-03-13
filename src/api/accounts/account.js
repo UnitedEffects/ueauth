@@ -24,7 +24,7 @@ export default {
 
 	async patchAccount(authGroupId, id, update) {
 		const account = await dal.getAccount(authGroupId, id);
-		const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(account)), update);
+		const patched = jsonPatch.apply_patch(account.toObject(), update);
 		return dal.patchAccount(authGroupId, id, patched);
 	},
 

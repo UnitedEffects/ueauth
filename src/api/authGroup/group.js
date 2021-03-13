@@ -22,7 +22,7 @@ export default {
 	},
 
 	async getOne(id) {
-		return dal.getOne(id);
+		return dal.getOneByEither(id, false);
 	},
 
 	async deleteOne(id) {
@@ -34,8 +34,8 @@ export default {
 	},
 
 	async patch(group, update) {
-		const patched = jsonPatch.apply_patch(JSON.parse(JSON.stringify(group)), update);
-		if(patched.pluginOptions.notifications.enabled === true && group.pluginOptions.notifications.enabled === false) {
+		const patched = jsonPatch.apply_patch(group.toObject(), update);
+		if(patched.pluginOptions.notification.enabled === true && group.pluginOptions.notification.enabled === false) {
 			const globalSettings = await plugins.getLatestPluginOptions();
 			if (globalSettings.notifications.enabled !== true) {
 				throw Boom.methodNotAllowed('The Service Admin has not enabled Global Notifications. ' +

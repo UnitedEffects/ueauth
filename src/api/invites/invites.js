@@ -1,9 +1,12 @@
 import dal from './dal';
 import iat from '../oidc/initialAccess/iat';
 import helper from '../../helper';
+import plugin from '../../notifications';
+
+const config = require('../../config');
 
 export default {
-	async createInvite(data, authGroup) {
+	async createInvite(userId, data, authGroup) {
 		let accessToken;
 		try {
 			const invite = JSON.parse(JSON.stringify(data));
@@ -18,7 +21,20 @@ export default {
 			invite.accessToken = accessToken.jti;
 			invite.expiresAt = accessToken.exp*1000;
 			invite.createdAt = accessToken.iat*1000;
-			return dal.createInvite(invite);
+			const result = await dal.createInvite(invite);
+			// todo make invite screen
+			await plugin.notify(userId, authGroup, 'invite',
+				{
+					id: meta.sub,
+					email: meta.email
+				},  {
+					screen: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.prettyName}/invite/${result.id}`
+				}, {
+					message: 'You have been invited',
+					subject: 'Invite',
+					meta: result
+				});
+			return result;
 		} catch (error) {
 			if (accessToken) {
 				await iat.deleteOne(accessToken.jti, authGroup.id);

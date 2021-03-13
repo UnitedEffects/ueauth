@@ -199,19 +199,20 @@ http://jsonpatch.com/
 
 immediate todo
 - create a library that can send https POST to notification url if enabled globally and in db
-    - write functions (done)
-    - create a test service to return 200 on all requests (done)
-    - initialize (done)
-    - configure global plugin for notifications enabled using test service url (done)
-    - insure latest comes back (done)
-    - configure authGroup to enable notifications
-    - include notification into invite and give it a go 
+    - test invite without notification enabled
+    - test notification with awk = false
+    - test response error  - processed should end up false
 - secure http request by issuing client-credential token against root before sending
 - secure global endpoints above to ROOT only and track req.user
 - test notification service can request tokens too
 - remove audience from config?
 - remove config.js global notification setting and just use db?
 
+
+- Need to converge or fix the way user invites happen to a locked group
+    - an admin should be able to create users without needing the initial-access token
+    - the IAT system should be adapted for the invite process - claiming vs creating
+    
 * Build a general Notifications Interface
     * IP - A library to handle sending requests for email or txt - simple req/res system with an established POST body
         * Requires a global service interface configured on config.js - see above

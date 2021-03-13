@@ -1084,7 +1084,7 @@ paths:
             type: string
           required: true
         - in: header
-          name: accept
+          name: content-type
           schema:
             type: string
             default: 'application/x-www-form-urlencoded'
@@ -1965,6 +1965,19 @@ components:
               value:
                 type: string
                 description: 'The string, array or object to set the property at the above path to'
+          - required:
+              - op
+              - path
+              - value
+            properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: boolean
           - required:
               - op
               - path

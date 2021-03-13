@@ -90,7 +90,7 @@ export default {
     },
 
     async preparePatch(client, update) {
-        return jsonPatch.apply_patch(JSON.parse(JSON.stringify(client)), update);
+        return jsonPatch.apply_patch(client.toObject(), update);
     },
 
     async checkSchema(client) {
