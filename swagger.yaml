@@ -328,6 +328,9 @@ paths:
                   format: url
                   description: the url to the endpoint that will recieve http notification POST requests
                   example: "https://youremailortextservice.com/path"
+                currentVersion:
+                  type: number
+                  description: the current global plugin version. this will autoincrement if successful
         description: Setting for notification desired
         required: true
 
@@ -1079,6 +1082,12 @@ paths:
           description: the auth group ID associated to your business account
           schema:
             type: string
+          required: true
+        - in: header
+          name: accept
+          schema:
+            type: string
+            default: 'application/x-www-form-urlencoded'
           required: true
       responses:
         '200':

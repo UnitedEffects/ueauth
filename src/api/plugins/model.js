@@ -11,6 +11,10 @@ const pluginConfig = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	version: {
+		type: Number,
+		required: true
+	},
 	notifications: {
 		enabled: {
 			type: Boolean,

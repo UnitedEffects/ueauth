@@ -200,9 +200,10 @@ http://jsonpatch.com/
 immediate todo
 - create a library that can send https POST to notification url if enabled globally and in db
     - write functions (done)
-    - create a test service to return 200 on all requests
-    - initialize
-    - configure global plugin for notifications enabled using test service url
+    - create a test service to return 200 on all requests (done)
+    - initialize (done)
+    - configure global plugin for notifications enabled using test service url (done)
+    - insure latest comes back (done)
     - configure authGroup to enable notifications
     - include notification into invite and give it a go 
 - secure http request by issuing client-credential token against root before sending
