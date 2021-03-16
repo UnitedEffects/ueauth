@@ -199,9 +199,7 @@ http://jsonpatch.com/
 
 immediate todo
 - create a library that can send https POST to notification url if enabled globally and in db
-    - test invite without notification enabled
-    - test notification with awk = false
-    - test response error  - processed should end up false
+    - test response error with ack off  - processed should end up false
 - secure http request by issuing client-credential token against root before sending
 - secure global endpoints above to ROOT only and track req.user
 - test notification service can request tokens too

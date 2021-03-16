@@ -1,5 +1,6 @@
 import n from './api/plugins/notifications/notifications';
 import plugins from "./api/plugins/plugins";
+import Boom from '@hapi/boom';
 
 const config = require('./config');
 
@@ -40,16 +41,19 @@ export default {
                 if(notification.recipientEmail) notification.formats.push('email');
                 if(notification.recipientSms) notification.formats.push('sms');
                 const not = await n.createNotification(notification);
-                return n.sendNotification(not);
-            } {
-                console.info('notifications for this authGroup not active');
-                return null;
+                const resp = await n.sendNotification(not);
+                return resp;
             }
+            console.info('notifications for this authGroup not active');
+            return null;
         } catch (error) {
             if(type === 'invite' && authGroup.pluginOptions.notification.ackRequiredOnOptional === false) {
                 return error;
             }
-            throw error;
+            if(error.isAxiosError===true) {
+                throw Boom.failedDependency('The notification service did not acknowledge the request. Please try again later');
+            }
+            throw Boom.boomify(error);
         }
     }
 }

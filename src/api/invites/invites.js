@@ -8,6 +8,7 @@ const config = require('../../config');
 export default {
 	async createInvite(userId, data, authGroup) {
 		let accessToken;
+		let invResult;
 		try {
 			const invite = JSON.parse(JSON.stringify(data));
 			invite.authGroup = authGroup.id;
@@ -21,23 +22,26 @@ export default {
 			invite.accessToken = accessToken.jti;
 			invite.expiresAt = accessToken.exp*1000;
 			invite.createdAt = accessToken.iat*1000;
-			const result = await dal.createInvite(invite);
+			invResult = await dal.createInvite(invite);
 			// todo make invite screen
 			await plugin.notify(userId, authGroup, 'invite',
 				{
 					id: meta.sub,
 					email: meta.email
 				},  {
-					screen: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.prettyName}/invite/${result.id}`
+					screen: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.prettyName}/invite/${invResult.id}`
 				}, {
 					message: 'You have been invited',
 					subject: 'Invite',
-					meta: result
+					meta: invResult
 				});
-			return result;
+			return invResult;
 		} catch (error) {
 			if (accessToken) {
 				await iat.deleteOne(accessToken.jti, authGroup.id);
+			}
+			if (invResult) {
+				await dal.deleteInvite(authGroup, invResult.id);
 			}
 			throw error;
 		}
