@@ -198,13 +198,12 @@ http://jsonpatch.com/
 ## TODO
 
 immediate todo
-- create a library that can send https POST to notification url if enabled globally and in db
-    - test response error with ack off  - processed should end up false
 - secure http request by issuing client-credential token against root before sending
 - secure global endpoints above to ROOT only and track req.user
 - test notification service can request tokens too
 - remove audience from config?
 - remove config.js global notification setting and just use db?
+- way of processing old notifications?
 
 
 - Need to converge or fix the way user invites happen to a locked group
@@ -212,8 +211,6 @@ immediate todo
     - the IAT system should be adapted for the invite process - claiming vs creating
     
 * Build a general Notifications Interface
-    * IP - A library to handle sending requests for email or txt - simple req/res system with an established POST body
-        * Requires a global service interface configured on config.js - see above
     * IP - As an alternative to the above configuration style, consider a ROOT only Global Plugins API where clients are registered to ROOT authgroup - this would remove the manual audience configurations and be generally more compatible when custom configs are in the picture
         * Need a plugin API and mongo collection
     * TODO - Can be enabled or disabled at a group level depending on tenant preference

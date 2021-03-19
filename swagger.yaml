@@ -1083,12 +1083,6 @@ paths:
           schema:
             type: string
           required: true
-        - in: header
-          name: content-type
-          schema:
-            type: string
-            default: 'application/x-www-form-urlencoded'
-          required: true
       responses:
         '200':
           description: successful operation
@@ -1113,6 +1107,19 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/codeAuthorizationTokenRequest'
+            encoding:
+              grant_type:
+                style: form
+              client_secret:
+                style: form
+              redirect_uri:
+                style: form
+              format:
+                style: form
+              code:
+                style: form
+              client_id:
+                style: form
         required: true
   /{group}/token/initial-access:
     post:
@@ -1403,6 +1410,7 @@ components:
           description: if provided, this is the locked user id
 
     codeAuthorizationTokenRequest:
+      type: object
       properties:
         grant_type:
           type: string
