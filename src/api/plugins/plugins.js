@@ -1,17 +1,12 @@
 import Boom from '@hapi/boom';
 import dal from './dal';
-import group from '../authGroup/group';
 import cl from '../oidc/client/clients';
-
-//import helper from '../../helper';
-//const config = require('../../config');
 
 export default {
 	async initPlugins() {
 		return dal.initPlugins();
 	},
-	async toggleGlobalNotifications(data, userId) {
-		const root = await group.getOneByEither('root');
+	async toggleGlobalNotifications(data, userId, root) {
 		let client;
 		if(data.enabled === true) {
 			client = await cl.generateNotificationServiceClient(root);
@@ -43,24 +38,4 @@ export default {
 	async auditPluginOptions() {
 		return dal.auditPluginOptions();
 	}
-/*
-    async getLogs(q) {
-        const query = await helper.parseOdataQuery(q);
-        return dal.getLogs(query);
-    },
-
-    async getLog(id) {
-        return dal.getLog(id);
-    },
-
-    async record(data, write=WRITE_BEHAVIOR) {
-        const logData = {
-            logCode: 'HTTP',
-            message: 'Error recorded and sent out as http response.',
-            details: data
-        };
-        return this.writeLog(logData, write);
-    },
-
- */
 };

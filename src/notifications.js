@@ -41,7 +41,7 @@ export default {
                 if(notification.recipientEmail) notification.formats.push('email');
                 if(notification.recipientSms) notification.formats.push('sms');
                 const not = await n.createNotification(notification);
-                const resp = await n.sendNotification(not);
+                const resp = await n.sendNotification(not, global);
                 return resp;
             }
             console.info('notifications for this authGroup not active');

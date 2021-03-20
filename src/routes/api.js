@@ -49,9 +49,22 @@ router.patch('/group/:id', [
 	m.access], group.patch);
 
 // Plugins
-router.post('/plugins/global/notifications', plugins.toggleGlobalNotifications);
-router.get('/plugins/global', plugins.getLatestPluginOptions);
-router.get('/plugins/global/audit', plugins.auditPluginOptions);
+router.post('/plugins/global/notifications', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access], plugins.toggleGlobalNotifications);
+router.get('/plugins/global', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access], plugins.getLatestPluginOptions);
+router.get('/plugins/global/audit', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access], plugins.auditPluginOptions);
 
 // Accounts
 router.post('/:group/account', [

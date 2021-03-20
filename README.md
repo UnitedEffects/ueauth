@@ -198,26 +198,12 @@ http://jsonpatch.com/
 ## TODO
 
 immediate todo
-- secure http request by issuing client-credential token against root before sending
-- secure global endpoints above to ROOT only and track req.user
-- test notification service can request tokens too
-- remove audience from config?
-- remove config.js global notification setting and just use db?
-- way of processing old notifications?
-
-
+- way of processing old notifications
+- api for seeing old notification records
 - Need to converge or fix the way user invites happen to a locked group
     - an admin should be able to create users without needing the initial-access token
     - the IAT system should be adapted for the invite process - claiming vs creating
     
-* Build a general Notifications Interface
-    * IP - As an alternative to the above configuration style, consider a ROOT only Global Plugins API where clients are registered to ROOT authgroup - this would remove the manual audience configurations and be generally more compatible when custom configs are in the picture
-        * Need a plugin API and mongo collection
-    * TODO - Can be enabled or disabled at a group level depending on tenant preference
-        * If not globally enabled, attempting to set it to true here will return error
-        * always check global setting before doing anything so you can handled issues gracefully if there is a problem even though group is set to enabled
-    * TODO - Needs an API - 7 day TTL
-    * TODO - client credential flow
 * Need way to transfer ownership of a group
     * If notification interface is enbabled, send
     * Group setting to require response or allow fire/forget
@@ -303,10 +289,10 @@ immediate todo
 * auth layer and permissions
 * notifications plugin
 
-## Roadmap
+## vNext Roadmap
 
 * Define a system for Plugins and Hooks (allows permissions, MFA, etc)
-* Allow custom notification url per group instead of global one
+* Allow custom notification url per group instead of only global one
 * Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups
 * Create Account Validation and default to false until complete

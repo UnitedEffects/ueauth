@@ -58,6 +58,9 @@ function oidcConfig(g) {
             email: ['email', 'verified'],
             username: ['username'],
         },
+        scopes: [
+            'openid'
+        ],
         dynamicScopes: [
             ///api:[a-zA-Z0-9_-]*$/
         ],
@@ -161,7 +164,7 @@ function oidcConfig(g) {
         formats: {
             ClientCredentials(ctx, token) {
                 const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-                if (ctx.oidc && ctx.oidc.body) {
+                if (ctx && ctx.oidc && ctx.oidc.body) {
                     if (types.includes(ctx.oidc.body.format))
                         return ctx.oidc.body.format;
 
@@ -170,7 +173,7 @@ function oidcConfig(g) {
             },
             AccessToken(ctx, token) {
                 const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-                if (ctx.oidc && ctx.oidc.body) {
+                if (ctx && ctx.oidc && ctx.oidc.body) {
                     if (types.includes(ctx.oidc.body.format))
                         return ctx.oidc.body.format;
 
@@ -182,14 +185,38 @@ function oidcConfig(g) {
             keys: config.COOKIE_KEYS()
         },
         async extraAccessTokenClaims(ctx, token) {
-            const claims = {
-                group: ctx.authGroup._id
-            };
+            let claims = {};
+            if (ctx) {
+                claims = {
+                    group: ctx.authGroup._id
+                };
+            } else {
+                // check for authGroup reference in scope group:group_id
+                let scope;
+                let group;
+                if (typeof token.scope !== 'object') {
+                    try {
+                        scope = token.scope.split(' ');
+                    } catch (e) {
+                        console.error(e);
+                        scope = [];
+                    }
+                } else scope = token.scope;
+
+                for(let i=0; i<scope.length; i++) {
+                    if(scope[i].includes('group')){
+                        group = scope[i].split(':');
+                        claims = {
+                            group: group[group.length-1]
+                        };
+                    }
+                }
+            }
             //todo add hooks here?
             return claims;
         },
         async audiences(ctx, sub, token, use) {
-            if (ctx.oidc && ctx.oidc.body) {
+            if (ctx && ctx.oidc && ctx.oidc.body) {
                 if (ctx.oidc.body.audience) {
                     const reqAud = ctx.oidc.body.audience.split(',');
                     const aud = [];

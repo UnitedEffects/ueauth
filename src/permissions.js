@@ -53,7 +53,8 @@ export default {
 };
 
 function superAccess (req) {
-	return !(req.method !== 'get' && req.method !== 'post');
+	if(!req.path.includes('plugins')) return !(req.method !== 'get' && req.method !== 'post');
+	else return true;
 }
 
 function translateMethod(method) {

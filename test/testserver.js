@@ -11,6 +11,8 @@ const requestListener = function (req, res) {
         req.on('end', function (){
             console.info(JSON.parse(json));
         });
+        console.info('headers....');
+        console.info(req.headers);
     }
 	res.writeHead(200);
 	res.end('test response');

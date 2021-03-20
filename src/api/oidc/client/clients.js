@@ -72,6 +72,18 @@ export default {
         return fixed;
     },
 
+    async generateClientCredentialToken(authGroup, client, scope) {
+        if(!authGroup) throw new Error('authGroupId not defined');
+        const data = JSON.parse(JSON.stringify(client));
+        return new (oidc(authGroup).ClientCredentials)({
+            client: client.client_id,
+            aud: data.client_id,
+            scope
+        }).save().then(async (token) => {
+            return token;
+        });
+    },
+
     async get(authGroup, q) {
         const query = await helper.parseOdataQuery(q);
         return dal.get(authGroup, query);

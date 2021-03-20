@@ -1120,6 +1120,8 @@ paths:
                 style: form
               client_id:
                 style: form
+              scope:
+                style: form
         required: true
   /{group}/token/initial-access:
     post:
@@ -1428,6 +1430,8 @@ components:
           type: string
           description: code recieved from authorization redirect
         client_id:
+          type: string
+        scope:
           type: string
 
     acceptInvite:
@@ -1933,7 +1937,7 @@ components:
               type: boolean
             notificationServiceUri:
               type: string
-              format: url
+              description: the url of your service to which we post
             registeredClientId:
               type: string
 

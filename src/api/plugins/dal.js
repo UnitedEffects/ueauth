@@ -29,14 +29,5 @@ export default {
 		});
 
 		return plugin.save();
-	},
-/*
-	async getLogs(query) {
-		return Plugins.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
-	},
-	async getLog(id) {
-		return Plugins.findOne( { _id: id });
 	}
-
- */
 };
