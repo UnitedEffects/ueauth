@@ -118,6 +118,23 @@ Now Auth Group owners can enable their own notifications. If they do so, this wi
 * forgot password (plugin required)
 * passwordless access (plugin required)
 
+To update an authGroup configuration, use the PATCH /group/id endpoint:
+
+```json
+[
+  {
+    "op": "replace",
+    "path": "/pluginOptions/notification/enabled",
+    "value": true
+  },
+  {
+    "op": "replace",
+    "path": "/pluginOptions/notification/ackRequiredOnOptional",
+    "value": true
+  }
+]
+```
+
 Regardless of the auth-group interacting with your service, all requests to the Notification Service will be via client-credential tokens against the ROOT authGroup and clientId. Your service should validate the following:
 * The token in general - iss, exp, etc...
 * That the audience is equal to the Notification Service ClientId issued
