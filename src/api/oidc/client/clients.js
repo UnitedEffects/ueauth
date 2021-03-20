@@ -6,6 +6,7 @@ import oidc from "../oidc";
 import Adapter from '../dal';
 import { uuid } from 'uuidv4';
 import { snakeCase } from 'lodash';
+import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
@@ -43,7 +44,44 @@ export default {
         const add = new Adapter('client');
         await add.upsert(client.clientId, fixed);
         return fixed;
+    },
 
+    async deleteNotificationsServiceClient(authGroup) {
+        const check = await dal.getOneByName(authGroup, `${authGroup.id}_Global_Notification_Service`);
+        if(check) return dal.deleteOne(authGroup, check._id);
+        return null;
+    },
+
+    async generateNotificationServiceClient(authGroup) {
+        const check = await dal.getOneByName(authGroup, `${authGroup.id}_Global_Notification_Service`);
+        if(check) await dal.deleteOne(authGroup, check._id);
+        const client = new (oidc(authGroup).Client)({
+            "client_secret": cryptoRandomString({length: 86, type: 'url-safe'}),
+            "client_secret_expires_at": 0,
+            "client_id_issued_at": Date.now(),
+            "client_id": uuid(),
+            "client_name": `${authGroup.id}_Global_Notification_Service`,
+            "grant_types": ["client_credentials"],
+            "response_types": [],
+            "redirect_uris": [`https://${config.UI_URL}`],
+            "auth_group": authGroup.id
+        });
+        const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
+        const add = new Adapter('client');
+        await add.upsert(client.clientId, fixed);
+        return fixed;
+    },
+
+    async generateClientCredentialToken(authGroup, client, scope) {
+        if(!authGroup) throw new Error('authGroupId not defined');
+        const data = JSON.parse(JSON.stringify(client));
+        return new (oidc(authGroup).ClientCredentials)({
+            client: client.client_id,
+            aud: data.client_id,
+            scope
+        }).save().then(async (token) => {
+            return token;
+        });
     },
 
     async get(authGroup, q) {
@@ -64,7 +102,7 @@ export default {
     },
 
     async preparePatch(client, update) {
-        return jsonPatch.apply_patch(JSON.parse(JSON.stringify(client)), update);
+        return jsonPatch.apply_patch(client.toObject(), update);
     },
 
     async checkSchema(client) {

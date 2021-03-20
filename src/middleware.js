@@ -81,6 +81,12 @@ const mid = {
                     req.params.group = req.params.id;
                 }
             }
+
+            // ensure plugins are root only
+            if (req.path.includes('/plugins/')){
+                req.params.group = 'root';
+            }
+
             if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
             if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
             const result = await group.getOneByEither(req.params.group);

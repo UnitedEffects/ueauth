@@ -78,39 +78,55 @@ For this example, we will assume you are adding a user to the root group.
     
 ## Notification and Message Plugin
 
-This is an interface to allow an external messaging service to handle emails or sms messaging as needed. You must set the following environment variable or .env/env.production.json (or other environment) values.
+This is an interface to allow an external messaging service to handle emails or sms messaging as needed.
 
-* NOTIFICATION_PLUGIN_ENABLED = true
+First, you must make the appropriate API requests to configure the notification service using a ROOT authgroup access-token. This only works with ROOT admins. To further ensure this does not change frequently, you must do a GET on /plugins/global to see the current version number and include it in your request. This will increment the version number as well.
 
-Next you must make the appropriate API requests to configure the notification service using a ROOT authgroup access-token. This only works with ROOT admins. The request return an error if the plugin is not enabled at a config level. Otherwise you must send:
-
-POST /global/plugin/notification (see swagger)
+POST /plugins/global/notification (see swagger)
 
 ```json
 {
   "enable": true,
-  "url": "https://youremailortextservice.com/path"
+  "url": "https://youremailortextservice.com/path",
+  "currentVersion": 1
 }
 ```
 
-This will add a registered client with client-name "NOTIFICATION SERVICE-${clientId}". It will then return the client-id and client-secret of this new service in the request. Make note of these as your service will need them to request tokens or to validate incoming requests.
+This will add a registered client specifically for notification requests. It will then return the client-id and client-secret of this new service in the request. Make note of these as your service will need them to request tokens or to validate incoming requests.
 
-If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased. You may also disable the feature via config, though this will not in and of itself delete the specified client.
+```json
+{
+  "type": "PLUGINS",
+  "data": {
+    "notifications": {
+      "enabled": true,
+      "notificationServiceUri": "http://www.something.com",
+      "notificationServiceClientId": "your-notification-client-id",
+      "notificationServiceClientSecret": "your-notification-client-secret",
+      "plugins": {
+        "version": 2
+      }
+    }
+  }
+}
+```
+
+If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased.
 
 Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions:
 * invitations (optional - will work without)
 * forgot password (plugin required)
 * passwordless access (plugin required)
 
-Regardless of the auth-group interacting with your service, all requests to the Notification Service will be via client-credential tokens agains the ROOT authgroup and clientId. Your service should validate the following:
+Regardless of the auth-group interacting with your service, all requests to the Notification Service will be via client-credential tokens against the ROOT authGroup and clientId. Your service should validate the following:
 * The token in general - iss, exp, etc...
 * That the audience is equal to the Notification Service ClientId issued
 * That the notification iss is equal to the token iss
 * That you have not received the ID before
 
-As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests.
+As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests. It will do this using the client_id and client_secret issued.
 
-NOTE: Notifications only have a 7-day life in service for an audit or query via API.
+NOTE: Notifications only have a 30-day life in service for an audit or query via API.
 
 The body of the POST will be as follows - shown in JSON schema:
 
@@ -197,16 +213,13 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Build a general Notifications Interface
-    * A library to handle sending requests for email or txt - simple req/res system with an established POST body
-        * Requires a global service interface configured on config.js - see above
-    * As an alternative to the above configuration style, consider a ROOT only Global Plugins API where clients are registered to ROOT authgroup - this would remove the manual audience configurations and be generally more compatible when custom configs are in the picture
-        * Need a plugin API and mongo collection
-    * Can be enabled or disabled at a group level depending on tenant preference
-        * If not globally enabled, attempting to set it to true here will return error
-        * always check global setting before doing anything so you can handled issues gracefully if there is a problem even though group is set to enabled
-    * Needs an API - 7 day TTL
-    * client credential flow
+immediate todo
+- way of processing old notifications
+- api for seeing old notification records
+- Need to converge or fix the way user invites happen to a locked group
+    - an admin should be able to create users without needing the initial-access token
+    - the IAT system should be adapted for the invite process - claiming vs creating
+    
 * Need way to transfer ownership of a group
     * If notification interface is enbabled, send
     * Group setting to require response or allow fire/forget
@@ -292,10 +305,10 @@ http://jsonpatch.com/
 * auth layer and permissions
 * notifications plugin
 
-## Roadmap
+## vNext Roadmap
 
 * Define a system for Plugins and Hooks (allows permissions, MFA, etc)
-* Allow custom notification url per group instead of global one
+* Allow custom notification url per group instead of only global one
 * Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups
 * Create Account Validation and default to false until complete

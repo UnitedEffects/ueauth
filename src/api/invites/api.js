@@ -21,7 +21,7 @@ const api = {
             }
             req.body.email = account.email;
             if(account.txt) req.body.txt = account.txt;
-            const result = await inv.createInvite(req.body, req.authGroup);
+            const result = await inv.createInvite(req.user.sub, req.body, req.authGroup);
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
             next(error);

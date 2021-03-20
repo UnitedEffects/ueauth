@@ -41,7 +41,7 @@ const authGroup = new mongoose.Schema({
 	config: {
 		keys: Array
 	},
-	plugins: {
+	pluginOptions: {
 		notification: {
 			enabled: {
 				type: Boolean,
@@ -51,6 +51,9 @@ const authGroup = new mongoose.Schema({
 				type: Boolean,
 				default: false
 			},
+			/*
+			The customService option is a future feature and not yet implemented
+			 */
 			customService: {
 				enabled: {
 					type: Boolean,

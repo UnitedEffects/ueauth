@@ -5,8 +5,8 @@ import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
 import acct from "../accounts/account";
+import plugs from '../plugins/plugins';
 import permissions from "../../permissions";
-import dal from "./dal";
 const config = require('../../config');
 
 
@@ -18,6 +18,7 @@ const api = {
         let account;
         let client;
         let final;
+        let plugins;
         try {
             // when not allowed, we'll just say not found. No need to point at a security feature.
             if(config.ALLOW_ROOT_CREATION!==true) return next(Boom.notFound());
@@ -48,11 +49,18 @@ const api = {
             client = await cl.generateClient(g);
             final = JSON.parse(JSON.stringify(await group.activateNewAuthGroup(g, account, client.client_id)));
             if(final.config) delete final.config.keys;
+            try {
+                plugins = await plugs.initPlugins();
+            } catch (error) {
+                console.info('Plugins did not initialize - this is not a blocker but a warning');
+                console.error(error);
+            }
             const out = {
                 WARNING: "NOW THAT YOU HAVE FINISHED INITIAL SETUP, REDEPLOY THIS SERVICE WITH ALLOW_ROOT_CREATION SET TO FALSE AND ONE_TIME_PERSONAL_ROOT_CREATION_KEY SET TO EMPTY STRING",
                 account,
                 authGroup: final,
-                client
+                client,
+                plugins
             };
             return res.respond(say.created(out, RESOURCE));
         } catch (error) {

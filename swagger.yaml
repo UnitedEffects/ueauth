@@ -20,6 +20,8 @@ info:
 tags:
   - name: Auth Groups
     description: Auth Groups
+  - name: Plugins
+    description: Plugin configurations for the service
   - name: Users
     description: User Accounts
   - name: Invites
@@ -226,6 +228,110 @@ paths:
             schema:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
+        required: true
+
+  # Plugins
+  /api/plugins/global/audit:
+    get:
+      tags:
+        - Plugins
+      summary: Retrieves an audit of all plugin updates made and by who sorted from current/latest on back
+      description: Retrieves an audit of all plugin updates made and by who sorted from current/latest on back
+      operationId: auditPluginOptions
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+  /api/plugins/global:
+    get:
+      tags:
+        - Plugins
+      summary: Retrieve all global plugin configurations
+      description: Retrieve all global plugin configurations
+      operationId: getLatestPluginOptions
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+  /api/plugins/global/notifications:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global Notifications Plugins as Service Owner
+      description: Configure Global Notifications Plugins as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  notificationServiceClientId:
+                    type: string
+                  notificationServiceClientName:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                notificationServiceUri:
+                  type: string
+                  format: url
+                  description: the url to the endpoint that will recieve http notification POST requests
+                  example: "https://youremailortextservice.com/path"
+                currentVersion:
+                  type: number
+                  description: the current global plugin version. this will autoincrement if successful
+        description: Setting for notification desired
         required: true
 
   # Account APIs
@@ -1001,6 +1107,21 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/codeAuthorizationTokenRequest'
+            encoding:
+              grant_type:
+                style: form
+              client_secret:
+                style: form
+              redirect_uri:
+                style: form
+              format:
+                style: form
+              code:
+                style: form
+              client_id:
+                style: form
+              scope:
+                style: form
         required: true
   /{group}/token/initial-access:
     post:
@@ -1291,6 +1412,7 @@ components:
           description: if provided, this is the locked user id
 
     codeAuthorizationTokenRequest:
+      type: object
       properties:
         grant_type:
           type: string
@@ -1308,6 +1430,8 @@ components:
           type: string
           description: code recieved from authorization redirect
         client_id:
+          type: string
+        scope:
           type: string
 
     acceptInvite:
@@ -1795,6 +1919,28 @@ components:
           type: string
           description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers.
 
+    globalPlugins:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: User Id of the person who created latest update config
+        notifications:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            notificationServiceUri:
+              type: string
+              description: the url of your service to which we post
+            registeredClientId:
+              type: string
+
     jsonPatch:
       additionalProperties: false
       description: Details for JSONPatch can be found at http://jsonpatch.com/
@@ -1831,6 +1977,19 @@ components:
               value:
                 type: string
                 description: 'The string, array or object to set the property at the above path to'
+          - required:
+              - op
+              - path
+              - value
+            properties:
+              op:
+                type: string
+                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: boolean
           - required:
               - op
               - path
