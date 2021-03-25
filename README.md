@@ -231,8 +231,6 @@ http://jsonpatch.com/
 ## TODO
 
 immediate todo
-- way of processing old notifications
-- api for seeing old notification records
 - Need to converge or fix the way user invites happen to a locked group
     - an admin should be able to create users without needing the initial-access token
     - the IAT system should be adapted for the invite process - claiming vs creating

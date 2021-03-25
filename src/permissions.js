@@ -108,7 +108,7 @@ function returnActions(method, path, role) {
  * Actions: create update:all|own read:all|own delete:all|own
  */
 //todo can we derive these??
-const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operation:client', 'operation', 'token:initial-access', 'token'];
+const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operation:client', 'operation', 'token:initial-access', 'token', 'notification', 'notifications'];
 
 const Owner = [
 	{
@@ -154,6 +154,14 @@ const Owner = [
 	{
 		target: 'token:initial-access',
 		actions: 'create'
+	},
+	{
+		target: 'notifications',
+		actions: 'create read:all delete:all update:all'
+	},
+	{
+		target: 'notification',
+		actions: 'create read:all delete:all update:all'
 	}
 ];
 

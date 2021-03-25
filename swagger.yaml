@@ -30,6 +30,8 @@ tags:
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Operations
     description: Commands for Artifact/Security Updates
+  - name: Notification
+    description: Manage notifications sent to the http notification plugin
   - name: OIDC
     description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
   - name: Health
@@ -325,7 +327,6 @@ paths:
                   type: boolean
                 notificationServiceUri:
                   type: string
-                  format: url
                   description: the url to the endpoint that will recieve http notification POST requests
                   example: "https://youremailortextservice.com/path"
                 currentVersion:
@@ -1068,6 +1069,269 @@ paths:
               $ref: '#/components/schemas/operations'
         description: Account data to be written
         required: true
+
+
+  # Notifications APIs
+  /api/{group}/notification/process:
+    post:
+      tags:
+        - Notification
+      summary: Process up to 25 currently unprocessed notifications
+      description: This is a stateless way to processes old notifications that may not be processed yet. You should build a cronjob to make this requet on a cadence of your choosing.
+      operationId: processBulkNotifications
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+
+  '/api/{group}/notification/{id}/process':
+    put:
+      tags:
+        - Notification
+      summary: Process a specific notification that is currently not processed.
+      description: Process a specific notification that is currently not processed. If the notification is already processed, it will simply return that notification but take no action. Keep in mind notifications have a 30 day TTL
+      operationId: processNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of notification to process
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+
+  /api/{group}/notification:
+    post:
+      tags:
+        - Notification
+      summary: Define a new notification
+      description: Define a new notification to be processed. Only possible if global & auth group notifications are enabled
+      operationId: writeNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeNotification'
+        description: the notification as stored in ue auth system
+        required: true
+
+  /api/{group}/notifications:
+    get:
+      tags:
+        - Notification
+      summary: Retrieve all notifications in the group
+      description: Retrieve all notifications in the group. Keep in mind notifications have a 30 day TTL
+      operationId: getNotifications
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+
+  '/api/{group}/notification/{id}':
+    get:
+      tags:
+        - Notification
+      summary: return a specific notification
+      description: return a specific notification. Keep in mind notifications have a 30 day TTL
+      operationId: getNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of notification to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+    delete:
+      tags:
+        - Notification
+      summary: Hard delete a notification
+      description: Hard delete a notification. Notifications can not be updated once created, they can only be deleted. Keep in mind that if the notification was already processed, this will not change how that processing communicated the notification to the recipient.
+      operationId: deleteNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of notification to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
 
   # A few of the OIDC specific API Endpoints
   /{group}/token:
@@ -1895,6 +2159,7 @@ components:
         accessToken:
           type: string
           description: Token associated to the invite. This will be hashed.
+
     createInvite:
       type: object
       additionalProperties: false
@@ -1940,6 +2205,80 @@ components:
               description: the url of your service to which we post
             registeredClientId:
               type: string
+
+    notification:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/writeNotification'
+      properties:
+        id:
+          type: string
+          format: guid
+          description: system generated id of the notification
+        createdAt:
+          type: string
+          format: date-time
+          description: when the notification was created
+        createdBy:
+          type: string
+          description: userId of the creator
+        processed:
+          type: boolean
+          description: indicates whether or not this notification was successfully sent to the plugin service
+        iss:
+          type: string
+          description: a record of the UE Auth issuer address
+        authGroupId:
+          type: string
+          description: Auth Group ID (not prettyName) associated to the notification
+        destinationUri:
+          type: string
+          description: plugin service http address the request was sent to
+
+    writeNotification:
+      type: object
+      additionalProperties: false
+      description: This will result in a request to an external notification processing service of your choice (see README for notification Plugin)
+      required:
+        - type
+        - recipientEmail
+      properties:
+        type:
+          type: string
+          description: supported notification types
+          enum:
+            - invite
+            - forgotPassword
+            - passwordless
+        formats:
+          type: array
+          description: intended formats for this notification - sent to the plugin service
+          items:
+            type: string
+            enum:
+              - email
+              - sms
+        recipientUserId:
+          type: string
+          description: userId of the intended recipient
+        recipientEmail:
+          type: string
+          description: email address of the intended recipient
+        recipientSms:
+          type: string
+          description: mobile phone number of the intended recipient
+        screenUrl:
+          type: string
+          description: optional field to direct the recipient to a specific screen - automatically populated based on type if not provided
+        subject:
+          type: string
+          description: a subject line for the recipient
+        message:
+          type: string
+          description: a message for the recipient
+        meta:
+          type: object
+          description: any addtional metadata that should go with this
 
     jsonPatch:
       additionalProperties: false

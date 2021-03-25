@@ -66,6 +66,60 @@ router.get('/plugins/global/audit', [
 	m.permissions,
 	m.access], plugins.auditPluginOptions);
 
+// Notifications
+router.post('/:group/notification', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.validateNotificationRequest,
+	m.permissions,
+	m.access,
+], plugins.writeNotification);
+router.get('/:group/notifications', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.validateNotificationRequest,
+	m.permissions,
+	m.access,
+], plugins.getNotifications);
+router.get('/:group/notification/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.validateNotificationRequest,
+	m.permissions,
+	m.access
+], plugins.getNotification);
+router.delete('/:group/notification/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.validateNotificationRequest,
+	m.permissions,
+	m.access
+], plugins.deleteNotification);
+
+router.put('/:group/notification/:id/process', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.validateNotificationRequest,
+	m.permissions,
+	m.access
+], plugins.processNotification);
+
+//todo, ensure this works with client credentials
+router.post('/:group/notification/process', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.validateNotificationRequest,
+	m.permissions,
+	m.access
+], plugins.bulkNotificationProcess);
+
 // Accounts
 router.post('/:group/account', [
 	m.validateAuthGroupAllowInactive,

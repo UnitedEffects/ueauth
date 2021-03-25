@@ -1,6 +1,10 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import pins from './plugins';
+import notifications from './notifications/notifications';
+import permissions from "../../permissions";
+
+const config = require('../../config');
 
 const RESOURCE = 'PLUGINS';
 
@@ -32,6 +36,102 @@ const api = {
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
+		}
+	},
+	async writeNotification(req, res, next) {
+		let result;
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			const data = req.body;
+			data.authGroupId = req.authGroup.id;
+			data.createdBy = req.user.sub;
+			data.iss = `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}`;
+			data.destinationUri = req.globalSettings.notifications.notificationServiceUri;
+			if(!data.formats) {
+				data.formats = [];
+				if(data.recipientEmail) data.formats.push('email');
+				if(data.recipientSms) data.formats.push('sms');
+			}
+			result = await notifications.createNotification(data);
+			try {
+				await notifications.sendNotification(result, req.globalSettings);
+				result.processed = true;
+			} catch (e) {
+				if(data.type !== 'invite') throw e;
+				if(data.type === 'invite' && req.authGroup.pluginOptions.notification.ackRequiredOnOptional === true) {
+					throw e;
+				}
+				console.error(`Invites do not require successful notification for this authGroup: ${req.authGroup.id}`);
+				console.error(e.message);
+			}
+			return res.respond(say.created(result, RESOURCE));
+		} catch (error) {
+			if (error.isAxiosError) {
+				await notifications.deleteNotification(req.authGroup, result.id);
+				return next(Boom.failedDependency('The notification plugin service did not process this request'));
+			}
+			return next(error);
+		}
+	},
+	async getNotifications(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			const result = await notifications.getNotifications(req.authGroup, req.query);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getNotification(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			await permissions.enforceOwn(req.permissions, req.params.id);
+			const result = await notifications.getNotification(req.authGroup, req.params.id);
+			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async deleteNotification(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			await permissions.enforceOwn(req.permissions, req.params.id);
+			const result = await notifications.deleteNotification(req.authGroup, req.params.id);
+			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async processNotification(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			await permissions.enforceOwn(req.permissions, req.params.id);
+			const result = await notifications.processNotification(req.globalSettings, req.authGroup, req.params.id);
+			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			return res.respond(say.ok(result, RESOURCE));
+		}catch (error) {
+			if (error.isAxiosError) {
+				return next(Boom.failedDependency('The notification plugin service did not process this request'));
+			}
+			return next(error);
+		}
+	},
+	async bulkNotificationProcess(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			const result = await notifications.bulkNotificationProcess(req.globalSettings, req.authGroup.id);
+			const out = {
+				message: 'Request received and processing attempted. Validate processed property on each result. This API returns 200 upon completion of the task regardless of outcome for each result',
+				result
+			}
+			return res.respond(say.ok(out, RESOURCE));
+		}catch (error) {
+			next(error)
 		}
 	}
 };

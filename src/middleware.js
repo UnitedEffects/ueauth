@@ -9,6 +9,7 @@ import account from './api/accounts/account';
 import enforce from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
+import plugins from "./api/plugins/plugins";
 
 const config = require('./config');
 const p = require('../package.json');
@@ -71,6 +72,24 @@ const mid = {
             return schema.validate(req.method.toString().toLowerCase(), path.toLowerCase())(req, res, next);
         } catch (error) {
             next(Boom.expectationFailed(error.message || 'Something unexpected went wrong validating OpenAPI Schema'));
+        }
+    },
+    async getGlobalPluginSettings(req, res, next) {
+        try {
+            req.globalSettings = await plugins.getLatestPluginOptions();
+            return next();
+        } catch (error) {
+            next(error);
+        }
+    },
+    async validateNotificationRequest(req, res, next) {
+        try {
+            // assumes authgroup validation and global settings middleware have already run
+            if(req.globalSettings.notifications.enabled !== true) throw Boom.methodNotAllowed('Global Notifications have not been set');
+            if(req.authGroup.pluginOptions.notification.enabled !== true) throw Boom.methodNotAllowed('Your AuthGroup has not been configured for notifications');
+            return next();
+        } catch (error) {
+            next(error);
         }
     },
     async validateAuthGroup (req, res, next) {

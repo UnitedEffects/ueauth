@@ -10,5 +10,18 @@ export default {
 	},
 	async getOne(id) {
 		return Notify.findOne({ _id: id });
+	},
+	async getNotifications(gId, query) {
+		query.query.authGroupId = gId;
+		return Notify.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
+	async getNotification(agId, id) {
+		return Notify.findOne( { _id: id, authGroupId: agId });
+	},
+	async deleteNotification(agId, id) {
+		return Notify.findOneAndRemove( { _id: id, authGroupId: agId });
+	},
+	async notificationsNotProcessed(agId) {
+		return Notify.find({ authGroupId: agId, processed: false }).limit(25);
 	}
 };
