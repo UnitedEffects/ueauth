@@ -71,5 +71,21 @@ export default {
 	},
 	async deleteNotification(ag, id) {
 		return dal.deleteNotification(ag.id, id);
+	},
+	async notify(global, data, ag) {
+		data.authGroupId = ag.id;
+		data.destinationUri = global.notifications.notificationServiceUri;
+		let notification;
+		try {
+			notification = await this.createNotification(data);
+			await this.sendNotification(notification, global);
+			return notification;
+		} catch (error) {
+			if(notification) {
+				await this.deleteNotification(ag, notification.id);
+			}
+			throw error;
+		}
+
 	}
 };

@@ -199,7 +199,24 @@ router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.p
 
 // Operations
 //todo - client as well 'c'
-router.post('/:group/operations/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.clientOperations);
-router.post('/:group/operations', [m.validateAuthGroup, m.isAuthenticated, m.schemaCheck, m.permissions, m.access], group.operations);
+router.post('/:group/operations/client/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], client.clientOperations);
+router.post('/:group/operations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], group.operations);
+router.post('/:group/operations/user/reset-password', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], account.resetPassword);
 
 module.exports = router;

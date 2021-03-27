@@ -39,7 +39,21 @@ const authGroup = new mongoose.Schema({
 	},
 	metadata: Object,
 	config: {
-		keys: Array
+		keys: Array,
+		requireVerified: {
+			type: Boolean,
+			default: false
+		},
+		passwordLessSupport: {
+			email: {
+				type: Boolean,
+				default: true
+			},
+			sms: {
+				type: Boolean,
+				default: false
+			}
+		}
 	},
 	pluginOptions: {
 		notification: {

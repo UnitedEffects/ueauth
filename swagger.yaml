@@ -1023,6 +1023,44 @@ paths:
               $ref: '#/components/schemas/operations'
         description: Account data to be written
         required: true
+
+  /api/{group}/operations/user/reset-password:
+    post:
+      tags:
+        - Operations
+      summary: Initiate password reset for an account. API does not return anything. Requires Notification Plugin to be working.
+      description: Initiate password reset for an account. Requires that the account have a valid matching email or phone number associated. API does not return anything on success. Requires Notification Plugin to be working. Token not required for this endpoint.
+      operationId: userOperations
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/passwordReset'
+        description: Account data to be written
+        required: true
+
   /api/{group}/operations/client/{id}:
     post:
       tags:
@@ -2279,6 +2317,22 @@ components:
         meta:
           type: object
           description: any addtional metadata that should go with this
+
+    passwordReset:
+      additionalProperties: false
+      description: Send a unique email address and choose email, sms or both for the reset link to be sent. Email must already be associated to the account. If no preference is picked, all associated data is used. This must be associated with the AuthGroup in the url.
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: the unique email address
+        formats:
+          type: array
+          items:
+            type: string
+            enum: ['email', 'sms']
 
     jsonPatch:
       additionalProperties: false

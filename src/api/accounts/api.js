@@ -5,6 +5,9 @@ import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
 import permissions from "../../permissions";
+import n from '../plugins/notifications/notifications';
+
+const config = require('../../config');
 
 const RESOURCE = 'Account';
 
@@ -89,11 +92,10 @@ const api = {
     },
     async patchAccount(req, res, next) {
         try {
-            //todo add modifiedBy
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             await permissions.enforceOwn(req.permissions, req.params.id);
-            const result = await acct.patchAccount(req.params.group, req.params.id, req.body);
+            const result = await acct.patchAccount(req.params.group, req.params.id, req.body, req.user.sub || 'SYSTEM');
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -112,6 +114,68 @@ const api = {
             next(error);
         }
     },
+
+    async resetPassword(req, res, next) {
+        let result;
+        let iAccessToken;
+        try {
+            if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+            if(!req.body.email) throw Boom.preconditionRequired('Must provide email address');
+            if(req.globalSettings.notifications.enabled === false) throw Boom.methodNotAllowed('There is no Global Notification Plugin enabled. You will need the admin to reset your password directly and inform you of the new password');
+            if(req.authGroup.pluginOptions.notification.enabled === false) throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+            const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email, req.authGroup.config.requireVerified);
+            if(!user) throw Boom.notFound('This email address is not registered with our system');
+            const meta = {
+                auth_group: req.authGroup.id,
+                sub: user.id,
+                email: user.email
+            };
+            iAccessToken = await iat.generateIAT(14400, ['auth_group'], req.authGroup, meta);
+            const data = {
+                iss: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}`,
+                createdBy: `proxy_${user.id}`,
+                type: 'forgotPassword',
+                formats: req.body.formats,
+                recipientUserId: user.id,
+                recipientEmail: user.email,
+                recipientSms: user.sms,
+                screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}/forgot-password`,
+                subject: `${req.authGroup.prettyName} - User Password Reset`,
+                message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
+                meta: {
+                    token: iAccessToken.jti,
+                    apiHeader: `bearer ${iAccessToken.jti}`,
+                    apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup.id}/user/${user.id}`,
+                    apiMethod: 'PATCH',
+                    apiBody: [
+                        {
+                            "op": "replace",
+                            "path": "/password",
+                            "value": 'NEW-PASSWORD-HERE'
+                        }
+                    ]
+                }
+            }
+            if(!req.body.formats) {
+                data.formats = [];
+                if(user.email) data.formats.push('email');
+                if(user.sms) data.formats.push('sms');
+            }
+            result = await n.notify(req.globalSettings, data, req.authGroup);
+            return res.respond(say.noContent(RESOURCE));
+        } catch (error) {
+            if(result) {
+                await n.deleteNotification(req.authGroup, result.id);
+            }
+            if(iAccessToken) {
+                await iat.deleteOne(iAccessToken.jti, req.authGroup.id);
+            }
+            if(error.isAxiosError) {
+                return next(Boom.failedDependency('There is an error with the global notifications service plugin - contact the admin'));
+            }
+            return next(error);
+        }
+    }
 };
 
 export default api;

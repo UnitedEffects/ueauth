@@ -22,9 +22,10 @@ export default {
 		return dal.deleteAccount(authGroupId, id);
 	},
 
-	async patchAccount(authGroupId, id, update) {
+	async patchAccount(authGroupId, id, update, modifiedBy) {
 		const account = await dal.getAccount(authGroupId, id);
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
+		patched.modifiedBy = modifiedBy;
 		return dal.patchAccount(authGroupId, id, patched);
 	},
 

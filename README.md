@@ -230,42 +230,26 @@ http://jsonpatch.com/
 
 ## TODO
 
-immediate todo
-- Need to converge or fix the way user invites happen to a locked group
-    - an admin should be able to create users without needing the initial-access token
-    - the IAT system should be adapted for the invite process - claiming vs creating
-    
-* Need way to transfer ownership of a group
-    * If notification interface is enbabled, send
-    * Group setting to require response or allow fire/forget
-    * code complete, must test...
-    * Document how this should be interfaced...
-    * Invite should include a url to an accept screen - (configurable)
-    * Create central accept invitation screen
-* Validate deactivate or delete (with warning) and reactivate accounts if I’m the owner or admin
-    * test super admin
-    * test owner
-    * test self
-* How do account invites work?
-    * create inactive account with auto generated password
-    * Use Invite type 'account'
-        * Invite should include a url to an accept screen - (configurable)
-        * If notification interface is enbabled, send
-        * Group setting to require response or allow fire/forget
-    * Claim invite? using associated IAT-JTI?
-        * Should you still be able to create an account with an IAT? I'm thinking no... only claim
-        * Modify central accept invitiation screen
-    * As an additional option, we should allow for access requests, meaning a user can creae an account and an admin can confirm. No access until confirmation.
-        * This should be a config flag on the group
-* Forgot password (ONLY WORKS WITH NOTIFICATION INTERFACE)
-    * If no interface present, send 4xx
-    * Flag to enable/disable on group - should not be possible without notification interface
-    * Forgot password via link (domain configurable)
-    * Needs a custom screen
+* Forgot Password flow is built, still need to:
+    * modify patch to accept IAT
+    * build the central screen
+* Invite User
+    * Admin creates a user with a generated password
+    * "invite" simply initiates password reset and sends modified notification (optional email verified flag) - type=userInvite
+    * May need custom screen
+* Invite AG Owner
+    * User to be invited to ownership must be present
+    * Admin creates an IAT token which gets sent via notification - type=ownerInvite
+    * User must be logged in and also have the IAT - this swaps the owner of the AG
+* Remove/Clean old invite API
 * Passwordless Access (ONLY WORKS WITH NOTIFICATION INTERFACE)
     * If no interface present, send 4xx
     * Flag to enable/disable on group - should not be possible without notification interface
     * Needs a custom screen
+* Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
+    * test super admin
+    * test owner
+    * test self
 * cleanup 1
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
