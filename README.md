@@ -231,7 +231,6 @@ http://jsonpatch.com/
 ## TODO
 
 * Forgot Password flow is built, still need to:
-    * modify patch to accept IAT
     * build the central screen
 * Invite User
     * Admin creates a user with a generated password
@@ -304,10 +303,11 @@ http://jsonpatch.com/
 * config cookie secrets
 * auth layer and permissions
 * notifications plugin
+* password reset - ensure user is logged out
 
 ## vNext Roadmap
 
-* Define a system for Plugins and Hooks (allows permissions, MFA, etc)
+* Integrate plugins for Permissions and MFA
 * Allow custom notification url per group instead of only global one
 * Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups

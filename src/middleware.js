@@ -232,6 +232,7 @@ const mid = {
         if(req.authGroup.locked === true) return authorizer.isLockedGroupIatAuth(req, res, next);
         return next();
     },
+    isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIAT,
     isAuthenticated: authorizer.isAuthenticated
 };
 

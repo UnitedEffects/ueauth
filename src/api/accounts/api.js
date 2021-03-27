@@ -6,6 +6,7 @@ import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
 import permissions from "../../permissions";
 import n from '../plugins/notifications/notifications';
+import session from '../oidc/session/session';
 
 const config = require('../../config');
 
@@ -95,7 +96,7 @@ const api = {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
             await permissions.enforceOwn(req.permissions, req.params.id);
-            const result = await acct.patchAccount(req.params.group, req.params.id, req.body, req.user.sub || 'SYSTEM');
+            const result = await acct.patchAccount(req.params.group, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -131,6 +132,7 @@ const api = {
                 email: user.email
             };
             iAccessToken = await iat.generateIAT(14400, ['auth_group'], req.authGroup, meta);
+
             const data = {
                 iss: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}`,
                 createdBy: `proxy_${user.id}`,

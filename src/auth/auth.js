@@ -4,8 +4,10 @@ import njwk from 'node-jwk';
 import Boom from '@hapi/boom';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
 import iat from '../api/oidc/initialAccess/iat';
+import account from '../api/accounts/account';
 import oidc from '../api/oidc/oidc';
-import group from "../api/authGroup/group";
+import group from '../api/authGroup/group';
+import session from '../api/oidc/session/session';
 
 const config = require('../config');
 
@@ -31,6 +33,7 @@ async function introspect(token, issuer, authGroup) {
      * @type {AccessToken}
      */
 	const accessToken = await oidc(authGroup).AccessToken.find(token);
+	if(!accessToken) return null;
 	return {
 		active: (accessToken.iat < accessToken.exp),
 		sub: accessToken.accountId,
@@ -122,6 +125,46 @@ async (req, token, next) => {
 		const access = await iat.getOne(token, authGroupId);
 		if(!access) return next(null, false);
 		return next(null, true, { ...reqBody, authGroup: authGroupId, token: access });
+	} catch (error) {
+		return next(error);
+	}
+}
+));
+
+passport.use('user-iat-password', new BearerStrategy({
+	passReqToCallback: true
+},
+async (req, token, next) => {
+	try {
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		// limit this interaction to password reset
+		if (req.body) {
+			if(req.body.length > 1) return next(null, false);
+			if(req.body[0].path !== '/password') return next(null, false);
+			if(req.body[0].op !== 'replace') return next(null, false);
+		}
+		const access = await iat.getOne(token, req.authGroup.id);
+		if(!access) return next(null, false);
+		const payload = JSON.parse(JSON.stringify(access.payload));
+		if(!payload) return next(null, false);
+		if(payload.kind !== 'InitialAccessToken') return next(null, false);
+		const user = await account.getAccount(req.authGroup.id, payload.sub);
+		if(!user) return next(null, false);
+		if(user.email !== payload.email) return next(null, false);
+		if(user.authGroup !== payload.auth_group) return next(null, false);
+		if(user.authGroup !== req.authGroup.id) return next(null, false);
+		try {
+			//attempt to clear iat and log the user out of other sessions but don't get hung up
+			await iat.deleteOne(access._id, req.authGroup.id);
+			// Clear out the existing sessions and force a login
+			await session.removeSessionByAccountId(user.id);
+		} catch (e) {
+			console.error('check to make sure initial access tokens are deleting once used and that the user does not have active sessions');
+			console.error(e);
+		}
+		const subject = JSON.parse(JSON.stringify(user));
+		subject.sub = subject.id;
+		return next(null, { ...subject, decoded: payload, subject_group: req.authGroup }, token);
 	} catch (error) {
 		return next(error);
 	}
@@ -225,6 +268,7 @@ async (req, token, next) => {
 
 export default {
 	isIatAuthenticated: passport.authenticate('iat-group-create', { session: false }),
+	isAuthenticatedOrIAT: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
 	isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
 };

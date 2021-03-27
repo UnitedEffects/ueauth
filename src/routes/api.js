@@ -142,7 +142,7 @@ router.get('/:group/account/:id', [
 ], account.getAccount);
 router.patch('/:group/account/:id', [
 	m.validateAuthGroup,
-	m.isAuthenticated,
+	m.isAuthenticatedOrIAT,
 	m.schemaCheck,
 	m.permissions,
 	m.access
