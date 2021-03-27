@@ -242,6 +242,7 @@ http://jsonpatch.com/
     * Admin creates an IAT token which gets sent via notification - type=ownerInvite
     * User must be logged in and also have the IAT - this swaps the owner of the AG
 * Remove/Clean old invite API
+* Build UE SendGrid Service for global notifications
 * Passwordless Access (ONLY WORKS WITH NOTIFICATION INTERFACE)
     * If no interface present, send 4xx
     * Flag to enable/disable on group - should not be possible without notification interface
