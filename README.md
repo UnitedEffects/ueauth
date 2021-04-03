@@ -233,6 +233,7 @@ http://jsonpatch.com/
 * Forgot Password flow is built, still need to:
     * build the central screen
 * Update notification documentation and optional ack from "invite" to "general"
+* implement requiredVerify and autoVerify on config
 * Invite User
     * Admin creates a user with a generated password
     * "invite" simply initiates password reset and sends modified notification (optional email verified flag) - type=userInvite

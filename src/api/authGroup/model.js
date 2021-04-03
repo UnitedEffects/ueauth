@@ -44,6 +44,11 @@ const authGroup = new mongoose.Schema({
 			type: Boolean,
 			default: false
 		},
+		// if true, send a verify email on account creation
+		autoVerify: {
+			type: Boolean,
+			default: false
+		},
 		passwordLessSupport: {
 			email: {
 				type: Boolean,

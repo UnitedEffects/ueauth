@@ -20,6 +20,8 @@ router.get('/:group/interaction/:uid', [jsonParser, m.setNoCache, m.validateAuth
 router.post('/:group/interaction/:uid/login', [jsonParser, urlParser, m.setNoCache, m.validateAuthGroup], interactions.login);
 router.post('/:group/interaction/:uid/confirm', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.confirm);
 router.get('/:group/interaction/:uid/abort', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.abort);
+router.post('/:group/interaction/:uid/forgot', [jsonParser, m.setNoCache, m.validateAuthGroup, m.isAuthenticatedOrIAT], interactions.forgot);
+router.get('/:group/forgotpassword', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.forgotPasswordScreen);
 
 //rest of OIDC
 router.use('/:group', api.oidcCaller);
