@@ -95,6 +95,13 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            if(req.user && req.user.decoded && req.user.decoded.kind === 'InitialAccessToken') {
+                if (req.body) {
+                    if(req.body.length > 1 || req.body[0].path !== '/password' || req.body[0].op !== 'replace') {
+                        throw Boom.methodNotAllowed();
+                    }
+                }
+            }
             await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await acct.patchAccount(req.params.group, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
             return res.respond(say.ok(result, RESOURCE));
@@ -141,10 +148,11 @@ const api = {
                 recipientUserId: user.id,
                 recipientEmail: user.email,
                 recipientSms: user.sms,
-                screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}/forgot-password`,
+                screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
                 subject: `${req.authGroup.prettyName} - User Password Reset`,
                 message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
                 meta: {
+                    description: 'Direct API Patch Call',
                     token: iAccessToken.jti,
                     apiHeader: `bearer ${iAccessToken.jti}`,
                     apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup.id}/user/${user.id}`,

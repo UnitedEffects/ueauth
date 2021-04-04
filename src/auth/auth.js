@@ -137,12 +137,6 @@ passport.use('user-iat-password', new BearerStrategy({
 async (req, token, next) => {
 	try {
 		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
-		// limit this interaction to password reset
-		if (req.body) {
-			if(req.body.length > 1) return next(null, false);
-			if(req.body[0].path !== '/password') return next(null, false);
-			if(req.body[0].op !== 'replace') return next(null, false);
-		}
 		const access = await iat.getOne(token, req.authGroup.id);
 		if(!access) return next(null, false);
 		const payload = JSON.parse(JSON.stringify(access.payload));

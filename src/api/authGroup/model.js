@@ -38,9 +38,15 @@ const authGroup = new mongoose.Schema({
 		required: true
 	},
 	metadata: Object,
+	primaryDomain: String, //todo add this as part of init
 	config: {
 		keys: Array,
 		requireVerified: {
+			type: Boolean,
+			default: false
+		},
+		// if true, send a verify email on account creation
+		autoVerify: {
 			type: Boolean,
 			default: false
 		},

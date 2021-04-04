@@ -29,7 +29,7 @@ class Account {
 	static async authenticate(authGroupId, email, password) {
 		try {
 			const account = await acct.getAccountByEmailOrUsername(authGroupId, email);
-			if(account.verifyPassword(password)) {
+			if(await account.verifyPassword(password)) {
 				return account.id;
 			}
 			throw undefined;

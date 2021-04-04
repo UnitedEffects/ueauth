@@ -1,6 +1,12 @@
 extends layout
 
 block content
-  h1= message
-  h2= error.status
-  pre #{error.stack}
+  section#head.section
+    .container
+      div(style="background: lightslategrey;").card
+        .card-body
+          h5(style="color: wheat").card-title.danger=title
+          h6.card-subtitle.mb-2=message
+          p.card-text=details
+          //h4.tagline=description
+          //p

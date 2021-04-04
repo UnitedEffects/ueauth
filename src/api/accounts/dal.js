@@ -28,5 +28,8 @@ export default {
 			query.verified = true;
 		}
 		return Account.findOne(query);
+	},
+	async updatePassword(authGroup, id, update) {
+		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	}
 };

@@ -36,6 +36,7 @@ const api = {
                 name: "root",
                 prettyName: "root",
                 locked: true,
+                primaryDomain: `https://${config.UI_URL}`,
                 owner: config.ROOT_EMAIL
             };
             const aData = {

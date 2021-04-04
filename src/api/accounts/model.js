@@ -47,11 +47,6 @@ const accountSchema = new mongoose.Schema({
 		default: true
 	},
 	metadata: Object,
-	organizations: [{
-		name: String,
-		domains: [String]
-	}],
-	roles: [String],
 	_id: {
 		type: String,
 		default: uuid
@@ -63,7 +58,6 @@ accountSchema.index({ username: 1, authGroup: 1}, { unique: true });
 
 accountSchema.pre('save', function(callback) {
 	const account = this;
-
 	if (!account.isModified('password')) return callback();
 
 	// Password changed so we need to hash it
@@ -73,6 +67,22 @@ accountSchema.pre('save', function(callback) {
 		bcrypt.hash(account.password, salt, (err, hash) => {
 			if (err) return callback(err);
 			account.password = hash;
+			callback();
+		});
+	});
+});
+
+accountSchema.pre('findOneAndUpdate', function(callback) {
+	const account = this;
+	if (!account._update.password) return callback();
+
+	// Password changed so we need to hash it
+	bcrypt.genSalt(10, (err, salt) => {
+		if (err) return callback(err);
+
+		bcrypt.hash(account._update.password, salt, (err, hash) => {
+			if (err) return callback(err);
+			account._update.password = hash;
 			callback();
 		});
 	});

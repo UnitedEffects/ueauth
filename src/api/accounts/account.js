@@ -29,6 +29,14 @@ export default {
 		return dal.patchAccount(authGroupId, id, patched);
 	},
 
+	async updatePassword(authGroupId, id, password, modifiedBy) {
+		const update = {
+			modifiedBy,
+			password
+		};
+		return dal.updatePassword(authGroupId, id, update);
+	},
+
 	async getAccountByEmailOrUsername(authGroupId, em) {
 		const email = String(em).toLowerCase();
 		return dal.getAccountByEmailOrUsername(authGroupId, email);

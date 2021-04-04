@@ -98,13 +98,16 @@ html
             li + ul, ul + li, li + li {
                 padding-top: 0.3em;
             }
+            .center-text {
+                text-align: center;
+            }
             button {
                 cursor: pointer;
             }
     body
         .login-card
             h1=title
-            h2=authGroupName
+            h2.center-text=authGroupName
             .login-client-image
             if client.logoUri
                 img(src=client.logoUri)
