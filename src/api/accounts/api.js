@@ -148,10 +148,11 @@ const api = {
                 recipientUserId: user.id,
                 recipientEmail: user.email,
                 recipientSms: user.sms,
-                screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}/forgot-password`,
+                screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
                 subject: `${req.authGroup.prettyName} - User Password Reset`,
                 message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
                 meta: {
+                    description: 'Direct API Patch Call',
                     token: iAccessToken.jti,
                     apiHeader: `bearer ${iAccessToken.jti}`,
                     apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup.id}/user/${user.id}`,

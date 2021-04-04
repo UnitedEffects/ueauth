@@ -2086,6 +2086,10 @@ components:
         config:
           type: object
           description: oidc configurations (wip)
+        primaryDomain:
+          type: string
+          format: url
+          description: primary domain url
 
     authGroup:
       type: object

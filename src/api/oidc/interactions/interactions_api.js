@@ -1,6 +1,8 @@
 import oidc from '../oidc';
 import Account from '../../accounts/accountOidcInterface';
+import {say} from "../../../say";
 import acc from '../../accounts/account';
+const config = require('../../../config');
 
 export default {
 	async getInt(req, res, next) {
@@ -77,7 +79,6 @@ export default {
 	},
 	async confirm (req, res, next) {
 		try {
-			console.info(req.body);
 			const result = {
 				consent: {
 					rejectedScopes: req.body.rejectedScopes || [],
@@ -111,9 +112,7 @@ export default {
 				}
 			];
 			const updated = await acc.patchAccount(req.authGroup.id, req.user.sub, update, req.user.sub);
-			console.info(updated);
-			//todo this is probably not going to work...
-			return this.getInt(req, res, next);
+			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
 	    	next (err);
 		}
@@ -121,20 +120,13 @@ export default {
 
 	async forgotPasswordScreen (req, res, next) {
 		try {
-			const details = await oidc(req.authGroup).interactionDetails(req, res);
-			//console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
-			const { uid, prompt, params } = details;
-			const client = await oidc(req.authGroup).Client.find(params.client_id);
-
 			res.render('forgot', {
-				client,
-				authGroup: req.authGroup._id,
 				authGroupName: req.authGroup.name,
-				uid,
-				details: prompt.details,
-				params,
 				title: 'Forgot Password',
-				flash: undefined,
+				iat: req.query.code,
+				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
+				flash: 'Type in your new password to reset',
+				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`
 			});
 		} catch (err) {
 			next (err);

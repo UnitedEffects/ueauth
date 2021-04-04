@@ -38,6 +38,7 @@ const authGroup = new mongoose.Schema({
 		required: true
 	},
 	metadata: Object,
+	primaryDomain: String, //todo add this as part of init
 	config: {
 		keys: Array,
 		requireVerified: {

@@ -4,7 +4,7 @@ html
         meta(charset='utf-8')
         meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
         meta(http-equiv='x-ua-compatible', content='ie=edge')
-        title Sign-in
+        title Forgot Password
         style.
             @import url(https://fonts.googleapis.com/css?family=Roboto:400,100);
             body {
@@ -105,18 +105,24 @@ html
             button {
                 cursor: pointer;
             }
+            .visible {
+                display:none
+            }
     body
+        script(type="text/javascript").
+            const url = '#{url}';
+            const iat = '#{iat}';
+            const redirect = '#{redirect}'
+        script
+            include forgotSend.js
         .login-card
-            h1=title
+            h1(id='title')=title
             h2=authGroupName
                 if flash
-                    p= flash
-            form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/forgot', method='post')
-                input(required='', type='password', name='password', placeholder='and password')
+                    h4(id='message')= flash
+            form(id='forgot' autocomplete='off')
+                input(required='', type='password', name='password', placeholder='new password')
                 button.login.login-submit(type='submit') Reset Password
-            .login-help
-                a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
-                if client.tosUri
-                    a(href=client.tosUri) [ Terms of Service ]
-                if client.policyUri
-                    a(href=client.policyUri) [ Privacy Policy ]
+            if redirect
+                form.visible(id='gotoSite' autocomplete='off' action=redirect)
+                    button.login.login-submit(type='submit') Go To Site
