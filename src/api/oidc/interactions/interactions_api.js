@@ -18,7 +18,7 @@ export default {
 				return res.render('login', {
 					client,
 					authGroup: req.authGroup._id,
-					authGroupName: req.authGroup.name,
+					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
 					uid,
 					details: prompt.details,
 					params,
@@ -31,7 +31,7 @@ export default {
 				client,
 				uid,
 				authGroup: req.authGroup._id,
-				authGroupName: req.authGroup.name,
+				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
 				details: prompt.details,
 				params,
 				title: 'Authorize',
@@ -54,7 +54,7 @@ export default {
 					client,
 					uid,
 					authGroup: req.authGroup._id,
-					authGroupName: req.authGroup.name,
+					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
 					details: prompt.details,
 					params: {
 						...params,
@@ -111,7 +111,7 @@ export default {
 					value: newPassword
 				}
 			];
-			const updated = await acc.patchAccount(req.authGroup.id, req.user.sub, update, req.user.sub);
+			await acc.patchAccount(req.authGroup.id, req.user.sub, update, req.user.sub);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
 	    	next (err);
@@ -120,13 +120,29 @@ export default {
 
 	async forgotPasswordScreen (req, res, next) {
 		try {
-			res.render('forgot', {
-				authGroupName: req.authGroup.name,
+			if(!req.query.code) {
+				if(req.query.email) {
+					return res.render('error', {
+						title: 'Resent Password Reset',
+						message: 'Looks like successfully resent your password reset link.',
+						details: 'Check your email or mobile device.'
+					})
+				}
+				return res.render('error', {
+					title: 'Uh oh...',
+					message: 'Invalid Reset Password Request',
+					details: 'This page requires special access. Check your email or mobile device for the link.'
+				})
+
+			}
+			return res.render('forgot', {
+				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
 				title: 'Forgot Password',
 				iat: req.query.code,
 				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
 				flash: 'Type in your new password to reset',
-				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`
+				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
+				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/user/reset-password`
 			});
 		} catch (err) {
 			next (err);

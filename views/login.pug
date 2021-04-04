@@ -94,6 +94,9 @@ html
             .login-card label {
                 color: #999;
             }
+            .center-text {
+                text-align: center;
+            }
             ul {
                 font-weight: 100;
                 padding-left: 1em;
@@ -108,7 +111,7 @@ html
     body
         .login-card
             h1=title
-            h2=authGroupName
+            h2.center-text=authGroupName
                 if flash
                     p= flash
             form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')

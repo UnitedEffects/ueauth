@@ -230,8 +230,6 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Forgot Password flow is built, still need to:
-    * build the central screen
 * Update notification documentation and optional ack from "invite" to "general"
 * implement requiredVerify and autoVerify on config
 * Invite User
@@ -260,6 +258,7 @@ http://jsonpatch.com/
         * update modifiedby data
 * Setup CD to QA
 * Views
+    * clean and brand
     * need login errors to rendor as a view rather than json
     * Different views by tenant ?
         * login
