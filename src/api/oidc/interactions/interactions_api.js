@@ -109,12 +109,48 @@ export default {
 					op: 'replace',
 					path: '/password',
 					value: newPassword
+				},
+				{
+					op: 'replace',
+					path: '/verified',
+					value: true
 				}
 			];
 			await acc.patchAccount(req.authGroup.id, req.user.sub, update, req.user.sub);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
 	    	next (err);
+		}
+	},
+
+	async verifyAccountScreen (req, res, next) {
+		try {
+			if(!req.query.code) {
+				if(req.query.email) {
+					return res.render('error', {
+						title: 'Sent Password Reset',
+						message: 'Looks like successfully sent your password reset link.',
+						details: 'Check your email or mobile device.'
+					})
+				}
+				return res.render('error', {
+					title: 'Uh oh...',
+					message: 'Invalid Verify Account Request',
+					details: 'This page requires special access. Check your email or mobile device for the link.'
+				})
+
+			}
+			return res.render('verify', {
+				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+				title: 'Verify Your Account',
+				iat: req.query.code,
+				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
+				flash: 'Type in your new password',
+				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
+				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/user/reset-password`
+			});
+		} catch (err) {
+			next (err);
 		}
 	},
 

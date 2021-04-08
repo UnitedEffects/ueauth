@@ -20,6 +20,56 @@ const api = {
             if (!req.body.email) return next(Boom.preconditionRequired('username is required'));
             if (!req.body.password) return next(Boom.preconditionRequired('password is required'));
             const result = await acct.writeAccount(req.body);
+            if (req.globalSettings.notifications.enabled === true &&
+                req.authGroup.config.notification.enabled === true &&
+                req.authGroup.config.autoVerify === true) {
+
+                const meta = {
+                    auth_group: req.authGroup.id,
+                    sub: result.id,
+                    email: result.email
+                };
+                const iAccessToken = await iat.generateIAT(14400, ['auth_group'], req.authGroup, meta);
+
+                const data = {
+                    iss: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}`,
+                    createdBy: req.user.sub || result.id,
+                    type: 'verify',
+                    formats: req.body.formats,
+                    recipientUserId: result.id,
+                    recipientEmail: result.email,
+                    recipientSms: result.sms,
+                    screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}/verify?code=${iAccessToken.jti}`,
+                    subject: `${req.authGroup.prettyName} - Verify and Claim Your New Account`,
+                    message: `You have been added to ${req.authGroup.prettyName}. Please click the button below or copy past the link in a browser to verify your identity and set your password.`,
+                    meta: {
+                        description: 'Direct API Patch Call',
+                        token: iAccessToken.jti,
+                        apiHeader: `bearer ${iAccessToken.jti}`,
+                        apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup.id}/user/${result.id}`,
+                        apiMethod: 'PATCH',
+                        apiBody: [
+                            {
+                                "op": "replace",
+                                "path": "/password",
+                                "value": 'NEW-PASSWORD-HERE'
+                            },
+                            {
+                                "op": "replace",
+                                "path": "/verified",
+                                "value": true
+                            }
+                        ]
+                    }
+                }
+
+                if(!req.body.formats) {
+                    data.formats = [];
+                    if(result.email) data.formats.push('email');
+                    if(result.sms) data.formats.push('sms');
+                }
+                await n.notify(req.globalSettings, data, req.authGroup);
+            }
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -29,6 +79,7 @@ const api = {
         let account;
         let client;
         try {
+            req.body.verified = true; //todo make sure this works...
             account = await acct.writeAccount(req.body);
             if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
             client = await cl.generateClient(req.authGroup);
@@ -162,6 +213,11 @@ const api = {
                             "op": "replace",
                             "path": "/password",
                             "value": 'NEW-PASSWORD-HERE'
+                        },
+                        {
+                            "op": "replace",
+                            "path": "/verified",
+                            "value": true
                         }
                     ]
                 }

@@ -57,8 +57,8 @@ const api = {
 				await notifications.sendNotification(result, req.globalSettings);
 				result.processed = true;
 			} catch (e) {
-				if(data.type !== 'invite') throw e;
-				if(data.type === 'invite' && req.authGroup.pluginOptions.notification.ackRequiredOnOptional === true) {
+				if(data.type !== 'general') throw e;
+				if(data.type === 'general' && req.authGroup.pluginOptions.notification.ackRequiredOnOptional === true) {
 					throw e;
 				}
 				console.error(`Invites do not require successful notification for this authGroup: ${req.authGroup.id}`);

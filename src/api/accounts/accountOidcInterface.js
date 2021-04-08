@@ -6,8 +6,15 @@ class Account {
 	static async findAccount(ctx, id, token) {
 		// This would ideally be just a check whether the account is still in your storage
 		const account = await acct.getAccount(ctx.authGroup._id, id);
+
 		if (!account) {
 			return undefined;
+		}
+		// todo - try this out for a while and revisit to see if its working as we though - verifyRequired
+		if(ctx.authGroup && ctx.authGroup.config && ctx.authGroup.config.requireVerified === true) {
+			if (account.verified === false) {
+				return undefined;
+			}
 		}
 
 		return {

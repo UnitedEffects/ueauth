@@ -47,7 +47,7 @@ export default {
             console.info('notifications for this authGroup not active');
             return null;
         } catch (error) {
-            if(type === 'invite' && authGroup.pluginOptions.notification.ackRequiredOnOptional === false) {
+            if(type === 'general' && authGroup.pluginOptions.notification.ackRequiredOnOptional === false) {
                 return error;
             }
             if(error.isAxiosError===true) {
