@@ -42,7 +42,8 @@ const api = {
             const aData = {
                 username: config.ROOT_EMAIL,
                 email: config.ROOT_EMAIL,
-                password: req.body.password
+                password: req.body.password,
+                verified: true
             }
             g = await group.write(gData);
             aData.authGroup = g.id;

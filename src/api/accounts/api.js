@@ -6,7 +6,6 @@ import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
 import permissions from "../../permissions";
 import n from '../plugins/notifications/notifications';
-import session from '../oidc/session/session';
 
 const config = require('../../config');
 
@@ -79,7 +78,7 @@ const api = {
         let account;
         let client;
         try {
-            req.body.verified = true; //todo make sure this works...
+            req.body.verified = true;
             account = await acct.writeAccount(req.body);
             if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
             client = await cl.generateClient(req.authGroup);
