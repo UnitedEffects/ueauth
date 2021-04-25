@@ -43,7 +43,7 @@ const mid = {
                 if(error.statusCode === 404) {
                     return res.render('error', { title: 'Not sure what you\'re looking for...', message: 'But, it looks like you may have gone to a bad URL', details: Object.entries(error).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('') });
                 }
-                return res.render('error', { title: 'oop! something went wrong', message: error.message, details: error.error });
+                return res.render('error', { title: 'oops! something went wrong', message: error.message, details: error.error });
             }
             return res.respond(error);
         } catch (error) {
