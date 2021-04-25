@@ -6,9 +6,6 @@ import iat from '../oidc/initialAccess/iat';
 import cl from "../oidc/client/clients";
 import permissions from "../../permissions";
 import n from '../plugins/notifications/notifications';
-import client from "../oidc/client/clients";
-
-const config = require('../../config');
 const cryptoRandomString = require('crypto-random-string');
 
 const RESOURCE = 'Account';
