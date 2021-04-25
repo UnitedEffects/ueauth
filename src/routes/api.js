@@ -125,9 +125,11 @@ router.post('/:group/account', [
 	m.validateAuthGroupAllowInactive,
 	m.schemaCheck,
 	m.setGroupActivationEvent,
-	m.isIatGroupActivationAuthorized,
+	m.isAuthorizedToCreateAccount,
 	m.captureAuthGroupInBody,
-	m.getGlobalPluginSettings
+	m.getGlobalPluginSettings,
+	m.permissions,
+	m.access
 ], account.writeAccount);
 router.get('/:group/accounts', [
 	m.validateAuthGroup,
@@ -155,6 +157,50 @@ router.delete('/:group/account/:id', [
 	m.access
 ], account.deleteAccount);
 
+// Clients
+// todo - allow client_credential when from the client in question - this can be another role 'c'
+router.get('/:group/clients', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);
+router.get('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.getOne);
+router.patch('/:group/client/:id', [m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
+router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.deleteOne);
+
+// Operations
+//todo - client as well 'c'
+router.post('/:group/operations/client/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], client.clientOperations);
+
+//todo create user operations...
+router.post('/:group/operations/user/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access,
+	m.getGlobalPluginSettings,
+], account.userOperations);
+
+
+router.post('/:group/operations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], group.operations);
+router.post('/:group/operations/reset-user-password', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], account.resetPassword);
+
+/**
+ * THESE MAY NOT BE NEEDED
+ */
 // Invites
 router.post('/:group/invite',[
 	m.validateAuthGroup,
@@ -190,45 +236,5 @@ router.post('/:group/accept/:inviteType', [
 	m.permissions,
 	m.access
 ], invite.accept);
-
-// Clients
-// todo - allow client_credential when from the client in question - this can be another role 'c'
-router.get('/:group/clients', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);
-router.get('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.getOne);
-router.patch('/:group/client/:id', [m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
-router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.deleteOne);
-
-// Operations
-//todo - client as well 'c'
-router.post('/:group/operations/client/:id', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access
-], client.clientOperations);
-
-//todo create user operations...
-router.post('/:group/operations/user/:id', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access
-], client.clientOperations);
-
-
-router.post('/:group/operations', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access
-], group.operations);
-router.post('/:group/operations/reset-user-password', [
-	m.schemaCheck,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings
-], account.resetPassword);
 
 module.exports = router;

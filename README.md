@@ -238,12 +238,7 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Invite User
-    * Admin creates a user with a generated password
-    * "invite" simply initiates password reset and sends modified notification (optional email verified flag) - type=userInvite
-    * May need custom screen
-* Initiate verification manually through operation/user/id - {verify-account}
-    * validate that admin can simply manually update verifed=true on any account
+* Do you still need userInvite notification? I don't think so...
 * Invite AG Owner
     * User to be invited to ownership must be present
     * Admin creates an IAT token which gets sent via notification - type=ownerInvite

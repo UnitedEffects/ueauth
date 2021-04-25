@@ -1065,7 +1065,7 @@ paths:
     post:
       tags:
         - Operations
-      summary: Execute operations against a user (NOT YET IMPLEMENTED)
+      summary: Execute operations against a user
       description: Execute operations against a user. Currently supports - verify_account, reset_password, generate_password
       operationId: userOperations
       parameters:
@@ -1735,7 +1735,7 @@ components:
         operation:
           type: string
           enum:
-            - verify_acccount
+            - verify_account
             - password_reset
             - generate_password
 
@@ -2094,14 +2094,10 @@ components:
           type: boolean
           description: status of the account
       allOf:
-        - $ref: '#/components/schemas/writeAccount'
+        - $ref: '#/components/schemas/refWriteAccount'
 
-    writeAccount:
+    refWriteAccount:
       type: object
-      additionalProperties: false
-      required:
-        - email
-        - password
       properties:
         username:
           type: string
@@ -2119,6 +2115,18 @@ components:
         metadata:
           type: object
           description: additional context provided by the implementer
+
+    writeAccount:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      allOf:
+        - $ref: '#/components/schemas/refWriteAccount'
+      properties:
+        generatePassword:
+          type: boolean
+          description: if false, password field is required; otherwise, a 32 char password is generated
 
     writeAuthGroup:
       type: object
