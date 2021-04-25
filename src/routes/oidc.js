@@ -15,9 +15,9 @@ router.post('/:group/token/initial-access', [jsonParser, m.validateAuthGroup, m.
 // OIDC Interactions
 //todo - might need to render error pages here instead of just throwing the error...
 router.get('/:group/interaction/:uid', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.getInt);
+router.get('/:group/interaction/:uid/abort', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.abort);
 router.post('/:group/interaction/:uid/login', [jsonParser, urlParser, m.setNoCache, m.validateAuthGroup], interactions.login);
 router.post('/:group/interaction/:uid/confirm', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.confirm);
-router.get('/:group/interaction/:uid/abort', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.abort);
 
 // Custom Interactions
 router.post('/:group/setpass', [jsonParser, m.setNoCache, m.validateAuthGroup, m.isAuthenticatedOrIAT], interactions.forgot);
