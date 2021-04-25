@@ -207,6 +207,17 @@ router.post('/:group/operations/client/:id', [
 	m.permissions,
 	m.access
 ], client.clientOperations);
+
+//todo create user operations...
+router.post('/:group/operations/user/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], client.clientOperations);
+
+
 router.post('/:group/operations', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
@@ -214,7 +225,7 @@ router.post('/:group/operations', [
 	m.permissions,
 	m.access
 ], group.operations);
-router.post('/:group/operations/user/reset-password', [
+router.post('/:group/operations/reset-user-password', [
 	m.schemaCheck,
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings

@@ -1024,13 +1024,13 @@ paths:
         description: Account data to be written
         required: true
 
-  /api/{group}/operations/user/reset-password:
+  /api/{group}/operations/reset-user-password:
     post:
       tags:
         - Operations
       summary: Initiate password reset for an account. API does not return anything. Requires Notification Plugin to be working.
       description: Initiate password reset for an account. Requires that the account have a valid matching email or phone number associated. API does not return anything on success. Requires Notification Plugin to be working. Token not required for this endpoint.
-      operationId: userOperations
+      operationId: userPasswordReset
       parameters:
         - name: group
           in: path
@@ -1058,6 +1058,55 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/passwordReset'
+        description: Account data to be written
+        required: true
+
+  /api/{group}/operations/user/{id}:
+    post:
+      tags:
+        - Operations
+      summary: Execute operations against a user (NOT YET IMPLEMENTED)
+      description: Execute operations against a user. Currently supports - verify_account, reset_password, generate_password
+      operationId: userOperations
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the user/account id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful update operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '204':
+          description: successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userOperations'
         description: Account data to be written
         required: true
 
@@ -1677,6 +1726,18 @@ components:
             - rotate_secret
             - rotate_keys
             - rotate_registration_access_token
+
+    userOperations:
+      type: object
+      required:
+        - operation
+      properties:
+        operation:
+          type: string
+          enum:
+            - verify_acccount
+            - password_reset
+            - generate_password
 
     initialAccessTokenRequest:
       properties:
