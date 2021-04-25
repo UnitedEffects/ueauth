@@ -1,5 +1,7 @@
 import { Provider } from 'oidc-provider';
 import { uuid } from 'uuidv4';
+import Pug from 'koa-pug';
+import path from 'path';
 import Account from '../accounts/accountOidcInterface';
 import Client from './client/clients';
 import middle from '../../oidcMiddleware';
@@ -233,6 +235,14 @@ function oidcConfig(g) {
                 }
             }
             return undefined;
+        },
+        async renderError(ctx, out, error) {
+            const pug = new Pug({
+                viewPath: path.resolve(__dirname, '../../../views'),
+                basedir: 'path/for/pug/extends',
+            })
+            ctx.type = 'html';
+            ctx.body = await pug.render('error', {title: 'oops! something went wrong', message: 'You may have navigated here by mistake', details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')});
         }
     }
 }

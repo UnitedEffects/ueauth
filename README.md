@@ -238,22 +238,19 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Error page with auth on invalid client- make pretty
-* Think through how a single UI manages logins from multiple authgroup/client combinations
-    * May need a custom code handler endpoint just for the root UI
-* build email service & templates for United Effects to make qa/prod work...
 * Invite User
     * Admin creates a user with a generated password
     * "invite" simply initiates password reset and sends modified notification (optional email verified flag) - type=userInvite
     * May need custom screen
-* UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
 * Invite AG Owner
     * User to be invited to ownership must be present
     * Admin creates an IAT token which gets sent via notification - type=ownerInvite
     * User must be logged in and also have the IAT - this swaps the owner of the AG
 * Remove/Clean old invite API
 * do we still need ./notification?
-* Build UE SendGrid Service for global notifications
+* build email service & templates for United Effects to make qa/prod work...
+* UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
+* migrate oidc views to pug
 * Passwordless Access (ONLY WORKS WITH NOTIFICATION INTERFACE)
     * If no interface present, send 4xx
     * Flag to enable/disable on group - should not be possible without notification interface
@@ -277,7 +274,6 @@ http://jsonpatch.com/
         * invites
         * forgot password
         * passwordless
-    * Custom error view ?
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * audit system
