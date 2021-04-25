@@ -124,7 +124,7 @@ async (req, token, next) => {
 		const authGroupId = req.authGroup._id;
 		const access = await iat.getOne(token, authGroupId);
 		if(!access) return next(null, false);
-		return next(null, true, { ...reqBody, authGroup: authGroupId, token: access });
+		return next(null, { initialAccessToken: true }, { ...reqBody, authGroup: authGroupId, token: access });
 	} catch (error) {
 		return next(error);
 	}
@@ -165,6 +165,7 @@ async (req, token, next) => {
 }
 ));
 
+//todo is anything using this?
 passport.use('iat-group-register', new BearerStrategy({
 	passReqToCallback: true
 },
@@ -261,8 +262,8 @@ async (req, token, next) => {
 ));
 
 export default {
-	isIatAuthenticated: passport.authenticate('iat-group-create', { session: false }),
-	isAuthenticatedOrIAT: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
-	isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }),
+	isIatAuthenticatedForGroupActivation: passport.authenticate('iat-group-create', { session: false }),
+	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
+	isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }), //todo need this?
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
 };

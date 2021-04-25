@@ -4,6 +4,11 @@ export default {
 	async permissionEnforce(req, res, next) {
 		const ERROR_MESSAGE = 'You do not have the right permissions';
 		try {
+			// If there isn't a user, there isn't anything to enforce...
+			if(!req.user) return next();
+			// If this is an IAT token, there isn't anything to enforce at this level...
+			if(req.user.initialAccessToken) return next();
+
 			// super admin has full access if "FULL_SUPER_CONTROL" is set to true, otherwise update and delete are disabled
 			if(req.permissions && req.permissions.roles && req.permissions.roles.length !== 0 && req.permissions.roles.includes('super')) {
 				if(config.FULL_SUPER_CONTROL === true) return next();

@@ -127,6 +127,7 @@ const mid = {
         try {
             if(!req.user) return next();
             if(!req.authGroup) return next();
+            if(req.user.initialAccessToken) return next();
             req.permissions = {
                 agent: req.user,
                 sub_group: req.user.subject_group.id,
@@ -233,12 +234,12 @@ const mid = {
         res.set('Cache-Control', 'no-cache, no-store');
         next();
     },
-    isIatGroupActivationAuthorized(req, res, next) {
-        if(req.groupActivationEvent === true) return authorizer.isIatAuthenticated(req, res, next);
-        if(req.authGroup.locked === true) return authorizer.isLockedGroupIatAuth(req, res, next);
+    isAuthorizedToCreateAccount(req, res, next) {
+        if(req.groupActivationEvent === true) return authorizer.isIatAuthenticatedForGroupActivation(req, res, next);
+        if(req.authGroup.locked === true) return authorizer.isAuthenticated(req, res, next);
         return next();
     },
-    isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIAT,
+    isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
     isAuthenticated: authorizer.isAuthenticated
 };
 
