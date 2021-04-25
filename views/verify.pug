@@ -4,7 +4,7 @@ html
         meta(charset='utf-8')
         meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
         meta(http-equiv='x-ua-compatible', content='ie=edge')
-        title Sign-in
+        title Verify Your Account
         style.
             @import url(https://fonts.googleapis.com/css?family=Roboto:400,100);
             html {
@@ -38,6 +38,10 @@ html
                 font-weight: 100;
                 text-align: center;
                 font-size: 2.3em;
+            }
+            .login-card h1 + p {
+                font-weight: 100;
+                text-align: center;
             }
             .login-card [type=submit] {
                 width: 100%;
@@ -106,49 +110,45 @@ html
             li + ul, ul + li, li + li {
                 padding-top: 0.3em;
             }
-            .center-text {
-                text-align: center;
-            }
             button {
                 cursor: pointer;
             }
+            .invisible {
+                display:none
+            }
+            .invisible {
+                display:none
+            }
+            .center-text {
+                text-align: center;
+            }
+            .error {
+                color: red
+            }
+            .success {
+                color: green
+            }
+
     body
+        script(type="text/javascript").
+            const url = '#{url}';
+            const iat = '#{iat}';
+            const redirect = '#{redirect}'
+            const retryUrl = '#{retryUrl}'
+        script
+            include forgotSend.js
         .login-card
-            h1=title
+            h1(id='title')=title
             h2.center-text=authGroupName
-            .login-client-image
-            if client.logoUri
-                img(src=client.logoUri)
-            ul
-                - var detailsExpression1 = [details.scopes.accepted, details.scopes.rejected, details.claims.accepted, details.claims.rejected].every(({ length }) => length === 0);
-                if detailsExpression1
-                    li this is a new authorization
-                - var detailsExpression2 = [details.scopes.new, details.claims.new].every(({ length }) => length === 0);
-                if detailsExpression2
-                    li the client is asking you to confirm previously given authorization
-                - var newScopes = new Set(details.scopes.new); newScopes.delete('openid'); newScopes.delete('offline_access');
-                if newScopes.size
-                    li scopes:
-                        ul
-                            each scope in Array.from(newScopes)
-                                li=scope
-                - var newClaims = new Set(details.claims.new); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(newClaims));
-                if newClaims.size
-                    li claims:
-                        ul
-                            each claim in Array.from(newClaims)
-                                li=claim
-
-                if params.scope && params.scope.includes('offline_access')
-                    li the client is asking to have offline access to this authorization
-                        if !details.scopes.new.includes('offline_access')
-                            | (which you've previously granted)
-
-            form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
-                button.login.login-submit(autofocus='', type='submit') Continue
-            .login-help
-                a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
-                if client.tosUri
-                    a(href=client.tosUri) [ Terms of Service ]
-                if client.policyUri
-                    a(href=client.policyUri) [ Privacy Policy ]
+                if flash
+                    h4(id='message')= flash
+            form(id='forgot' autocomplete='off')
+                input(required='', type='password', name='password', placeholder='new password')
+                input(required='', type='password', name='confirm-password', placeholder='confirm your password')
+                button.login.login-submit(type='submit') Set My Password
+            if redirect
+                form.invisible(id='gotoSite' autocomplete='off' action=redirect)
+                    button.login.login-submit(type='submit') Go To Site
+            form.invisible(id='tryAgain' autocomplete='off')
+                input(id='t1' required='', type='text', name='email', placeholder='your email')
+                button.login.login-submit(id='retry' type='submit') Send Password Reset

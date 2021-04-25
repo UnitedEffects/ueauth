@@ -47,7 +47,7 @@ export default {
 			const client = await oidc(req.authGroup).Client.find(params.client_id);
 
 			// email will check against username as well... todo do we want to control that?
-			const accountId = await Account.authenticate(req.authGroup._id, req.body.email, req.body.password);
+			const accountId = await Account.authenticate(req.authGroup, req.body.email, req.body.password);
 
 			if (!accountId) {
 				res.render('login', {
@@ -109,12 +109,48 @@ export default {
 					op: 'replace',
 					path: '/password',
 					value: newPassword
+				},
+				{
+					op: 'replace',
+					path: '/verified',
+					value: true
 				}
 			];
 			await acc.patchAccount(req.authGroup.id, req.user.sub, update, req.user.sub);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
 	    	next (err);
+		}
+	},
+
+	async verifyAccountScreen (req, res, next) {
+		try {
+			if(!req.query.code) {
+				if(req.query.email) {
+					return res.render('error', {
+						title: 'Sent Password Reset',
+						message: 'Looks like successfully sent your password reset link.',
+						details: 'Check your email or mobile device.'
+					})
+				}
+				return res.render('error', {
+					title: 'Uh oh...',
+					message: 'Invalid Verify Account Request',
+					details: 'This page requires special access. Check your email or mobile device for the link.'
+				})
+
+			}
+			return res.render('verify', {
+				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+				title: 'Verify And Claim Your Account',
+				iat: req.query.code,
+				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
+				flash: 'Verification requires you to reset your password. Type the new one and confirm.',
+				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
+				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/user/reset-password`
+			});
+		} catch (err) {
+			next (err);
 		}
 	},
 

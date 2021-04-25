@@ -40,7 +40,7 @@ const accountSchema = new mongoose.Schema({
 	txt: String,
 	verified: {
 		type: Boolean,
-		default: true //make this false once validation is enabled
+		default: false
 	},
 	active: {
 		type: Boolean,

@@ -6,6 +6,7 @@ class Account {
 	static async findAccount(ctx, id, token) {
 		// This would ideally be just a check whether the account is still in your storage
 		const account = await acct.getAccount(ctx.authGroup._id, id);
+
 		if (!account) {
 			return undefined;
 		}
@@ -26,12 +27,20 @@ class Account {
 	}
 
 	// This can be anything you need to authenticate a user
-	static async authenticate(authGroupId, email, password) {
+	static async authenticate(authGroup, email, password) {
 		try {
-			const account = await acct.getAccountByEmailOrUsername(authGroupId, email);
+			const account = await acct.getAccountByEmailOrUsername(authGroup.id, email);
+
+			if(authGroup && authGroup.config && authGroup.config.requireVerified === true) {
+				if (account.verified === false) {
+					throw undefined;
+				}
+			}
+
 			if(await account.verifyPassword(password)) {
 				return account.id;
 			}
+
 			throw undefined;
 		} catch (err) {
 			return undefined;

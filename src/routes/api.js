@@ -126,7 +126,8 @@ router.post('/:group/account', [
 	m.schemaCheck,
 	m.setGroupActivationEvent,
 	m.isIatGroupActivationAuthorized,
-	m.captureAuthGroupInBody
+	m.captureAuthGroupInBody,
+	m.getGlobalPluginSettings
 ], account.writeAccount);
 router.get('/:group/accounts', [
 	m.validateAuthGroup,

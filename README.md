@@ -114,8 +114,11 @@ This will add a registered client specifically for notification requests. It wil
 If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased.
 
 Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions:
-* invitations (optional - will work without)
-* forgot password (plugin required)
+* general (optional - will work without successful notification depending on config and store the notification for 30 days)
+* userInvite (plugin required)
+* ownerInvite (plugin required)
+* forgotPassword (plugin required)
+* verify (plugin required)
 * passwordless access (plugin required)
 
 To update an authGroup configuration, use the PATCH /group/id endpoint:
@@ -140,8 +143,9 @@ Regardless of the auth-group interacting with your service, all requests to the 
 * That the audience is equal to the Notification Service ClientId issued
 * That the notification iss is equal to the token iss
 * That you have not received the ID before
+* That the authGroup is Root (may change this later if we implement custom servers)
 
-As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests. It will do this using the client_id and client_secret issued.
+As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests. It will do this using the client_id and client_secret issued, again for the root authGroup.
 
 NOTE: Notifications only have a 30-day life in service for an audit or query via API.
 
@@ -206,6 +210,10 @@ The body of the POST will be as follows - shown in JSON schema:
 ```
 In future iterations, there will be an option at an authGroup level to override the DEFAULT_NOTIFICATION_PLUGIN_URL with a customUrl to a different service per Group as desired by the owner.
 
+### Verified Users
+
+If the notification plugin is not enabled both globally and within the authGroup, accounts will still be not verified when created. If you've set requireVerified to true, you will need to manually verify these accounts and manually set the flag on the account to true. NOTE: The forgot password notification does set the verify flag to true. There is a specific "verify" notification as well.
+
 ## Key Stack Components
 
 * Express
@@ -230,17 +238,21 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Update notification documentation and optional ack from "invite" to "general"
-* implement requiredVerify and autoVerify on config
+* Error page with auth on invalid client- make pretty
+* Think through how a single UI manages logins from multiple authgroup/client combinations
+    * May need a custom code handler endpoint just for the root UI
+* build email service & templates for United Effects to make qa/prod work...
 * Invite User
     * Admin creates a user with a generated password
     * "invite" simply initiates password reset and sends modified notification (optional email verified flag) - type=userInvite
     * May need custom screen
+* UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
 * Invite AG Owner
     * User to be invited to ownership must be present
     * Admin creates an IAT token which gets sent via notification - type=ownerInvite
     * User must be logged in and also have the IAT - this swaps the owner of the AG
 * Remove/Clean old invite API
+* do we still need ./notification?
 * Build UE SendGrid Service for global notifications
 * Passwordless Access (ONLY WORKS WITH NOTIFICATION INTERFACE)
     * If no interface present, send 4xx

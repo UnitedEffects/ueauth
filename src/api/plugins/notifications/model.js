@@ -20,7 +20,7 @@ const notificationSchema = new mongoose.Schema({
 	iss: String,
 	type: {
 		type: String,
-		enum: ['general', 'userInvite', 'ownerInvite', 'forgotPassword', 'passwordless']
+		enum: ['general', 'userInvite', 'ownerInvite', 'forgotPassword', 'passwordless', 'verify']
 	},
 	formats: {
 		type: [String],
