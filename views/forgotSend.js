@@ -5,19 +5,19 @@ window.addEventListener( "load", function () {
             if (event.target.status !== 204) {
                 document.getElementById('message').classList.add('error');
                 document.getElementById("title").innerHTML = "Uh oh...";
-                document.getElementById("message").innerHTML = "Reset was not successful. Your reset window may have expired. Click below to resend the email";
+                document.getElementById("message").innerHTML = "Verification or reset was not successful. Your reset or verification window may have expired. Click below to resend the email";
                 form.remove();
                 document.getElementById('tryAgain').classList.remove('invisible');
             } else {
-                document.getElementById("title").innerHTML = "Successful Reset";
+                document.getElementById("title").innerHTML = "Successful Verification And Reset";
                 document.getElementById('message').classList.add('success');
                 if(redirect && redirect !== '') {
                     form.remove();
                     document.getElementById("gotoSite").classList.remove("invisible");
-                    document.getElementById("message").innerHTML = "Your password is changed. Click below to continue."
+                    document.getElementById("message").innerHTML = "Your password is set. Click below to continue."
                 }
                 else {
-                    document.getElementById("message").innerHTML = "Your password is changed. Go to your login screen to try it out."
+                    document.getElementById("message").innerHTML = "Your password is set. Go to your login screen to try it out."
                     form.remove();
                 }
             }
@@ -25,7 +25,7 @@ window.addEventListener( "load", function () {
         XHR.addEventListener( "error", function( event ) {
             document.getElementById('message').classList.add('error');
             document.getElementById("title").innerHTML = "Uh oh...";
-            document.getElementById("message").innerHTML = "Reset was not successful. Try again in a bit or contact the admin";
+            document.getElementById("message").innerHTML = "Verification or reset was not successful. Try again in a bit or contact the admin";
         } );
         XHR.open( "POST", url);
         XHR.setRequestHeader('authorization', `bearer ${iat}`);

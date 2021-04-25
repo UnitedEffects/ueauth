@@ -238,12 +238,7 @@ http://jsonpatch.com/
 
 ## TODO
 
-* implement requiredVerify and autoVerify on config - (done - test this)
-    * set requireVerify true/false and try to login using a non-root authGroup (this failed)
-    * set autoVerify true/false and add accounts - make sure fake service is running
-        * validate warning on autoVerify fail...
-    * validate verify and passwordReset set verify = true
-    * create verify page - basically the same as forgot password... (done - test this)
+* Error page with auth on invalid client- make pretty
 * Think through how a single UI manages logins from multiple authgroup/client combinations
     * May need a custom code handler endpoint just for the root UI
 * build email service & templates for United Effects to make qa/prod work...
@@ -251,7 +246,7 @@ http://jsonpatch.com/
     * Admin creates a user with a generated password
     * "invite" simply initiates password reset and sends modified notification (optional email verified flag) - type=userInvite
     * May need custom screen
-* Verify Notification?
+* UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
 * Invite AG Owner
     * User to be invited to ownership must be present
     * Admin creates an IAT token which gets sent via notification - type=ownerInvite

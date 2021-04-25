@@ -47,7 +47,7 @@ export default {
 			const client = await oidc(req.authGroup).Client.find(params.client_id);
 
 			// email will check against username as well... todo do we want to control that?
-			const accountId = await Account.authenticate(req.authGroup._id, req.body.email, req.body.password);
+			const accountId = await Account.authenticate(req.authGroup, req.body.email, req.body.password);
 
 			if (!accountId) {
 				res.render('login', {
@@ -142,10 +142,10 @@ export default {
 			}
 			return res.render('verify', {
 				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-				title: 'Verify Your Account',
+				title: 'Verify And Claim Your Account',
 				iat: req.query.code,
 				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
-				flash: 'Type in your new password',
+				flash: 'Verification requires you to reset your password. Type the new one and confirm.',
 				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
 				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/user/reset-password`
 			});

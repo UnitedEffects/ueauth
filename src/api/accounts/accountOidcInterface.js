@@ -10,12 +10,6 @@ class Account {
 		if (!account) {
 			return undefined;
 		}
-		// todo - try this out for a while and revisit to see if its working as we though - verifyRequired
-		if(ctx.authGroup && ctx.authGroup.config && ctx.authGroup.config.requireVerified === true) {
-			if (account.verified === false) {
-				return undefined;
-			}
-		}
 
 		return {
 			accountId: id,
@@ -33,12 +27,20 @@ class Account {
 	}
 
 	// This can be anything you need to authenticate a user
-	static async authenticate(authGroupId, email, password) {
+	static async authenticate(authGroup, email, password) {
 		try {
-			const account = await acct.getAccountByEmailOrUsername(authGroupId, email);
+			const account = await acct.getAccountByEmailOrUsername(authGroup.id, email);
+
+			if(authGroup && authGroup.config && authGroup.config.requireVerified === true) {
+				if (account.verified === false) {
+					throw undefined;
+				}
+			}
+
 			if(await account.verifyPassword(password)) {
 				return account.id;
 			}
+
 			throw undefined;
 		} catch (err) {
 			return undefined;

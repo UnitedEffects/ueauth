@@ -42,6 +42,9 @@ export default {
                     'This options is not currently possible for Auth Groups. Contact your admin to activate this feature.');
 			}
 		}
+		if(patched.config.autoVerify === true && patched.pluginOptions.notification.enabled === false) {
+			throw Boom.methodNotAllowed('Automatic account verification requires that you activate or keep active notifications');
+		}
 		return dal.patch(group.id, patched);
 	},
 
