@@ -7,6 +7,7 @@ export default {
         };
         if(meta.sub) update['payload.sub'] = meta.sub;
         if(meta.email) update['payload.email'] = meta.email;
+        if(meta.uid) update['payload.uid'] = meta.uid;
 
         return IAT.findOneAndUpdate( { _id: id }, update, {new: true});
     },

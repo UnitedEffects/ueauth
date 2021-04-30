@@ -53,7 +53,7 @@ const authGroup = new mongoose.Schema({
 		passwordLessSupport: {
 			email: {
 				type: Boolean,
-				default: true
+				default: false
 			},
 			sms: {
 				type: Boolean,

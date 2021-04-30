@@ -5,6 +5,7 @@ html
         meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
         meta(http-equiv='x-ua-compatible', content='ie=edge')
         title Sign-in
+        link(rel="icon" type="image/png" href="https://ue-platform-content.s3.amazonaws.com/0f8aeec8-8e9b-4629-b06c-6672b4a2e9ad" sizes="100x100")
         style.
             @import url(https://fonts.googleapis.com/css?family=Roboto:400,100);
             html {
@@ -88,6 +89,7 @@ html
                 width: 100%;
                 text-align: center;
                 font-size: 12px;
+                margin-top: 20px;
             }
             .login-client-image img {
                 margin-bottom: 20px;
@@ -105,6 +107,23 @@ html
             .center-text {
                 text-align: center;
             }
+            .flash {
+                border-radius: 10px;
+                padding: 20px;
+                background: tomato;
+                color: white;
+            }
+            .passwordless {
+                margin: 10px;
+                border: lightgrey;
+                border-style: solid;
+                border-width: thin;
+                padding: 10px;
+                padding-left: 20px;
+                border-radius: 15px;
+                background: aliceblue;
+                color: darkslategray;
+            }
             ul {
                 font-weight: 100;
                 padding-left: 1em;
@@ -116,12 +135,33 @@ html
             button {
                 cursor: pointer;
             }
+            hr {
+                margin-bottom: 20px;
+                margin-top: 20px;
+            }
+            .abutton {
+                text-decoration: none !important;
+                margin: auto;
+                padding-top: 1em;
+                padding-bottom: 1em;
+                opacity: 100% !important;
+                width: 100%;
+                margin-bottom: 10px;
+                position: relative;
+                border: 0px;
+                color: #fff !important;
+                text-shadow: 0 1px rgb(0 0 0 / 10%);
+                background-color: #4d90fe;
+                font-size: 14px;
+                font-family: 'Arial', sans-serif;
+                font-weight: 700 !important;
+            }
     body
         .login-card
             h1=title
             h2.center-text=authGroupName
                 if flash
-                    p= flash
+                    h5.flash= flash
             form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
                 if !params.login_hint
                     input(required='', type='email', name='email', placeholder='Enter an email', autofocus='on')
@@ -132,9 +172,14 @@ html
                 else
                     input(required='', type='password', name='password', placeholder='and password')
                 button.login.login-submit(type='submit') Sign-in
+            if params.passwordless
+                hr
+                a.abutton(href='/'+authGroup+'/interaction/'+uid+'/passwordless-request') Login Without a Password
+                h5.passwordless We can send you a secure password free login link!
             .login-help
                 a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
                 if client.tosUri
                     a(href=client.tosUri) [ Terms of Service ]
                 if client.policyUri
                     a(href=client.policyUri) [ Privacy Policy ]
+
