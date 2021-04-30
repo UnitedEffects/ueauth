@@ -8,7 +8,8 @@ export default {
 			const metaData = {
 				auth_group: authGroup.id,
 				sub: meta.sub,
-				email: meta.email
+				email: meta.email,
+				uid: meta.uid
 			};
 			const iat = await dal.updateAuthGroup(x, metaData);
 			const response = JSON.parse(JSON.stringify(iat.payload));

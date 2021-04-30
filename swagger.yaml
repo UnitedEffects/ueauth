@@ -569,7 +569,7 @@ paths:
     post:
       tags:
         - Invites
-      summary: Create an invitiation for group transfer or account access
+      summary: Invites are used to notify and allow a user to accept ownership of a resource or access to a resource. (ACCESS NOT YET IMPLEMENTED).
       description: Create an invitiation for group transfer or account access.
       operationId: createInvite
       parameters:
@@ -2231,6 +2231,8 @@ components:
 
     inviteObject:
       type: object
+      allOf:
+        - $ref: '#/components/schemas/inviteCore'
       properties:
         id:
           type: string
@@ -2244,26 +2246,6 @@ components:
           type: string
           format: date-time
           description: when the account was created
-        type:
-          type: string
-          enum:
-            - group
-            - account
-          description: is this to transfer a group or create a new account?
-        sub:
-          type: string
-          format: guid
-          description: Subject/User ID of the user for whom this is intended
-        email:
-          type: string
-          format: email
-          description: email assoicated to the subject id
-        txt:
-          type: string
-          description: phone number assocaited to the subject id - if available
-        passCode:
-          type: string
-          description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers. This will be hashed.
         authGroup:
           type: string
           description: authGroup of the invite
@@ -2271,29 +2253,36 @@ components:
           type: string
           description: Token associated to the invite. This will be hashed.
 
-    createInvite:
+    inviteCore:
       type: object
       additionalProperties: false
-      required:
-        - type
-        - sub
       properties:
         type:
           type: string
           enum:
-            - group
-            - account
-          description: is this to transfer a group or create a new account?
-        daysToExpire:
-          type: number
-          format: int32
-          description: how many days should the invite be active? Default is 7 days.
+            - owner
+            - access
+          description: owner type allows a user to be invited to own/admin a resource. access type notifies a user of access and allows them to accept.
         sub:
           type: string
           description: Subject/User ID of the user for whom this is intended
         passCode:
           type: string
           description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers.
+
+    createInvite:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - sub
+      allOf:
+        - $ref: '#/components/schemas/inviteCore'
+      properties:
+        daysToExpire:
+          type: number
+          format: int32
+          description: how many days should the invite be active? Default is 7 days.
 
     globalPlugins:
       type: object

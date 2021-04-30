@@ -17,7 +17,7 @@ const inviteSchema = new mongoose.Schema({
 	type: {
 		type: String,
 		required: true,
-		enum: ['group', 'account']
+		enum: ['owner', 'access']
 	},
 	sub: {
 		type: String,

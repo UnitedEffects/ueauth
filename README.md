@@ -115,7 +115,6 @@ If you wish to disable notifications, you can simply send "enabled": false, to t
 
 Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions:
 * general (optional - will work without successful notification depending on config and store the notification for 30 days)
-* userInvite (plugin required)
 * ownerInvite (plugin required)
 * forgotPassword (plugin required)
 * verify (plugin required)
@@ -238,20 +237,19 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Do you still need userInvite notification? I don't think so...
 * Invite AG Owner
+    * types: owner and access
+    * Uses passwordless flow
     * User to be invited to ownership must be present
     * Admin creates an IAT token which gets sent via notification - type=ownerInvite
     * User must be logged in and also have the IAT - this swaps the owner of the AG
+* Bug - direct GET /interactions/foo should return 4xx not 500
+* Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
 * Remove/Clean old invite API
-* do we still need ./notification?
+* do we still need ./notification? <- probably not
 * build email service & templates for United Effects to make qa/prod work...
 * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
 * migrate oidc views to pug
-* Passwordless Access (ONLY WORKS WITH NOTIFICATION INTERFACE)
-    * If no interface present, send 4xx
-    * Flag to enable/disable on group - should not be possible without notification interface
-    * Needs a custom screen
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
@@ -313,7 +311,9 @@ http://jsonpatch.com/
 
 ## vNext Roadmap
 
+* Create social login setup via API for Google, Twitter and GitHub
 * Integrate plugins for Permissions and MFA
+* Native AWS SES integration as an optional notifications config
 * Allow custom notification url per group instead of only global one
 * Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups

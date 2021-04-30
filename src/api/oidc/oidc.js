@@ -236,6 +236,13 @@ function oidcConfig(g) {
             }
             return undefined;
         },
+        responseTypes: [
+            'code id_token',
+            'code',
+            'token',
+            'id_token',
+            'none'
+        ],
         async renderError(ctx, out, error) {
             const pug = new Pug({
                 viewPath: path.resolve(__dirname, '../../../views'),

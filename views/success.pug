@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  section#head.section
+    .container
+      div(style="background: lightslategrey;").card
+        .card-body
+          h5(style="color: wheat").card-title.danger=title
+          h6.card-subtitle.mb-2=message
+          if details
+            .card
+              .card-text.detail-color!=details

@@ -35,7 +35,7 @@ export default {
             "client_id": uuid(),
             "client_name": `${authGroup.id}-client`,
             "grant_types": ["client_credentials", "authorization_code", "implicit"],
-            "response_types": ["code id_token"],
+            "response_types": ["code id_token", "code", "id_token"],
             "redirect_uris": [`https://${config.UI_URL}`],
             "auth_group": authGroup.id
         });
