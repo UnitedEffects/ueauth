@@ -35,7 +35,7 @@
     "@babel/preset-env": "^7.6.3",
     "@babel/register": "^7.7.4",
     "@hapi/boom": "^9.1.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "basic-auth": "^2.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.13.2",
