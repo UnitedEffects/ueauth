@@ -245,6 +245,7 @@ http://jsonpatch.com/
     * User must be logged in and also have the IAT - this swaps the owner of the AG
 * Bug - direct GET /interactions/foo should return 4xx not 500
 * Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
+* Bug - favicon on login screen is wrong...
 * Remove/Clean old invite API
 * do we still need ./notification? <- probably not
 * build email service & templates for United Effects to make qa/prod work...
