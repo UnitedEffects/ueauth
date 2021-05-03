@@ -115,7 +115,7 @@ If you wish to disable notifications, you can simply send "enabled": false, to t
 
 Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions:
 * general (optional - will work without successful notification depending on config and store the notification for 30 days)
-* ownerInvite (plugin required)
+* invite (optional - will work without successful notification depending on config and store the notification for 30 days)
 * forgotPassword (plugin required)
 * verify (plugin required)
 * passwordless access (plugin required)
@@ -202,7 +202,7 @@ The body of the POST will be as follows - shown in JSON schema:
         },
         "meta": {
           "type": "object",
-          "description": "Additional json structured data specific to the request that may be useful"
+          "description": "Additional json structured data specific to the request that may be useful."
         } 
     }
 }
@@ -237,18 +237,23 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Invite AG Owner
-    * types: owner and access
-    * Uses passwordless flow
-    * User to be invited to ownership must be present
-    * Admin creates an IAT token which gets sent via notification - type=ownerInvite
-    * User must be logged in and also have the IAT - this swaps the owner of the AG
+* Invite AG Owner - This assumes the TBD IAM UI. There is no central screen
+    * Invites only work for logged in users... Don't need additional IAT or other passcodes
+    * Invites do not require the notification system to be enabled, but will use it if its there
+    * Admin (OIDC Authenticated)
+        * CRD Invites + expiration
+        * Notification triggers auto if its there
+        * Resend option for notification available if its there
+    * User (OIDC Authenticated)
+        * RD Invites
+        * Accept and Reject
+    * Remove/Clean old invite API
 * Bug - direct GET /interactions/foo should return 4xx not 500
 * Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
-* Remove/Clean old invite API
-* do we still need ./notification? <- probably not
-* build email service & templates for United Effects to make qa/prod work...
-* UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
+* Do we still need ./notification? <- probably not
+* Build email service & templates for United Effects to make qa/prod work...
+* UI Functional APIs Section
+    * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
