@@ -315,6 +315,8 @@ http://jsonpatch.com/
 * auth layer and permissions
 * notifications plugin
 * password reset - ensure user is logged out
+* account verify
+* invites
 
 ## vNext Roadmap
 
