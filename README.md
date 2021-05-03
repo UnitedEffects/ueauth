@@ -64,17 +64,15 @@ The root group is the super admin for the entire service. Any account in the roo
 
 ## Locked Groups
 
-If you choose to lock your group upon creation, it means that users can not self register to the group. In this case, they must either be provided with an initial access token (option 1), or they must attempt to register which will trigger a access request which the admin (you) must confirm (option 2 - this second usecase is pending).
+If you choose to lock your group upon creation, it means that users cannot self-register to the group. This is a good options for B2B organizations and applications where all users must be invited by the admin. In this case, they must be created by you the administrator first. You have several options to provide the now existing user with their credentials:
 
-For this example, we will assume you are adding a user to the root group.
+1. You can simply set a password and notify the user outside of the system of their password
+2. (RECOMMENDED) You can activate autoVerify in your config (assuming notifications are enabled) and a verification notification will go to the user where they will both accept the account and set a new password
+3. You can manually trigger an account verify flow using the operations/user API which results in the same flow as 2 above
+4. You can ask the user to initiate a password reset (assuming notifications are enabled) and a notification will go to the user which will functionally give them their credentials through the password reset flow
+5. You can manually trigger a password reset flow using the operations/user API which results in the same flow as 4 above
 
-* Option 1
-    * As the creator of your group, you already have an account. Use one of the OIDC flows to receive a token
-    * Use this token as your bearer token to make an http request to 'POST /root/token/initial-access' making sure to include the email of the user you are inviting in the body { "userEmail": "yourfriend@email.com" }
-    * The resulting initial access token (the jti property) can now be used as a bearer token on the 'POST /api/root/account' with appropriate body { username, email, password }
-    * If the request is made within the iat expiration window (default 7 days) and the email matches userEmail above, the account will be created
-* Option 2
-    * PENDING FUNCTIONALITY
+**NOTE: As a time savings step, users can be created without having to define passwords for them using the generatePassword=true property on the Account create API.**
     
 ## Notification and Message Plugin
 
@@ -113,12 +111,13 @@ This will add a registered client specifically for notification requests. It wil
 
 If you wish to disable notifications, you can simply send "enabled": false, to the same endpoint and this registered client will be erased.
 
-Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions:
-* general (optional - will work without successful notification depending on config and store the notification for 30 days)
-* invite (optional - will work without successful notification depending on config and store the notification for 30 days)
-* forgotPassword (plugin required)
-* verify (plugin required)
-* passwordless access (plugin required)
+Now Auth Group owners can enable their own notifications. If they do so, this will result in a POST http request to the notifications url specified in your enabling request for the following interactions (notification types):
+
+* **general** - Optional: Will work without successful notification depending on config and store the notification for 30 days
+* **invite** - Optional: Will work without successful notification depending on config and store the notification for 30 days
+* **forgotPassword** - Plugin Required and must succeed
+* **verify** - Plugin Required and must succeed
+* **passwordless** - Plugin Required and must succeed
 
 To update an authGroup configuration, use the PATCH /group/id endpoint:
 
@@ -138,6 +137,7 @@ To update an authGroup configuration, use the PATCH /group/id endpoint:
 ```
 
 Regardless of the auth-group interacting with your service, all requests to the Notification Service will be via client-credential tokens against the ROOT authGroup and clientId. Your service should validate the following:
+
 * The token in general - iss, exp, etc...
 * That the audience is equal to the Notification Service ClientId issued
 * That the notification iss is equal to the token iss
@@ -146,7 +146,7 @@ Regardless of the auth-group interacting with your service, all requests to the 
 
 As a final precaution, your service can request its own token and query the Notifications API to validate incoming requests. It will do this using the client_id and client_secret issued, again for the root authGroup.
 
-NOTE: Notifications only have a 30-day life in service for an audit or query via API.
+**NOTE: Notifications only have a 30-day life in service for an audit or query via API.**
 
 The body of the POST will be as follows - shown in JSON schema:
 
@@ -211,7 +211,9 @@ In future iterations, there will be an option at an authGroup level to override 
 
 ### Verified Users
 
-If the notification plugin is not enabled both globally and within the authGroup, accounts will still be not verified when created. If you've set requireVerified to true, you will need to manually verify these accounts and manually set the flag on the account to true. NOTE: The forgot password notification does set the verify flag to true. There is a specific "verify" notification as well.
+If the notification plugin is not enabled, both globally and within the authGroup, accounts will still be not verified when created. If you've set requireVerified to true, you will need to manually verify these accounts and manually set the flag on the account to true. If you do have notifications enabled, it is recommended that you use the autoVerify feature.
+
+**NOTE: The forgot password notification also sets the verify flag to true. There is a specific "verify" notification as well.**
 
 ## Key Stack Components
 
