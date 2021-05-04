@@ -24,8 +24,8 @@ tags:
     description: Plugin configurations for the service
   - name: Users
     description: User Accounts
-  - name: Invites
-    description: Secure method of ownership and access exchange
+  - name: Invite Dashboard
+    description: API to manage invites to accept ownership or access
   - name: Clients
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Operations
@@ -568,9 +568,9 @@ paths:
   /api/{group}/invite:
     post:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Invites are used to notify and allow a user to accept ownership of a resource or access to a resource. (ACCESS NOT YET IMPLEMENTED).
-      description: Create an invitiation for group transfer or account access.
+      description: Create an invitiation for group transfer or account access. Invites for a given user can be queried by that user. In UE Auth they are available as part of the Invite Dashboard
       operationId: createInvite
       parameters:
         - name: group
@@ -608,7 +608,7 @@ paths:
   /api/{group}/invites:
     get:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Retrieve all invites (CRUD operation)
       description: 'Uses oData filtering to retrieve Invites. Admins and Owners only.'
       operationId: getInvites
@@ -671,7 +671,7 @@ paths:
   '/api/{group}/invite/{id}':
     get:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Find an Invite with ID
       description: Identify a single Invite. Must be intended recipient or owner of auth group
       operationId: getInvite
@@ -709,7 +709,7 @@ paths:
         - bearer: []
     delete:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Hard delete an Invite - only authGroup owner
       description: Hard delete an Invite - only authGroup owner
       operationId: deleteInvite
@@ -748,7 +748,7 @@ paths:
   /api/{group}/accept/{inviteType}:
     post:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Accept an invitiation of type "group" or "account"
       description: Accept an invitiation of type "group" or "account". WIP - first target is group owner transfer
       operationId: accept
@@ -2249,9 +2249,6 @@ components:
         authGroup:
           type: string
           description: authGroup of the invite
-        accessToken:
-          type: string
-          description: Token associated to the invite. This will be hashed.
 
     inviteCore:
       type: object
@@ -2266,9 +2263,25 @@ components:
         sub:
           type: string
           description: Subject/User ID of the user for whom this is intended
-        passCode:
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/inviteResources'
+
+    inviteResources:
+      type: object
+      additionalProperties: false
+      properties:
+        resourceType:
           type: string
-          description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers.
+          enum:
+            - group
+            - organization
+            - domain
+            - product
+        resourceId:
+          type: string
+
 
     createInvite:
       type: object
@@ -2276,6 +2289,7 @@ components:
       required:
         - type
         - sub
+        - resources
       allOf:
         - $ref: '#/components/schemas/inviteCore'
       properties:

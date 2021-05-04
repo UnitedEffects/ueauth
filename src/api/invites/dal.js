@@ -2,13 +2,8 @@ import Invite from './model';
 
 export default {
 	async createInvite(data) {
-		const ogPassCode = data.passCode;
-		const ogAccessToken = data.accessToken;
 		const invite =  new Invite(data);
-		const result = JSON.parse(JSON.stringify(await invite.save()));
-		result.passCode = ogPassCode;
-		result.accessToken = ogAccessToken;
-		return result;
+		return invite.save();
 	},
 	async getInvites(g, query) {
 		query.query.authGroup = g;

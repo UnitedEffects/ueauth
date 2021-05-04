@@ -240,10 +240,10 @@ http://jsonpatch.com/
 ## TODO
 
 * Invite AG Owner - This assumes the TBD IAM UI. There is no central screen
-    * Invites only work for logged in users... Don't need additional IAT or other passcodes
+    * Invites only work for logged in users... Don't need additional IAT or other passcodes (done)
     * Invites do not require the notification system to be enabled, but will use it if its there
     * Admin (OIDC Authenticated)
-        * CRD Invites + expiration
+        * CRD Invites + expiration (done)
         * Notification triggers auto if its there
         * Resend option for notification available if its there
     * User (OIDC Authenticated)
@@ -321,6 +321,7 @@ http://jsonpatch.com/
 ## vNext Roadmap
 
 * Create social login setup via API for Google, Twitter and GitHub
+* Bulk user creation and invitations
 * Integrate plugins for Permissions and MFA
 * Native AWS SES integration as an optional notifications config
 * Allow custom notification url per group instead of only global one

@@ -10,7 +10,8 @@
     "build": "yarn && && yarn test && babel src -d dist",
     "package": "yarn && && yarn test && babel src -d dist && sls package",
     "deploy": "yarn && yarn test && babel src -d dist && sls deploy",
-    "test": "jest"
+    "test": "jest",
+    "test-notifications": "nodemon ./test/testserver.js"
   },
   "keywords": [
     "docker",
