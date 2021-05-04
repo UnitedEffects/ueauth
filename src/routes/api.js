@@ -198,10 +198,7 @@ router.post('/:group/operations/reset-user-password', [
 	m.getGlobalPluginSettings
 ], account.resetPassword);
 
-/**
- * THESE MAY NOT BE NEEDED
- */
-// Invites
+// Invite Dashboard APIs
 router.post('/:group/invite',[
 	m.validateAuthGroup,
 	m.isAuthenticated,

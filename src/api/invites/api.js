@@ -13,14 +13,12 @@ const api = {
         try {
             if (req.authGroup.active === false) throw Boom.forbidden('You can not transfer an inactive group');
             if (!req.body.sub) throw Boom.preconditionRequired('user/sub Id is required');
-            if (req.body.type === 'group' && !req.body.passCode) throw Boom.preconditionRequired('a passCode is required for group ownership transfer invites');
+            if(!req.body.resources && req.body.resources.length === 0) throw Boom.badRequest('No resources identified');
             const account = await acc.getAccount(req.authGroup.id, req.body.sub);
             if(!account) throw Boom.notFound(req.body.sub);
             if(account.active === false || account.blocked === true) {
                 throw Boom.badRequest('Intended recipient account is not in good standing');
             }
-            req.body.email = account.email;
-            if(account.txt) req.body.txt = account.txt;
             const result = await inv.createInvite(req.user.sub, req.body, req.authGroup);
             return res.respond(say.created(result, RESOURCE));
         } catch (error) {
@@ -30,6 +28,14 @@ const api = {
     async getInvites(req, res, next) {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+            //todo test this
+            if(req.permissions.enforceOwn === true) {
+                if(req.query['$filter']) {
+                    req.query['$filter'] = `${req.query['$filter']} and sub eq ${req.user.sub}`
+                } else {
+                    req.query['$filter'] = `sub eq ${req.user.sub}`
+                }
+            }
             const result = await inv.getInvites(req.params.group, req.query);
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
@@ -59,6 +65,7 @@ const api = {
             next(error);
         }
     },
+    // todo - refactor
     async accept(req, res, next) {
         try {
             /**
