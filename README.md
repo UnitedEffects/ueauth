@@ -241,6 +241,7 @@ http://jsonpatch.com/
 
 * Invite AG Owner - This assumes the TBD IAM UI. There is no central screen
     * Invites only work for logged in users... Don't need additional IAT or other passcodes (done)
+    * validation function for resources... (done)
     * Invites do not require the notification system to be enabled, but will use it if its there
     * Admin (OIDC Authenticated)
         * CRD Invites + expiration (done)
@@ -256,6 +257,7 @@ http://jsonpatch.com/
 * Build email service & templates for United Effects to make qa/prod work...
 * UI Functional APIs Section
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
+    * this should be root level client-credential protected
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin

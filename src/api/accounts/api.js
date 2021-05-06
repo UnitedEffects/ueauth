@@ -100,9 +100,10 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            await permissions.enforceOwn(req.permissions, req.params.id);
-            const result = await acct.getAccount(req.params.group, req.params.id);
-            if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+            const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
+            await permissions.enforceOwn(req.permissions, id);
+            const result = await acct.getAccount(req.params.group, id);
+            if (!result) return next(Boom.notFound(`id requested was ${id}`));
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);

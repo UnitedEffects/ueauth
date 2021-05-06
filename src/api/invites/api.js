@@ -28,7 +28,6 @@ const api = {
     async getInvites(req, res, next) {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-            //todo test this
             if(req.permissions.enforceOwn === true) {
                 if(req.query['$filter']) {
                     req.query['$filter'] = `${req.query['$filter']} and sub eq ${req.user.sub}`
