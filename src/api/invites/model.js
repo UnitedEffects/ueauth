@@ -26,6 +26,15 @@ const inviteSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	status: {
+		type: String,
+		default: 'new',
+		enum: ['new', 'accepted', 'declined', 'sent']
+	},
+	xSent: {
+		type: Number,
+		default: 0
+	},
 	resources: [
 		{
 			resourceType: {

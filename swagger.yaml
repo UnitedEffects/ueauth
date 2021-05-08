@@ -25,11 +25,11 @@ tags:
   - name: Users
     description: User Accounts
   - name: Invite Dashboard
-    description: API to manage invites to accept ownership or access
+    description: API to manage invites to ownership or access
   - name: Clients
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Operations
-    description: Commands for Artifact/Security Updates
+    description: Commands for Artifact or Security Updates
   - name: Notification
     description: Manage notifications sent to the http notification plugin
   - name: OIDC
@@ -745,13 +745,13 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
-  /api/{group}/accept/{inviteType}:
+  /api/{group}/operations/invite/{id}:
     post:
       tags:
-        - Invite Dashboard
-      summary: Accept an invitiation of type "group" or "account"
-      description: Accept an invitiation of type "group" or "account". WIP - first target is group owner transfer
-      operationId: accept
+        - Operations
+      summary: Accept or decline an invitiation
+      description: Accept or reject an invitiation. Operations include 'accept' or 'decline'
+      operationId: inviteOperation
       parameters:
         - name: group
           in: path
@@ -759,22 +759,15 @@ paths:
           schema:
             type: string
           required: true
-        - name: inviteType
+        - name: id
           in: path
-          description: type of invite, group or account
+          description: the id of the invite
           schema:
             type: string
-            enum:
-              - group
-              - account
           required: true
       responses:
-        '200':
+        '204':
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/groupOwnerChange'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -791,7 +784,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/acceptInvite'
+              $ref: '#/components/schemas/inviteOperation'
         description: Invite data to be written
         required: true
 
@@ -1797,31 +1790,18 @@ components:
         scope:
           type: string
 
-    acceptInvite:
+    inviteOperation:
       type: object
       required:
-        - inviteToken
+        - operation
       additionalProperties: false
       properties:
-        passCode:
+        operation:
           type: string
-          description: optional passcode provided by invite creator
-        inviteToken:
-          type: string
-          description: required invite/access token created to identify invitation
-
-    groupOwnerChange:
-      type: object
-      properties:
-        message:
-          type: string
-          description: a confirmation of success
-        warning:
-          type: string
-          description: if there were any issues, they are defined here
-        group:
-          type: object
-          $ref: '#/components/schemas/authGroup'
+          enum:
+            - accept
+            - decline
+            - resend
 
     accessTokens:
       properties:

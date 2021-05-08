@@ -173,8 +173,6 @@ router.post('/:group/operations/client/:id', [
 	m.permissions,
 	m.access
 ], client.clientOperations);
-
-//todo create user operations...
 router.post('/:group/operations/user/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
@@ -183,8 +181,6 @@ router.post('/:group/operations/user/:id', [
 	m.access,
 	m.getGlobalPluginSettings,
 ], account.userOperations);
-
-
 router.post('/:group/operations', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
@@ -197,6 +193,15 @@ router.post('/:group/operations/reset-user-password', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], account.resetPassword);
+// Accept Invites
+router.post('/:group/operations/invite/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access,
+	m.getGlobalPluginSettings
+], invite.inviteOperations);
 
 // Invite Dashboard APIs
 router.post('/:group/invite',[
@@ -204,7 +209,8 @@ router.post('/:group/invite',[
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access
+	m.access,
+	m.getGlobalPluginSettings
 ], invite.createInvite);
 router.get('/:group/invites', [
 	m.validateAuthGroup,
@@ -224,14 +230,5 @@ router.delete('/:group/invite/:id', [
 	m.permissions,
 	m.access
 ], invite.deleteInvite);
-
-// Accept Invites
-router.post('/:group/accept/:inviteType', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access
-], invite.accept);
 
 module.exports = router;
