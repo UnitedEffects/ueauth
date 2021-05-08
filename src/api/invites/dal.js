@@ -17,5 +17,8 @@ export default {
 	},
 	async inviteAuthorizedLookup(authGroup, sub, type) {
 		return Invite.findOne({sub, authGroup, type});
+	},
+	async updateSent(authGroup, id, update) {
+		return Invite.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	}
 };

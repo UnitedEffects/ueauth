@@ -2,14 +2,14 @@ import dal from './dal';
 import helper from '../../helper';
 import group from '../authGroup/group';
 import Boom from '@hapi/boom';
-//import plugin from '../../notifications';
-//const config = require('../../config');
+
+const config = require('../../config');
 
 const inv = {
 	async createInvite(userId, data, authGroup) {
 		const invite = JSON.parse(JSON.stringify(data));
 		invite.authGroup = authGroup.id;
-		const days = invite.daysToExpire || 7;
+		const days = (invite.daysToExpire || invite.daysToExpire === 0) ? invite.daysToExpire : 7;
 		invite.expiresAt = new Date().setDate(new Date().getDate() + days);
 		const valEr = [];
 		await Promise.all(invite.resources.map(async (resource) => {
@@ -20,9 +20,44 @@ const inv = {
 			}
 		}))
 		if(valEr.length!==0) throw Boom.badRequest(valEr.join('; '));
-		const invResult = await dal.createInvite(invite);
-		// todo notification
-		return invResult;
+		return dal.createInvite(invite);
+	},
+	async incSent(authGroupId, id) {
+		const update = {
+			status: 'sent',
+			$inc : { xSent : 1 }
+		}
+		return dal.updateSent(authGroupId, id, update);
+	},
+	inviteNotificationObject(authGroup, user, invite, formats = [], activeUser) {
+		const options = { year: "numeric", month: "long", day: "numeric" }
+		const data = {
+			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
+			createdBy: activeUser,
+			type: 'invite',
+			formats,
+			recipientUserId: user.id,
+			recipientEmail: user.email,
+			recipientSms: user.sms,
+			screenUrl: `${config.PROTOCOL}://${config.UI_URL}`,
+			subject: (invite.type === 'owner') ? `${authGroup.prettyName} - Invite to Take Ownership of Resource` : `${authGroup.prettyName} - Invite to Access Resource`,
+			message: `You have an invitation to ${(invite.type==='owner') ? 'take ownership of' : 'access'} resources within the ${authGroup.prettyName} authentication group. This invite expires at ${new Date(invite.expiresAt).toLocaleDateString(undefined, options)}. Please go to the invitation dashboard to take action.`,
+			meta: {
+				description: 'Direct API calls. You must have an active session token to make invite API calls. Token not provided by invite.',
+				resources: invite.resources,
+				expiresAt: invite.expiresAt,
+				apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/operation/invite/${invite.id}`,
+				apiMethod: 'POST',
+				apiBody: { operation: 'accept' }
+			}
+		}
+
+		if(formats.length === 0) {
+			data.formats = [];
+			if(user.email) data.formats.push('email');
+			if(user.sms) data.formats.push('sms');
+		}
+		return data;
 	},
 	async validateResourceIds(r, id) {
 		switch (r) {
