@@ -63,6 +63,10 @@ export default {
 		return dal.activatePatch(authGroup._id || authGroup.id, copy);
 	},
 
+	async partialUpdate(id, data) {
+		return dal.patchNoOverwrite(id, data);
+	},
+
 	async operations(id, operation) {
 		switch (operation) {
 		case 'rotate_keys':

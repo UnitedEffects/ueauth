@@ -20,5 +20,8 @@ export default {
 	},
 	async updateSent(authGroup, id, update) {
 		return Invite.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
-	}
+	},
+	async updateStatus(authGroup, id, status) {
+		return Invite.findOneAndUpdate({ _id: id, authGroup }, { status }, { new: true });
+	},
 };

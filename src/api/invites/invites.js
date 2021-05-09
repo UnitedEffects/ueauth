@@ -85,6 +85,10 @@ const inv = {
 
 	async inviteAuthorizedLookup(authGroupId, sub, type) {
 		return dal.inviteAuthorizedLookup(authGroupId, sub, type);
+	},
+
+	async updateInviteStatus(authGroupId, id, status) {
+		return dal.updateStatus(authGroupId, id, status);
 	}
 };
 

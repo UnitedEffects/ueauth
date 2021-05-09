@@ -238,20 +238,9 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
-
-* Invite AG Owner - This assumes the TBD IAM UI. There is no central screen
-    * Invites only work for logged in users... Don't need additional IAT or other passcodes (done)
-    * validation function for resources... (done)
-    * Invites do not require the notification system to be enabled, but will use it if its there (done)
-    * Admin (OIDC Authenticated)
-        * CRD Invites + expiration (done)
-        * Notification triggers auto if its there (done)
-        * Resend option for notification available if its there (done)
-    * User (OIDC Authenticated)
-        * RD Invites (done)
-        * Accept and Reject
-    * figure out permissions for operations in general...!
-    * Remove/Clean old invite API (done)
+* Invites todo to finish
+    * Test group owner invite with non-root ag
+    * Figure out permissions for operations in general and for invites
 * Bug - direct GET /interactions/foo should return 4xx not 500
 * Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
 * Build email service & templates for United Effects to make qa/prod work...
