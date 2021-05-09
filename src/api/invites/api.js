@@ -48,6 +48,7 @@ const api = {
                 } else {
                     req.query['$filter'] = `sub eq ${req.user.sub}`
                 }
+                req.query['$filter'] = `${req.query['$filter']} and status ne 'declined' and status ne 'accepted'`;
             }
             const result = await inv.getInvites(req.params.group, req.query);
             return res.respond(say.ok(result, RESOURCE));
@@ -86,11 +87,53 @@ const api = {
             const invite = await inv.getInvite(req.authGroup.id, req.params.id);
             if(!invite) throw Boom.notFound(req.params.id);
             const op = req.body.operation;
+            const valEr = [];
             switch (op) {
                 case 'accept':
-                    break;
+                    if (req.user.sub !== invite.sub) throw Boom.unauthorized();
+                    if (req.authGroup.id !== invite.authGroup) throw Boom.unauthorized();
+                    await Promise.all(invite.resources.map(async (r) => {
+                        switch (r.resourceType) {
+                            case 'group':
+                                const ogOwner = req.authGroup.owner;
+                                const ogStatus = invite.status;
+                                try {
+                                    await grp.partialUpdate(invite.authGroup, { owner: invite.sub });
+                                    await inv.updateInviteStatus(invite.authGroup, invite.id, 'accepted');
+                                } catch (e) {
+                                    await grp.partialUpdate(invite.authGroup, { owner: ogOwner });
+                                    await inv.updateInviteStatus(invite.authGroup, invite.id, ogStatus);
+                                    console.error(e);
+                                    valEr.push(e.message);
+                                }
+                                break;
+                            default:
+                                valEr.push('Unknown resource type');
+                        }
+                    }))
+                    if (valEr.length !== 0) throw Boom.failedDependency(valEr.join("; "));
+                    return res.respond(say.noContent(RESOURCE));
                 case 'decline':
-                    break;
+                    if (req.user.sub !== invite.sub) throw Boom.unauthorized();
+                    if (req.authGroup.id !== invite.authGroup) throw Boom.unauthorized();
+                    await Promise.all(invite.resources.map(async (r) => {
+                        switch (r.resourceType) {
+                            case 'group':
+                                const ogStatus = invite.status;
+                                try {
+                                    await inv.updateInviteStatus(invite.authGroup, invite.id, 'declined');
+                                } catch (e) {
+                                    await inv.updateInviteStatus(invite.authGroup, invite.id, ogStatus);
+                                    console.error(e);
+                                    valEr.push(e.message);
+                                }
+                                break;
+                            default:
+                                valEr.push('Unknown resource type');
+                        }
+                    }))
+                    if (valEr.length !== 0) throw Boom.failedDependency(valEr.join("; "));
+                    return res.respond(say.noContent(RESOURCE));
                 case 'resend':
                     const account = await acc.getAccount(req.authGroup.id, invite.sub);
                     if(!account) throw Boom.failedDependency('Invite does not appear to be to a known user');
@@ -102,71 +145,6 @@ const api = {
                     throw Boom.badRequest(`Operation not supported: ${op}`)
             }
             throw Boom.badRequest();
-        } catch (error) {
-            next(error);
-        }
-    },
-    // todo - refactor
-    async accept(req, res, next) {
-        try {
-            /**
-             * normal member access token required to get here
-             * only doing group for now
-             * body includes - passCode, accessToken
-             * validate accessToken via IAT Lookup
-             * look up invite for sub/group/type
-             * validate passCode
-             * validate accessToken
-             * if all good, update group with new owner=sub
-             */
-            const user = req.user;
-            const inviteType = req.params.inviteType.toLowerCase();
-            if(!req.body.inviteToken) throw Boom.badRequest('invite token is required');
-            const iaTok = req.body.inviteToken;
-            console.info(user);
-            switch (inviteType) {
-                case 'group':
-                    console.info('group');
-                    if(!req.body.passCode) throw Boom.badRequest('for group transfer, pass code is required');
-                    const pc = req.body.passCode;
-                    const access = await iat.getOne(iaTok, req.authGroup.id);
-                    if(!access) throw Boom.unauthorized();
-                    const payload = JSON.parse(JSON.stringify(access.payload));
-                    if(payload.email === undefined) throw Boom.unauthorized();
-                    if(payload.sub === undefined) throw Boom.unauthorized();
-                    if(payload.email !== req.user.email) throw Boom.unauthorized();
-                    if(payload.sub !== req.user.sub) throw Boom.unauthorized();
-                    const invitation = await inv.inviteAuthorizedLookup(req.authGroup.id, req.user.sub, 'group');
-                    if(!invitation) {
-                        console.error('Invite not found');
-                        throw Boom.unauthorized();
-                    }
-                    if(!invitation.verifyPassCode(pc)) {
-                        console.error('Passcode is wrong');
-                        throw Boom.unauthorized();
-                    }
-                    if(!invitation.verifyAccessToken(iaTok)) {
-                        console.error('IAT is wrong');
-                        throw Boom.unauthorized();
-                    }
-                    const updatedGroup = await grp.switchGroupOwner(req.authGroup, req.user.sub);
-                    const output = {
-                        message: 'ownership changed',
-                        warning: null,
-                        group: updatedGroup
-                    }
-                    try {
-                        await iat.deleteOne(access._id, req.authGroup.id);
-                        await inv.deleteInvite(req.authGroup.id, invitation.id);
-                    } catch (error) {
-                        console.error(error);
-                        output.warning = 'There was an issue removing the invitation but ownership is transferred. It will expire on its own or you can manually delete it as the new owner.'
-                    }
-                    console.info(output);
-                    return res.respond(say.ok(output, RESOURCE));
-                default:
-                    throw Boom.notFound('Unknown Invite Type');
-            }
         } catch (error) {
             next(error);
         }
