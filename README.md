@@ -261,12 +261,14 @@ http://jsonpatch.com/
 * Setup CD to QA
 * Views
     * clean and brand
-    * need login errors to rendor as a view rather than json
+    * need login errors to rendor as a view rather than json (done)
     * Different views by tenant ?
         * login
-        * invites
+        * verify
         * forgot password
         * passwordless
+        * error
+        * success
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * audit system
@@ -312,7 +314,7 @@ http://jsonpatch.com/
 ## vNext Roadmap
 
 * Create social login setup via API for Google, Twitter and GitHub
-* Bulk user creation and invitations
+* Bulk user creation and notifications and/or invites
 * Integrate plugins for Permissions and MFA
 * Native AWS SES integration as an optional notifications config
 * Allow custom notification url per group instead of only global one
