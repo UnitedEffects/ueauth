@@ -19,4 +19,4 @@ steps:
     commands:
       - yarn
       - yarn test
-#      - yarn deploy
+#     - yarn deploy

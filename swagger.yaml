@@ -1771,7 +1771,7 @@ components:
           description: if provided, this is the locked user email
         sub:
           type: string
-          format: guid
+          format: uuid
           description: if provided, this is the locked user id
 
     codeAuthorizationTokenRequest:
@@ -2236,7 +2236,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
           description: unique id of the invitiation
         createdAt:
           type: string
@@ -2313,7 +2313,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
           description: system generated id of the notification
         createdAt:
           type: string

@@ -146,7 +146,7 @@ describe('Middleware tests', () => {
 		try {
 			const req = { route: { path: '/logs/:id' }, params: ['id'], method: 'get' }, res = { respond: jest.fn() }, next = jest.fn();
 			await m.schemaCheck(req, res, next);
-			expect(OpenApiValidator).toHaveBeenCalledWith(swag);
+			expect(OpenApiValidator).toHaveBeenCalledWith(swag, { ajvOptions: { formats: { email: true, password: true, uri: true, url: true, uuid: true } } });
 			const mockValidator = OpenApiValidator.mock.instances[0];
 			expect(mockValidator.validate).toHaveBeenCalled();
 		} catch (error) {
