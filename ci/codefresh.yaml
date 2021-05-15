@@ -17,8 +17,6 @@ steps:
     title: Build and Test Service
     working_directory: "${{clone}}"
     commands:
-      - node -v
       - yarn
       - yarn test
-
-#      - yarn deploy
+#     - yarn deploy
