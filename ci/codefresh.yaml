@@ -19,4 +19,5 @@ steps:
     commands:
       - yarn
       - yarn test
+      - node -v
 #      - yarn deploy
