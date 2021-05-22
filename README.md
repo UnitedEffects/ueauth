@@ -238,6 +238,10 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
+* rebase to master and fix swagger format stuff....
+* Ensure notification on authGroup creation
+* Validate what happens after IAT use if account creation + authGroup creation fail
+* How does verification work with self-creation of accounts?
 * Invites todo to finish
     * Test group owner invite with non-root ag
     * Figure out permissions for operations in general and for invites
