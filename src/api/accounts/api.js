@@ -123,11 +123,7 @@ const api = {
                     }
                 }
             }
-            //if(!req.permissions.roles.includes('super')){
-            //    if(!req.permissions.roles.includes('owner') && req.permissions.sub_group !== req.permissions.req_group){
-                    await permissions.enforceOwn(req.permissions, req.params.id);
-            //    }
-            //}
+            await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await acct.patchAccount(req.params.group, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
