@@ -30,7 +30,9 @@ router.post('/group', [
 	m.schemaCheck,
 	m.openGroupRegAuth,
 	m.openGroupRegPermissions,
-	m.openGroupRegAccess], group.write);
+	m.openGroupRegAccess,
+	m.getGlobalPluginSettings
+], group.write);
 
 router.get('/groups', [
 	m.isAuthenticated,

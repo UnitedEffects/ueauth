@@ -40,8 +40,8 @@ const inv = {
 			recipientEmail: user.email,
 			recipientSms: user.sms,
 			screenUrl: `${config.PROTOCOL}://${config.UI_URL}`,
-			subject: (invite.type === 'owner') ? `${authGroup.prettyName} - Invite to Take Ownership of Resource` : `${authGroup.prettyName} - Invite to Access Resource`,
-			message: `You have an invitation to ${(invite.type==='owner') ? 'take ownership of' : 'access'} resources within the ${authGroup.prettyName} authentication group. This invite expires at ${new Date(invite.expiresAt).toLocaleDateString(undefined, options)}. Please go to the invitation dashboard to take action.`,
+			subject: (invite.type === 'owner') ? `${authGroup.name} - Invite to Take Ownership of Resource` : `${authGroup.name} - Invite to Access Resource`,
+			message: `You have an invitation to ${(invite.type==='owner') ? 'take ownership of' : 'access'} resources within the ${authGroup.name} authentication group. This invite expires at ${new Date(invite.expiresAt).toLocaleDateString(undefined, options)}. Please go to the invitation dashboard to take action.`,
 			meta: {
 				description: 'Direct API calls. You must have an active session token to make invite API calls. Token not provided by invite.',
 				resources: invite.resources,

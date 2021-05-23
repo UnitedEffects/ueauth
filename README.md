@@ -238,16 +238,15 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
-* rebase to master and fix swagger format stuff....
-* Ensure notification on authGroup creation
-* Validate what happens after IAT use if account creation + authGroup creation fail
-* How does verification work with self-creation of accounts?
 * Invites todo to finish
-    * Test group owner invite with non-root ag
-    * Figure out permissions for operations in general and for invites
+    * need to retest owner transfer in general
+    * test compound path permissions for all operations
+    * repeated accept operations seem to all return 204... that seems wrong
+* How does verification work with self-creation of accounts?
+* DeprecationWarning: uuidv4() is deprecated. Use v4() from the uuid module instead
 * Bug - direct GET /interactions/foo should return 4xx not 500
-* Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
 * Build email service & templates for United Effects to make qa/prod work...
+* Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
 * UI Functional APIs Section
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
     * this should be root level client-credential protected
