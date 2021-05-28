@@ -3,8 +3,8 @@ import { say } from '../../say';
 import acct from './account';
 import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
-import cl from "../oidc/client/clients";
-import permissions from "../../permissions";
+import cl from '../oidc/client/clients';
+import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 const cryptoRandomString = require('crypto-random-string');
 
@@ -176,6 +176,7 @@ const api = {
                         if (req.globalSettings.notifications.enabled === true &&
                             req.authGroup.pluginOptions.notification.enabled === true) {
                             const user = await acct.getAccount(req.authGroup.id, req.params.id);
+                            await permissions.enforceOwn(req.permissions, user.id);
                             result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, false);
                             return res.respond(say.noContent(RESOURCE));
                         }
@@ -191,6 +192,7 @@ const api = {
                         if (req.globalSettings.notifications.enabled === true &&
                             req.authGroup.pluginOptions.notification.enabled === true) {
                             const user = await acct.getAccount(req.authGroup.id, req.params.id);
+                            await permissions.enforceOwn(req.permissions, user.id);
                             result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, true);
                             return res.respond(say.noContent(RESOURCE));
                         }
@@ -203,6 +205,8 @@ const api = {
                     }
                 case "generate_password":
                     const password = cryptoRandomString({length: 32, type: 'url-safe'});
+                    const user = await acct.getAccount(req.authGroup.id, req.params.id);
+                    await permissions.enforceOwn(req.permissions, user.id);
                     result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined);
                     return res.respond(say.ok(result, RESOURCE));
                 default:

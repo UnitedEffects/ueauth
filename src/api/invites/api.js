@@ -12,6 +12,7 @@ const RESOURCE = 'INVITE';
 const api = {
     async createInvite(req, res, next) {
         try {
+            console.info(req.permissions);
             if (req.authGroup.active === false) throw Boom.forbidden('You can not transfer an inactive group');
             if (!req.body.sub) throw Boom.preconditionRequired('user/sub Id is required');
             if(!req.body.resources && req.body.resources.length === 0) throw Boom.badRequest('No resources identified');
@@ -44,7 +45,7 @@ const api = {
             if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
             if(req.permissions.enforceOwn === true) {
                 if(req.query['$filter']) {
-                    req.query['$filter'] = `${req.query['$filter']} and sub eq ${req.user.sub}`
+                    req.query['$filter'] = `${req.query['$filter']} and sub eq ${req.user.sub}`;
                 } else {
                     req.query['$filter'] = `sub eq ${req.user.sub}`
                 }
@@ -92,6 +93,7 @@ const api = {
                 case 'accept':
                     if (req.user.sub !== invite.sub) throw Boom.unauthorized();
                     if (req.authGroup.id !== invite.authGroup) throw Boom.unauthorized();
+                    if (invite.status === 'accepted') throw Boom.badRequest('This was already accepted');
                     await Promise.all(invite.resources.map(async (r) => {
                         switch (r.resourceType) {
                             case 'group':
@@ -116,6 +118,7 @@ const api = {
                 case 'decline':
                     if (req.user.sub !== invite.sub) throw Boom.unauthorized();
                     if (req.authGroup.id !== invite.authGroup) throw Boom.unauthorized();
+                    if (invite.status === 'accepted') throw Boom.badRequest('This was already accepted');
                     await Promise.all(invite.resources.map(async (r) => {
                         switch (r.resourceType) {
                             case 'group':
@@ -131,10 +134,13 @@ const api = {
                             default:
                                 valEr.push('Unknown resource type');
                         }
-                    }))
+                    }));
                     if (valEr.length !== 0) throw Boom.failedDependency(valEr.join("; "));
                     return res.respond(say.noContent(RESOURCE));
                 case 'resend':
+                    if (req.user.sub !== invite.sub) throw Boom.unauthorized();
+                    if (req.authGroup.id !== invite.authGroup) throw Boom.unauthorized();
+                    if (invite.status === 'accepted') throw Boom.badRequest('This was already accepted');
                     const account = await acc.getAccount(req.authGroup.id, invite.sub);
                     if(!account) throw Boom.failedDependency('Invite does not appear to be to a known user');
                     const data = inv.inviteNotificationObject(req.authGroup, account, invite, [], req.user.sub);
@@ -142,7 +148,7 @@ const api = {
                     const result = await inv.incSent(req.authGroup.id, invite.id);
                     return res.respond(say.ok(result, RESOURCE));
                 default:
-                    throw Boom.badRequest(`Operation not supported: ${op}`)
+                    throw Boom.badRequest(`Operation not supported: ${op}`);
             }
             throw Boom.badRequest();
         } catch (error) {

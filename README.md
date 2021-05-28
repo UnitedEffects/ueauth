@@ -238,12 +238,9 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
-* Invites todo to finish
-    * need to retest owner transfer in general
-    * test compound path permissions for all operations
-    * repeated accept operations seem to all return 204... that seems wrong
-* How does verification work with self-creation of accounts?
 * DeprecationWarning: uuidv4() is deprecated. Use v4() from the uuid module instead
+* How does verification work with self-creation of accounts?
+* reset password should only work with a client-credential token from our UI?
 * Bug - direct GET /interactions/foo should return 4xx not 500
 * Build email service & templates for United Effects to make qa/prod work...
 * Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients

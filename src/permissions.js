@@ -130,7 +130,7 @@ function returnActions(method, path, role) {
 		return targets.includes(p.target);
 	});
 	if(possiblePerms.length === 1) {
-		return possiblePerms.actions.split(' ');
+		return possiblePerms[0].actions.split(' ');
 	}
 	targets = [];
 	for(let x=0; x<possiblePerms.length; x++) {
@@ -237,6 +237,10 @@ const Member = [
 	},
 	{
 		target: 'invite',
+		actions: 'read:own'
+	},
+	{
+		target: 'invites',
 		actions: 'read:own'
 	},
 	{
