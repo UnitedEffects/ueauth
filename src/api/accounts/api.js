@@ -3,8 +3,8 @@ import { say } from '../../say';
 import acct from './account';
 import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
-import cl from "../oidc/client/clients";
-import permissions from "../../permissions";
+import cl from '../oidc/client/clients';
+import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 const cryptoRandomString = require('crypto-random-string');
 
@@ -60,8 +60,11 @@ const api = {
                 client
             };
             try {
-                await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
+                console.info(req.authInfo);
+                const result = await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
+                console.info(result);
             } catch (error) {
+                console.error(error);
                 console.error('could not clean token');
             }
             return res.respond(say.created(out, RESOURCE));
@@ -100,9 +103,10 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            await permissions.enforceOwn(req.permissions, req.params.id);
-            const result = await acct.getAccount(req.params.group, req.params.id);
-            if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+            const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
+            await permissions.enforceOwn(req.permissions, id);
+            const result = await acct.getAccount(req.params.group, id);
+            if (!result) return next(Boom.notFound(`id requested was ${id}`));
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -172,6 +176,7 @@ const api = {
                         if (req.globalSettings.notifications.enabled === true &&
                             req.authGroup.pluginOptions.notification.enabled === true) {
                             const user = await acct.getAccount(req.authGroup.id, req.params.id);
+                            await permissions.enforceOwn(req.permissions, user.id);
                             result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, false);
                             return res.respond(say.noContent(RESOURCE));
                         }
@@ -187,6 +192,7 @@ const api = {
                         if (req.globalSettings.notifications.enabled === true &&
                             req.authGroup.pluginOptions.notification.enabled === true) {
                             const user = await acct.getAccount(req.authGroup.id, req.params.id);
+                            await permissions.enforceOwn(req.permissions, user.id);
                             result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, true);
                             return res.respond(say.noContent(RESOURCE));
                         }
@@ -199,6 +205,8 @@ const api = {
                     }
                 case "generate_password":
                     const password = cryptoRandomString({length: 32, type: 'url-safe'});
+                    const user = await acct.getAccount(req.authGroup.id, req.params.id);
+                    await permissions.enforceOwn(req.permissions, user.id);
                     result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined);
                     return res.respond(say.ok(result, RESOURCE));
                 default:

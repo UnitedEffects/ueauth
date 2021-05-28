@@ -24,12 +24,12 @@ tags:
     description: Plugin configurations for the service
   - name: Users
     description: User Accounts
-  - name: Invites
-    description: Secure method of ownership and access exchange
+  - name: Invite Dashboard
+    description: API to manage invites to ownership or access
   - name: Clients
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Operations
-    description: Commands for Artifact/Security Updates
+    description: Commands for Artifact or Security Updates
   - name: Notification
     description: Manage notifications sent to the http notification plugin
   - name: OIDC
@@ -568,9 +568,9 @@ paths:
   /api/{group}/invite:
     post:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Invites are used to notify and allow a user to accept ownership of a resource or access to a resource. (ACCESS NOT YET IMPLEMENTED).
-      description: Create an invitiation for group transfer or account access.
+      description: Create an invitiation for group transfer or account access. Invites for a given user can be queried by that user. In UE Auth they are available as part of the Invite Dashboard
       operationId: createInvite
       parameters:
         - name: group
@@ -608,7 +608,7 @@ paths:
   /api/{group}/invites:
     get:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Retrieve all invites (CRUD operation)
       description: 'Uses oData filtering to retrieve Invites. Admins and Owners only.'
       operationId: getInvites
@@ -671,7 +671,7 @@ paths:
   '/api/{group}/invite/{id}':
     get:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Find an Invite with ID
       description: Identify a single Invite. Must be intended recipient or owner of auth group
       operationId: getInvite
@@ -709,7 +709,7 @@ paths:
         - bearer: []
     delete:
       tags:
-        - Invites
+        - Invite Dashboard
       summary: Hard delete an Invite - only authGroup owner
       description: Hard delete an Invite - only authGroup owner
       operationId: deleteInvite
@@ -745,13 +745,13 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
-  /api/{group}/accept/{inviteType}:
+  /api/{group}/operations/invite/{id}:
     post:
       tags:
-        - Invites
-      summary: Accept an invitiation of type "group" or "account"
-      description: Accept an invitiation of type "group" or "account". WIP - first target is group owner transfer
-      operationId: accept
+        - Operations
+      summary: Accept or decline an invitiation
+      description: Accept or reject an invitiation. Operations include 'accept' or 'decline'
+      operationId: inviteOperation
       parameters:
         - name: group
           in: path
@@ -759,22 +759,15 @@ paths:
           schema:
             type: string
           required: true
-        - name: inviteType
+        - name: id
           in: path
-          description: type of invite, group or account
+          description: the id of the invite
           schema:
             type: string
-            enum:
-              - group
-              - account
           required: true
       responses:
-        '200':
+        '204':
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/groupOwnerChange'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -791,7 +784,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/acceptInvite'
+              $ref: '#/components/schemas/inviteOperation'
         description: Invite data to be written
         required: true
 
@@ -1797,31 +1790,18 @@ components:
         scope:
           type: string
 
-    acceptInvite:
+    inviteOperation:
       type: object
       required:
-        - inviteToken
+        - operation
       additionalProperties: false
       properties:
-        passCode:
+        operation:
           type: string
-          description: optional passcode provided by invite creator
-        inviteToken:
-          type: string
-          description: required invite/access token created to identify invitation
-
-    groupOwnerChange:
-      type: object
-      properties:
-        message:
-          type: string
-          description: a confirmation of success
-        warning:
-          type: string
-          description: if there were any issues, they are defined here
-        group:
-          type: object
-          $ref: '#/components/schemas/authGroup'
+          enum:
+            - accept
+            - decline
+            - resend
 
     accessTokens:
       properties:
@@ -2249,9 +2229,6 @@ components:
         authGroup:
           type: string
           description: authGroup of the invite
-        accessToken:
-          type: string
-          description: Token associated to the invite. This will be hashed.
 
     inviteCore:
       type: object
@@ -2266,9 +2243,25 @@ components:
         sub:
           type: string
           description: Subject/User ID of the user for whom this is intended
-        passCode:
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/inviteResources'
+
+    inviteResources:
+      type: object
+      additionalProperties: false
+      properties:
+        resourceType:
           type: string
-          description: Used as an optional user provided secret in addition to the system generated invite token. Share this with the intended user in private, they will need it to claim the invite. This is a required field for Group owner transfers.
+          enum:
+            - group
+            - organization
+            - domain
+            - product
+        resourceId:
+          type: string
+
 
     createInvite:
       type: object
@@ -2276,6 +2269,7 @@ components:
       required:
         - type
         - sub
+        - resources
       allOf:
         - $ref: '#/components/schemas/inviteCore'
       properties:

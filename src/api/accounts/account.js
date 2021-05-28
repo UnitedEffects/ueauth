@@ -79,8 +79,8 @@ export default {
 			recipientEmail: user.email,
 			recipientSms: user.sms,
 			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/verifyaccount?code=${iAccessToken.jti}`,
-			subject: `${authGroup.prettyName} - Verify and Claim Your New Account`,
-			message: `You have been added to the authentication group '${authGroup.prettyName}'. Please click the button below or copy past the link in a browser to verify your identity and set your password.`,
+			subject: `${authGroup.name} - Verify and Claim Your New Account`,
+			message: `You have been added to the authentication group '${authGroup.name}'. Please click the button below or copy past the link in a browser to verify your identity and set your password.`,
 			meta: {
 				description: 'Direct API Patch Call',
 				token: iAccessToken.jti,
@@ -120,7 +120,7 @@ export default {
 			recipientEmail: user.email,
 			recipientSms: user.sms,
 			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
-			subject: `${authGroup.prettyName} - User Password Reset`,
+			subject: `${authGroup.name} - User Password Reset`,
 			message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
 			meta: {
 				description: 'Direct API Patch Call',

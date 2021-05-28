@@ -238,24 +238,15 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
-
-* Invite AG Owner - This assumes the TBD IAM UI. There is no central screen
-    * Invites only work for logged in users... Don't need additional IAT or other passcodes
-    * Invites do not require the notification system to be enabled, but will use it if its there
-    * Admin (OIDC Authenticated)
-        * CRD Invites + expiration
-        * Notification triggers auto if its there
-        * Resend option for notification available if its there
-    * User (OIDC Authenticated)
-        * RD Invites
-        * Accept and Reject
-    * Remove/Clean old invite API
+* DeprecationWarning: uuidv4() is deprecated. Use v4() from the uuid module instead
+* How does verification work with self-creation of accounts?
+* reset password should only work with a client-credential token from our UI?
 * Bug - direct GET /interactions/foo should return 4xx not 500
-* Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
-* Do we still need ./notification? <- probably not
 * Build email service & templates for United Effects to make qa/prod work...
+* Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
 * UI Functional APIs Section
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
+    * this should be root level client-credential protected
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
@@ -270,12 +261,14 @@ http://jsonpatch.com/
 * Setup CD to QA
 * Views
     * clean and brand
-    * need login errors to rendor as a view rather than json
+    * need login errors to rendor as a view rather than json (done)
     * Different views by tenant ?
         * login
-        * invites
+        * verify
         * forgot password
         * passwordless
+        * error
+        * success
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * audit system
@@ -315,10 +308,13 @@ http://jsonpatch.com/
 * auth layer and permissions
 * notifications plugin
 * password reset - ensure user is logged out
+* account verify
+* invites
 
 ## vNext Roadmap
 
 * Create social login setup via API for Google, Twitter and GitHub
+* Bulk user creation and notifications and/or invites
 * Integrate plugins for Permissions and MFA
 * Native AWS SES integration as an optional notifications config
 * Allow custom notification url per group instead of only global one

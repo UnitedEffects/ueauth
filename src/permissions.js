@@ -23,18 +23,41 @@ export default {
 			// auth group owner has full access to their group
 			if (req.permissions && req.permissions.roles && req.permissions.roles.length !== 0) {
 				const roles = req.permissions.roles;
-				let actions;
-				const actionsExist = await roles.some((role) => {
-					actions = returnActions(req.method, req.path, role);
-					return actions.length > 0;
+				let actions = [];
+				await roles.map((role) => {
+					if (actions.length === 0) {
+						actions = returnActions(req.method, req.path, role);
+					}
+					else {
+						actions = actions.concat(returnActions(req.method, req.path, role));
+					}
 				});
+				const actionsExist = (actions.length !== 0);
 				if(!actionsExist) throw Boom.forbidden(ERROR_MESSAGE);
 				const methodAction = translateMethod(req.method);
 				if(!methodAction) throw Boom.methodNotAllowed(req.method);
-				const final = actions.filter((a) => {
+				let final = actions.filter((a) => {
 					return a.includes(methodAction) === true;
 				});
 				if(final.length === 0) throw Boom.forbidden(ERROR_MESSAGE);
+				if(final.length > 1) {
+					// de-dup
+					final = final.reduce((unique, item) => unique.includes(item) ? unique : [...unique, item], []);
+					// prioritize "all"
+					const x = [];
+					await final.forEach((f) => {
+						x.push(f.split(':')[0]);
+					});
+					const y = x.reduce((unique, item) => unique.includes(item) ? unique : [...unique, item], []);
+					await y.forEach((z) => {
+						if((final.includes(`${z}:all`) || final.includes(z)) && final.includes(`${z}:own`)){
+							final = final.filter((f) => {
+								return !f.includes(`${z}:own`);
+							});
+						}
+					});
+				}
+				//todo - this may need revising when full permissions are implemented via IAM
 				if (final[0].includes(':own')){
 					req.permissions.enforceOwn = true;
 				}
@@ -46,6 +69,7 @@ export default {
 		}
 	},
 	async enforceOwn(p, resourceOwner) {
+
 		if(p.enforceOwn === true) {
 			if(!p.agent) throw Boom.forbidden();
 			if(!p.agent.sub) throw Boom.forbidden();
@@ -54,6 +78,7 @@ export default {
 				throw Boom.notFound(resourceOwner);
 			}
 		}
+
 	}
 };
 
@@ -96,13 +121,52 @@ function returnActions(method, path, role) {
 		permissions = null;
 	}
 	if(!permissions) return [];
-	const targets = Targets.filter((t) => {
+	//narrow it down
+	let targets = Targets.filter((t) => {
+		t = t.split(':').join('/');
 		return modPath.includes(`${t}-`) || modPath.includes(`${t}/`);
 	});
+	const possiblePerms = permissions.filter((p) => {
+		return targets.includes(p.target);
+	});
+	if(possiblePerms.length === 1) {
+		return possiblePerms[0].actions.split(' ');
+	}
+	targets = [];
+	for(let x=0; x<possiblePerms.length; x++) {
+		targets.push(possiblePerms[x].target);
+	}
+	//look for compound paths and pick a target
+	const compoundTargets = targets.filter((t) => {
+		return t.includes(':');
+	});
+	targets = targets.filter(x => !compoundTargets.includes(x));
+	//check compound first
+	let target = [];
+	if(compoundTargets.length !== 0) {
+		for(let x=0; x<compoundTargets.length; x++) {
+			if(target.length === 0) {
+				if(modPath.includes(compoundTargets[x].split(':').join('/'))) {
+					target.push(compoundTargets[x]);
+				}
+			}
+		}
+	}
+	if(target.length === 0) {
+		//try non compound targets
+		const paths = modPath.split('/');
+		for(let x=0; x<paths.length; x++) {
+			if(target.length === 0) {
+				if(targets.includes(paths[x])) {
+					target.push(paths[x]);
+				}
+			}
+		}
+	}
 	if(targets.length === 0) return [];
-	const target = targets[0];
+	const t = target[0];
 	const p = permissions.find((a) => {
-		return a.target === target;
+		return a.target === t;
 	});
 	if(!p || !p.actions) return [];
 	return p.actions.split(' ');
@@ -113,7 +177,7 @@ function returnActions(method, path, role) {
  * Actions: create update:all|own read:all|own delete:all|own
  */
 //todo can we derive these??
-const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operation:client', 'operation', 'token:initial-access', 'token', 'notification', 'notifications'];
+const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operations:client', 'operations:reset-user-password', 'operations:user', 'operations:invite', 'operations', 'token:initial-access', 'token', 'notification', 'notifications'];
 
 const Owner = [
 	{
@@ -149,11 +213,7 @@ const Owner = [
 		actions: 'read:all'
 	},
 	{
-		target: 'operation:client',
-		actions: 'create'
-	},
-	{
-		target: 'operation',
+		target: 'operations',
 		actions: 'create'
 	},
 	{
@@ -180,8 +240,24 @@ const Member = [
 		actions: 'read:own'
 	},
 	{
+		target: 'invites',
+		actions: 'read:own'
+	},
+	{
 		target: 'accept',
 		actions: 'create'
+	},
+	{
+		target: 'operations:reset-user-password',
+		actions: 'create'
+	},
+	{
+		target: 'operations:user',
+		actions: 'create:own'
+	},
+	{
+		target: 'operations:invite',
+		actions: 'create:own'
 	}
 ];
 

@@ -5,6 +5,8 @@ import plugins from '../plugins/plugins';
 import helper from '../../helper';
 import k from './generate-keys';
 
+const config = require('../../config');
+
 export default {
 	async check(pName) {
 		const docs = await dal.checkPrettyName(pName);
@@ -63,6 +65,10 @@ export default {
 		return dal.activatePatch(authGroup._id || authGroup.id, copy);
 	},
 
+	async partialUpdate(id, data) {
+		return dal.patchNoOverwrite(id, data);
+	},
+
 	async operations(id, operation) {
 		switch (operation) {
 		case 'rotate_keys':
@@ -71,5 +77,32 @@ export default {
 		default:
 			throw Boom.badData('Unknown operation specified');
 		}
-	}
+	},
+
+	groupCreationNotifyOptions(authGroup, owner) {
+		console.info(authGroup);
+		return {
+			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
+			createdBy: owner,
+			type: 'general',
+			formats: ['email'],
+			recipientEmail: owner,
+			// todo - finalize the screen url after UX
+			screenUrl: `${config.PROTOCOL}://${config.UI_URL}/${authGroup.id}/register?code=${authGroup.initialAccessToken}`,
+			subject: `${authGroup.name} - Register Your Ownership Account`,
+			message: `You created a new auth group called '${authGroup.name}'. In order to complete the creation process and activate the group, you must register your account with the same email address that you used to create the group.`,
+			meta: {
+				description: 'Direct API Post Call',
+				token: authGroup.initialAccessToken,
+				apiHeader: `bearer ${authGroup.initialAccessToken}`,
+				apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/user`,
+				apiMethod: 'POST',
+				apiBody: {
+					username: owner,
+					email: owner,
+					password: 'INSERT-PASSWORD-HERE'
+				}
+			}
+		};
+	},
 };
