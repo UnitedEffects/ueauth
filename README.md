@@ -239,14 +239,15 @@ http://jsonpatch.com/
 
 ## TODO
 * DeprecationWarning: uuidv4() is deprecated. Use v4() from the uuid module instead
-* How does verification work with self-creation of accounts?
-* reset password should only work with a client-credential token from our UI?
 * Bug - direct GET /interactions/foo should return 4xx not 500
-* Build email service & templates for United Effects to make qa/prod work...
 * Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
+* Bug - shouldn't login with a different client-id create a new session even on the same browser?
+* Refactor passwordless config setup...
+* How does verification work with self-creation of accounts?
 * UI Functional APIs Section
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
     * this should be root level client-credential protected
+    * reset password should only work with a client-credential token from our UI?
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
