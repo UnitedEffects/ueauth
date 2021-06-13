@@ -33,7 +33,7 @@ export default {
             "client_secret_expires_at": 0,
             "client_id_issued_at": Date.now(),
             "client_id": uuid(),
-            "client_name": `${authGroup.name}`,
+            "client_name": config.PLATFORM_NAME,
             "grant_types": ["client_credentials", "authorization_code", "implicit"],
             "response_types": ["code id_token", "code", "id_token"],
             "redirect_uris": [`https://${config.UI_URL}`],

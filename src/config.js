@@ -28,6 +28,7 @@ const config = {
 	INIT_ROOT_PRIMARY_DOMAIN: process.env.INIT_ROOT_PRIMARY_DOMAIN || envVars.INIT_ROOT_PRIMARY_DOMAIN || 'https://unitedeffects.com',
 	INIT_ROOT_PRIMARY_TOS: process.env.INIT_ROOT_PRIMARY_TOS || envVars.INIT_ROOT_PRIMARY_TOS || 'https://unitedeffects.com/tos',
 	INIT_ROOT_PRIMARY_POLICY: process.env.INIT_ROOT_PRIMARY_POLICY || envVars.INIT_ROOT_PRIMARY_POLICY || 'https://unitedeffects.com/privacy',
+	PLATFORM_NAME: process.env.PLATFORM_NAME || envVars.PLATFORM_NAME || 'UE Auth'
 };
 
 module.exports = config;
