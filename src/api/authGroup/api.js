@@ -37,7 +37,9 @@ const api = {
 				name: 'root',
 				prettyName: 'root',
 				locked: true,
-				primaryDomain: `https://${config.UI_URL}`,
+				primaryDomain: config.ROOT_PRIMARY_DOMAIN,
+				primaryTOS: config.ROOT_PRIMARY_TOS,
+				primaryPrivacyPolicy: config.ROOT_PRIMARY_POLICY,
 				owner: config.ROOT_EMAIL
 			};
 			const aData = {

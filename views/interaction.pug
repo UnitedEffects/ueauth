@@ -116,7 +116,8 @@ html
     body
         .login-card
             h1=title
-            h2.center-text=authGroupName
+            h2.center-text=client.clientName
+            h3.center-text=authGroupName
             .login-client-image
             if client.logoUri
                 img(src=client.logoUri)
@@ -148,8 +149,8 @@ html
             form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
                 button.login.login-submit(autofocus='', type='submit') Continue
             .login-help
-                a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
-                if client.tosUri
-                    a(href=client.tosUri) [ Terms of Service ]
-                if client.policyUri
-                    a(href=client.policyUri) [ Privacy Policy ]
+                a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
+                if (client.tosUri || tos)
+                    a(href=(client.tosUri || tos)) [ Terms of Service ]
+                if (client.policyUri || policy)
+                    a(href=(client.policyUri || policy)) [ Privacy Policy ]

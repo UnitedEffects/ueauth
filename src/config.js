@@ -24,7 +24,10 @@ const config = {
 	ONE_TIME_PERSONAL_ROOT_CREATION_KEY: process.env.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || envVars.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || null,
 	FULL_SUPER_CONTROL: (process.env.FULL_SUPER_CONTROL === 'true') || envVars.FULL_SUPER_CONTROL || true,
 	OPEN_GROUP_REG: (process.env.OPEN_GROUP_REG === 'true') || envVars.OPEN_GROUP_REG || false,
-	ROOT_COMPANY_NAME: process.env.ROOT_COMPANY_NAME || envVars.ROOT_COMPANY_NAME || 'United Effects'
+	ROOT_COMPANY_NAME: process.env.ROOT_COMPANY_NAME || envVars.ROOT_COMPANY_NAME || 'United Effects',
+	ROOT_PRIMARY_DOMAIN: process.env.ROOT_PRIMARY_DOMAIN || envVars.ROOT_PRIMARY_DOMAIN || 'https://unitedeffects.com',
+	ROOT_PRIMARY_TOS: process.env.ROOT_PRIMARY_TOS || envVars.ROOT_PRIMARY_TOS || 'https://unitedeffects.com/tos',
+	ROOT_PRIMARY_POLICY: process.env.ROOT_PRIMARY_POLICY || envVars.ROOT_PRIMARY_POLICY || 'https://unitedeffects.com/privacy',
 };
 
 module.exports = config;
