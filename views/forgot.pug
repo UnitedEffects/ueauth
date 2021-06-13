@@ -141,9 +141,10 @@ html
         .login-card
             h1(id='title')=title
             h2.center-text=client.clientName
-            h3.center-text=authGroupName
-                if flash
-                    h4(id='message')= flash
+            if (authGroupName !== client.clientName)
+                h3.center-text=authGroupName
+            if flash
+                h4(id='message')= flash
             form(id='forgot' autocomplete='off')
                 input(required='', type='password', name='password', placeholder='new password')
                 input(required='', type='password', name='confirm-password', placeholder='confirm your password')

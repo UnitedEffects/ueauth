@@ -6,7 +6,6 @@ import Account from '../accounts/accountOidcInterface';
 import Client from './client/clients';
 import middle from '../../oidcMiddleware';
 
-
 import IAT from './models/initialAccessToken';
 import group from '../authGroup/group';
 
@@ -183,7 +182,24 @@ function oidcConfig(g) {
 			}
 		},
 		cookies: {
-			keys: config.COOKIE_KEYS()
+			keys: config.COOKIE_KEYS(),
+			long: {
+				httpOnly: true,
+				overwrite: true,
+				sameSite: 'none',
+				//signed: true
+			},
+			short: {
+				httpOnly: true,
+				overwrite: true,
+				sameSite: 'lax',
+				//signed: true
+			},
+			names: {
+				interaction: `${g.prettyName}_interaction`,
+				resume: `${g.prettyName}_interaction_resume`,
+				session: `${g.prettyName}_session`
+			}
 		},
 		async extraAccessTokenClaims(ctx, token) {
 			let claims = {};

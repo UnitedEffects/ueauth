@@ -239,9 +239,11 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Bug - shouldn't login with a different client-id create a new session even on the same browser?
-* Refactor passwordless config setup...
+* Implement logoutSource and postLogoutSource functions 
+    * https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#logoutsource
+* TEST - Attempt to log into 2 different authgroups at the same time
 * How does verification work with self-creation of accounts?
+* Refactor passwordless config setup...
 * UI Functional APIs Section
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
     * this should be root level client-credential protected

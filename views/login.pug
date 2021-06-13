@@ -160,9 +160,10 @@ html
         .login-card
             h1=title
             h2.center-text=client.clientName
-            h3.center-text=authGroupName
-                if flash
-                    h5.flash= flash
+            if (authGroupName !== client.clientName)
+                h3.center-text=authGroupName
+            if flash
+                h5.flash= flash
             form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
                 if !params.login_hint
                     input(required='', type='email', name='email', placeholder='Enter an email', autofocus='on')

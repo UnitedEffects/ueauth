@@ -117,7 +117,8 @@ html
         .login-card
             h1=title
             h2.center-text=client.clientName
-            h3.center-text=authGroupName
+            if (authGroupName !== client.clientName)
+                h3.center-text=authGroupName
             .login-client-image
             if client.logoUri
                 img(src=client.logoUri)
