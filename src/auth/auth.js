@@ -209,7 +209,7 @@ async (req, token, next) => {
 			if(issuer !== null && preDecoded.payload.group !== subAG.id) {
 				// there is a problem with the token authgroup,
 				// we reset issuer here so we can check to see if this is a root account (super admin)
-				console.info('debug check (delete later) - issuer cleared');
+				// console.info('debug check (delete later) - issuer cleared');
 				issuer = null;
 			}
 			if(issuer === null) {

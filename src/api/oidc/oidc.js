@@ -1,5 +1,5 @@
 import { Provider } from 'oidc-provider';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import Pug from 'koa-pug';
 import path from 'path';
 import Account from '../accounts/accountOidcInterface';

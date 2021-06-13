@@ -4,7 +4,7 @@ import dal from './dal';
 import helper from '../../../helper';
 import oidc from "../oidc";
 import Adapter from '../dal';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { snakeCase } from 'lodash';
 
 const config = require('../../../config');

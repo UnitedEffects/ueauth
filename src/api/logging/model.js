@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 
 mongoose.set('useCreateIndex', true);
 const logSchema = new mongoose.Schema({
