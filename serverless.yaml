@@ -25,9 +25,9 @@ provider:
     FULL_SUPER_CONTROL: ${env:FULL_SUPER_CONTROL, file(./.env/env.${self:provider.env}.json):FULL_SUPER_CONTROL}
     OPEN_GROUP_REG: ${env:OPEN_GROUP_REG, file(./.env/env.${self:provider.env}.json):OPEN_GROUP_REG}
     ROOT_COMPANY_NAME: ${env:ROOT_COMPANY_NAME, file(./.env/env.${self:provider.env}.json):ROOT_COMPANY_NAME}
-    ROOT_PRIMARY_DOMAIN: ${env:ROOT_PRIMARY_DOMAIN, file(./.env/env.${self:provider.env}.json):ROOT_PRIMARY_DOMAIN}
-    ROOT_PRIMARY_TOS: ${env:ROOT_PRIMARY_TOS, file(./.env/env.${self:provider.env}.json):ROOT_PRIMARY_TOS}
-    ROOT_PRIMARY_POLICY: ${env:ROOT_PRIMARY_POLICY, file(./.env/env.${self:provider.env}.json):ROOT_PRIMARY_POLICY}
+    INIT_ROOT_PRIMARY_DOMAIN: ${env:INIT_ROOT_PRIMARY_DOMAIN, file(./.env/env.${self:provider.env}.json):INIT_ROOT_PRIMARY_DOMAIN}
+    INIT_ROOT_PRIMARY_TOS: ${env:INIT_ROOT_PRIMARY_TOS, file(./.env/env.${self:provider.env}.json):INIT_ROOT_PRIMARY_TOS}
+    INIT_ROOT_PRIMARY_POLICY: ${env:INIT_ROOT_PRIMARY_POLICY, file(./.env/env.${self:provider.env}.json):INIT_ROOT_PRIMARY_POLICY}
 
 package:
   exclude:
