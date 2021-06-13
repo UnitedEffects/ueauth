@@ -2139,6 +2139,14 @@ components:
           type: string
           format: url
           description: primary domain url
+        primaryTOS:
+          type: string
+          format: url
+          description: link to your company terms of service
+        primaryPrivacyPolicy:
+          type: string
+          format: url
+          description: link to your company privacty policy
 
     authGroup:
       type: object

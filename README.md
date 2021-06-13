@@ -238,9 +238,7 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## TODO
-* DeprecationWarning: uuidv4() is deprecated. Use v4() from the uuid module instead
-* Bug - direct GET /interactions/foo should return 4xx not 500
-* Bug - need to add terms of service uri and privacy uri configuration for initialization of root and new authgroup default clients
+
 * Bug - shouldn't login with a different client-id create a new session even on the same browser?
 * Refactor passwordless config setup...
 * How does verification work with self-creation of accounts?

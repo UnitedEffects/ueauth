@@ -6,11 +6,16 @@ import group from '../authGroup/group';
 
 const api = {
 	async oidcCaller(req, res, next) {
-		if (!req.params.group) return next();
-		if (helper.protectedNames(req.params.group)) return next();
-		const tenant = await group.getOneByEither(req.params.group, false);
-		if(!tenant) return next(Boom.notFound('Auth Group'));
-		return oidc(tenant).callback(req, res, next);
+		try {
+			if (!req.params.group) return next();
+			if (helper.protectedNames(req.params.group)) return next();
+			const tenant = await group.getOneByEither(req.params.group, false);
+			if(!tenant) return next(Boom.notFound('Auth Group'));
+			return oidc(tenant).callback(req, res, next);
+		} catch (error) {
+			next(error);
+		}
+
 	},
 
 	async getInitialAccessToken(req, res, next) {

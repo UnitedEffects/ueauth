@@ -11,7 +11,7 @@ export default {
 	async getInt(req, res, next) {
 		try {
 			const details = await oidc(req.authGroup).interactionDetails(req, res);
-			//console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
+			console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
 			const { uid, prompt, params } = details;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -24,6 +24,7 @@ export default {
 
 			//todo client should be specific to authGroup as well...
 			const client = await oidc(req.authGroup).Client.find(params.client_id);
+			console.info(client);
 
 			if (prompt.name === 'login') {
 				return res.render('login', {
@@ -31,6 +32,8 @@ export default {
 					authGroup: req.authGroup._id,
 					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
 					uid,
+					tos: req.authGroup.primaryTOS,
+					policy: req.authGroup.primaryPrivacyPolicy,
 					details: prompt.details,
 					params,
 					title: 'Sign-in',

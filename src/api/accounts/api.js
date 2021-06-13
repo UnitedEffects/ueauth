@@ -60,9 +60,9 @@ const api = {
                 client
             };
             try {
-                console.info(req.authInfo);
+                //console.info(req.authInfo);
                 const result = await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
-                console.info(result);
+                //console.info(result);
             } catch (error) {
                 console.error(error);
                 console.error('could not clean token');
