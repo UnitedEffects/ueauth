@@ -7,7 +7,6 @@ import Client from './client/clients';
 import middle from '../../oidcMiddleware';
 
 import IAT from './models/initialAccessToken';
-import group from '../authGroup/group';
 
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
@@ -17,12 +16,57 @@ const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
 } = require('oidc-provider');
 
+async function logoutSource(ctx, form) {
+	// @param ctx - koa request context
+	// @param form - form source (id="op.logoutForm") to be embedded in the page and submitted by
+	//   the End-User
+	console.info(form);
+	console.info(ctx.oidc.client);
+	ctx.body = `<!DOCTYPE html>
+    <head>
+      <title>Logout Request</title>
+      <style>/* css and html classes omitted for brevity, see lib/helpers/defaults.js */</style>
+    </head>
+    <body>
+      <div>
+        <h1>Do you want to sign-out from ${ctx.host}?</h1>
+        ${form}
+        <button autofocus type="submit" form="op.logoutForm" value="yes" name="logout">Yes, sign me out</button>
+        <button type="submit" form="op.logoutForm">No, stay signed in</button>
+      </div>
+    </body>
+    </html>`;
+}
+
+async function postLogoutSuccessSource(ctx) {
+	// @param ctx - koa request context
+	const {
+		clientId, clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
+	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+	const display = clientName || clientId;
+
+	console.info(display);
+	console.info(ctx.oidc.client);
+
+	ctx.body = `<!DOCTYPE html>
+    <head>
+      <title>Sign-out Success</title>
+      <style>/* css and html classes omitted for brevity, see lib/helpers/defaults.js */</style>
+    </head>
+    <body>
+      <div>
+        <h1>Sign-out Success</h1>
+        <p>Your sign-out ${display ? `with ${display}` : ''} was successful.</p>
+      </div>
+    </body>
+    </html>`;
+}
 
 function oidcConfig(g) {
 	const jwks = JSON.parse(JSON.stringify({
 		keys: g.config.keys
 	}));
-	return {
+	const oidcOptions = {
 		adapter: MongoAdapter,
 		clients: [],
 		jwks,
@@ -50,9 +94,6 @@ function oidcConfig(g) {
 				},
 			};
 		},
-
-		// let's tell oidc-provider you also support the email scope, which will contain email and
-		// email_verified claims
 		claims: {
 			openid: ['sub', 'group'],
 			email: ['email', 'verified'],
@@ -64,21 +105,22 @@ function oidcConfig(g) {
 		dynamicScopes: [
 			///api:[a-zA-Z0-9_-]*$/
 		],
-		// let's tell oidc-provider where our own interactions will be
-		// setting a nested route is just good practice so that users
-		// don't run into weird issues with multiple interactions open
-		// at a time.
 		interactions: {
 			url(ctx) {
 				return `/${ctx.authGroup._id}/interaction/${ctx.oidc.uid}`;
 			},
 		},
 		features: {
-			// disable the packaged interactions
-			devInteractions: {enabled: false},
+			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {enabled: true},
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
+			userinfo: {enabled: true},
+			rpInitiatedLogout: {
+				enabled: true,
+				logoutSource,
+				postLogoutSuccessSource
+			},
 			//jwtResponseModes: { enabled: true },
 			//sessionManagement: { enabled: true},
 			registration: {
@@ -86,48 +128,48 @@ function oidcConfig(g) {
 				idFactory: uuid,
 				initialAccessToken: true,
 				policies: {
-                    'auth_group': async function (ctx, properties) {
-                        try {
-                            if (ctx.method === 'POST') {
-                                if (!ctx.oidc.entities.InitialAccessToken.jti) {
-                                    throw new AccessDenied();
-                                }
-                                const iatAg = await IAT.findOne({_id: ctx.oidc.entities.InitialAccessToken.jti}).select({'payload.auth_group': 1});
-                                if (!iatAg) {
-                                    throw new AccessDenied();
-                                }
-                                if (!iatAg.payload) {
-                                    throw new AccessDenied();
-                                }
-                                if (iatAg.payload.auth_group !== properties.auth_group) {
-                                    throw new AccessDenied();
-                                }
-                            } else {
-                                const id = ctx.authGroup._id || ctx.authGroup.id;
-                                if(ctx.authGroup.associatedClient === ctx.oidc.entities.Client.clientId){
-                                    console.error('attempted to update client associated to auth-group');
-                                    throw new AccessDenied();
-                                }
-                                if (id !== ctx.oidc.entities.Client.auth_group) {
-                                    console.error('mismatch of request authgroup and client authgroup');
-                                    throw new AccessDenied();
-                                }
-                                if (id !== ctx.request.body.auth_group) {
-                                    console.error('mismatch of request authgroup and request-body authgroup');
-                                    throw new AccessDenied();
-                                }
-                                if (ctx.oidc.entities.Client.auth_group !== ctx.request.body.auth_group) {
-                                    console.error('mismatch of client authgroup and request-body authgroup');
-                                    throw new AccessDenied();
-                                }
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            if (error.name === 'AccessDenied') throw error;
-                            throw new OIDCProviderError(error.message);
-                        }
+					'auth_group': async function (ctx, properties) {
+						try {
+							if (ctx.method === 'POST') {
+								if (!ctx.oidc.entities.InitialAccessToken.jti) {
+									throw new AccessDenied();
+								}
+								const iatAg = await IAT.findOne({_id: ctx.oidc.entities.InitialAccessToken.jti}).select({'payload.auth_group': 1});
+								if (!iatAg) {
+									throw new AccessDenied();
+								}
+								if (!iatAg.payload) {
+									throw new AccessDenied();
+								}
+								if (iatAg.payload.auth_group !== properties.auth_group) {
+									throw new AccessDenied();
+								}
+							} else {
+								const id = ctx.authGroup._id || ctx.authGroup.id;
+								if(ctx.authGroup.associatedClient === ctx.oidc.entities.Client.clientId){
+									console.error('attempted to update client associated to auth-group');
+									throw new AccessDenied();
+								}
+								if (id !== ctx.oidc.entities.Client.auth_group) {
+									console.error('mismatch of request authGroup and client authGroup');
+									throw new AccessDenied();
+								}
+								if (id !== ctx.request.body.auth_group) {
+									console.error('mismatch of request authGroup and request-body authGroup');
+									throw new AccessDenied();
+								}
+								if (ctx.oidc.entities.Client.auth_group !== ctx.request.body.auth_group) {
+									console.error('mismatch of client authGroup and request-body authGroup');
+									throw new AccessDenied();
+								}
+							}
+						} catch (error) {
+							console.error(error);
+							if (error.name === 'AccessDenied') throw error;
+							throw new OIDCProviderError(error.message);
+						}
 
-                    }
+					}
 				}
 			},
 			registrationManagement: {
@@ -187,13 +229,13 @@ function oidcConfig(g) {
 				httpOnly: true,
 				overwrite: true,
 				sameSite: 'none',
-				//signed: true
+				signed: true
 			},
 			short: {
 				httpOnly: true,
 				overwrite: true,
 				sameSite: 'lax',
-				//signed: true
+				signed: true
 			},
 			names: {
 				interaction: `${g.prettyName}_interaction`,
@@ -208,7 +250,6 @@ function oidcConfig(g) {
 					group: ctx.authGroup._id
 				};
 			} else {
-				// check for authGroup reference in scope group:group_id
 				let scope;
 				let group;
 				if (typeof token.scope !== 'object') {
@@ -229,7 +270,7 @@ function oidcConfig(g) {
 					}
 				}
 			}
-			//todo add hooks here?
+			//todo permissions here?
 			return claims;
 		},
 		async audiences(ctx, sub, token, use) {
@@ -259,6 +300,7 @@ function oidcConfig(g) {
 			'none'
 		],
 		async renderError(ctx, out, error) {
+			console.error(error);
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../views'),
 				basedir: 'path/for/pug/extends',
@@ -267,13 +309,17 @@ function oidcConfig(g) {
 			ctx.body = await pug.render('error', {title: 'oops! something went wrong', message: 'You may have navigated here by mistake', details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')});
 		}
 	};
+
+	// make sure we've activated initial access token correctly
+	if(oidcOptions.features.registration.initialAccessToken === false) {
+		delete oidcOptions.features.registration.policies;
+	}
+
+	return oidcOptions;
 }
 
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
-	if(options.features.registration.initialAccessToken === false) {
-	    delete options.features.registration.policies;
-    }
 	const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());
