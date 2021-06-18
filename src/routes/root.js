@@ -7,7 +7,7 @@ const pJson = require('../../package.json');
 
 router.get('/', (req, res) => {
     const date = new Date();
-    return res.render('index', { title: pJson.name, version: pJson.version, description: pJson.description, by: pJson.author, url: pJson.person.url, year: date.getFullYear(), home: pJson.homepage  })
+    return res.render('index', { title: pJson.name, version: pJson.version, description: pJson.description, by: pJson.author, url: pJson.person.url, year: date.getFullYear(), home: pJson.homepage  });
 });
 
 router.get('/api', (req, res) => {
