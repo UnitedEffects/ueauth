@@ -212,7 +212,7 @@ const mid = {
             if (!req.authGroup) throw Boom.preconditionRequired('authGroup is required');
             if (req.authGroup.active === false) {
                 // verify that owner is an email
-                const pattern = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/;
+                const pattern = /^([a-zA-Z0-9_\-\.\+]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/;
                 const owner = req.authGroup.owner;
                 if(pattern.test(owner)) {
                     // verify there are no other members
