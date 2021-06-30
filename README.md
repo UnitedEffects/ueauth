@@ -245,8 +245,9 @@ http://jsonpatch.com/
 * How does verification work with self-creation of accounts?
 * Refactor passwordless config setup...
 * UI Functional APIs Section
+    * based on auth group, return a clientID for Core UI
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
-    * this should be root level client-credential protected
+        * idToken + code + client_credential token (issued against root) -> returns access token
     * reset password should only work with a client-credential token from our UI?
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
