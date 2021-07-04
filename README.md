@@ -241,16 +241,16 @@ http://jsonpatch.com/
 
 * Implement logoutSource and postLogoutSource functions 
     * https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#logoutsource
-    * why doesn't client show?
+    * why doesn't client show? https://github.com/panva/node-oidc-provider/issues/800
     * what happens if I'm logged into 2 sessions with 2 different AGs?
-* TEST - Attempt to log into 2 different authgroups at the same time
-* How does verification work with self-creation of accounts?
-* Refactor passwordless config setup...
+        * TEST - Attempt to log into (and out of) 2 different authgroups at the same time
 * UI Functional APIs Section
     * based on auth group, return a clientID for Core UI
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
         * idToken + code + client_credential token (issued against root) -> returns access token
     * reset password should only work with a client-credential token from our UI?
+* How does verification work with self-creation of accounts?
+* Refactor passwordless config setup...
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
