@@ -20,22 +20,13 @@ async function logoutSource(ctx, form) {
 	// @param ctx - koa request context
 	// @param form - form source (id="op.logoutForm") to be embedded in the page and submitted by
 	//   the End-User
-	console.info(form);
-	console.info(ctx.oidc.client);
-	ctx.body = `<!DOCTYPE html>
-    <head>
-      <title>Logout Request</title>
-      <style>/* css and html classes omitted for brevity, see lib/helpers/defaults.js */</style>
-    </head>
-    <body>
-      <div>
-        <h1>Do you want to sign-out from ${ctx.host}?</h1>
-        ${form}
-        <button autofocus type="submit" form="op.logoutForm" value="yes" name="logout">Yes, sign me out</button>
-        <button type="submit" form="op.logoutForm">No, stay signed in</button>
-      </div>
-    </body>
-    </html>`;
+	const pug = new Pug({
+		viewPath: path.resolve(__dirname, '../../../views'),
+		basedir: 'path/for/pug/extends',
+	});
+	const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${ctx.authGroup.name}?`, formId: 'op.logoutForm', actionUrl:`${ctx.oidc.issuer}/session/end/confirm`, secret: ctx.oidc.session.state.secret, inName:'xsrf'};
+	ctx.type = 'html';
+	ctx.body = await pug.render('logout', options);
 }
 
 async function postLogoutSuccessSource(ctx) {

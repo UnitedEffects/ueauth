@@ -241,6 +241,8 @@ http://jsonpatch.com/
 
 * Implement logoutSource and postLogoutSource functions 
     * https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#logoutsource
+    * why doesn't client show?
+    * what happens if I'm logged into 2 sessions with 2 different AGs?
 * TEST - Attempt to log into 2 different authgroups at the same time
 * How does verification work with self-creation of accounts?
 * Refactor passwordless config setup...
