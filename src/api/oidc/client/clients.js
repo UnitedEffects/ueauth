@@ -28,7 +28,7 @@ const snakeKeys = (obj) => {
 
 export default {
     async generateClient(authGroup) {
-        const client = new (oidc(authGroup).Client)({
+        const options = {
             "client_secret": cryptoRandomString({length: 86, type: 'url-safe'}),
             "client_secret_expires_at": 0,
             "client_id_issued_at": Date.now(),
@@ -37,8 +37,15 @@ export default {
             "grant_types": ["client_credentials", "authorization_code", "implicit"],
             "response_types": ["code id_token", "code", "id_token"],
             "redirect_uris": [`https://${config.UI_URL}`],
+            "post_logout_redirect_uris": [`https://${config.UI_URL}`],
             "auth_group": authGroup.id
-        });
+        }
+        if(authGroup.primaryDomain) {
+            if (authGroup.primaryDomain !== config.UI_URL) {
+                options.post_logout_redirect_uris.push(authGroup.primaryDomain);
+            }
+        }
+        const client = new (oidc(authGroup).Client)(options);
         const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
         const add = new Adapter('client');
         await add.upsert(client.clientId, fixed);

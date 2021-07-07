@@ -215,6 +215,14 @@ If the notification plugin is not enabled, both globally and within the authGrou
 
 **NOTE: The forgot password notification also sets the verify flag to true. There is a specific "verify" notification as well.**
 
+### Client Session End Links
+
+* /{authGroup}/session/end?client_id={your-client-id}&post_logout_redirect_uri={your-redirect-url}
+    * You can pass client_id, id_token_hint (the id token itself), post_logout_redirect_uri, state, or other OIDC params
+    * You should always include the post_logout_redirect_uri with a client_id or id_token_hint to make sure the user is directed appropriately. NOTE, if you do not and you click cancel, you'll still see the success page
+    * post_logout_redirect_uris must be registered to the client being used for login/logout. The default authgroup client will have the UE Core URL and the AuthGroup primary domain registered.
+    
+
 ## Key Stack Components
 
 * Express
@@ -239,15 +247,14 @@ http://jsonpatch.com/
 
 ## TODO
 
-* Implement logoutSource and postLogoutSource functions 
-    * https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#logoutsource
-* TEST - Attempt to log into 2 different authgroups at the same time
-* How does verification work with self-creation of accounts?
-* Refactor passwordless config setup...
 * UI Functional APIs Section
+    * based on auth group, return a clientID for Core UI
     * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
-    * this should be root level client-credential protected
+        * idToken + code + client_credential token (issued against root) -> returns access token
     * reset password should only work with a client-credential token from our UI?
+* How does verification work with self-creation of accounts?
+* validate that I can log into multiple client sessions with the same authGroup...
+* Refactor passwordless config setup...
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
@@ -323,3 +330,4 @@ http://jsonpatch.com/
 * Define custom jwks key configuration rather than using default for AuthGroups
 * Create Account Validation and default to false until complete
 * Move remaining OIDC configurations to authGroup
+* Global logout features

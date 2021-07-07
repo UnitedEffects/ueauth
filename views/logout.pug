@@ -1,0 +1,13 @@
+extends layout
+
+block content
+    section#head.section
+        .container
+            div(style="background: lightslategrey;").card
+                .card-body
+                    h5(style="color: wheat").card-title.danger=title
+                    h6.card-subtitle.mb-2=message
+                    form(id=formId method="post" action=actionUrl)
+                        input(type="hidden" name=inName value=secret)
+                        button.btn.btn-default(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
+                        button.btn.btn-default(type="submit" form=formId style="margin-left: 5px") Cancel
