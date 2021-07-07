@@ -1,6 +1,8 @@
 import { createQuery } from 'odata-v4-mongodb'
 import Boom from '@hapi/boom';
 
+const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
+
 export default {
     /**
      * Checks string to see if its JSON
@@ -14,6 +16,9 @@ export default {
         } catch (e) {
             return false;
         }
+    },
+    isJWT(str) {
+        return jwtCheck.test(str);
     },
     elementExists(property, check, arr) {
         return arr.some((el) => {

@@ -248,8 +248,8 @@ http://jsonpatch.com/
 ## TODO
 
 * UI Functional APIs Section
-    * based on auth group, return a clientID for Core UI
-    * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
+    * based on auth group, return a clientID for Core UI --> coded, needs security
+    * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs --> coded, needs security
         * idToken + code + client_credential token (issued against root) -> returns access token
     * reset password should only work with a client-credential token from our UI?
 * How does verification work with self-creation of accounts?

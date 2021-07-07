@@ -4,6 +4,8 @@ import group from '../api/authGroup/api';
 import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
+import access from '../api/oidc/access/api';
+
 import m from '../middleware';
 
 /**
@@ -24,6 +26,8 @@ router.get('/health', m.health);
 
 // Auth Group Functional
 router.get('/groupcheck/:prettyName', group.check);
+router.get('/:group/group', group.getPublicGroupInfo); //todo secure with client-credential
+router.post('/token', [m.schemaCheck], access.getUIAccessTokens); //todo secure with client-credential
 
 // Auth Groups
 router.post('/group', [
