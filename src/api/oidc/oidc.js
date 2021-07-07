@@ -17,40 +17,41 @@ const {
 } = require('oidc-provider');
 
 async function logoutSource(ctx, form) {
-	// @param ctx - koa request context
-	// @param form - form source (id="op.logoutForm") to be embedded in the page and submitted by
-	//   the End-User
+	try {
+		const action = ctx.oidc.urlFor('end_session_confirm');
+		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
+		const pug = new Pug({
+			viewPath: path.resolve(__dirname, '../../../views'),
+			basedir: 'path/for/pug/extends',
+		});
+
+		const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${name}?`, formId: 'op.logoutForm', actionUrl: action, secret: ctx.oidc.session.state.secret, inName:'xsrf' };
+		ctx.type = 'html';
+		ctx.body = await pug.render('logout', options);
+	} catch (error) {
+		throw new OIDCProviderError(error.message);
+	}
+
+}
+
+async function postLogoutSuccessSource(ctx) {
+	const {
+		clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
+	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+	const name = (clientName) ? clientName : ctx.authGroup.name;
 	const pug = new Pug({
 		viewPath: path.resolve(__dirname, '../../../views'),
 		basedir: 'path/for/pug/extends',
 	});
-	const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${ctx.authGroup.name}?`, formId: 'op.logoutForm', actionUrl:`${ctx.oidc.issuer}/session/end/confirm`, secret: ctx.oidc.session.state.secret, inName:'xsrf'};
+	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
+	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
+	const options = {title: 'Success', message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl, authGroup: {
+		name: ctx.authGroup.name,
+		primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
+		primaryTOS: ctx.authGroup.primaryTOS,
+		primaryDomain: ctx.authGroup.primaryDomain }};
 	ctx.type = 'html';
-	ctx.body = await pug.render('logout', options);
-}
-
-async function postLogoutSuccessSource(ctx) {
-	// @param ctx - koa request context
-	const {
-		clientId, clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
-	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
-	const display = clientName || clientId;
-
-	console.info(display);
-	console.info(ctx.oidc.client);
-
-	ctx.body = `<!DOCTYPE html>
-    <head>
-      <title>Sign-out Success</title>
-      <style>/* css and html classes omitted for brevity, see lib/helpers/defaults.js */</style>
-    </head>
-    <body>
-      <div>
-        <h1>Sign-out Success</h1>
-        <p>Your sign-out ${display ? `with ${display}` : ''} was successful.</p>
-      </div>
-    </body>
-    </html>`;
+	ctx.body = await pug.render('logoutSuccess', options);
 }
 
 function oidcConfig(g) {
@@ -107,13 +108,14 @@ function oidcConfig(g) {
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},
+			backchannelLogout: { enabled: false }, //this is still draft
 			rpInitiatedLogout: {
 				enabled: true,
 				logoutSource,
 				postLogoutSuccessSource
 			},
 			//jwtResponseModes: { enabled: true },
-			//sessionManagement: { enabled: true},
+			sessionManagement: { enabled: false}, //this is still draft
 			registration: {
 				enabled: true,
 				idFactory: uuid,

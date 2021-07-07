@@ -9,5 +9,5 @@ block content
                     h6.card-subtitle.mb-2=message
                     form(id=formId method="post" action=actionUrl)
                         input(type="hidden" name=inName value=secret)
-                        button(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
-                        button(type="submit" form=formId) Cancel
+                        button.btn.btn-default(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
+                        button.btn.btn-default(type="submit" form=formId style="margin-left: 5px") Cancel
