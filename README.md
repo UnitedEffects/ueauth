@@ -14,49 +14,42 @@ https://qa.ueauth.io
 
 This implementation is built with MongoDB as a dependency; however [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider) itself does not have a specific persistence technology dependency and this service could be refactored to operate with any [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider) supported DB with minimal effort. Having said that, if you are using this service as is, you'll need MongoDB. For development purposes, I suggest you use docker for a quick test instance as follows:
 
-* DB
-    * docker run -p 27017:27017 mongo
-    
-* Service - first run
-    * cp .env_ci to .env
-        * Do not update .env_ci directly
-        * Copy .env_ci to .env
-        * Update the json files pertaining to your desired deployment or NODE_ENV configuration
-        * Add new deployment/env configurations as desired using the naming "env.NODE_ENV_NAME.json"
-    * within .env/env.dev.json, set the following
-        * ALLOW_ROOT_CREATION = true
-        * ROOT_EMAIL = you@yourdomain.com
-        * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = YOUR_ONE_TIME_SECRET
-        * set other values as you like
-    * yarn
-    * yarn test
-    * yarn run dev
-    * curl -X POST "http://localhost:3000/api/init" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"password\":\"YOURPASSWORD\",\"setupCode\":\"YOUR_ONE_TIME_SECRET\"}"
-        * NOTE, this is a one time setup action and is not represented in swagger
-        * Copy the resulting AuthGroup, Account, and Client data for future use
-    * within .env/env.dev.json set the following and redeploy
-        * ALLOW_ROOT_CREATION = false
-        * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = ""
-    * YOU HAVE JUST CREATED THE ROOT SUPER ADMIN ACCOUNT
-    * http://localhost:3000/root/.well-known/openid-configuration
-    * YOU MUST DO THIS IN ANY NEW DEPLOYED ENVIRONMENT AS WELL
-    
-* Service - all subsequent usage
-    * Documentation here: http://localhost:3000/api
-    * Swagger here: http://localhost:3000/swagger
-    * create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
-        * make note of the initialAccessToken (IAT)
-    * Using the IAT as a bearer token, create an account for this authGroup to activate POST http://localhost:3000/api/testGroup/account
-    * Make note of the returned data, this is your active Auth Group, Account and UeAuth Client data
-    * New users will simply create accounts and only see their account information
-    * http://localhost:3000/testGroup/.well-known/openid-configuration
+### DB
+* docker run -p 27017:27017 mongo
 
-### Manual Deployment
-
-* Ensure you have your .env correctly configured. Lets assume we want to deploy QA which pertains to json file env.qa.json
-* Ensure that [Serverless](https://serverless.com/) is installed and configured to deploy to aws for your account
-* SLS_ENV=qa yarn deploy
-* KEEP THE ABOVE INIT SETUP INSTRUCTIONS IN MIND AND REDEPLOY WITH ROOT SETUP OFF
+### Service - first run
+* cp .env_ci to .env
+    * Do not update .env_ci directly
+    * Copy .env_ci to .env
+    * Update the json files pertaining to your desired deployment or NODE_ENV configuration
+    * Add new deployment/env configurations as desired using the naming "env.NODE_ENV_NAME.json"
+* within .env/env.dev.json, set the following
+    * ALLOW_ROOT_CREATION = true
+    * ROOT_EMAIL = you@yourdomain.com
+    * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = YOUR_ONE_TIME_SECRET
+    * set other values as you like
+* yarn
+* yarn test
+* yarn run dev
+* curl -X POST "http://localhost:3000/api/init" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"password\":\"YOURPASSWORD\",\"setupCode\":\"YOUR_ONE_TIME_SECRET\"}"
+    * NOTE, this is a one time setup action and is not represented in swagger
+    * Copy the resulting AuthGroup, Account, and Client data for future use
+* within .env/env.dev.json set the following and redeploy
+    * ALLOW_ROOT_CREATION = false
+    * ONE_TIME_PERSONAL_ROOT_CREATION_KEY = ""
+* YOU HAVE JUST CREATED THE ROOT SUPER ADMIN ACCOUNT
+* http://localhost:3000/root/.well-known/openid-configuration
+* YOU MUST DO THIS IN ANY NEW DEPLOYED ENVIRONMENT AS WELL
+    
+### Service - all subsequent usage
+* Documentation here: http://localhost:3000/api
+* Swagger here: http://localhost:3000/swagger
+* create an authGroup of your choice (i.e. testGroup) POST http://localhost:3000/api/group
+    * make note of the initialAccessToken (IAT)
+* Using the IAT as a bearer token, create an account for this authGroup to activate POST http://localhost:3000/api/testGroup/account
+* Make note of the returned data, this is your active Auth Group, Account and UeAuth Client data
+* New users will simply create accounts and only see their account information
+* http://localhost:3000/testGroup/.well-known/openid-configuration
 
 ## The Root Account
 
@@ -221,14 +214,14 @@ If the notification plugin is not enabled, both globally and within the authGrou
     * Note: you can assist by initiating the password-reset or verify-account operations on behalf of the user as well
 
 
-### Client Session End Links
+## Client Session End Links
 
 * /{authGroup}/session/end?client_id={your-client-id}&post_logout_redirect_uri={your-redirect-url}
     * You can pass client_id, id_token_hint (the id token itself), post_logout_redirect_uri, state, or other OIDC params
     * You should always include the post_logout_redirect_uri with a client_id or id_token_hint to make sure the user is directed appropriately. NOTE, if you do not and you click cancel, you'll still see the success page
     * post_logout_redirect_uris must be registered to the client being used for login/logout. The default authgroup client will have the UE Core URL and the AuthGroup primary domain registered.
     
-### Whitelisted UI APIs
+## Whitelisted UI APIs
 
 These are APIs specifically to allow functionality to the UE Core UI. These endpoints are not secured via OIDC but are only accessible through whitelisted hosts as a precaution.
 
@@ -236,6 +229,13 @@ These are APIs specifically to allow functionality to the UE Core UI. These endp
 * GET group client Id
 * POST token from code/group
 * POST password reset
+
+## Manual Deployment
+
+* Ensure you have your .env correctly configured. Lets assume we want to deploy QA which pertains to json file env.qa.json
+* Ensure that [Serverless](https://serverless.com/) is installed and configured to deploy to aws for your account
+* SLS_ENV=qa yarn deploy
+* KEEP THE ABOVE INIT SETUP INSTRUCTIONS IN MIND AND REDEPLOY WITH ROOT SETUP OFF
 
 ## Key Stack Components
 
@@ -259,7 +259,7 @@ https://www.odata.org/documentation/
 
 http://jsonpatch.com/
 
-## TODO
+## Alpha TODO
 
 * Refactor passwordless config setup...
 * migrate oidc views to pug
@@ -268,6 +268,8 @@ http://jsonpatch.com/
     * test owner
     * test self
 * cleanup 1
+    * per authGroup Swagger/Redoc
+    * review inline todos
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
         * figure out permissions per endpoint required...
@@ -292,13 +294,20 @@ http://jsonpatch.com/
     * go feature by feature on the options...
         * different grant types - with/without confirmation
         * Setup CORS options
-        * figure out logout
     * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
-    * review inline todos
 * Write high risk area Tests!!!!
 * implement with a client/app (mmv api portal)
 * Open Source this Library (add link in spec)
-* MVP release
+* MVP Alpha release
+
+## UE Core MVP Todo
+* Integrate Permissions/Organizations etc
+* MFA
+* Create social login setup via API for Google, Twitter and GitHub
+* Move remaining OIDC configurations to authGroup
+* Global logout features
+* Investigate securing db or hashing client secrets
+* Define custom jwks key configuration rather than using default for AuthGroups
 
 ## TESTING TODO
 
@@ -327,14 +336,6 @@ http://jsonpatch.com/
 * invites
 
 ## vNext Roadmap
-
-* Create social login setup via API for Google, Twitter and GitHub
 * Bulk user creation and notifications and/or invites
-* Integrate plugins for Permissions and MFA
 * Native AWS SES integration as an optional notifications config
 * Allow custom notification url per group instead of only global one
-* Investigate securing db or hashing client secrets
-* Define custom jwks key configuration rather than using default for AuthGroups
-* Create Account Validation and default to false until complete
-* Move remaining OIDC configurations to authGroup
-* Global logout features
