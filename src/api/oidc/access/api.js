@@ -37,15 +37,15 @@ export default {
 					try {
 						// get access token
 						const result = await access.getUIAccessTokens(subAG, decoded.iss, code, cl.payload, redirect_uri);
-						return res.json(result);
+						return res.json(result.data);
 					} catch (error) {
+						console.info(error);
 						if(error.isAxiosError) {
-							console.error(error.response);
 							if(error.response && error.response.data && error.response.data.error_description) {
 								return next(Boom.badData(error.response.data.error_description));
 							}
 						}
-						return next(Boom.badData());
+						return next(Boom.badData(error.message));
 					}
 				}
 			});

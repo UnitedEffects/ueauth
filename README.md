@@ -215,6 +215,12 @@ If the notification plugin is not enabled, both globally and within the authGrou
 
 **NOTE: The forgot password notification also sets the verify flag to true. There is a specific "verify" notification as well.**
 
+#### Designed Limitations of Self Registration
+* You can not enable requireVerified on your authGroup if it is public (locked=false) and you do not have notifications enabled
+* Users self-registering to a public (locked=false) authGroup which has set requireVerified true and autoVerify false, must perform a password reset immediately after account creation to verify the account. We highly recommend you set autoVerify to true in this case. Alternatively, you could forgo the user initially setting a password by using the generatePassword option, simplifying the workflow.
+    * Note: you can assist by initiating the password-reset or verify-account operations on behalf of the user as well
+
+
 ### Client Session End Links
 
 * /{authGroup}/session/end?client_id={your-client-id}&post_logout_redirect_uri={your-redirect-url}
@@ -255,8 +261,6 @@ http://jsonpatch.com/
 
 ## TODO
 
-* How does verification work with self-creation of accounts?
-* validate that I can log into multiple client sessions with the same authGroup...
 * Refactor passwordless config setup...
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin

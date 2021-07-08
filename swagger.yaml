@@ -45,7 +45,7 @@ paths:
       tags:
         - UI Functions
       summary: Return a clientID for Core UI from authGroup
-      description: Return a clientID for Core UI from authGroup. secured by client_credential
+      description: Return a clientID for Core UI from authGroup. secured by UI host whitelist
       parameters:
         - name: group
           in: path
@@ -83,7 +83,7 @@ paths:
       tags:
         - UI Functions
       summary: looks up authgroup using id_token then return access and id tokens from code
-      description: looks up authgroup using id_token then return access and id tokens from code. secured by client_credential
+      description: looks up authgroup using id_token then return access and id tokens from code. secured by UI host whitelist
       responses:
         '200':
           description: successful operation

@@ -14,6 +14,12 @@ export default {
 	},
 
 	async write(data) {
+		// validating verification setup
+		if(data.locked === false && data.config && data.config.requireVerified === true) {
+			if (data.pluginOptions.notification.enabled !== true){
+				data.config.requireVerified = false;
+			}
+		}
 		return dal.write(data);
 	},
 
@@ -46,6 +52,12 @@ export default {
 		}
 		if(patched.config.autoVerify === true && patched.pluginOptions.notification.enabled === false) {
 			throw Boom.methodNotAllowed('Automatic account verification requires that you activate or keep active notifications');
+		}
+		// validating verification setup
+		if(patched.locked === false && patched.config && patched.config.requireVerified === true) {
+			if (patched.pluginOptions.notification.enabled !== true){
+				throw Boom.methodNotAllowed('As a public authGroup, you can not force verification without also enabling notifications');
+			}
 		}
 		return dal.patch(group.id, patched);
 	},
