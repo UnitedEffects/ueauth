@@ -259,7 +259,11 @@ async (req, token, next) => {
 
 async function whitelist(req, res, next) {
 	try {
-		if(config.UI_WHITE_LIST().includes(req.hostname)) return next();
+		if(config.ENV !== 'dev'){
+			if(config.UI_WHITE_LIST().includes(req.hostname) && req.secure) return next();
+		} else {
+			if(config.UI_WHITE_LIST().includes(req.hostname)) return next();
+		}
 		throw Boom.unauthorized();
 	} catch (error) {
 		next(error);
