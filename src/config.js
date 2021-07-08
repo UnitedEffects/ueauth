@@ -15,9 +15,14 @@ const config = {
 	SINGLE_USE_IAT: process.env.SINGLE_USE_IAT || envVars.SINGLE_USE_IAT || true,
 	GROUP_SECURE_EXPIRES: parseInt(process.env.GROUP_SECURE_EXPIRES) || envVars.GROUP_SECURE_EXPIRES || 86400 * 31,
 	COOKIE_KEYS () {
-		if (process.env.COOKIE_KEYS) return process.env.COOKIE_KEYS.toString().split(',');
-		if (envVars.COOKIE_KEYS) return envVars.COOKIE_KEYS.toString().split(',');
-		return ['secret1', 'secret2'];
+		try {
+			if (process.env.COOKIE_KEYS) return process.env.COOKIE_KEYS.toString().split(',');
+			if (envVars.COOKIE_KEYS) return envVars.COOKIE_KEYS.toString().split(',');
+			return ['secret1', 'secret2'];
+		} catch (error) {
+			console.error(error);
+			return [];
+		}
 	},
 	ALLOW_ROOT_CREATION: (process.env.ALLOW_ROOT_CREATION === 'true') || envVars.ALLOW_ROOT_CREATION || false,
 	ROOT_EMAIL: process.env.ROOT_EMAIL || envVars.ROOT_EMAIL || null,
@@ -28,7 +33,17 @@ const config = {
 	INIT_ROOT_PRIMARY_DOMAIN: process.env.INIT_ROOT_PRIMARY_DOMAIN || envVars.INIT_ROOT_PRIMARY_DOMAIN || 'https://unitedeffects.com',
 	INIT_ROOT_PRIMARY_TOS: process.env.INIT_ROOT_PRIMARY_TOS || envVars.INIT_ROOT_PRIMARY_TOS || 'https://unitedeffects.com/tos',
 	INIT_ROOT_PRIMARY_POLICY: process.env.INIT_ROOT_PRIMARY_POLICY || envVars.INIT_ROOT_PRIMARY_POLICY || 'https://unitedeffects.com/privacy',
-	PLATFORM_NAME: process.env.PLATFORM_NAME || envVars.PLATFORM_NAME || 'UE Auth'
+	PLATFORM_NAME: process.env.PLATFORM_NAME || envVars.PLATFORM_NAME || 'UE Auth',
+	UI_WHITE_LIST () {
+		try {
+			if(process.env.UI_WHITE_LIST) return process.env.UI_WHITE_LIST.toString().split(',');
+			if(envVars.UI_WHITE_LIST) return envVars.UI_WHITE_LIST.toString().split(',');
+			return ['localhost'];
+		} catch (error) {
+			console.error(error);
+			return [];
+		}
+	}
 };
 
 module.exports = config;

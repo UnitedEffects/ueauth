@@ -261,9 +261,19 @@ async (req, token, next) => {
 }
 ));
 
+async function whitelist(req, res, next) {
+	try {
+		if(config.UI_WHITE_LIST().includes(req.hostname)) return next();
+		throw Boom.unauthorized();
+	} catch (error) {
+		next(error);
+	}
+}
+
 export default {
 	isIatAuthenticatedForGroupActivation: passport.authenticate('iat-group-create', { session: false }),
 	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
 	isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }), //todo need this?
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
+	isWhitelisted: whitelist
 };

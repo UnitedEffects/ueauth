@@ -25,9 +25,9 @@ router.get('/version', m.version);
 router.get('/health', m.health);
 
 // Auth Group Functional
-router.get('/groupcheck/:prettyName', group.check);
-router.get('/:group/group', group.getPublicGroupInfo); //todo secure with client-credential
-router.post('/token', [m.schemaCheck], access.getUIAccessTokens); //todo secure with client-credential
+router.get('/groupcheck/:prettyName', [m.isWhitelisted], group.check);
+router.get('/:group/group', [m.isWhitelisted], group.getPublicGroupInfo);
+router.post('/token', [m.schemaCheck, m.isWhitelisted], access.getUIAccessTokens);
 
 // Auth Groups
 router.post('/group', [
@@ -197,7 +197,8 @@ router.post('/:group/operations', [
 router.post('/:group/operations/reset-user-password', [
 	m.schemaCheck,
 	m.validateAuthGroup,
-	m.getGlobalPluginSettings
+	m.getGlobalPluginSettings,
+	m.isWhitelisted
 ], account.resetPassword);
 // Accept Invites
 router.post('/:group/operations/invite/:id', [

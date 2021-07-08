@@ -196,10 +196,10 @@ const api = {
 		try {
 			const ag = req.params.group;
 			const result = await group.getOne(ag);
+			if(!result) throw Boom.notFound(ag);
 			const out = {
-				id: result.id,
-				prettyName: result.prettyName,
-				clientId: result.associatedClient
+				group: ag,
+				id: result.associatedClient
 			};
 			return res.respond(say.ok(out, RESOURCE));
 		} catch (error) {

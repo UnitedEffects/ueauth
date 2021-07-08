@@ -240,7 +240,8 @@ const mid = {
         return next();
     },
     isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
-    isAuthenticated: authorizer.isAuthenticated
+    isAuthenticated: authorizer.isAuthenticated,
+    isWhitelisted: authorizer.isWhitelisted
 };
 
 export default mid;

@@ -1,6 +1,6 @@
 {
   "name": "UE-Auth",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "UE Auth is a multi-tenant OIDC Provider intended to serve small to midsize organization that require functionality similar to those provided by enterprise Identity and Access SaaS providers but without the costs associated to the full scale of those solutions.",
   "private": true,
   "scripts": {
