@@ -180,7 +180,6 @@ const api = {
 			next(error);
 		}
 	},
-
 	async operations(req, res, next) {
 		try {
 			//todo add modifiedBy
@@ -189,6 +188,20 @@ const api = {
 			const result = await group.operations(req.authGroup.id, body.operation);
 			if(result.config) delete result.config.keys;
 			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getPublicGroupInfo(req, res, next) {
+		try {
+			const ag = req.params.group;
+			const result = await group.getOne(ag);
+			if(!result) throw Boom.notFound(ag);
+			const out = {
+				group: ag,
+				id: result.associatedClient
+			};
+			return res.respond(say.ok(out, RESOURCE));
 		} catch (error) {
 			next(error);
 		}

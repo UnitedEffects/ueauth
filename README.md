@@ -222,6 +222,14 @@ If the notification plugin is not enabled, both globally and within the authGrou
     * You should always include the post_logout_redirect_uri with a client_id or id_token_hint to make sure the user is directed appropriately. NOTE, if you do not and you click cancel, you'll still see the success page
     * post_logout_redirect_uris must be registered to the client being used for login/logout. The default authgroup client will have the UE Core URL and the AuthGroup primary domain registered.
     
+### Whitelisted UI APIs
+
+These are APIs specifically to allow functionality to the UE Core UI. These endpoints are not secured via OIDC but are only accessible through whitelisted hosts as a precaution.
+
+* GET prettyName check
+* GET group client Id
+* POST token from code/group
+* POST password reset
 
 ## Key Stack Components
 
@@ -247,11 +255,6 @@ http://jsonpatch.com/
 
 ## TODO
 
-* UI Functional APIs Section
-    * based on auth group, return a clientID for Core UI
-    * UI OIDC Code Authorization endpoint to return access tokens for single UI serving multiple AGs
-        * idToken + code + client_credential token (issued against root) -> returns access token
-    * reset password should only work with a client-credential token from our UI?
 * How does verification work with self-creation of accounts?
 * validate that I can log into multiple client sessions with the same authGroup...
 * Refactor passwordless config setup...

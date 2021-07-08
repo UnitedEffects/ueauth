@@ -4,6 +4,8 @@ import group from '../api/authGroup/api';
 import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
+import access from '../api/oidc/access/api';
+
 import m from '../middleware';
 
 /**
@@ -23,7 +25,9 @@ router.get('/version', m.version);
 router.get('/health', m.health);
 
 // Auth Group Functional
-router.get('/groupcheck/:prettyName', group.check);
+router.get('/groupcheck/:prettyName', [m.isWhitelisted], group.check);
+router.get('/:group/group', [m.isWhitelisted], group.getPublicGroupInfo);
+router.post('/token', [m.schemaCheck, m.isWhitelisted], access.getUIAccessTokens);
 
 // Auth Groups
 router.post('/group', [
@@ -193,7 +197,8 @@ router.post('/:group/operations', [
 router.post('/:group/operations/reset-user-password', [
 	m.schemaCheck,
 	m.validateAuthGroup,
-	m.getGlobalPluginSettings
+	m.getGlobalPluginSettings,
+	m.isWhitelisted
 ], account.resetPassword);
 // Accept Invites
 router.post('/:group/operations/invite/:id', [

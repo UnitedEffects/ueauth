@@ -34,10 +34,107 @@ tags:
     description: Manage notifications sent to the http notification plugin
   - name: OIDC
     description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
+  - name: UI Functions
+    description: APIs specifically for the United Effects UI implementation
   - name: Health
 
 paths:
-  # Group APIs
+  # Functional APIs
+  /api/{group}/group:
+    get:
+      tags:
+        - UI Functions
+      summary: Return a clientID for Core UI from authGroup
+      description: Return a clientID for Core UI from authGroup. secured by client_credential
+      parameters:
+        - name: group
+          in: path
+          description: id or prettyName of the authgroup
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  prettyName:
+                    type: string
+                  clientId:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+
+  /api/token:
+    post:
+      tags:
+        - UI Functions
+      summary: looks up authgroup using id_token then return access and id tokens from code
+      description: looks up authgroup using id_token then return access and id tokens from code. secured by client_credential
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/accessTokens'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_token:
+                  type: string
+                  description: an id_token provided as part of the code authorization flow
+                code:
+                  type: string
+                  description: a code provided as part of the code authorization flow
+                redirect_uri:
+                  type: string
+                  description: redirect uri to use, should match expected from client
+            encoding:
+              grant_type:
+                style: form
+              client_secret:
+                style: form
+              redirect_uri:
+                style: form
+              format:
+                style: form
+              code:
+                style: form
+              client_id:
+                style: form
+              scope:
+                style: form
+        required: true
+
   /api/groupcheck/{prettyName}:
     get:
       tags:
@@ -75,6 +172,8 @@ paths:
           $ref: '#/components/responses/ExpectationFailed'
       security:
         - bearer: []
+
+  # Group APIs
   /api/group:
     post:
       tags:

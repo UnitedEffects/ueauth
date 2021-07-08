@@ -8,13 +8,9 @@ import account from '../api/accounts/account';
 import oidc from '../api/oidc/oidc';
 import group from '../api/authGroup/group';
 import session from '../api/oidc/session/session';
+import helper from '../helper';
 
 const config = require('../config');
-
-const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
-function isJWT(str) {
-	return jwtCheck.test(str);
-}
 
 async function getUser(authGroup, decoded, token) {
 	/**
@@ -204,7 +200,7 @@ async (req, token, next) => {
 		} else {
 			issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
 		}
-		if(isJWT(token)){
+		if(helper.isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
 			if(issuer !== null && preDecoded.payload.group !== subAG.id) {
 				// there is a problem with the token authgroup,
@@ -261,9 +257,19 @@ async (req, token, next) => {
 }
 ));
 
+async function whitelist(req, res, next) {
+	try {
+		if(config.UI_WHITE_LIST().includes(req.hostname)) return next();
+		throw Boom.unauthorized();
+	} catch (error) {
+		next(error);
+	}
+}
+
 export default {
 	isIatAuthenticatedForGroupActivation: passport.authenticate('iat-group-create', { session: false }),
 	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
 	isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }), //todo need this?
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
+	isWhitelisted: whitelist
 };
