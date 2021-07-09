@@ -140,9 +140,7 @@ html
             include forgotSend.js
         .login-card
             h1(id='title')=title
-            h2.center-text=client.clientName
-            if (authGroupName !== client.clientName)
-                h3.center-text=authGroupName
+            h2.center-text=authGroupName
             if flash
                 h4(id='message')= flash
             form(id='forgot' autocomplete='off')
@@ -156,7 +154,7 @@ html
                 input(id='t1' required='', type='text', name='email', placeholder='your email')
                 button.login.login-submit(id='retry' type='submit') Send Password Reset
         .login-help
-            if (client.tosUri || tos)
-                a(href=(client.tosUri || tos)) [ Terms of Service ]
-            if (client.policyUri || policy)
-                a(href=(client.policyUri || policy)) [ Privacy Policy ]
+            if (tos)
+                a(href=tos) [ Terms of Service ]
+            if (policy)
+                a(href=policy) [ Privacy Policy ]

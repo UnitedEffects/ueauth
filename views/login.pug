@@ -159,9 +159,12 @@ html
     body
         .login-card
             h1=title
-            h2.center-text=client.clientName
-            if (authGroupName !== client.clientName)
-                h3.center-text=authGroupName
+            if (client)
+                h2.center-text=client.clientName
+                if (authGroupName !== client.clientName)
+                    h3.center-text=authGroupName
+            else
+                h2.center-text=authGroupName
             if flash
                 h5.flash= flash
             form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
@@ -180,8 +183,8 @@ html
                 h5.passwordless We can send you a secure password free login link!
             .login-help
                 a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
-                if (client.tosUri || tos)
-                    a(href=(client.tosUri||tos)) [ Terms of Service ]
-                if (client.policyUri || policy)
-                    a(href=(client.policyUri||policy)) [ Privacy Policy ]
+                if ((client && client.tosUri) || tos)
+                    a(href=(client.tosUri || tos)) [ Terms of Service ]
+                if ((client && client.policyUri) || policy)
+                    a(href=(client.policyUri || policy)) [ Privacy Policy ]
 

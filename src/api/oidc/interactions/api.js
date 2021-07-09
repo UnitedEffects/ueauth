@@ -337,11 +337,13 @@ export default {
 					title: 'Uh oh...',
 					message: 'Invalid Verify Account Request',
 					details: 'This page requires special access. Check your email or mobile device for the link.'
-				})
+				});
 
 			}
 			return res.render('verify', {
 				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+				tos: req.authGroup.primaryTOS,
+				policy: req.authGroup.primaryPrivacyPolicy,
 				title: 'Verify And Claim Your Account',
 				iat: req.query.code,
 				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
@@ -374,6 +376,8 @@ export default {
 			return res.render('forgot', {
 				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
 				title: 'Forgot Password',
+				tos: req.authGroup.primaryTOS,
+				policy: req.authGroup.primaryPrivacyPolicy,
 				iat: req.query.code,
 				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
 				flash: 'Type in your new password to reset',
