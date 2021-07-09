@@ -250,6 +250,7 @@ These are APIs specifically to allow functionality to the UE Core UI. These endp
 * Babel (see libs in package.json)
 * Passport (see libs in package.json)
 * Jest
+* Jose ^2.0.5 (version 3+ does not support keystore at this time)
 
 ### oData Spec
 
@@ -261,6 +262,16 @@ http://jsonpatch.com/
 
 ## Alpha TODO
 
+* Upgrade to 7+ on OP.
+    * still can't login with code authorization....
+    * test AG create and patch and key rotation
+    * test login forms... various
+    * initial access tokens
+        * reg
+        * invites
+        * etc
+    * test notifications and client-credentials
+* logout does not revoke access tokens.... should it? Also need to upgrade oidc-provider
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin

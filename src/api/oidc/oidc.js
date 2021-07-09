@@ -1,5 +1,6 @@
 import { Provider } from 'oidc-provider';
 import { v4 as uuid } from 'uuid';
+import ms from 'ms';
 import Pug from 'koa-pug';
 import path from 'path';
 import Account from '../accounts/accountOidcInterface';
@@ -65,6 +66,7 @@ function oidcConfig(g) {
 		findAccount: Account.findAccount,
 
 		async findById(ctx, sub, token) {
+			console.info('......here?')
 			// @param ctx - koa request context
 			// @param sub {string} - account identifier (subject)
 			// @param token - is a reference to the token used for which a given account is being loaded,
@@ -98,8 +100,8 @@ function oidcConfig(g) {
 			///api:[a-zA-Z0-9_-]*$/
 		],
 		interactions: {
-			url(ctx) {
-				return `/${ctx.authGroup._id}/interaction/${ctx.oidc.uid}`;
+			url(ctx, interaction) {
+				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
 			},
 		},
 		features: {
@@ -108,14 +110,14 @@ function oidcConfig(g) {
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},
-			backchannelLogout: { enabled: false }, //this is still draft
+			backchannelLogout: { enabled: false },
 			rpInitiatedLogout: {
 				enabled: true,
 				logoutSource,
 				postLogoutSuccessSource
 			},
+			encryption: { enabled: true },
 			//jwtResponseModes: { enabled: true },
-			sessionManagement: { enabled: false}, //this is still draft
 			registration: {
 				enabled: true,
 				idFactory: uuid,
@@ -285,12 +287,15 @@ function oidcConfig(g) {
 			}
 			return undefined;
 		},
+		//todo figure out if we care token standalone was removed
 		responseTypes: [
+			'code id_token token',
 			'code id_token',
+			'code token',
 			'code',
-			'token',
+			'id_token token',
 			'id_token',
-			'none'
+			'none',
 		],
 		async renderError(ctx, out, error) {
 			console.error(error);
@@ -300,20 +305,36 @@ function oidcConfig(g) {
 			});
 			ctx.type = 'html';
 			ctx.body = await pug.render('error', {title: 'oops! something went wrong', message: 'You may have navigated here by mistake', details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')});
-		}
+		},
+		ttl: {
+			AccessToken: ms('1h') / 1000,
+			AuthorizationCode: ms('10m') / 1000,
+			ClientCredentials: ms('100y') / 1000,
+			DeviceCode: ms('1h') / 1000,
+			IdToken: ms('1h') / 1000,
+			RefreshToken: ms('1d') / 1000,
+			Interaction: ms('1h') / 1000,
+			Session: ms('10d') / 1000
+		},
+		allowOmittingSingleRegisteredRedirectUri: true,
+		pkce: {
+			required: () => false,
+		},
 	};
 
 	// make sure we've activated initial access token correctly
-	if(oidcOptions.features.registration.initialAccessToken === false) {
+	if(oidcOptions.features &&
+		oidcOptions.features.registration &&
+		oidcOptions.features.registration.initialAccessToken === false) {
 		delete oidcOptions.features.registration.policies;
 	}
-
 	return oidcOptions;
 }
 
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
-	const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`, options);
+	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`;
+	const oidc = new Provider(issuer, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());
 	oidc.use(middle.parseKoaOIDC);

@@ -1,6 +1,5 @@
-//const fs = require('fs');
-//const path = require('path');
-const jose = require('jose');
+import jose from 'jose';
+
 const DEFAULT = [
 	{
 		kty: 'RSA',
@@ -37,10 +36,8 @@ export default {
                 await keystore.generate(codes[i].kty, codes[i].bitlength || codes[i].crv, codes[i].parameters);
             }
             const output = JSON.parse(JSON.stringify(keystore.toJWKS(true))).keys;
-            //console.info(output);
             return output;
         } catch (error) {
-            console.info('here');
             throw error;
         }
     }

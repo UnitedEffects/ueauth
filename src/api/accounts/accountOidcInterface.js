@@ -1,22 +1,20 @@
 import acct from './account';
-//import group from '../authGroup/group';
 
 class Account {
 	// This interface is required by oidc-provider
 	static async findAccount(ctx, id, token) {
-		// This would ideally be just a check whether the account is still in your storage
+		console.info('called');
 		const account = await acct.getAccount(ctx.authGroup._id, id);
-
+		console.info(account.id);
 		if (!account) {
 			return undefined;
 		}
-
 		return {
-			accountId: id,
+			accountId: account.id,
 			// and this claims() method would actually query to retrieve the account claims
 			async claims(use, scope, claims, rejected) {
 				return {
-					sub: id,
+					sub: account.id,
 					group: account.authGroup,
 					username: account.username,
 					email: account.email,
@@ -30,7 +28,6 @@ class Account {
 	static async authenticate(authGroup, email, password) {
 		try {
 			const account = await acct.getAccountByEmailOrUsername(authGroup.id, email);
-
 			if(authGroup && authGroup.config && authGroup.config.requireVerified === true) {
 				if (account.verified === false) {
 					throw undefined;
@@ -40,7 +37,6 @@ class Account {
 			if(await account.verifyPassword(password)) {
 				return account.id;
 			}
-
 			throw undefined;
 		} catch (err) {
 			return undefined;

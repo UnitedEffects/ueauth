@@ -11,7 +11,7 @@ export default {
 	async getInt(req, res, next) {
 		try {
 			const details = await oidc(req.authGroup).interactionDetails(req, res);
-			//console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
+			console.log('see what else is available to you for interaction views', JSON.stringify(details, null, 2));
 			const { uid, prompt, params } = details;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -141,7 +141,7 @@ export default {
 
 			const result = {
 				login: {
-					account: account.id,
+					accountId: account.id,
 				},
 			};
 			await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
@@ -164,7 +164,6 @@ export default {
 
 			// email will check against username as well... todo do we want to control that?
 			const accountId = await Account.authenticate(req.authGroup, req.body.email, req.body.password);
-
 			if (!accountId) {
 				res.render('login', {
 					client,
@@ -184,7 +183,7 @@ export default {
 
 			const result = {
 				login: {
-					account: accountId,
+					accountId
 				},
 			};
 
