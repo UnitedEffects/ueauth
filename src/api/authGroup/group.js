@@ -14,10 +14,17 @@ export default {
 	},
 
 	async write(data) {
-		// validating verification setup
-		if(data.locked === false && data.config && data.config.requireVerified === true) {
-			if (data.pluginOptions.notification.enabled !== true){
-				data.config.requireVerified = false;
+		// if notifications are off
+		if (data.pluginOptions && data.pluginOptions.notification && data.pluginOptions.notification.enabled !== true){
+			// if no config was set, there is no issue
+			if (data.config) {
+				// can not have passwordless support without notifications
+				data.config.passwordLessSupport = false;
+				// can not use requireVerify when there are no notifications and group is public
+				if(data.locked === false) {
+					data.config.requireVerified = false;
+					data.config.autoVerify = false;
+				}
 			}
 		}
 		return dal.write(data);
@@ -53,12 +60,23 @@ export default {
 		if(patched.config.autoVerify === true && patched.pluginOptions.notification.enabled === false) {
 			throw Boom.methodNotAllowed('Automatic account verification requires that you activate or keep active notifications');
 		}
-		// validating verification setup
-		if(patched.locked === false && patched.config && patched.config.requireVerified === true) {
-			if (patched.pluginOptions.notification.enabled !== true){
-				throw Boom.methodNotAllowed('As a public authGroup, you can not force verification without also enabling notifications');
+		// if notifications are off
+		if (patched.pluginOptions && patched.pluginOptions.notification && patched.pluginOptions.notification.enabled !== true){
+			// if no config was set, there is no issue
+			if (patched.config) {
+				// can not have passwordless support without notifications
+				if(patched.config.passwordLessSupport === true) {
+					throw Boom.methodNotAllowed('You can not set passwordless to true without notifications');
+				}
+				// can not use requireVerify when there are no notifications and group is public
+				if(patched.locked === false) {
+					if (patched.config.requireVerified === true || patched.config.autoVerify === true) {
+						throw Boom.methodNotAllowed('As a public authGroup, you can not force verification without also enabling notifications');
+					}
+				}
 			}
 		}
+
 		return dal.patch(group.id, patched);
 	},
 

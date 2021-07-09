@@ -261,7 +261,6 @@ http://jsonpatch.com/
 
 ## Alpha TODO
 
-* Refactor passwordless config setup...
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
@@ -275,6 +274,7 @@ http://jsonpatch.com/
         * figure out permissions per endpoint required...
         * read/write/admin scopes?
         * update modifiedby data
+        * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
 * Setup CD to QA
 * Views
     * clean and brand

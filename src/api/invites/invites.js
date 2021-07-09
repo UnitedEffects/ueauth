@@ -30,7 +30,7 @@ const inv = {
 		return dal.updateSent(authGroupId, id, update);
 	},
 	inviteNotificationObject(authGroup, user, invite, formats = [], activeUser) {
-		const options = { year: "numeric", month: "long", day: "numeric" }
+		const options = { year: "numeric", month: "long", day: "numeric" };
 		const data = {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
 			createdBy: activeUser,
@@ -50,7 +50,7 @@ const inv = {
 				apiMethod: 'POST',
 				apiBody: { operation: 'accept' }
 			}
-		}
+		};
 
 		if(formats.length === 0) {
 			data.formats = [];

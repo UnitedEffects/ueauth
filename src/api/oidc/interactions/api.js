@@ -18,8 +18,7 @@ export default {
 			req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (req.authGroup &&
 					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport &&
-					(req.authGroup.config.passwordLessSupport.email === true || req.authGroup.config.passwordLessSupport.sms === true))
+					req.authGroup.config.passwordLessSupport === true);
 			}
 
 			//todo client should be specific to authGroup as well...
@@ -63,8 +62,7 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (req.authGroup &&
 					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport &&
-					(req.authGroup.config.passwordLessSupport.email === true || req.authGroup.config.passwordLessSupport.sms === true))
+					req.authGroup.config.passwordLessSupport === true);
 			}
 
 			if (params.passwordless === false ||
@@ -107,8 +105,7 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (req.authGroup &&
 					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport &&
-					(req.authGroup.config.passwordLessSupport.email === true || req.authGroup.config.passwordLessSupport.sms === true))
+					req.authGroup.config.passwordLessSupport === true);
 			}
 			const account = await acc.getAccount(req.authGroup.id, id);
 			const tok = await iat.getOne(iAccessToken, req.authGroup.id);
@@ -162,8 +159,7 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (req.authGroup &&
 					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport &&
-					(req.authGroup.config.passwordLessSupport.email === true || req.authGroup.config.passwordLessSupport.sms === true))
+					req.authGroup.config.passwordLessSupport === true);
 			}
 
 			// email will check against username as well... todo do we want to control that?
@@ -213,8 +209,7 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (req.authGroup &&
 					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport &&
-					(req.authGroup.config.passwordLessSupport.email === true || req.authGroup.config.passwordLessSupport.sms === true))
+					req.authGroup.config.passwordLessSupport === true);
 			} else {
 				return res.render('login', {
 					client,
@@ -258,7 +253,7 @@ export default {
 			return res.render('success', {
 				title: 'SUCCESS!',
 				message: 'You should have a password free login link in your email or text messages. You may close this window.'
-			})
+			});
 		} catch (err) {
 			if(iAccessToken) {
 				await iat.deleteOne(iAccessToken.jti, req.authGroup.id);

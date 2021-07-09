@@ -1,4 +1,3 @@
-import jsonPatch from 'jsonpatch';
 import dal from './dal';
 import helper from '../../helper';
 const config = require('../../config');

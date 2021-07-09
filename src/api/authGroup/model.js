@@ -52,15 +52,10 @@ const authGroup = new mongoose.Schema({
 			type: Boolean,
 			default: false
 		},
+		// if true, passwordless (magic-link) is supported
 		passwordLessSupport: {
-			email: {
-				type: Boolean,
-				default: false
-			},
-			sms: {
-				type: Boolean,
-				default: false
-			}
+			type: Boolean,
+			default: false
 		}
 	},
 	pluginOptions: {
