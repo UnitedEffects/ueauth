@@ -261,7 +261,6 @@ https://www.odata.org/documentation/
 http://jsonpatch.com/
 
 ## Alpha TODO
-
 * Upgrade to 7+ on OP.
     * still can't login with code authorization.... use older version and go back and forth to figure out changes
     * test AG create and patch and key rotation
@@ -271,6 +270,7 @@ http://jsonpatch.com/
         * invites
         * etc
     * test notifications and client-credentials
+* fix UI password Resend link on expired notice...
 * logout does not revoke access tokens.... should it? Also need to upgrade oidc-provider
 * migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
