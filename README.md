@@ -263,7 +263,7 @@ http://jsonpatch.com/
 ## Alpha TODO
 
 * Upgrade to 7+ on OP.
-    * still can't login with code authorization....
+    * still can't login with code authorization.... use older version and go back and forth to figure out changes
     * test AG create and patch and key rotation
     * test login forms... various
     * initial access tokens
