@@ -11,6 +11,7 @@ import PushedAuthorizationRequest from './pushedAuthorizationRequest';
 import RefreshToken from './refreshToken';
 import RegistrationAccessToken from './registrationAccessToken';
 import ReplayDetection from './replayDetection';
+import Grant from './grant';
 
 function getModel (name) {
     switch (name) {
@@ -38,6 +39,8 @@ function getModel (name) {
             return RegistrationAccessToken;
         case ReplayDetection.modelName:
             return ReplayDetection;
+        case Grant.modelName:
+            return Grant;
         default:
             return Default(name);
     }

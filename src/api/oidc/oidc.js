@@ -17,44 +17,6 @@ const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
 } = require('oidc-provider');
 
-async function logoutSource(ctx, form) {
-	try {
-		const action = ctx.oidc.urlFor('end_session_confirm');
-		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
-		const pug = new Pug({
-			viewPath: path.resolve(__dirname, '../../../views'),
-			basedir: 'path/for/pug/extends',
-		});
-
-		const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${name}?`, formId: 'op.logoutForm', actionUrl: action, secret: ctx.oidc.session.state.secret, inName:'xsrf' };
-		ctx.type = 'html';
-		ctx.body = await pug.render('logout', options);
-	} catch (error) {
-		throw new OIDCProviderError(error.message);
-	}
-
-}
-
-async function postLogoutSuccessSource(ctx) {
-	const {
-		clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
-	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
-	const name = (clientName) ? clientName : ctx.authGroup.name;
-	const pug = new Pug({
-		viewPath: path.resolve(__dirname, '../../../views'),
-		basedir: 'path/for/pug/extends',
-	});
-	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
-	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
-	const options = {title: 'Success', message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl, authGroup: {
-		name: ctx.authGroup.name,
-		primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
-		primaryTOS: ctx.authGroup.primaryTOS,
-		primaryDomain: ctx.authGroup.primaryDomain }};
-	ctx.type = 'html';
-	ctx.body = await pug.render('logoutSuccess', options);
-}
-
 function oidcConfig(g) {
 	const jwks = JSON.parse(JSON.stringify({
 		keys: g.config.keys
@@ -64,9 +26,7 @@ function oidcConfig(g) {
 		clients: [],
 		jwks,
 		findAccount: Account.findAccount,
-
 		async findById(ctx, sub, token) {
-			console.info('......here?')
 			// @param ctx - koa request context
 			// @param sub {string} - account identifier (subject)
 			// @param token - is a reference to the token used for which a given account is being loaded,
@@ -83,7 +43,7 @@ function oidcConfig(g) {
 				//   "id_token" or "userinfo" (depends on the "use" param)
 				// @param rejected {Array[String]} - claim names that were rejected by the end-user, you might
 				//   want to skip loading some claims from external resources or through db projection
-				async claims(use, scope, claims, rejected) {
+				async claims(use, scope) {
 					return {sub};
 				},
 			};
@@ -347,6 +307,44 @@ function oidcWrapper(tenant) {
 	oidc.use(middle.uniqueClientRegCheck);
 	oidc.use(middle.noDeleteOnPrimaryClient);
 	return oidc;
+}
+
+async function logoutSource(ctx, form) {
+	try {
+		const action = ctx.oidc.urlFor('end_session_confirm');
+		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
+		const pug = new Pug({
+			viewPath: path.resolve(__dirname, '../../../views'),
+			basedir: 'path/for/pug/extends',
+		});
+
+		const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${name}?`, formId: 'op.logoutForm', actionUrl: action, secret: ctx.oidc.session.state.secret, inName:'xsrf' };
+		ctx.type = 'html';
+		ctx.body = await pug.render('logout', options);
+	} catch (error) {
+		throw new OIDCProviderError(error.message);
+	}
+
+}
+
+async function postLogoutSuccessSource(ctx) {
+	const {
+		clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
+	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+	const name = (clientName) ? clientName : ctx.authGroup.name;
+	const pug = new Pug({
+		viewPath: path.resolve(__dirname, '../../../views'),
+		basedir: 'path/for/pug/extends',
+	});
+	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
+	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
+	const options = {title: 'Success', message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl, authGroup: {
+		name: ctx.authGroup.name,
+		primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
+		primaryTOS: ctx.authGroup.primaryTOS,
+		primaryDomain: ctx.authGroup.primaryDomain }};
+	ctx.type = 'html';
+	ctx.body = await pug.render('logoutSuccess', options);
 }
 
 export default oidcWrapper;

@@ -29,7 +29,9 @@ const debug = (obj) => querystring.stringify(Object.entries(obj).reduce((acc, [k
 export default {
 	async getInt(req, res, next) {
 		try {
-			const details = await oidc(req.authGroup).interactionDetails(req, res);
+			const provider = await oidc(req.authGroup);
+			const details = await provider.interactionDetails(req, res);
+			console.info(details);
 			const { uid, prompt, params, session } = details;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -40,7 +42,7 @@ export default {
 			}
 
 			//todo client should be specific to authGroup as well...
-			const client = await oidc(req.authGroup).Client.find(params.client_id);
+			const client = await provider.Client.find(params.client_id);
 
 			switch (prompt.name) {
 			case 'login': {
@@ -90,8 +92,9 @@ export default {
 
 	async passwordless (req, res, next) {
 		try {
-			const { uid, prompt, params, session } = await oidc(req.authGroup).interactionDetails(req, res);
-			const client = await oidc(req.authGroup).Client.find(params.client_id);
+			const provider = await oidc(req.authGroup);
+			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const client = await provider.Client.find(params.client_id);
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
@@ -147,8 +150,9 @@ export default {
 		try {
 			const iAccessToken = req.query.token;
 			const id = req.query.sub;
-			const { uid, prompt, params, session } = await oidc(req.authGroup).interactionDetails(req, res);
-			const client = await oidc(req.authGroup).Client.find(params.client_id);
+			const provider = await oidc(req.authGroup);
+			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const client = await provider.Client.find(params.client_id);
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
@@ -200,7 +204,7 @@ export default {
 					accountId: account.id,
 				},
 			};
-			await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);
 		}
@@ -208,7 +212,8 @@ export default {
 
 	async login(req, res, next) {
 		try {
-			const { uid, prompt, params, session } = await oidc(req.authGroup).interactionDetails(req, res);
+			const provider = await oidc(req.authGroup);
+			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
@@ -223,7 +228,7 @@ export default {
 
 			// if there is a problem, go back to login...
 			if (!accountId) {
-				const client = await oidc(req.authGroup).Client.find(params.client_id);
+				const client = await provider.Client.find(params.client_id);
 				res.render('login', {
 					client,
 					uid,
@@ -253,7 +258,7 @@ export default {
 				},
 			};
 
-			await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);
 		}
@@ -267,12 +272,13 @@ export default {
 		let _session;
 		let _prompt;
 		try {
-			const { uid, prompt, params, session } = await oidc(req.authGroup).interactionDetails(req, res);
+			const provider = await oidc(req.authGroup);
+			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			_uid = uid;
 			_params = params;
 			_session = session;
 			_prompt = prompt;
-			client = await oidc(req.authGroup).Client.find(params.client_id);
+			client = await provider.Client.find(params.client_id);
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
@@ -369,7 +375,8 @@ export default {
 
 	async confirm (req, res, next) {
 		try {
-			const interactionDetails = await oidc(req.authGroup).interactionDetails(req, res);
+			const provider = await oidc(req.authGroup);
+			const interactionDetails = await provider.interactionDetails(req, res);
 			const { prompt: { name, details }, params, session: { accountId } } = interactionDetails;
 			assert.equal(name, 'consent');
 
@@ -377,11 +384,12 @@ export default {
 			let grant;
 
 			if (grantId) {
-				grant = await oidc(req.authGroup).Grant.find(grantId);
+				grant = await provider.Grant.find(grantId);
 			} else {
-				grant = new (oidc(req.authGroup).Grant)({
+				grant = new (provider.Grant)({
 					accountId,
-					clientId: params.client_id
+					clientId: params.client_id,
+					authGroup: req.authGroup.id
 				});
 			}
 			if (details.missingOIDCScope) {
@@ -406,7 +414,7 @@ export default {
 			}
 
 			const result = { consent };
-			await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: true });
+			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 		} catch (err) {
 			next(err);
 		}
