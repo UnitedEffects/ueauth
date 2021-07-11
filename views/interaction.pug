@@ -128,18 +128,19 @@ html
             ul
                 if (details.scopes)
                     - var detailsExpression1 = [details.scopes.accepted, details.scopes.rejected, details.claims.accepted, details.claims.rejected].every(({ length }) => length === 0);
+                    - var detailsExpression2 = [details.scopes.new, details.claims.new].every(({ length }) => length === 0);
+                    - var newScopes = new Set(details.scopes.new); newScopes.delete('openid'); newScopes.delete('offline_access');
                 if detailsExpression1
                     li this is a new authorization
-                    - var detailsExpression2 = [details.scopes.new, details.claims.new].every(({ length }) => length === 0);
                 if detailsExpression2
                     li the client is asking you to confirm previously given authorization
-                    - var newScopes = new Set(details.scopes.new); newScopes.delete('openid'); newScopes.delete('offline_access');
                 if (newScopes && newScopes.size)
                     li scopes:
                         ul
                             each scope in Array.from(newScopes)
                                 li=scope
-                - var newClaims = new Set(details.claims.new); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(newClaims));
+                if (details.claims)
+                    - var newClaims = new Set(details.claims.new); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(newClaims));
                 if (newClaims && newClaims.size)
                     li claims:
                         ul
