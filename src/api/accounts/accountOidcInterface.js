@@ -1,18 +1,14 @@
 import acct from './account';
 
 class Account {
-	// This interface is required by oidc-provider
 	static async findAccount(ctx, id, token) {
-		console.info('called');
 		const account = await acct.getAccount(ctx.authGroup._id, id);
-		console.info(account.id);
 		if (!account) {
 			return undefined;
 		}
 		return {
 			accountId: account.id,
-			// and this claims() method would actually query to retrieve the account claims
-			async claims(use, scope, claims, rejected) {
+			async claims(use, scope) {
 				return {
 					sub: account.id,
 					group: account.authGroup,
@@ -24,7 +20,7 @@ class Account {
 		};
 	}
 
-	// This can be anything you need to authenticate a user
+	// This can be anything you need to authenticate a user - in OP docs this is called findByLogin
 	static async authenticate(authGroup, email, password) {
 		try {
 			const account = await acct.getAccountByEmailOrUsername(authGroup.id, email);
@@ -42,6 +38,11 @@ class Account {
 			return undefined;
 		}
 	}
+
+	/**
+	 * todo: The interface specifies findByFederated
+	 * https://github.com/panva/node-oidc-provider/blob/d7a5ba5ba191d5af8e4bed9449cbb43a3d5a1619/example/support/account.js
+	 */
 }
 
 export default Account;

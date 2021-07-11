@@ -314,7 +314,8 @@ function oidcConfig(g) {
 			IdToken: ms('1h') / 1000,
 			RefreshToken: ms('1d') / 1000,
 			Interaction: ms('1h') / 1000,
-			Session: ms('10d') / 1000
+			Session: ms('10d') / 1000,
+			Grant: ms('10d') / 1000
 		},
 		allowOmittingSingleRegisteredRedirectUri: true,
 		pkce: {
