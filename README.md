@@ -266,6 +266,7 @@ http://jsonpatch.com/
     * Views (in-progress)
         * https://github.com/panva/node-oidc-provider/tree/main/example/views
         * federated interactino???
+        * migrate oidc views to pug
     * fix UI password Resend link on expired notice...
     * test AG create and patch and key rotation
     * initial access tokens
@@ -274,7 +275,6 @@ http://jsonpatch.com/
         * etc
     * test notifications and client-credentials
 * logout does not revoke access tokens.... should it? Also need to upgrade oidc-provider
-* migrate oidc views to pug
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
