@@ -263,7 +263,9 @@ http://jsonpatch.com/
 ## Alpha TODO
 * Upgrade to 7+ on OP.
     * login (done)
-    * Views (in-progress) https://github.com/panva/node-oidc-provider/tree/main/example/views
+    * Views (in-progress)
+        * https://github.com/panva/node-oidc-provider/tree/main/example/views
+        * federated interactino???
     * fix UI password Resend link on expired notice...
     * test AG create and patch and key rotation
     * initial access tokens
