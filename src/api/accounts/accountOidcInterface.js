@@ -2,13 +2,8 @@ import acct from './account';
 
 class Account {
 	static async findAccount(ctx, id, token) {
-		console.info('is this happening?');
-		console.info(ctx.authGroup);
-		console.info(id);
 		const account = await acct.getAccount(ctx.authGroup._id, id);
-		console.info(account);
 		if (!account) {
-			console.info('noooo');
 			return undefined;
 		}
 		return {

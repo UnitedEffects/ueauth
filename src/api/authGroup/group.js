@@ -110,7 +110,7 @@ export default {
 	},
 
 	groupCreationNotifyOptions(authGroup, owner) {
-		console.info(authGroup);
+		//console.info(authGroup);
 		return {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
 			createdBy: owner,

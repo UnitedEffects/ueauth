@@ -250,7 +250,6 @@ These are APIs specifically to allow functionality to the UE Core UI. These endp
 * Babel (see libs in package.json)
 * Passport (see libs in package.json)
 * Jest
-* Jose ^2.0.5 (version 3+ does not support keystore at this time)
 
 ### oData Spec
 
@@ -260,16 +259,53 @@ https://www.odata.org/documentation/
 
 http://jsonpatch.com/
 
+## OIDC Specs
+
+* The root library and docs can be found here: https://github.com/panva/node-oidc-provider/blob/main/docs/README.md
+* OIDC Specs themselves are here: https://openid.net/developers/specs/
+
+### Code Authorization Flow Example
+
+* LOGIN REQUEST - http://localhost:3000/root/auth?
+  <br>response_type=code id_token&
+  <br>client_id=[CLIENTID]&
+  <br>redirect_uri=https://qa.ueauth.io&
+  <br>resource=https://qa.ueauth.io
+  <br>scope=openid api:read email username&
+  <br>state=123
+    * Notice this is requesting a resource for an AccessToken
+    * This should allow you to login with a username and password and then redirect to provide a code and id_token in the query parameter of the browser url
+    * Notice also that we are requesting both id_token scopes and access_token scopes
+    * You follow this with a token request, presented as a curl statement here...
+* TOKEN REQUEST - POST - http://lo
+    * curl -X 'POST' \
+'http://localhost:3000/root/token' \
+-H 'accept: application/json' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-d 'client_secret=[CLIENTSECRET]&
+<br>audience=https://qa.ueauth.io&
+<br>redirect_uri=https://qa.ueauth.io &
+<br>code=[CODERECIEVED]&
+<br>client_id=[CLIENTID]&
+<br>scope=api:read
+<br>grant_type=authorization_code'
+    * This should respond with an access_token and your id_token
+
 ## Alpha TODO
-* Upgrade to 7+ on OP.
+* Upgrade to 7+ on OP. (in progress)
     * login (done)
     * Views (done)
         * migrate oidc views to pug (done)
     * Get AccessTokens working again... (in-progress)
         * Something is wrong with audience/resource and how I'm requesting them
-        * you probably need to remove the custom format concept...
-        * https://github.com/panva/node-oidc-provider/discussions/959
-        * https://stackoverflow.com/questions/67529736/how-to-change-access-token-format-using-node-oidc-provider
+            * Figure out the new api functions... (done)
+            * Figure out if you need userinfo off for sure even with interceptor... (done)
+            * Need to add scopes to clients???? (done)
+        * you probably need to remove the custom format concept... (done)
+        * does a regular oidc request provide opaque tokens still or do I need to handle an error?
+        * need to change the aud check on the auth.js section... shouldn't be clientId
+        * Can I use an array for aud yet?
+        * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
     * General
         * Test forgot password - forgot password screen should let you request it too...
         * https://github.com/panva/node-oidc-provider/tree/main/example/views
@@ -284,6 +320,7 @@ http://jsonpatch.com/
     * test token endpoint with client-credential generation
 * Register link on login?
 * logout does not revoke access tokens.... should it? Also need to upgrade oidc-provider
+* Is it easy to update client scopes?
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner

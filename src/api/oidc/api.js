@@ -9,9 +9,7 @@ const api = {
 		try {
 			if (!req.params.group) return next();
 			if (helper.protectedNames(req.params.group)) return next();
-			console.info('requesting auth group oidc - ' +req.params.group);
 			const tenant = await group.getOneByEither(req.params.group, false);
-			console.info(tenant);
 			if(!tenant) return next(Boom.notFound('Auth Group'));
 			const provider = oidc(tenant);
 			provider.on('server_error', (ctx, error) => {

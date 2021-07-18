@@ -67,7 +67,7 @@ function oidcConfig(g) {
 			introspection: {enabled: true},
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
-			userinfo: {enabled: false}, // todo...
+			userinfo: {enabled: true},
 			backchannelLogout: { enabled: false },
 			rpInitiatedLogout: {
 				enabled: true,
@@ -75,7 +75,6 @@ function oidcConfig(g) {
 				postLogoutSuccessSource
 			},
 			encryption: { enabled: true },
-			//jwtResponseModes: { enabled: true },
 			registration: {
 				enabled: true,
 				idFactory: uuid,
@@ -129,31 +128,21 @@ function oidcConfig(g) {
 				enabled: true,
 				rotateRegistrationAccessToken: true
 			},
-			/*
-			resourceIndicators: {
-				defaultResource: defaultResource, // see expanded details below
-				enabled: true,
-				getResourceServerInfo: getResourceServerInfo, // see expanded details below
-				useGrantedResource: useGrantedResource
-			},*/
 			resourceIndicators: {
 				defaultResource: (ctx, client, oneOf) => {
-					console.info(client);
 					if(oneOf) return oneOf;
-					return `${config.PROTOCOL}://${config.SWAGGER}`;
+					// client resource url?
+					return undefined;
 				},
 				enabled: true,
 				getResourceServerInfo: (ctx, resourceIndicator, client) => {
-					console.log("resource indicator: ", resourceIndicator, client);
 					return ({
-						scope: 'api:read api:write',
 						audience: resourceIndicator,
-						accessTokenTTL: 2 * 60 * 60, // 2 hours
 						accessTokenFormat: 'jwt',
-						jwt: {
-							sign: { alg: 'ES256' },
-						},
 					});
+				},
+				useGrantedResource: (ctx, model) => {
+					return true;
 				}
 			}
 		},
@@ -184,9 +173,11 @@ function oidcConfig(g) {
 			}
 		},
 		formats: {
-			// todo update or remove
 			customizers: {
 				async jwt(ctx, token, jwt) {
+					if(ctx && ctx.oidc && ctx.oidc.body && ctx.oidc.body.custom) jwt.payload.custom = ctx.oidc.body.custom;
+					//todo this (all below) is probably not needed
+					/*
 					console.info('customizer');
 					console.info(token);
 					console.info(ctx.oidc.body);
@@ -200,9 +191,9 @@ function oidcConfig(g) {
 							//throw new InvalidRequest('Audience is required for jwt access tokens');
 						}
 					}
-					/*
+
+					// todo - this is probably wrong...
 					if(token.kind === 'ClientCredential') {
-						//todo validate - also need one for opaque client-credentials...
 						if (ctx && ctx.oidc && ctx.oidc.body) {
 							if (ctx.oidc.body.audience) {
 								const reqAud = ctx.oidc.body.audience.split(',');
@@ -220,25 +211,12 @@ function oidcConfig(g) {
 							}
 						}
 					}*/
-					jwt.payload.bowashere = 'okieeeee';
-					console.info(jwt);
 				}
 			},
 			ClientCredentials(ctx, token) {
-				const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-				if (ctx && ctx.oidc && ctx.oidc.body) {
-					if (types.includes(ctx.oidc.body.format))
-						return ctx.oidc.body.format;
-				}
 				return token.aud ? 'jwt' : 'opaque';
 			},
 			AccessToken(ctx, token) {
-				const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-				if (ctx && ctx.oidc && ctx.oidc.body) {
-					if (types.includes(ctx.oidc.body.format))
-						return ctx.oidc.body.format;
-
-				}
 				return token.aud ? 'jwt' : 'opaque';
 			}
 		},
@@ -392,34 +370,4 @@ async function postLogoutSuccessSource(ctx) {
 	ctx.body = await pug.render('logoutSuccess', options);
 }
 
-async function defaultResource(ctx, client, oneOf) {
-	// @param ctx - koa request context
-	// @param client - client making the request
-	// @param oneOf {string[]} - The OP needs to select **one** of the values provided.
-	//                           Default is that the array is provided so that the request will fail.
-	//                           This argument is only provided when called during
-	//                           Authorization Code / Refresh Token / Device Code exchanges.
-	console.info('this');
-	if (oneOf) {
-		console.info('test');
-		return oneOf;
-	}
-	return undefined;
-}
-
-async function getResourceServerInfo(ctx, resourceIndicator, client) {
-	// @param ctx - koa request context
-	// @param resourceIndicator - resource indicator value either requested or resolved by the defaultResource helper.
-	// @param client - client making the request
-	console.info('ok');
-	throw new errors.InvalidTarget();
-}
-
-async function useGrantedResource(ctx, model) {
-	// @param ctx - koa request context
-	// @param model - depending on the request's grant_type this can be either an AuthorizationCode, BackchannelAuthenticationRequest,
-	//                RefreshToken, or DeviceCode model instance.
-	console.info('this happened....')
-	return true;
-}
 export default oidcWrapper;

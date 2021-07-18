@@ -1878,9 +1878,6 @@ components:
         redirect_uri:
           type: string
           format: url
-        format:
-          type: string
-          description: opaque or jwt
         code:
           type: string
           description: code recieved from authorization redirect
@@ -1890,8 +1887,9 @@ components:
           type: string
         audience:
           type: string
-        resource:
+        custom:
           type: string
+          description: this will be added to jwt encoding returned but not the claims in the OIDC provider
 
     inviteOperation:
       type: object
