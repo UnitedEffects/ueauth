@@ -1,14 +1,19 @@
 extends layout
 
 block content
-    body
+    body(style="background: url(https://s3.amazonaws.com/ue-platform-content/background.jpg) no-repeat center center fixed;")
         section#head.section
-            .container
-                div(style="background: lightslategrey;").card
-                    .card-body
-                        h5(style="color: wheat").card-title.danger=title
-                        h6.card-subtitle.mb-2=message
-                        form(id=formId method="post" action=actionUrl)
+            .row
+                .col-lg-12
+                    .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
+                        h2=title
+                        p=message
+                        form.m-t-20(id=formId method="post" action=actionUrl)
                             input(type="hidden" name=inName value=secret)
-                            button.btn.btn-default(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
-                            button.btn.btn-default(type="submit" form=formId style="margin-left: 5px") Cancel
+                            button.btn.btn-outline-dark.m-r-5(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
+                            button.btn.btn-outline-dark(type="submit" form=formId) Cancel
+                        .m-t-10
+                            if (tosUri || (authGroup && authGroup.primaryTOS))
+                                a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
+                            if (policyUri || (authGroup && authGroup.primaryPrivacyPolicy))
+                                a(href=(policyUri || authGroup.primaryPrivacyPolicy) style="margin-left: 5px") [ Privacy Policy ]

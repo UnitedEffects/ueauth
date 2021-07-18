@@ -1,4 +1,4 @@
-import jose from 'jose';
+import jose from 'jose-legacy';
 
 const DEFAULT = [
 	{

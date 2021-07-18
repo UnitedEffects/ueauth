@@ -15,8 +15,7 @@ block content
                             else
                                 span.login100-form-title.p-b-10=authGroupName
                             if (flash)
-                                h5.flash= flash
-                                // todo flash needs testing
+                                h5.flash.m-b-20= flash
                             .wrap-input100.validate-input(data-validate='Valid email is required: ex@abc.xyz')
                                 if !params.login_hint
                                     input.input100(type='email' name='email' autofocus='on')
@@ -66,4 +65,7 @@ block content
                                     a(href=(client.tosUri || tos)) [ Terms of Service ]
                                 if (client.policyUri || policy)
                                     a(href=(client.policyUri || policy)) [ Privacy Policy ]
-                        .login100-more(style="background-image: url('https://s3.amazonaws.com/ue-platform-content/background.jpg');")
+                        if (!splashImage)
+                            .login100-more(style="background-image: url('https://s3.amazonaws.com/ue-platform-content/background.jpg');")
+                        else
+                            .login100-more(style="background-image: url('" + splashImage + "');")

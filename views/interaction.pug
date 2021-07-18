@@ -3,68 +3,78 @@ extends layout
 block content
     body
         section#head.section
-            .container
-                div(style="background: lightslategrey;").card
-                    .card-body
-                        h1(style="color: wheat").card-title.danger=title
-                        if (client)
-                            h2.card-subtitle.mb-2=client.clientName
-                            if (authGroupName !== client.clientName)
-                                h3.card-subtitle.mb-2=authGroupName
-                        else
-                            h2.card-subtitle.mb-2=authGroupName
-                        .login-client-image
-                        if client.logoUri
-                            img(src=client.logoUri)
-                        ul
-                            if ([details.missingOIDCScope, details.missingOIDCClaims, details.missingResourceScopes].filter(Boolean).length === 0)
-                                li the client is asking you to confirm a previously given authorization
-                            if (details.missingOIDCScope)
-                                - var missingOIDCScope = new Set(details.missingOIDCScope); missingOIDCScope.delete('openid'); missingOIDCScope.delete('offline_access');
-                            if (missingOIDCScope && missingOIDCScope.size)
-                                li scopes:
-                                ul
-                                    each scope in Array.from(missingOIDCScope)
-                                        li=scope
-                            if (details.missingOIDCClaims)
-                                - var missingOIDCClaims = new Set(details.missingOIDCClaims); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(missingOIDCClaims));
-                            if (missingOIDCClaims && missingOIDCClaims.size)
-                                li claims:
-                                ul
-                                    each claim in Array.from(missingOIDCClaims)
-                                        li=claim
-                            if (details.missingResourceScopes)
-                                - var missingResourceScopes = details.missingResourceScopes;
-                            if (missingResourceScopes)
-                                each obj in Array.from(missingResourceScopes)
-                                    li=obj.indicator
+            .limiter
+                .container-login100
+                    .wrap-login100
+                        form.login100-form.validate-form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
+                            //todo test client-image
+                            .login-client-image
+                            if client.logoUri
+                                img(src=client.logoUri)
+                            span.login100-form-title.p-b-10=title
+                            if (client)
+                                span.login100-form-title.p-b-10=client.clientName
+                                if (authGroupName !== client.clientName)
+                                    h3.login100-form-title.p-b-5=authGroupName
+                            else
+                                span.login100-form-title.p-b-10=authGroupName
+                            details.m-t-15(style="color: lightslategrey;")
+                                summary Click Here to Review Authorized Scopes and Claims
+                                .m-t-15.authorize-details
                                     ul
-                                        each scope in Array.from(obj.scopes)
-                                            li=scope
-                            if (params && params.scope && params.scope.includes('offline_access'))
-                                li the client is asking to have offline access to this authorization
-                                    if ((!details.missingOIDCScope) || !details.missingOIDCScope.includes('offline_access'))
-                                        | which you've previously granted
-                        form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
-                            button.button.btn.btn-default(autofocus='', type='submit') Continue
-                        .login-help
-                            a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
-                            if ((client && client.tosUri) || tos)
-                                a(href=(client.tosUri || tos)) [ Terms of Service ]
-                            if ((client && client.policyUri) || policy)
-                                a(href=(client.policyUri || policy)) [ Privacy Policy ]
-                        .grant-debug
-                            details
-                                summary(style="text-align: center;") (Click to expand) DEBUG information
-                                div
-                                    strong uid: #{uid}
-                                if (session)
+                                    if ([details.missingOIDCScope, details.missingOIDCClaims, details.missingResourceScopes].filter(Boolean).length === 0)
+                                        li the client is asking you to confirm a previously given authorization
+                                    if (details.missingOIDCScope)
+                                        - var missingOIDCScope = new Set(details.missingOIDCScope); missingOIDCScope.delete('openid'); missingOIDCScope.delete('offline_access');
+                                    if (missingOIDCScope && missingOIDCScope.size)
+                                        li these scopes are being requested...
+                                        ul
+                                            each scope in Array.from(missingOIDCScope)
+                                                li=scope
+                                    if (details.missingOIDCClaims)
+                                        - var missingOIDCClaims = new Set(details.missingOIDCClaims); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(missingOIDCClaims));
+                                    if (missingOIDCClaims && missingOIDCClaims.size)
+                                        li these claims are being requested...
+                                        ul
+                                            each claim in Array.from(missingOIDCClaims)
+                                                li=claim
+                                    if (details.missingResourceScopes)
+                                        - var missingResourceScopes = details.missingResourceScopes;
+                                    if (missingResourceScopes)
+                                        each obj in Array.from(missingResourceScopes)
+                                            li=obj.indicator
+                                            ul
+                                                each scope in Array.from(obj.scopes)
+                                                    li=scope
+                                    if (params && params.scope && params.scope.includes('offline_access'))
+                                        li the client is asking to have offline access to this authorization
+                                            if ((!details.missingOIDCScope) || !details.missingOIDCScope.includes('offline_access'))
+                                                | which you've previously granted
+                            .container-login100-form-btn.m-t-20
+                                button.login100-form-btn(type='submit')
+                                    | Continue
+                            .login-help.p-t-10
+                                a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
+                                if ((client && client.tosUri) || tos)
+                                    a(href=(client.tosUri || tos)) [ Terms of Service ]
+                                if ((client && client.policyUri) || policy)
+                                    a(href=(client.policyUri || policy)) [ Privacy Policy ]
+                            .grant-debug.m-t-50
+                                details
+                                    summary(style="text-align: center;") (Click to expand) DEBUG information
+                                    div
+                                        strong uid: #{uid}
+                                    if (session)
+                                        div
+                                            br
+                                            #{session}
                                     div
                                         br
-                                        #{session}
-                                div
-                                    br
-                                    #{dbg.params}
-                                div
-                                    br
-                                    #{dbg.prompt}
+                                        #{dbg.params}
+                                    div
+                                        br
+                                        #{dbg.prompt}
+                        if (!splashImage)
+                            .login100-more(style="background-image: url('https://s3.amazonaws.com/ue-platform-content/background.jpg');")
+                        else
+                            .login100-more(style="background-image: url('"+splashImage+"');")

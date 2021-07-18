@@ -54,7 +54,8 @@ function oidcConfig(g) {
 			username: ['username'],
 		},
 		scopes: [
-			'openid'
+			'openid',
+			'offline_access'
 		],
 		dynamicScopes: [
 			///api:[a-zA-Z0-9_-]*$/
@@ -130,6 +131,11 @@ function oidcConfig(g) {
 			registrationManagement: {
 				enabled: true,
 				rotateRegistrationAccessToken: true
+			},
+			resourceIndicators: {
+				defaultResource: defaultResource, // see expanded details below
+				enabled: true,
+				getResourceServerInfo: getResourceServerInfo, // see expanded details below
 			}
 		},
 		extraClientMetadata: {
@@ -159,12 +165,50 @@ function oidcConfig(g) {
 			}
 		},
 		formats: {
+			// todo update or remove
+			customizers: {
+				async jwt(ctx, token, jwt) {
+					console.info('here');
+					console.info(token);
+					console.info(ctx.oidc.body);
+					if(token.kind === 'AccessToken') {
+						if(ctx && ctx.oidc && ctx.oidc.body) {
+							if (ctx.oidc.body.format === 'jwt' && (jwt.payload && !jwt.payload.aud)) {
+								jwt.payload.aud = token.clientId;
+							}
+						}
+						if (jwt.payload && !jwt.payload.aud) {
+							throw new InvalidRequest('Audience is required for jwt access tokens and you are not auto-setting it with format=jwt');
+						}
+					}
+					if(token.kind === 'ClientCredential') {
+						//todo validate - also need one for opaque client-credentials...
+						if (ctx && ctx.oidc && ctx.oidc.body) {
+							if (ctx.oidc.body.audience) {
+								const reqAud = ctx.oidc.body.audience.split(',');
+								const aud = [];
+								let check;
+								aud.push(token.clientId);
+								await Promise.all(reqAud.map(async (id) => {
+									if (!aud.includes(id)) {
+										check = await Client.getOne(ctx.authGroup, id);
+										if (check) aud.push(id);
+										else throw new InvalidRequest(`audience not registered: ${ctx.oidc.body.audience}`);
+									}
+								}));
+								jwt.payload.aud = aud;
+							}
+						}
+					}
+					jwt.payload.bowashere = 'okieeeee';
+					console.info(jwt);
+				}
+			},
 			ClientCredentials(ctx, token) {
 				const types = ['jwt', 'legacy', 'opaque', 'paseto'];
 				if (ctx && ctx.oidc && ctx.oidc.body) {
 					if (types.includes(ctx.oidc.body.format))
 						return ctx.oidc.body.format;
-
 				}
 				return token.aud ? 'jwt' : 'opaque';
 			},
@@ -198,7 +242,7 @@ function oidcConfig(g) {
 				session: `${g.prettyName}_session`
 			}
 		},
-		async extraAccessTokenClaims(ctx, token) {
+		async extraTokenClaims(ctx, token) {
 			let claims = {};
 			if (ctx) {
 				claims = {
@@ -227,25 +271,6 @@ function oidcConfig(g) {
 			}
 			//todo permissions here?
 			return claims;
-		},
-		async audiences(ctx, sub, token, use) {
-			if (ctx && ctx.oidc && ctx.oidc.body) {
-				if (ctx.oidc.body.audience) {
-					const reqAud = ctx.oidc.body.audience.split(',');
-					const aud = [];
-					let check;
-					aud.push(token.clientId);
-					await Promise.all(reqAud.map(async (id) => {
-						if (!aud.includes(id)) {
-							check = await Client.getOne(ctx.authGroup, id);
-							if (check) aud.push(id);
-							else throw new InvalidRequest(`audience not registered: ${ctx.oidc.body.audience}`);
-						}
-					}));
-					return aud;
-				}
-			}
-			return undefined;
 		},
 		//todo figure out if we care token standalone was removed
 		responseTypes: [
@@ -347,4 +372,21 @@ async function postLogoutSuccessSource(ctx) {
 	ctx.body = await pug.render('logoutSuccess', options);
 }
 
+async function defaultResource(ctx, client, oneOf) {
+	// @param ctx - koa request context
+	// @param client - client making the request
+	// @param oneOf {string[]} - The OP needs to select **one** of the values provided.
+	//                           Default is that the array is provided so that the request will fail.
+	//                           This argument is only provided when called during
+	//                           Authorization Code / Refresh Token / Device Code exchanges.
+	if (oneOf) return oneOf;
+	return undefined;
+}
+
+async function getResourceServerInfo(ctx, resourceIndicator, client) {
+	// @param ctx - koa request context
+	// @param resourceIndicator - resource indicator value either requested or resolved by the defaultResource helper.
+	// @param client - client making the request
+	throw new errors.InvalidTarget();
+}
 export default oidcWrapper;

@@ -37,6 +37,7 @@ const mid = {
     },
     async catchErrors (err, req, res, next) {
         try {
+            console.info('this happening?')
             if(config.ENV !== 'production') console.info(err);
             const error = await handleErrors.parse(err);
             if(req.method.toLowerCase() === 'get' && !req.path.includes('/api')) {

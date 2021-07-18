@@ -1888,6 +1888,8 @@ components:
           type: string
         scope:
           type: string
+        audience:
+          type: string
 
     inviteOperation:
       type: object

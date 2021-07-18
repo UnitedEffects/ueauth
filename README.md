@@ -263,11 +263,14 @@ http://jsonpatch.com/
 ## Alpha TODO
 * Upgrade to 7+ on OP.
     * login (done)
-    * Views (in-progress)
+    * Views (done)
+        * migrate oidc views to pug (done)
+    * Get AccessTokens working again... (in-progress)
+        * Something is wrong with audience and how I'm requesting them
+    * General
+        * Test forgot password - forgot password screen should let you request it too...
         * https://github.com/panva/node-oidc-provider/tree/main/example/views
-        * federated interactino???
-        * migrate oidc views to pug
-        * forgot password screen should let you request it too...
+        * federated interactino?
     * fix UI password Resend link on expired notice...
     * test AG create and patch and key rotation
     * initial access tokens
@@ -275,6 +278,7 @@ http://jsonpatch.com/
         * invites
         * etc
     * test notifications and client-credentials
+    * test token endpoint with client-credential generation
 * Register link on login?
 * logout does not revoke access tokens.... should it? Also need to upgrade oidc-provider
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
