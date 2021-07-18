@@ -1890,6 +1890,8 @@ components:
           type: string
         audience:
           type: string
+        resource:
+          type: string
 
     inviteOperation:
       type: object

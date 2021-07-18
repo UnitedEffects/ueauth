@@ -57,9 +57,6 @@ function oidcConfig(g) {
 			'openid',
 			'offline_access'
 		],
-		dynamicScopes: [
-			///api:[a-zA-Z0-9_-]*$/
-		],
 		interactions: {
 			url(ctx, interaction) {
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
@@ -70,7 +67,7 @@ function oidcConfig(g) {
 			introspection: {enabled: true},
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
-			userinfo: {enabled: true},
+			userinfo: {enabled: false}, // todo...
 			backchannelLogout: { enabled: false },
 			rpInitiatedLogout: {
 				enabled: true,
@@ -132,10 +129,32 @@ function oidcConfig(g) {
 				enabled: true,
 				rotateRegistrationAccessToken: true
 			},
+			/*
 			resourceIndicators: {
 				defaultResource: defaultResource, // see expanded details below
 				enabled: true,
 				getResourceServerInfo: getResourceServerInfo, // see expanded details below
+				useGrantedResource: useGrantedResource
+			},*/
+			resourceIndicators: {
+				defaultResource: (ctx, client, oneOf) => {
+					console.info(client);
+					if(oneOf) return oneOf;
+					return `${config.PROTOCOL}://${config.SWAGGER}`;
+				},
+				enabled: true,
+				getResourceServerInfo: (ctx, resourceIndicator, client) => {
+					console.log("resource indicator: ", resourceIndicator, client);
+					return ({
+						scope: 'api:read api:write',
+						audience: resourceIndicator,
+						accessTokenTTL: 2 * 60 * 60, // 2 hours
+						accessTokenFormat: 'jwt',
+						jwt: {
+							sign: { alg: 'ES256' },
+						},
+					});
+				}
 			}
 		},
 		extraClientMetadata: {
@@ -168,19 +187,20 @@ function oidcConfig(g) {
 			// todo update or remove
 			customizers: {
 				async jwt(ctx, token, jwt) {
-					console.info('here');
+					console.info('customizer');
 					console.info(token);
 					console.info(ctx.oidc.body);
 					if(token.kind === 'AccessToken') {
 						if(ctx && ctx.oidc && ctx.oidc.body) {
 							if (ctx.oidc.body.format === 'jwt' && (jwt.payload && !jwt.payload.aud)) {
-								jwt.payload.aud = token.clientId;
+								//jwt.payload.aud = token.clientId;
 							}
 						}
 						if (jwt.payload && !jwt.payload.aud) {
-							throw new InvalidRequest('Audience is required for jwt access tokens and you are not auto-setting it with format=jwt');
+							//throw new InvalidRequest('Audience is required for jwt access tokens');
 						}
 					}
+					/*
 					if(token.kind === 'ClientCredential') {
 						//todo validate - also need one for opaque client-credentials...
 						if (ctx && ctx.oidc && ctx.oidc.body) {
@@ -199,7 +219,7 @@ function oidcConfig(g) {
 								jwt.payload.aud = aud;
 							}
 						}
-					}
+					}*/
 					jwt.payload.bowashere = 'okieeeee';
 					console.info(jwt);
 				}
@@ -379,7 +399,11 @@ async function defaultResource(ctx, client, oneOf) {
 	//                           Default is that the array is provided so that the request will fail.
 	//                           This argument is only provided when called during
 	//                           Authorization Code / Refresh Token / Device Code exchanges.
-	if (oneOf) return oneOf;
+	console.info('this');
+	if (oneOf) {
+		console.info('test');
+		return oneOf;
+	}
 	return undefined;
 }
 
@@ -387,6 +411,15 @@ async function getResourceServerInfo(ctx, resourceIndicator, client) {
 	// @param ctx - koa request context
 	// @param resourceIndicator - resource indicator value either requested or resolved by the defaultResource helper.
 	// @param client - client making the request
+	console.info('ok');
 	throw new errors.InvalidTarget();
+}
+
+async function useGrantedResource(ctx, model) {
+	// @param ctx - koa request context
+	// @param model - depending on the request's grant_type this can be either an AuthorizationCode, BackchannelAuthenticationRequest,
+	//                RefreshToken, or DeviceCode model instance.
+	console.info('this happened....')
+	return true;
 }
 export default oidcWrapper;

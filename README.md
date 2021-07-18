@@ -266,7 +266,10 @@ http://jsonpatch.com/
     * Views (done)
         * migrate oidc views to pug (done)
     * Get AccessTokens working again... (in-progress)
-        * Something is wrong with audience and how I'm requesting them
+        * Something is wrong with audience/resource and how I'm requesting them
+        * you probably need to remove the custom format concept...
+        * https://github.com/panva/node-oidc-provider/discussions/959
+        * https://stackoverflow.com/questions/67529736/how-to-change-access-token-format-using-node-oidc-provider
     * General
         * Test forgot password - forgot password screen should let you request it too...
         * https://github.com/panva/node-oidc-provider/tree/main/example/views
