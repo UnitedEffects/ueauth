@@ -5,6 +5,7 @@ import app from '../src/app';
 import swagger from "../src/swagger";
 const config = require('../src/config');
 const pJson = require('../package');
+import t from './testhelper';
 
 describe('API tests', () => {
     beforeEach(() => {
@@ -18,7 +19,7 @@ describe('API tests', () => {
             expect(res.statusCode).toEqual(404);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
 
     });
@@ -37,7 +38,7 @@ describe('API tests', () => {
             expect(res.body).toStrictEqual(swag);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 
@@ -49,7 +50,7 @@ describe('API tests', () => {
             expect(res.body.server).toStrictEqual('running');
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 
@@ -68,7 +69,7 @@ describe('API tests', () => {
             });
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 });

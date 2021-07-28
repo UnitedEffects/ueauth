@@ -2,8 +2,9 @@ module.exports = {
     "env": {
         "es6": true,
         "node": true,
-        "mocha": true
+        "jest": true
     },
+    "plugins": ["jest"],
     "extends": "eslint:recommended",
     "parser": "babel-eslint",
     "parserOptions": {

@@ -3,6 +3,7 @@ import "regenerator-runtime/runtime";
 import Model from '../src/api/logging/model';
 import log from '../src/api/logging/logs';
 const mockingoose = require('mockingoose');
+import t from './testhelper';
 
 const oneLog = {
     "logTimestamp": "2020-03-23T02:11:49.000Z",
@@ -62,7 +63,7 @@ describe('Log DAL tests', () => {
             expect(res.persisted).toBe(true);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
 
     });
@@ -88,7 +89,7 @@ describe('Log DAL tests', () => {
             expect(res.details).toStrictEqual(expected.details);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
 
     });
@@ -105,7 +106,7 @@ describe('Log DAL tests', () => {
             expect(res).toMatchObject(expected);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 
@@ -124,7 +125,7 @@ describe('Log DAL tests', () => {
             expect(res).toMatchObject(expected);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 
@@ -153,7 +154,7 @@ describe('Log DAL tests', () => {
             expect(res.message).toBe(expected.message);
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 */
@@ -168,7 +169,7 @@ describe('Log DAL tests', () => {
             expect(res.details).toStrictEqual({ info: 'testing http errors'});
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
     });
 

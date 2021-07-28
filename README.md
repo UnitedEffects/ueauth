@@ -306,6 +306,8 @@ http://jsonpatch.com/
         * need to change the aud check on the auth.js section... shouldn't be clientId
         * Can I use an array for aud yet?
         * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
+        * Can I request tokens without openid scope???
+        * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
     * General
         * Test forgot password - forgot password screen should let you request it too...
         * https://github.com/panva/node-oidc-provider/tree/main/example/views
@@ -318,6 +320,7 @@ http://jsonpatch.com/
         * etc
     * test notifications and client-credentials
     * test token endpoint with client-credential generation
+* clean up fonts!
 * Register link on login?
 * logout does not revoke access tokens.... should it? Also need to upgrade oidc-provider
 * Is it easy to update client scopes?

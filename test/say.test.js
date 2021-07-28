@@ -1,6 +1,7 @@
 import '@babel/register';
 import "regenerator-runtime/runtime";
 import { say, sayMiddleware } from '../src/say';
+import t from './testhelper';
 
 describe('Say library tests', () => {
     beforeEach(() => {
@@ -68,7 +69,7 @@ describe('Say library tests', () => {
             })
         } catch (error) {
             console.error(error);
-            fail();
+            t.fail();
         }
 
     })
