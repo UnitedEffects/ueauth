@@ -271,7 +271,7 @@ http://jsonpatch.com/
   <br>client_id=[CLIENTID]&
   <br>redirect_uri=https://qa.ueauth.io&
   <br>resource=http://localhost:3000/[AUTHGROUP]&
-  <br>scope=openid api:read email username&
+  <br>scope=openid core:read email username&
   <br>nonce=123&
   <br>state=123
     * Notice this is requesting a resource for an AccessToken
@@ -288,7 +288,6 @@ http://jsonpatch.com/
 <br>redirect_uri=https://qa.ueauth.io &
 <br>code=[CODERECIEVED]&
 <br>client_id=[CLIENTID]&
-<br>scope=api:read
 <br>grant_type=authorization_code'
     * This should respond with an access_token and your id_token
 
@@ -305,7 +304,8 @@ http://jsonpatch.com/
         * you probably need to remove the custom format concept... (done)
         * fix auth with new tokens... (done)
         * scope not working... (fixed/done)
-        * how should aud work for client-credentials and authenticating?
+            * Document the following: When scope is on client, only those scopes can be requested, even oidc. So if you want your client to support an oidc flow and you want to specify only some scopes, you need to include oidc on that client.
+        * how should aud/scopes work for client-credentials?
         * Can I request tokens without openid scope???
         * does a regular oidc request provide opaque tokens still or do I need to handle an error?
         * Can I use an array for aud yet?

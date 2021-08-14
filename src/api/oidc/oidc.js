@@ -13,15 +13,18 @@ const config = require('../../config');
 const MongoAdapter = require('./dal');
 
 //todo make this a ueauth config...
+const coreScopes = [
+	'core:read',
+	'core:write',
+	'core:delete',
+	'core:update'
+]
 const additionalScopes = [
 	'api:read',
 	'api:write',
 	'api:delete',
 	'api:update',
-	'core:read',
-	'core:write',
-	'core:delete',
-	'core:update'
+	'api:test'
 ]
 
 const {
@@ -67,7 +70,7 @@ function oidcConfig(g) {
 		//todo this MUST get added to config
 		scopes: [
 			'openid',
-			'offline_access'].concat(additionalScopes),
+			'offline_access'].concat(coreScopes).concat(additionalScopes),
 		interactions: {
 			url(ctx, interaction) {
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
@@ -149,7 +152,10 @@ function oidcConfig(g) {
 					const resource = {
 						audience: resourceIndicator,
 						accessTokenFormat: 'jwt',
-						scope: additionalScopes.join(' ')
+						scope: coreScopes.concat(additionalScopes).join(' ')
+					}
+					if(client.scope) {
+						resource.scope = client.scope.replace('openid', '').trim();
 					}
 					return (resource);
 				},
