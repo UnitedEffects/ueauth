@@ -58,13 +58,19 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 		throw Boom.unauthorized('Auth Group does not match');
 	}
 	if(typeof decoded.aud === 'string') {
-		if(decoded.aud !== authGroup.associatedClient) {
+		// todo - do we need to do this for client-credentials?
+		if(!issuer.includes(decoded.aud)) {
 			// check audience = client
 			throw Boom.unauthorized('Token audience not specific to this auth group client');
 		}
 	}
 	if(typeof decoded.aud === 'object') {
-		if(!decoded.aud.includes(authGroup.associatedClient)) {
+		// todo - do we need to do this for client-credentials?
+		let found = false;
+		for(let i=0; i<decoded.aud.length; i++) {
+			if(issuer.includes(decoded.aud[i])) found = true;
+		}
+		if(found === false) {
 			// check audience = client
 			throw Boom.unauthorized('Token audience not specific to this auth group client');
 		}
@@ -81,7 +87,7 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 		}
 	}
 	//check sub if present
-	if(decoded.sub && decoded.scope) {
+	if(decoded.sub) {
 		const user = await getUser(authGroup, decoded, token);
 		// console.info(oidc(authGroup.id).issuer);
 		if(!user) throw Boom.unauthorized('User not recognized');
@@ -90,10 +96,6 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 			throw Boom.unauthorized('User not associated with indicated auth group');
 		}
 		return { ...user, decoded, subject_group: authGroup };
-	}
-	if(decoded.sub && !decoded.scope) {
-		//id_token
-		throw Boom.unauthorized('API Access requires the access-token not the id-token');
 	}
 	// client_credential - note, permissions may still stop the request
 	return decoded;
@@ -228,6 +230,14 @@ async (req, token, next) => {
 				if(decoded) {
 					try {
 						const result = await runDecodedChecks(token, issuer, decoded, subAG);
+						if(decoded.scope) {
+							if(req.permissions) req.permissions.scopes = decoded.scope;
+							else {
+								req.permissions = {
+									scopes: decoded.scope
+								}
+							}
+						}
 						return next(null, result, { token });
 					} catch (error) {
 						console.error(error);

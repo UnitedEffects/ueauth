@@ -264,26 +264,27 @@ http://jsonpatch.com/
 * The root library and docs can be found here: https://github.com/panva/node-oidc-provider/blob/main/docs/README.md
 * OIDC Specs themselves are here: https://openid.net/developers/specs/
 
-### Code Authorization Flow Example
+### Code Authorization Flow Example - Run Locally
 
 * LOGIN REQUEST - http://localhost:3000/root/auth?
   <br>response_type=code id_token&
   <br>client_id=[CLIENTID]&
   <br>redirect_uri=https://qa.ueauth.io&
-  <br>resource=https://qa.ueauth.io
+  <br>resource=http://localhost:3000/[AUTHGROUP]&
   <br>scope=openid api:read email username&
+  <br>nonce=123&
   <br>state=123
     * Notice this is requesting a resource for an AccessToken
     * This should allow you to login with a username and password and then redirect to provide a code and id_token in the query parameter of the browser url
     * Notice also that we are requesting both id_token scopes and access_token scopes
     * You follow this with a token request, presented as a curl statement here...
-* TOKEN REQUEST - POST - http://lo
+* TOKEN REQUEST
     * curl -X 'POST' \
 'http://localhost:3000/root/token' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
 -d 'client_secret=[CLIENTSECRET]&
-<br>audience=https://qa.ueauth.io&
+<br>audience=http://localhost:3000/[AUTHGROUP]&
 <br>redirect_uri=https://qa.ueauth.io &
 <br>code=[CODERECIEVED]&
 <br>client_id=[CLIENTID]&
@@ -302,11 +303,13 @@ http://jsonpatch.com/
             * Figure out if you need userinfo off for sure even with interceptor... (done)
             * Need to add scopes to clients???? (done)
         * you probably need to remove the custom format concept... (done)
+        * fix auth with new tokens... (done)
+        * scope not working... (fixed/done)
+        * how should aud work for client-credentials and authenticating?
+        * Can I request tokens without openid scope???
         * does a regular oidc request provide opaque tokens still or do I need to handle an error?
-        * need to change the aud check on the auth.js section... shouldn't be clientId
         * Can I use an array for aud yet?
         * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
-        * Can I request tokens without openid scope???
         * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
     * General
         * Test forgot password - forgot password screen should let you request it too...

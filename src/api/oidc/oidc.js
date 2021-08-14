@@ -4,7 +4,6 @@ import ms from 'ms';
 import Pug from 'koa-pug';
 import path from 'path';
 import Account from '../accounts/accountOidcInterface';
-import Client from './client/clients';
 import middle from '../../oidcMiddleware';
 
 import IAT from './models/initialAccessToken';
@@ -12,6 +11,18 @@ import IAT from './models/initialAccessToken';
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const MongoAdapter = require('./dal');
+
+//todo make this a ueauth config...
+const additionalScopes = [
+	'api:read',
+	'api:write',
+	'api:delete',
+	'api:update',
+	'core:read',
+	'core:write',
+	'core:delete',
+	'core:update'
+]
 
 const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
@@ -53,10 +64,10 @@ function oidcConfig(g) {
 			email: ['email', 'verified'],
 			username: ['username'],
 		},
+		//todo this MUST get added to config
 		scopes: [
 			'openid',
-			'offline_access'
-		],
+			'offline_access'].concat(additionalScopes),
 		interactions: {
 			url(ctx, interaction) {
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
@@ -131,15 +142,16 @@ function oidcConfig(g) {
 			resourceIndicators: {
 				defaultResource: (ctx, client, oneOf) => {
 					if(oneOf) return oneOf;
-					// client resource url?
 					return undefined;
 				},
 				enabled: true,
 				getResourceServerInfo: (ctx, resourceIndicator, client) => {
-					return ({
+					const resource = {
 						audience: resourceIndicator,
 						accessTokenFormat: 'jwt',
-					});
+						scope: additionalScopes.join(' ')
+					}
+					return (resource);
 				},
 				useGrantedResource: (ctx, model) => {
 					return true;
@@ -176,41 +188,6 @@ function oidcConfig(g) {
 			customizers: {
 				async jwt(ctx, token, jwt) {
 					if(ctx && ctx.oidc && ctx.oidc.body && ctx.oidc.body.custom) jwt.payload.custom = ctx.oidc.body.custom;
-					//todo this (all below) is probably not needed
-					/*
-					console.info('customizer');
-					console.info(token);
-					console.info(ctx.oidc.body);
-					if(token.kind === 'AccessToken') {
-						if(ctx && ctx.oidc && ctx.oidc.body) {
-							if (ctx.oidc.body.format === 'jwt' && (jwt.payload && !jwt.payload.aud)) {
-								//jwt.payload.aud = token.clientId;
-							}
-						}
-						if (jwt.payload && !jwt.payload.aud) {
-							//throw new InvalidRequest('Audience is required for jwt access tokens');
-						}
-					}
-
-					// todo - this is probably wrong...
-					if(token.kind === 'ClientCredential') {
-						if (ctx && ctx.oidc && ctx.oidc.body) {
-							if (ctx.oidc.body.audience) {
-								const reqAud = ctx.oidc.body.audience.split(',');
-								const aud = [];
-								let check;
-								aud.push(token.clientId);
-								await Promise.all(reqAud.map(async (id) => {
-									if (!aud.includes(id)) {
-										check = await Client.getOne(ctx.authGroup, id);
-										if (check) aud.push(id);
-										else throw new InvalidRequest(`audience not registered: ${ctx.oidc.body.audience}`);
-									}
-								}));
-								jwt.payload.aud = aud;
-							}
-						}
-					}*/
 				}
 			},
 			ClientCredentials(ctx, token) {
@@ -270,7 +247,6 @@ function oidcConfig(g) {
 			//todo permissions here?
 			return claims;
 		},
-		//todo figure out if we care token standalone was removed
 		responseTypes: [
 			'code id_token token',
 			'code id_token',

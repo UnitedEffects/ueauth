@@ -39,7 +39,7 @@ export default {
 			'redirect_uris': [`https://${config.UI_URL}`],
 			'post_logout_redirect_uris': [`https://${config.UI_URL}`],
 			'auth_group': authGroup.id,
-			'scopes': 'api:read api:write api:delete api:update'
+			//'scope': 'api:read api:write api:delete api:update'
 		};
 		if(authGroup.primaryDomain) {
 			if (authGroup.primaryDomain !== config.UI_URL) {
@@ -72,7 +72,7 @@ export default {
 			'response_types': [],
 			'redirect_uris': [`https://${config.UI_URL}`],
 			'auth_group': authGroup.id,
-			'scopes': 'api:read api:write'
+			//'scope': 'api:read api:write'
 		});
 		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
 		const add = new Adapter('client');

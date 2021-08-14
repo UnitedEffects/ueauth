@@ -2508,13 +2508,13 @@ components:
         description: Reference the update model for the full paths to update
         oneOf:
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
@@ -2522,13 +2522,13 @@ components:
                 type: object
                 description: 'The object, array or object to set the property at the above path to'
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
@@ -2536,26 +2536,26 @@ components:
                 type: string
                 description: 'The string, array or object to set the property at the above path to'
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
               value:
                 type: boolean
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
@@ -2563,8 +2563,8 @@ components:
                 type: integer
                 description: 'The integer, array or object to set the property at the above path to'
           - required:
-              - op
-              - path
+            - op
+            - path
             properties:
               op:
                 type: string
@@ -2572,3 +2572,17 @@ components:
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+          - required:
+            - op
+            - from
+            - path
+            properties:
+              op:
+                type: string
+                enum: ['copy', 'move']
+              from:
+                type: string
+                description: 'Path to copy or move from'
+              path:
+                type: string
+                description: 'Path to copy or move to'
