@@ -108,16 +108,24 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - idToken
+                - code
+                - redirectUri
+                - clientId
               properties:
-                id_token:
+                idToken:
                   type: string
-                  description: an id_token provided as part of the code authorization flow
+                  description: an idToken provided as part of the code authorization flow
                 code:
                   type: string
                   description: a code provided as part of the code authorization flow
-                redirect_uri:
+                redirectUri:
                   type: string
                   description: redirect uri to use, should match expected from client
+                clientId:
+                  type: string
+                  description: the client id used for the authorization code
             encoding:
               grant_type:
                 style: form

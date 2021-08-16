@@ -1,16 +1,19 @@
 import axios from 'axios';
 import qs from 'qs';
 
+const config = require('../../../config');
+
 export default {
-	async getUIAccessTokens(group, iss, code, client, redirect_uri) {
+	async getUIAccessTokens(group, iss, code, client, redirectUri) {
 		const cl = JSON.parse(JSON.stringify(client));
 		const data = {
 		    'grant_type': 'authorization_code',
             'client_secret': cl.client_secret,
-            'redirect_uri': redirect_uri,
+            'redirect_uri': redirectUri,
             'format': 'jwt',
             'code': code,
-            'client_id': cl.client_id
+            'client_id': cl.client_id,
+			'audience': `${config.UI_CORE_AUDIENCE_ORIGIN}/${group.prettyName}`
 		};
 		const options = {
 			method: 'POST',

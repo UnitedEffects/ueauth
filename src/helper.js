@@ -52,6 +52,10 @@ export default {
     protectedNames(x) {
         const protectedNamespaces = [
             'api',
+            'css',
+            'js',
+            'fonts',
+            'favicon.ico',
             'swagger',
             'swagger.json',
             'ueauth',
