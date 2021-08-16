@@ -3,8 +3,8 @@ service: ${env:NAME, file(./package.json):name}
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
   env: ${env:SLS_ENV, 'test'}
+  stage: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
   region: us-east-1
   timeout: 30
   environment:
