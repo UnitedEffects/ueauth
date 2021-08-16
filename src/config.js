@@ -43,7 +43,8 @@ const config = {
 			console.error(error);
 			return [];
 		}
-	}
+	},
+	UI_CORE_AUDIENCE_ORIGIN: process.env.UI_CORE_AUDIENCE_ORIGIN || envVars.UI_CORE_AUDIENCE_ORIGIN || 'http://localhost:3000'
 };
 
 module.exports = config;

@@ -1,11 +1,20 @@
 extends layout
 
 block content
-  section#head.section
-    .container
-      div(style="background: lightslategrey;").card
-        .card-body
-          h5(style="color: wheat").card-title.danger=title
-          h6.card-subtitle.mb-2=message
-          .card
-            .card-text.detail-color!=details
+  body(style="background: url(https://s3.amazonaws.com/ue-platform-content/background.jpg) no-repeat center center fixed;")
+    section#head.section
+      .row
+        .col-lg-12
+          .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
+            h2=title
+            p=message
+            if (details)
+              .m-t-10.detail-color
+                p!=details
+            if (logoUri || (authGroup && authGroup.primaryDomain))
+              a.btn.btn-outline-dark(href=(logoUri || authGroup.primaryDomain)) Home to #{authGroup.name}
+            .m-t-10
+              if (tosUri || (authGroup && authGroup.primaryTOS))
+                a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
+              if (policyUri || (authGroup && authGroup.primaryPrivacyPolicy))
+                a(href=(policyUri || authGroup.primaryPrivacyPolicy) style="margin-left: 5px") [ Privacy Policy ]

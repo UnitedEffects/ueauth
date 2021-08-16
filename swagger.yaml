@@ -108,16 +108,24 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - idToken
+                - code
+                - redirectUri
+                - clientId
               properties:
-                id_token:
+                idToken:
                   type: string
-                  description: an id_token provided as part of the code authorization flow
+                  description: an idToken provided as part of the code authorization flow
                 code:
                   type: string
                   description: a code provided as part of the code authorization flow
-                redirect_uri:
+                redirectUri:
                   type: string
                   description: redirect uri to use, should match expected from client
+                clientId:
+                  type: string
+                  description: the client id used for the authorization code
             encoding:
               grant_type:
                 style: form
@@ -1878,9 +1886,6 @@ components:
         redirect_uri:
           type: string
           format: url
-        format:
-          type: string
-          description: opaque or jwt
         code:
           type: string
           description: code recieved from authorization redirect
@@ -1888,6 +1893,11 @@ components:
           type: string
         scope:
           type: string
+        audience:
+          type: string
+        custom:
+          type: string
+          description: this will be added to jwt encoding returned but not the claims in the OIDC provider
 
     inviteOperation:
       type: object
@@ -2506,13 +2516,13 @@ components:
         description: Reference the update model for the full paths to update
         oneOf:
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
@@ -2520,13 +2530,13 @@ components:
                 type: object
                 description: 'The object, array or object to set the property at the above path to'
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
@@ -2534,26 +2544,26 @@ components:
                 type: string
                 description: 'The string, array or object to set the property at the above path to'
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
               value:
                 type: boolean
           - required:
-              - op
-              - path
-              - value
+            - op
+            - path
+            - value
             properties:
               op:
                 type: string
-                enum: ['replace', 'add', 'remove', 'move', 'copy', 'test']
+                enum: ['replace', 'add', 'remove', 'test']
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
@@ -2561,8 +2571,8 @@ components:
                 type: integer
                 description: 'The integer, array or object to set the property at the above path to'
           - required:
-              - op
-              - path
+            - op
+            - path
             properties:
               op:
                 type: string
@@ -2570,3 +2580,17 @@ components:
               path:
                 type: string
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+          - required:
+            - op
+            - from
+            - path
+            properties:
+              op:
+                type: string
+                enum: ['copy', 'move']
+              from:
+                type: string
+                description: 'Path to copy or move from'
+              path:
+                type: string
+                description: 'Path to copy or move to'

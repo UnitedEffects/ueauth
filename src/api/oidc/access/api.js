@@ -9,17 +9,20 @@ import client from '../client/clients';
 export default {
 	async getUIAccessTokens(req, res, next) {
 		try {
-			if(!req.body.id_token) throw Boom.preconditionRequired('id_token is required');
+			if(!req.body.idToken) throw Boom.preconditionRequired('idToken is required');
 			if(!req.body.code) throw Boom.preconditionRequired('code is required');
-			if(!req.body.redirect_uri) throw Boom.preconditionFailed('Redirect_uri is required');
-			const idToken = req.body.id_token;
+			if(!req.body.redirectUri) throw Boom.preconditionFailed('RedirectUri is required');
+			if(!req.body.clientId) throw Boom.preconditionFailed('ClientId is required');
+			const idToken = req.body.idToken;
 			const code = req.body.code;
-			const redirect_uri = req.body.redirect_uri;
-			if(!helper.isJWT(idToken)) throw Boom.preconditionRequired('id_token must be valid jwt');
+			const redirectUri = req.body.redirectUri;
+			const clientId = req.body.clientId;
+			if(!helper.isJWT(idToken)) throw Boom.preconditionRequired('idToken must be valid jwt');
 			const preDecoded = jwt.decode(idToken, {complete: true});
 			if(!preDecoded.payload.group) throw Boom.unauthorized();
 			const subAG = await group.getOneByEither(preDecoded.payload.group);
 			if(!subAG) throw Boom.unauthorized();
+			if(subAG.associatedClient !== clientId) throw Boom.unauthorized();
 			const cl = await client.getOneFull(subAG, subAG.associatedClient);
 			if(!cl) throw Boom.unauthorized();
 			if(!cl.payload) throw Boom.unauthorized();
@@ -36,7 +39,8 @@ export default {
 				if(decoded) {
 					try {
 						// get access token
-						const result = await access.getUIAccessTokens(subAG, decoded.iss, code, cl.payload, redirect_uri);
+						const result = await access.getUIAccessTokens(
+							subAG, decoded.iss, code, cl.payload, redirectUri);
 						return res.json(result.data);
 					} catch (error) {
 						console.info(error);

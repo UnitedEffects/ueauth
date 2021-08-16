@@ -259,9 +259,84 @@ https://www.odata.org/documentation/
 
 http://jsonpatch.com/
 
-## Alpha TODO
+## OIDC Specs
 
-* migrate oidc views to pug
+* The root library and docs can be found here: https://github.com/panva/node-oidc-provider/blob/main/docs/README.md
+* OIDC Specs themselves are here: https://openid.net/developers/specs/
+
+### Code Authorization Flow Example - Run Locally
+
+* **LOGIN REQUEST** - http://localhost:3000/root/auth?
+  <br>response_type=code id_token&
+  <br>client_id=[CLIENTID]&
+  <br>redirect_uri=https://qa.ueauth.io&
+  <br>resource=http://localhost:3000/[AUTHGROUP]&
+  <br>scope=openid core:read email username&
+  <br>nonce=123&
+  <br>state=123
+    * Notice this is requesting a resource for an AccessToken
+    * This should allow you to login with a username and password and then redirect to provide a code and id_token in the query parameter of the browser url
+    * Notice also that we are requesting both id_token scopes and access_token scopes
+    * You follow this with a token request, presented as a curl statement here...
+* **TOKEN REQUEST**
+    * curl -X 'POST' \
+'http://localhost:3000/root/token' \
+-H 'accept: application/json' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-d 'client_secret=[CLIENTSECRET]&
+<br>audience=http://localhost:3000/[AUTHGROUP]&
+<br>redirect_uri=https://qa.ueauth.io &
+<br>code=[CODERECIEVED]&
+<br>client_id=[CLIENTID]&
+<br>grant_type=authorization_code'
+    * This should respond with an access_token and your id_token
+    
+## Important Tips and Examples
+
+### OIDC Scopes with Clients
+
+This service is an OAuth2 and OIDC provider. What that means is that you can create clients limited to scopes, providing those scopes are also defined for your Auth Group OP scopes. If you do this you will recieve an error whenever you request an authorization against that client on anything but the scopes explicitly added to the client. This is normal. What might trip you up is if you explicitly define scopes and then attempt to do an OIDC authorization, which would require the openid scope. This is not defaulted and if you want your client with limited scopes to also respect the OIDC flows, you will need to also add the "openid" scope.
+
+
+## Alpha TODO
+* Upgrade to 7+ on OP - core functionality (done)
+    * login (done)
+    * Views (done)
+        * migrate oidc views to pug (done)
+    * Get AccessTokens working again... (in-progress)
+        * Something is wrong with audience/resource and how I'm requesting them
+            * Figure out the new api functions... (done)
+            * Figure out if you need userinfo off for sure even with interceptor... (done)
+            * Need to add scopes to clients???? (done)
+        * you probably need to remove the custom format concept... (done)
+        * fix auth with new tokens... (done)
+        * scope not working... (fixed/done)
+            * Document the following: When scope is on client, only those scopes can be requested, even oidc. So if you want your client to support an oidc flow and you want to specify only some scopes, you need to include oidc on that client. (done)
+        * Fix UI Endpoints! (done)
+* Upgrade to v7 and fix remaining aux functionality (in-progress)
+    * Finish Remaining Upgrade Questions
+        * how should aud/scopes work for client-credentials?
+        * Can I request tokens without openid scope???
+        * does a regular oidc request provide opaque tokens still or do I need to handle an error?
+        * Can I use an array for aud yet?
+        * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
+        * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
+    * General
+        * Test forgot password - forgot password screen should let you request it too...
+        * https://github.com/panva/node-oidc-provider/tree/main/example/views
+        * federated interaction?
+    * fix UI password Resend link on expired notice...
+    * test AG create and patch and key rotation
+    * initial access tokens
+        * reg
+        * invites
+        * etc
+    * test notifications and client-credentials
+    * test token endpoint with client-credential generation
+* clean up fonts!
+* Register link on login?
+* logout does not revoke access tokens.... should it?
+* Is it easy to update client scopes?
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
@@ -302,12 +377,14 @@ http://jsonpatch.com/
 
 ## UE Core MVP Todo
 * Integrate Permissions/Organizations etc
+* Pkce...
 * MFA
 * Create social login setup via API for Google, Twitter and GitHub
 * Move remaining OIDC configurations to authGroup
 * Global logout features
 * Investigate securing db or hashing client secrets
 * Define custom jwks key configuration rather than using default for AuthGroups
+* Remember password cookies
 
 ## TESTING TODO
 

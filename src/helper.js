@@ -1,4 +1,4 @@
-import { createQuery } from 'odata-v4-mongodb'
+import { createQuery } from 'odata-v4-mongodb';
 import Boom from '@hapi/boom';
 
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
@@ -52,6 +52,10 @@ export default {
     protectedNames(x) {
         const protectedNamespaces = [
             'api',
+            'css',
+            'js',
+            'fonts',
+            'favicon.ico',
             'swagger',
             'swagger.json',
             'ueauth',

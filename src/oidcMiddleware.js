@@ -66,6 +66,11 @@ const mid = {
 	},
 	async parseKoaOIDC(ctx, next) {
 		await next();
+		if(ctx.response && ctx.response.body && ctx.response.body.error) {
+			if (ctx.response.body.error === 'server_error') {
+				return mid.koaErrorOut(ctx, Boom.badImplementation(ctx.response.body.error, (ctx.response.body.error_description) ?  ctx.response.body.error_description : 'Unknown error thrown by ODIC. See Logs.'));
+			}
+		}
 		if (ctx.oidc){
 			if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.group) {
 				// returning a 404 rather than indicating that the auth group may exist but is not theirs

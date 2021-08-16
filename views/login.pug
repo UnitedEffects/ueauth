@@ -1,190 +1,70 @@
-doctype html
-html
-    head
-        meta(charset='utf-8')
-        meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
-        meta(http-equiv='x-ua-compatible', content='ie=edge')
-        title Sign-in
-        link(rel="icon" type="image/png" href="https://ue-platform-content.s3.amazonaws.com/0f8aeec8-8e9b-4629-b06c-6672b4a2e9ad" sizes="100x100")
-        style.
-            @import url(https://fonts.googleapis.com/css?family=Roboto:400,100);
-            html {
-                background: #505D6E url(https://s3.amazonaws.com/ue-platform-content/background.jpg) no-repeat center center fixed;
-                min-height: 100%;
-                -webkit-background-size: cover;
-                -moz-background-size: cover;
-                -o-background-size: cover;
-                background-size: cover;
-            }
-            body {
-                font-family: 'Roboto', sans-serif;
-                margin-top: 25px;
-                margin-bottom: 25px;
-            }
-            .login-card {
-                padding: 40px;
-                padding-top: 0px;
-                padding-bottom: 10px;
-                width: 274px;
-                background-color: #F7F7F7;
-                margin: 0 auto 10px;
-                border-radius: 2px;
-                box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
-                overflow: hidden;
-            }
-            .login-card + .login-card {
-                padding-top: 10px;
-            }
-            .login-card h1 {
-                font-weight: 100;
-                text-align: center;
-                font-size: 2.3em;
-            }
-            .login-card h1 + p {
-                font-weight: 100;
-                text-align: center;
-            }
-            .login-card [type=submit] {
-                width: 100%;
-                display: block;
-                margin-bottom: 10px;
-                position: relative;
-            }
-            .login-card input[type=text], input[type=email], input[type=password] {
-                height: 44px;
-                font-size: 16px;
-                width: 100%;
-                margin-bottom: 10px;
-                -webkit-appearance: none;
-                background: #fff;
-                border: 1px solid #d9d9d9;
-                border-top: 1px solid #c0c0c0;
-                padding: 0 8px;
-                box-sizing: border-box;
-                -moz-box-sizing: border-box;
-            }
-            .login {
-                text-align: center;
-                font-size: 14px;
-                font-family: 'Arial', sans-serif;
-                font-weight: 700;
-                height: 36px;
-                padding: 0 8px;
-            }
-            .login-submit {
-                border: 0px;
-                color: #fff;
-                text-shadow: 0 1px rgba(0,0,0,0.1);
-                background-color: #4d90fe;
-            }
-            .login-card a {
-                text-decoration: none;
-                color: #666;
-                font-weight: 400;
-                text-align: center;
-                display: inline-block;
-                opacity: 0.6;
-            }
-            .login-help {
-                width: 100%;
-                text-align: center;
-                font-size: 12px;
-                margin-top: 20px;
-            }
-            .login-client-image img {
-                margin-bottom: 20px;
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-                width: 20%;
-            }
-            .login-card input[type=checkbox] {
-                margin-bottom: 10px;
-            }
-            .login-card label {
-                color: #999;
-            }
-            .center-text {
-                text-align: center;
-            }
-            .flash {
-                border-radius: 10px;
-                padding: 20px;
-                background: tomato;
-                color: white;
-            }
-            .passwordless {
-                margin: 10px;
-                border: lightgrey;
-                border-style: solid;
-                border-width: thin;
-                padding: 10px;
-                padding-left: 20px;
-                border-radius: 15px;
-                background: aliceblue;
-                color: darkslategray;
-            }
-            ul {
-                font-weight: 100;
-                padding-left: 1em;
-                list-style-type: circle;
-            }
-            li + ul, ul + li, li + li {
-                padding-top: 0.3em;
-            }
-            button {
-                cursor: pointer;
-            }
-            hr {
-                margin-bottom: 20px;
-                margin-top: 20px;
-            }
-            .abutton {
-                text-decoration: none !important;
-                margin: auto;
-                padding-top: 1em;
-                padding-bottom: 1em;
-                opacity: 100% !important;
-                width: 100%;
-                margin-bottom: 10px;
-                position: relative;
-                border: 0px;
-                color: #fff !important;
-                text-shadow: 0 1px rgb(0 0 0 / 10%);
-                background-color: #4d90fe;
-                font-size: 14px;
-                font-family: 'Arial', sans-serif;
-                font-weight: 700 !important;
-            }
-    body
-        .login-card
-            h1=title
-            if (client)
-                h2.center-text=client.clientName
-                if (authGroupName !== client.clientName)
-                    h3.center-text=authGroupName
-            else
-                h2.center-text=authGroupName
-            if flash
-                h5.flash= flash
-            form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
-                if !params.login_hint
-                    input(required='', type='email', name='email', placeholder='Enter an email', autofocus='on')
-                else
-                    input(required='', type='email', name='email', placeholder='Enter an email', value=params.login_hint)
-                if params.login_hint
-                    input(required='', type='password', name='password', placeholder='and password', autofocus='on')
-                else
-                    input(required='', type='password', name='password', placeholder='and password')
-                button.login.login-submit(type='submit') Sign-in
-            if params.passwordless
-                hr
-                a.abutton(href='/'+authGroup+'/interaction/'+uid+'/passwordless-request') Login Without a Password
-                h5.passwordless We can send you a secure password free login link!
-            .login-help
-                a(href='/'+authGroup+'/interaction/'+uid+'/abort') [ Cancel ]
-                if ((client && client.tosUri) || tos)
-                    a(href=(client.tosUri || tos)) [ Terms of Service ]
-                if ((client && client.policyUri) || policy)
-                    a(href=(client.policyUri || policy)) [ Privacy Policy ]
+extends layout
 
+block content
+    body
+        section#head.section
+            .limiter
+                .container-login100
+                    .wrap-login100
+                        form.login100-form.validate-form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
+                            //span.login100-form-title.p-b-43=title
+                            if (client)
+                                span.login100-form-title.p-b-10=client.clientName
+                                if (authGroupName !== client.clientName)
+                                    h3.login100-form-title.p-b-5=authGroupName
+                            else
+                                span.login100-form-title.p-b-10=authGroupName
+                            if (flash)
+                                h5.flash.m-b-20= flash
+                            .wrap-input100.validate-input(data-validate='Valid email is required: ex@abc.xyz')
+                                if !params.login_hint
+                                    input.input100(type='email' name='email' autofocus='on')
+                                    span.focus-input100
+                                    span.label-input100 Email
+                                else
+                                    input.input100(type='email' name='email' value=params.login_hint)
+                                    span.focus-input100
+                                    span.label-input100 Email
+                            .wrap-input100.validate-input(data-validate='Password is required')
+                                if params.login_hint
+                                    input.input100(type='password' name='password' autofocus='on')
+                                    span.focus-input100
+                                    span.label-input100 Password
+                                else
+                                    input.input100(type='password' name='password')
+                                    span.focus-input100
+                                    span.label-input100 Password
+                            .flex-sb-m.w-full.p-t-3.p-b-32
+                                //.contact100-form-checkbox
+                                    input#ckb1.input-checkbox100(type='checkbox' name='remember-me')
+                                    label.label-checkbox100(for='ckb1')
+                                        | Remember me
+                                div
+                                    // todo :group/forgotpassword
+                                    a.txt1(href='#')
+                                        | Forgot Password?
+                            .container-login100-form-btn
+                                button.login100-form-btn(type='submit')
+                                    | Login
+                            if params.passwordless
+                                .text-center.p-t-46.p-b-20
+                                    span.txt2
+                                        | or sign in using
+                                .container-login100-form-btn
+                                    a.btn.login100-form-btn(href='/' + authGroup + '/interaction/' + uid + '/passwordless-request')
+                                        | Email Magic Link
+                            //.login100-form-social.flex-c-m
+                                a.login100-form-social-item.flex-c-m.bg1.m-r-5(href='#')
+                                    i.fa.fa-facebook-f(aria-hidden='true')
+                                a.login100-form-social-item.flex-c-m.bg2.m-r-5(href='#')
+                                    i.fa.fa-twitter(aria-hidden='true')
+                            .login-help.p-t-10
+                                a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
+                                if (client.tosUri || tos)
+                                    a(href=(client.tosUri || tos)) [ Terms of Service ]
+                                if (client.policyUri || policy)
+                                    a(href=(client.policyUri || policy)) [ Privacy Policy ]
+                        if (!splashImage)
+                            .login100-more(style="background-image: url('https://s3.amazonaws.com/ue-platform-content/background.jpg');")
+                        else
+                            .login100-more(style="background-image: url('" + splashImage + "');")

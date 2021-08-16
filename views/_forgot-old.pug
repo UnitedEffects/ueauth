@@ -1,0 +1,33 @@
+extends layout
+
+block content
+    body
+        script(type="text/javascript").
+            const url = '#{url}';
+            const iat = '#{iat}';
+            const redirect = '#{redirect}'
+            const retryUrl = '#{retryUrl}'
+        script
+            include forgotSend.js
+        .login-card
+            h1(id='title')=title
+            h2.center-text=client.clientName
+            if (authGroupName !== client.clientName)
+                h3.center-text=authGroupName
+            if flash
+                h4(id='message')= flash
+            form(id='forgot' autocomplete='off')
+                input(required='', type='password', name='password', placeholder='new password')
+                input(required='', type='password', name='confirm-password', placeholder='confirm your password')
+                button.login.login-submit(type='submit') Reset Password
+            if redirect
+                form.invisible(id='gotoSite' autocomplete='off' action=redirect)
+                    button.login.login-submit(type='submit') Go To Site
+            form.invisible(id='tryAgain' autocomplete='off')
+                input(id='t1' required='', type='text', name='email', placeholder='your email')
+                button.login.login-submit(id='retry' type='submit') Resend Password Reset
+            .login-help
+                if (client.tosUri || tos)
+                    a(href=(client.tosUri || tos)) [ Terms of Service ]
+                if (client.policyUri || policy)
+                    a(href=(client.policyUri || policy)) [ Privacy Policy ]

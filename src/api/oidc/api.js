@@ -11,11 +11,15 @@ const api = {
 			if (helper.protectedNames(req.params.group)) return next();
 			const tenant = await group.getOneByEither(req.params.group, false);
 			if(!tenant) return next(Boom.notFound('Auth Group'));
-			return oidc(tenant).callback(req, res, next);
+			const provider = oidc(tenant);
+			provider.on('server_error', (ctx, error) => {
+				console.info('Found an Error');
+				console.info(error);
+			});
+			return provider.callback()(req, res, next);
 		} catch (error) {
 			next(error);
 		}
-
 	},
 
 	async getInitialAccessToken(req, res, next) {

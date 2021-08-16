@@ -1,9 +1,9 @@
 import { Provider } from 'oidc-provider';
 import { v4 as uuid } from 'uuid';
+import ms from 'ms';
 import Pug from 'koa-pug';
 import path from 'path';
 import Account from '../accounts/accountOidcInterface';
-import Client from './client/clients';
 import middle from '../../oidcMiddleware';
 
 import IAT from './models/initialAccessToken';
@@ -12,47 +12,24 @@ const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const MongoAdapter = require('./dal');
 
+//todo make this a ueauth config...
+const coreScopes = [
+	'core:read',
+	'core:write',
+	'core:delete',
+	'core:update'
+]
+const additionalScopes = [
+	'api:read',
+	'api:write',
+	'api:delete',
+	'api:update',
+	'api:test'
+]
+
 const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
 } = require('oidc-provider');
-
-async function logoutSource(ctx, form) {
-	try {
-		const action = ctx.oidc.urlFor('end_session_confirm');
-		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
-		const pug = new Pug({
-			viewPath: path.resolve(__dirname, '../../../views'),
-			basedir: 'path/for/pug/extends',
-		});
-
-		const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${name}?`, formId: 'op.logoutForm', actionUrl: action, secret: ctx.oidc.session.state.secret, inName:'xsrf' };
-		ctx.type = 'html';
-		ctx.body = await pug.render('logout', options);
-	} catch (error) {
-		throw new OIDCProviderError(error.message);
-	}
-
-}
-
-async function postLogoutSuccessSource(ctx) {
-	const {
-		clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
-	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
-	const name = (clientName) ? clientName : ctx.authGroup.name;
-	const pug = new Pug({
-		viewPath: path.resolve(__dirname, '../../../views'),
-		basedir: 'path/for/pug/extends',
-	});
-	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
-	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
-	const options = {title: 'Success', message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl, authGroup: {
-		name: ctx.authGroup.name,
-		primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
-		primaryTOS: ctx.authGroup.primaryTOS,
-		primaryDomain: ctx.authGroup.primaryDomain }};
-	ctx.type = 'html';
-	ctx.body = await pug.render('logoutSuccess', options);
-}
 
 function oidcConfig(g) {
 	const jwks = JSON.parse(JSON.stringify({
@@ -63,7 +40,6 @@ function oidcConfig(g) {
 		clients: [],
 		jwks,
 		findAccount: Account.findAccount,
-
 		async findById(ctx, sub, token) {
 			// @param ctx - koa request context
 			// @param sub {string} - account identifier (subject)
@@ -81,7 +57,7 @@ function oidcConfig(g) {
 				//   "id_token" or "userinfo" (depends on the "use" param)
 				// @param rejected {Array[String]} - claim names that were rejected by the end-user, you might
 				//   want to skip loading some claims from external resources or through db projection
-				async claims(use, scope, claims, rejected) {
+				async claims(use, scope) {
 					return {sub};
 				},
 			};
@@ -91,15 +67,13 @@ function oidcConfig(g) {
 			email: ['email', 'verified'],
 			username: ['username'],
 		},
+		//todo this MUST get added to config
 		scopes: [
-			'openid'
-		],
-		dynamicScopes: [
-			///api:[a-zA-Z0-9_-]*$/
-		],
+			'openid',
+			'offline_access'].concat(coreScopes).concat(additionalScopes),
 		interactions: {
-			url(ctx) {
-				return `/${ctx.authGroup._id}/interaction/${ctx.oidc.uid}`;
+			url(ctx, interaction) {
+				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
 			},
 		},
 		features: {
@@ -108,14 +82,13 @@ function oidcConfig(g) {
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},
-			backchannelLogout: { enabled: false }, //this is still draft
+			backchannelLogout: { enabled: false },
 			rpInitiatedLogout: {
 				enabled: true,
 				logoutSource,
 				postLogoutSuccessSource
 			},
-			//jwtResponseModes: { enabled: true },
-			sessionManagement: { enabled: false}, //this is still draft
+			encryption: { enabled: true },
 			registration: {
 				enabled: true,
 				idFactory: uuid,
@@ -168,6 +141,27 @@ function oidcConfig(g) {
 			registrationManagement: {
 				enabled: true,
 				rotateRegistrationAccessToken: true
+			},
+			resourceIndicators: {
+				defaultResource: (ctx, client, oneOf) => {
+					if(oneOf) return oneOf;
+					return undefined;
+				},
+				enabled: true,
+				getResourceServerInfo: (ctx, resourceIndicator, client) => {
+					const resource = {
+						audience: resourceIndicator,
+						accessTokenFormat: 'jwt',
+						scope: coreScopes.concat(additionalScopes).join(' ')
+					}
+					if(client.scope) {
+						resource.scope = client.scope.replace('openid', '').trim();
+					}
+					return (resource);
+				},
+				useGrantedResource: (ctx, model) => {
+					return true;
+				}
 			}
 		},
 		extraClientMetadata: {
@@ -197,22 +191,15 @@ function oidcConfig(g) {
 			}
 		},
 		formats: {
-			ClientCredentials(ctx, token) {
-				const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-				if (ctx && ctx.oidc && ctx.oidc.body) {
-					if (types.includes(ctx.oidc.body.format))
-						return ctx.oidc.body.format;
-
+			customizers: {
+				async jwt(ctx, token, jwt) {
+					if(ctx && ctx.oidc && ctx.oidc.body && ctx.oidc.body.custom) jwt.payload.custom = ctx.oidc.body.custom;
 				}
+			},
+			ClientCredentials(ctx, token) {
 				return token.aud ? 'jwt' : 'opaque';
 			},
 			AccessToken(ctx, token) {
-				const types = ['jwt', 'legacy', 'opaque', 'paseto'];
-				if (ctx && ctx.oidc && ctx.oidc.body) {
-					if (types.includes(ctx.oidc.body.format))
-						return ctx.oidc.body.format;
-
-				}
 				return token.aud ? 'jwt' : 'opaque';
 			}
 		},
@@ -236,7 +223,7 @@ function oidcConfig(g) {
 				session: `${g.prettyName}_session`
 			}
 		},
-		async extraAccessTokenClaims(ctx, token) {
+		async extraTokenClaims(ctx, token) {
 			let claims = {};
 			if (ctx) {
 				claims = {
@@ -266,31 +253,14 @@ function oidcConfig(g) {
 			//todo permissions here?
 			return claims;
 		},
-		async audiences(ctx, sub, token, use) {
-			if (ctx && ctx.oidc && ctx.oidc.body) {
-				if (ctx.oidc.body.audience) {
-					const reqAud = ctx.oidc.body.audience.split(',');
-					const aud = [];
-					let check;
-					aud.push(token.clientId);
-					await Promise.all(reqAud.map(async (id) => {
-						if (!aud.includes(id)) {
-							check = await Client.getOne(ctx.authGroup, id);
-							if (check) aud.push(id);
-							else throw new InvalidRequest(`audience not registered: ${ctx.oidc.body.audience}`);
-						}
-					}));
-					return aud;
-				}
-			}
-			return undefined;
-		},
 		responseTypes: [
+			'code id_token token',
 			'code id_token',
+			'code token',
 			'code',
-			'token',
+			'id_token token',
 			'id_token',
-			'none'
+			'none',
 		],
 		async renderError(ctx, out, error) {
 			console.error(error);
@@ -300,20 +270,37 @@ function oidcConfig(g) {
 			});
 			ctx.type = 'html';
 			ctx.body = await pug.render('error', {title: 'oops! something went wrong', message: 'You may have navigated here by mistake', details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')});
-		}
+		},
+		ttl: {
+			AccessToken: ms('1h') / 1000,
+			AuthorizationCode: ms('10m') / 1000,
+			ClientCredentials: ms('100y') / 1000,
+			DeviceCode: ms('1h') / 1000,
+			IdToken: ms('1h') / 1000,
+			RefreshToken: ms('1d') / 1000,
+			Interaction: ms('1h') / 1000,
+			Session: ms('10d') / 1000,
+			Grant: ms('10d') / 1000
+		},
+		allowOmittingSingleRegisteredRedirectUri: true,
+		pkce: {
+			required: () => false,
+		},
 	};
 
 	// make sure we've activated initial access token correctly
-	if(oidcOptions.features.registration.initialAccessToken === false) {
+	if(oidcOptions.features &&
+		oidcOptions.features.registration &&
+		oidcOptions.features.registration.initialAccessToken === false) {
 		delete oidcOptions.features.registration.policies;
 	}
-
 	return oidcOptions;
 }
 
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
-	const oidc = new Provider(`${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`, options);
+	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`;
+	const oidc = new Provider(issuer, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());
 	oidc.use(middle.parseKoaOIDC);
@@ -325,6 +312,44 @@ function oidcWrapper(tenant) {
 	oidc.use(middle.uniqueClientRegCheck);
 	oidc.use(middle.noDeleteOnPrimaryClient);
 	return oidc;
+}
+
+async function logoutSource(ctx, form) {
+	try {
+		const action = ctx.oidc.urlFor('end_session_confirm');
+		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
+		const pug = new Pug({
+			viewPath: path.resolve(__dirname, '../../../views'),
+			basedir: 'path/for/pug/extends',
+		});
+
+		const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${name}?`, formId: 'op.logoutForm', actionUrl: action, secret: ctx.oidc.session.state.secret, inName:'xsrf' };
+		ctx.type = 'html';
+		ctx.body = await pug.render('logout', options);
+	} catch (error) {
+		throw new OIDCProviderError(error.message);
+	}
+
+}
+
+async function postLogoutSuccessSource(ctx) {
+	const {
+		clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
+	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+	const name = (clientName) ? clientName : ctx.authGroup.name;
+	const pug = new Pug({
+		viewPath: path.resolve(__dirname, '../../../views'),
+		basedir: 'path/for/pug/extends',
+	});
+	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
+	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
+	const options = {title: 'Success', message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl, authGroup: {
+		name: ctx.authGroup.name,
+		primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
+		primaryTOS: ctx.authGroup.primaryTOS,
+		primaryDomain: ctx.authGroup.primaryDomain }};
+	ctx.type = 'html';
+	ctx.body = await pug.render('logoutSuccess', options);
 }
 
 export default oidcWrapper;

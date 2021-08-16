@@ -1,23 +1,19 @@
 extends layout
 
 block content
-  section#head.section
-    .container.keyPad
+  body(style="background: url(https://s3.amazonaws.com/ue-platform-content/background.jpg) no-repeat center center fixed;")
+    section#head.section
       .row
-        .col-md-10.col-lg-10.col-md-offset-1.col-lg-offset-1.text-center
-          h2.title=by
-          div.tagline="Copyright © "+year+" All Rights Reserved"
-          h3.subtitle=title
-            span.version=" v"+version
-          h4.tagline=description
-          p
-          .row
-            .col-md-3
-              a.btn.btn-default.btn-lg.btn-block(href='/swagger' style="font-size: 1.6em;") Swagger&nbsp;
-            .col-md-3
-              a.btn.btn-default.btn-lg.btn-block(href='/api' style="font-size: 1.6em;") Documentation&nbsp;
-            .col-md-3
-              a.btn.btn-default.btn-lg.btn-block(href=url style="font-size: 1.6em;") United Effects&nbsp;
-            .col-md-3
-              a.btn.btn-default.btn-lg.btn-block(href=home style="font-size: 1.6em;") Project&nbsp;
+        .col-lg-12
+          .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
+            h2=by
+            h6="Copyright © " + year + " All Rights Reserved"
+            h3=title
+              span.version=" v" + version
+            p.m-t-20=description
+            .m-t-20
+              a.btn.btn-outline-dark.m-r-5(href='/swagger') Swagger&nbsp;
+              a.btn.btn-outline-dark.m-r-5(href='/api' style="margin: 5px;") Documentation&nbsp;
+              a.btn.btn-outline-dark.m-r-5(href=url style="margin: 5px;") United Effects&nbsp;
+              a.btn.btn-outline-dark.m-r-5(href=home style="margin: 5px;") Project&nbsp;
 

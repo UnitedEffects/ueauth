@@ -5,6 +5,7 @@ import ref from 'json-schema-ref-parser';
 import merge from 'json-schema-resolve-allof';
 import yaml from 'yamljs';
 import fs from 'fs';
+import t from './testhelper';
 import { OpenApiValidator } from 'express-openapi-validate';
 jest.mock('express-openapi-validate');
 
@@ -23,7 +24,7 @@ describe('Error handler tests', () => {
 			expect(response.output.payload.statusCode).toBe(404);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 
 	});
@@ -34,7 +35,7 @@ describe('Error handler tests', () => {
 			expect(response.statusCode).toBe(500);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 
 	});
@@ -45,7 +46,7 @@ describe('Error handler tests', () => {
 			expect(response.statusCode).toBe(400);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 });
@@ -61,7 +62,7 @@ describe('Middleware tests', () => {
 			expect(next).toHaveBeenCalled();
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -72,7 +73,7 @@ describe('Middleware tests', () => {
 			expect(next).toHaveBeenCalledWith(Boom.notFound('Resource not found'));
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -89,7 +90,7 @@ describe('Middleware tests', () => {
 			expect(res.respond).toHaveBeenCalledWith(expected);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -105,7 +106,7 @@ describe('Middleware tests', () => {
 			expect(res.render).toHaveBeenCalledWith('error', expected);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -121,7 +122,7 @@ describe('Middleware tests', () => {
 			expect(res.render).toHaveBeenCalledWith('error', expected);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -138,7 +139,7 @@ describe('Middleware tests', () => {
 			expect(res.respond).toHaveBeenCalledWith(expected);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -151,7 +152,7 @@ describe('Middleware tests', () => {
 			expect(mockValidator.validate).toHaveBeenCalled();
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 });
@@ -164,7 +165,7 @@ describe('Swagger / OpenAPI parser test', () => {
 			expect(swag).toStrictEqual(doc);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 });
@@ -178,7 +179,7 @@ describe('Helper tests', () => {
 			expect(invalid).toBe(false);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -190,7 +191,7 @@ describe('Helper tests', () => {
 			expect(invalid).toBe(false);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -212,7 +213,7 @@ describe('Helper tests', () => {
 			expect(result.limit).toStrictEqual(1);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -226,7 +227,7 @@ describe('Helper tests', () => {
 				$orderby: 'timestamp dsc'
 			};
 			await helper.parseOdataQuery(query);
-			fail();
+			t.fail();
 		} catch (error) {
 			expect(error.isBoom).toBe(true);
 			expect(error.output.statusCode).toBe(400);
@@ -252,7 +253,7 @@ describe('Test connectjs', () => {
 			expect(result).toStrictEqual(mongoOptions);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -283,7 +284,7 @@ describe('Test connectjs', () => {
 			expect(result).toStrictEqual(copy);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 
@@ -313,7 +314,7 @@ describe('Test connectjs', () => {
 			expect(result).toStrictEqual(copy);
 		} catch (error) {
 			console.info(error);
-			fail();
+			t.fail();
 		}
 	});
 });

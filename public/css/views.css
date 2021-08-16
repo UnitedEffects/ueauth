@@ -1,4 +1,50 @@
 .detail-color {
-    color: dimgray;
+    color: white;
+}
+.login-client-image img {
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 20%;
+}
+.login-help {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+}
+.grant-debug {
+    text-align: center;
+    font-family: Fixed, monospace;
+    width: 100%;
+    font-size: 12px;
+    color: #999;
+}
+.grant-debug div {
+    padding-top: 10px;
+}
+.flash {
+    border-radius: 10px;
+    padding: 20px;
+    background: tomato;
+    color: white;
+}
+.passwordless {
     margin: 10px;
+    border: lightgrey;
+    border-style: solid;
+    border-width: thin;
+    padding: 10px;
+    padding-left: 20px;
+    border-radius: 15px;
+    background: aliceblue;
+    color: darkslategray;
+}
+.authorize-details {
+    border-style: none;
+    background: white;
+    padding: 20px;
+    max-width: 75%;
+    margin: auto;
+    border-radius: 20px;
 }
