@@ -274,7 +274,7 @@ function oidcConfig(g) {
 		ttl: {
 			AccessToken: ms('1h') / 1000,
 			AuthorizationCode: ms('10m') / 1000,
-			ClientCredentials: ms('100y') / 1000,
+			ClientCredentials: ms('1h') / 1000,
 			DeviceCode: ms('1h') / 1000,
 			IdToken: ms('1h') / 1000,
 			RefreshToken: ms('1d') / 1000,

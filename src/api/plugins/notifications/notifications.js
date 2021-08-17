@@ -47,13 +47,13 @@ export default {
 		if(payload.processed) delete payload.processed;
 		if(!token){
 			const ag = await group.getOneByEither('root', false);
-			const cl = await client.getOne(ag, global.notifications.registeredClientId);
-			token = await client.generateClientCredentialToken(ag, cl, `openid api:notifications group:${ag.id}`);
+			const cl = await client.getOneFull(ag, global.notifications.registeredClientId);
+			token = await client.generateClientCredentialToken(ag, cl, `api:write group:${ag.id}`, global.notifications.notificationServiceUri);
 		}
 		const options = {
 			method: 'POST',
 			headers: {
-				'Authorization': `bearer ${token}`
+				'Authorization': `bearer ${token.data.access_token}`
 			},
 			data: payload,
 			url: notification.destinationUri

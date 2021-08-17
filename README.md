@@ -315,6 +315,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * Fix UI Endpoints! (done)
 * Upgrade to v7 and fix remaining aux functionality (in-progress)
     * Finish Remaining Upgrade Questions
+        * notifications / client credentials
         * how should aud/scopes work for client-credentials?
         * Can I request tokens without openid scope???
         * does a regular oidc request provide opaque tokens still or do I need to handle an error?
