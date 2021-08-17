@@ -315,25 +315,28 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * Fix UI Endpoints! (done)
 * Upgrade to v7 and fix remaining aux functionality (in-progress)
     * Finish Remaining Upgrade Questions
-        * notifications / client credentials
-        * how should aud/scopes work for client-credentials?
-        * Can I request tokens without openid scope???
+        * notifications / client credentials (done)
+        * claim account (done)
+        * how should aud/scopes work for client-credentials? (done)
+        * test AG create and patch and key rotation
         * does a regular oidc request provide opaque tokens still or do I need to handle an error?
-        * Can I use an array for aud yet?
-        * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
-        * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
+            * I think when no aud its opaque, test this
+        * Can I request tokens without openid scope???
     * General
         * Test forgot password - forgot password screen should let you request it too...
         * https://github.com/panva/node-oidc-provider/tree/main/example/views
         * federated interaction?
     * fix UI password Resend link on expired notice...
-    * test AG create and patch and key rotation
     * initial access tokens
         * reg
         * invites
         * etc
     * test notifications and client-credentials
     * test token endpoint with client-credential generation
+    * nice to haves
+        * Can I use an array for aud yet?
+        * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
+        * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
 * clean up fonts!
 * Register link on login?
 * logout does not revoke access tokens.... should it?
