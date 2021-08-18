@@ -318,7 +318,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * notifications / client credentials (done)
         * claim account (done)
         * how should aud/scopes work for client-credentials? (done)
-        * test AG create
+        * test AG create (done)
         * AG patch and key rotation
         * does a regular oidc request provide opaque tokens still or do I need to handle an error?
             * I think when no aud its opaque, test this
@@ -332,8 +332,6 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * reg
         * invites
         * etc
-    * test notifications and client-credentials
-    * test token endpoint with client-credential generation
     * nice to haves
         * Can I use an array for aud yet?
         * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...

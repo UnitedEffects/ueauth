@@ -132,8 +132,11 @@ const api = {
 					const nOps = group.groupCreationNotifyOptions(result, req.body.owner);
 					await n.notify(req.globalSettings, nOps, result);
 				} catch (e) {
-					console.error(e);
-					result.warning = 'Owner will not get a notification, there was an error';
+					//console.error(e);
+					result.warning = {
+						message: 'Owner will not get a notification, there was an error',
+						info: e.message
+					};
 				}
 			} else result.warning = 'Owner will nto get a notification, global settings are not enabled';
 			return res.respond(say.created(result, RESOURCE));
