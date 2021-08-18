@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { snakeCase } from 'lodash';
 import qs from "qs";
 import axios from "axios";
+import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
@@ -44,9 +45,14 @@ export default {
 		};
 		if(authGroup.primaryDomain) {
 			if (authGroup.primaryDomain !== config.UI_URL) {
-				options.post_logout_redirect_uris.push(authGroup.primaryDomain);
+				let agDom = authGroup.primaryDomain;
+				if(!authGroup.primaryDomain.includes('://')) {
+					agDom = `https://${agDom}`;
+				}
+				options.post_logout_redirect_uris.push(agDom);
 			}
 		}
+		console.info(options);
 		const client = new (oidc(authGroup).Client)(options);
 		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
 		const add = new Adapter('client');

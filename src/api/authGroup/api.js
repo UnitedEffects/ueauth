@@ -119,6 +119,9 @@ const api = {
 			}
 			//todo move this logic to group.js
 			req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
+			if(req.body.primaryDomain && !req.body.primaryDomain.includes('://')) {
+				req.body.primaryDomain = `https://${req.body.primaryDomain}`;
+			}
 			result = JSON.parse(JSON.stringify(await group.write(req.body)));
 			const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
 			const token = await iat.generateIAT(expiresIn, ['auth_group'], result);

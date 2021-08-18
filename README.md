@@ -318,7 +318,8 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * notifications / client credentials (done)
         * claim account (done)
         * how should aud/scopes work for client-credentials? (done)
-        * test AG create and patch and key rotation
+        * test AG create
+        * AG patch and key rotation
         * does a regular oidc request provide opaque tokens still or do I need to handle an error?
             * I think when no aud its opaque, test this
         * Can I request tokens without openid scope???
