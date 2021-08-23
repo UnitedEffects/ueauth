@@ -14,21 +14,22 @@ block content
                 .col-lg-12
                     .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
                         h2(id='title')=title
-                        h3=client.clientName
-                        if (authGroupName !== client.clientName)
-                            h4=authGroupName
+                        h4=authGroupName
                         if flash
                             p(id='message')= flash
                         form.m-t-10(id='forgot' autocomplete='off')
-                            input(required='', type='password', name='password', placeholder='new password')
-                            input(required='', type='password', name='confirm-password', placeholder='confirm your password')
-                            button.btn.btn-outline-dark(type='submit') Set My Password
+                            .form-group
+                                input.form-control(required='', type='password', name='password', placeholder='new password')
+                            .form-group
+                                input.form-control(required='', type='password', name='confirm-password', placeholder='confirm your password')
+                            button.btn.btn-outline-dark.m-t-10(type='submit') Set My Password
                         if redirect
                             form.invisible.m-t-10(id='gotoSite' autocomplete='off' action=redirect)
-                                button.btn.btn-outline-dark(type='submit') Go To Site
+                                button.btn.btn-outline-dark.m-t-10(type='submit') Go To Site
                         form.invisible.m-t-10(id='tryAgain' autocomplete='off')
-                            input(id='t1' required='', type='text', name='email', placeholder='your email')
-                            button.btn.btn-outline-dark(id='retry' type='submit') Send Password Reset
+                            .form-group
+                                input.form-control(id='t1' required='', type='text', name='email', placeholder='your email')
+                            button.btn.btn-outline-dark.m-t-10(id='retry' type='submit') Send Password Reset
                         .m-t-10
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]

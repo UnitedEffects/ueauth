@@ -119,6 +119,9 @@ const api = {
 			}
 			//todo move this logic to group.js
 			req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
+			if(req.body.primaryDomain && !req.body.primaryDomain.includes('://')) {
+				req.body.primaryDomain = `https://${req.body.primaryDomain}`;
+			}
 			result = JSON.parse(JSON.stringify(await group.write(req.body)));
 			const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
 			const token = await iat.generateIAT(expiresIn, ['auth_group'], result);
@@ -129,8 +132,11 @@ const api = {
 					const nOps = group.groupCreationNotifyOptions(result, req.body.owner);
 					await n.notify(req.globalSettings, nOps, result);
 				} catch (e) {
-					console.error(e);
-					result.warning = 'Owner will not get a notification, there was an error';
+					//console.error(e);
+					result.warning = {
+						message: 'Owner will not get a notification, there was an error',
+						info: e.message
+					};
 				}
 			} else result.warning = 'Owner will nto get a notification, global settings are not enabled';
 			return res.respond(say.created(result, RESOURCE));

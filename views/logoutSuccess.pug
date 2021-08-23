@@ -10,7 +10,7 @@ block content
                         p=message
                         if (logoUri || authGroup.primaryDomain)
                             a.btn.btn-outline-dark(href=(logoUri || authGroup.primaryDomain)) Home to #{authGroup.name}
-                        if (initiateLoginUri || loginUrl)
+                        //if (initiateLoginUri || loginUrl)
                             a.btn.btn-outline-dark(href=(initiateLoginUri || loginUrl) style="margin-left: 5px") Login Again
                         .m-t-10
                             if (tosUri || authGroup.primaryTOS)

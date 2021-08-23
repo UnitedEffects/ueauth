@@ -18,20 +18,20 @@ block content
                                 h5.flash.m-b-20= flash
                             .wrap-input100.validate-input(data-validate='Valid email is required: ex@abc.xyz')
                                 if !params.login_hint
-                                    input.input100(type='email' name='email' autofocus='on')
+                                    input.input100(type='email' name='email' autofocus='on' autocomplete='username')
                                     span.focus-input100
                                     span.label-input100 Email
                                 else
-                                    input.input100(type='email' name='email' value=params.login_hint)
+                                    input.input100(type='email' name='email' value=params.login_hint autocomplete='username')
                                     span.focus-input100
                                     span.label-input100 Email
                             .wrap-input100.validate-input(data-validate='Password is required')
                                 if params.login_hint
-                                    input.input100(type='password' name='password' autofocus='on')
+                                    input.input100(type='password' name='password' autofocus='on' autocomplete='current-password')
                                     span.focus-input100
                                     span.label-input100 Password
                                 else
-                                    input.input100(type='password' name='password')
+                                    input.input100(type='password' name='password' autocomplete='current-password')
                                     span.focus-input100
                                     span.label-input100 Password
                             .flex-sb-m.w-full.p-t-3.p-b-32

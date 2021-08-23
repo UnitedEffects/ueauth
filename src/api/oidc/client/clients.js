@@ -6,6 +6,9 @@ import oidc from '../oidc';
 import Adapter from '../dal';
 import { v4 as uuid } from 'uuid';
 import { snakeCase } from 'lodash';
+import qs from "qs";
+import axios from "axios";
+import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
@@ -42,9 +45,14 @@ export default {
 		};
 		if(authGroup.primaryDomain) {
 			if (authGroup.primaryDomain !== config.UI_URL) {
-				options.post_logout_redirect_uris.push(authGroup.primaryDomain);
+				let agDom = authGroup.primaryDomain;
+				if(!authGroup.primaryDomain.includes('://')) {
+					agDom = `https://${agDom}`;
+				}
+				options.post_logout_redirect_uris.push(agDom);
 			}
 		}
+		console.info(options);
 		const client = new (oidc(authGroup).Client)(options);
 		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
 		const add = new Adapter('client');
@@ -79,16 +87,26 @@ export default {
 		return fixed;
 	},
 
-	async generateClientCredentialToken(authGroup, client, scope) {
+	async generateClientCredentialToken(authGroup, client, scope, audience) {
 		if(!authGroup) throw new Error('authGroupId not defined');
-		const data = JSON.parse(JSON.stringify(client));
-		return new (oidc(authGroup).ClientCredentials)({
-			client: client.client_id,
-			aud: data.client_id,
-			scope
-		}).save().then(async (token) => {
-			return token;
-		});
+		const cl = JSON.parse(JSON.stringify(client));
+		const iss = `${config.PROTOCOL}://${config.SWAGGER}/root`
+		const data = {
+			'grant_type': 'client_credentials',
+			'scope': scope,
+			'resource': audience
+		}
+		const options = {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				'authorization': `basic ${Buffer.from(`${cl.payload.client_id}:${cl.payload.client_secret}`).toString('base64')}`
+			},
+			data: qs.stringify(data),
+			url: `${iss}/token`,
+		};
+
+		return axios(options);
 	},
 
 	async get(authGroup, q) {

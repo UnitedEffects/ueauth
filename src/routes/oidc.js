@@ -24,7 +24,7 @@ router.get('/:group/interaction/:uid/passwordless', [jsonParser, m.setNoCache, m
 
 // Custom Interactions
 router.post('/:group/setpass', [jsonParser, m.setNoCache, m.validateAuthGroup, m.isAuthenticatedOrIAT], interactions.forgot);
-router.get('/:group/forgotpassword', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.forgotPasswordScreen);
+router.get('/:group/forgotpassword', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.forgotPasswordScreen);
 router.get('/:group/verifyaccount', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.verifyAccountScreen);
 
 //rest of OIDC

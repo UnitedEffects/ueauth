@@ -495,11 +495,21 @@ export default {
 						details: 'Check your email or mobile device.'
 					});
 				}
-				return res.render('error', {
-					title: 'Uh oh...',
-					message: 'Invalid Reset Password Request',
-					details: 'This page requires special access. Check your email or mobile device for the link.'
-				});
+				if(!req.globalSettings || !req.globalSettings.notifications || req.globalSettings.notifications.enabled !== true)
+				{
+					return res.render('error', {
+						title: `Forgot Password Not Enabled by the OP Admin`,
+						message: 'This UE Auth instance has not activated the global notifications plugin. This is required before secure password resets are allowed through self service.',
+						details: 'Please contact your UE Auth Admin.'
+					});
+				}
+				if(!req.authGroup || !req.authGroup.pluginOptions || !req.authGroup.pluginOptions.notification || req.authGroup.pluginOptions.notification.enabled !== true || !req.authGroup.config || req.authGroup.config.centralPasswordReset !== true) {
+					return res.render('error', {
+						title: `Forgot Password Not Enabled for ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name}`,
+						message: 'This Auth Group has either not enabled notifications or has disabled centralized password reset.',
+						details: `Please contact the ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name} admin.`
+					});
+				}
 
 			}
 			return res.render('forgot', {
@@ -511,7 +521,7 @@ export default {
 				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
 				flash: 'Type in your new password to reset',
 				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
-				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/user/reset-password`
+				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/reset-user-password`
 			});
 		} catch (err) {
 			next (err);
