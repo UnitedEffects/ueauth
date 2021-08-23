@@ -22,7 +22,7 @@ async function getUser(authGroup, decoded, token) {
 	return await userRecord.claims();
 }
 
-async function introspect(token, issuer, authGroup) {
+async function introspect(token, authGroup) {
 	/**
      * Looking up the token directly for decoding since this is the system of record. External systems would make an http request to the
      * introspect endpoint.
@@ -33,14 +33,14 @@ async function introspect(token, issuer, authGroup) {
 	return {
 		active: (accessToken.iat < accessToken.exp),
 		sub: accessToken.accountId,
-		group: (accessToken.extra) ? accessToken.extra.group : undefined,
+		group: (accessToken.extra && accessToken.extra.group) ? accessToken.extra.group : undefined,
 		client_id: accessToken.clientId,
 		exp: accessToken.exp,
 		iat: accessToken.iat,
-		iss: issuer,
+		iss: (accessToken.extra && accessToken.extra.group) ? `${config.PROTOCOL}://${config.SWAGGER}/${accessToken.extra.group}` : undefined,
 		jti: accessToken.jti,
 		scope: accessToken.scope,
-		token_type: (accessToken.format && accessToken.format === 'opaque') ? 'Bearer' : undefined
+		token_type: 'Bearer'
 	};
 }
 
@@ -89,7 +89,6 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 	//check sub if present
 	if(decoded.sub) {
 		const user = await getUser(authGroup, decoded, token);
-		// console.info(oidc(authGroup.id).issuer);
 		if(!user) throw Boom.unauthorized('User not recognized');
 		// Check auth group
 		if (!user.group && user.group !== decoded.group) {
@@ -247,12 +246,17 @@ async (req, token, next) => {
 			});
 		}
 		//opaque token
-		if(issuer === null) return next(null, false); // jwt only if authGroup is not defined
-		const inspect = await introspect(token, issuer[0], subAG);
+		if(issuer === null) {
+			//assume this is a root request
+			subAG = await group.getOneByEither('root');
+			issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
+		}
+		const inspect = await introspect(token, subAG);
 		if(inspect) {
 			if (inspect.active === false) return next(null, false);
 			try {
 				const result = await runDecodedChecks(token, issuer, inspect, subAG);
+				if(!req.authGroup) req.authGroup = subAG;
 				return next(null, result, { token });
 			} catch (error) {
 				console.error(error);

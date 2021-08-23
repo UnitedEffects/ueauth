@@ -1,6 +1,10 @@
 extends layout
 
 block content
+    style(type="text/css").
+        .success {
+            display: none;
+        }
     body(style="background: url(https://s3.amazonaws.com/ue-platform-content/background.jpg) no-repeat center center fixed;")
         script(type="text/javascript").
             const url = '#{url}';
@@ -14,21 +18,30 @@ block content
                 .col-lg-12
                     .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
                         h2(id='title')=title
-                        h3=client.clientName
-                        if (authGroupName !== client.clientName)
-                            h4=authGroupName
-                        if flash
-                            p(id='message')= flash
-                        form.m-t-10(id='forgot' autocomplete='off')
-                            input(required='', type='password', name='password', placeholder='new password')
-                            input(required='', type='password', name='confirm-password', placeholder='confirm your password')
-                            button.btn.btn-outline-dark(type='submit') Reset Password
-                        if redirect
-                            form.invisible.m-t-10(id='gotoSite' autocomplete='off' action=redirect)
-                                button.btn.btn-outline-dark(type='submit') Go To Site
-                        form.invisible.m-t-10(id='tryAgain' autocomplete='off')
-                            input(id='t1' required='', type='text', name='email', placeholder='your email')
-                            button.btn.btn-outline-dark(id='retry' type='submit') Resend Password Reset
+                        h3=authGroupName
+                        if iat
+                            if flash
+                                p(id='message')= flash
+                            form.m-t-10(id='forgot')
+                                .form-group
+                                    input.form-control.select2-hidden-accessible(type='text', name='username', autocomplete='username')
+                                    input.form-control.m-t-5(required='', type='password', name='password', placeholder='new password', autocomplete='new-password')
+
+                                    input.form-control.m-t-5(required='', type='password', name='confirm-password', placeholder='confirm your password' autocomplete="new-password")
+                                button.btn.btn-outline-dark.m-t-10(type='submit') Reset Password
+                            if redirect
+                                form.invisible.m-t-10(id='gotoSite' autocomplete='off' action=redirect)
+                                    button.btn.btn-outline-dark.m-t-10(type='submit') Go To Site
+                            form.invisible(id='tryAgain' autocomplete='off')
+                                .form-group
+                                    input.form-control(id='t1' required='', type='text', name='email', placeholder='your email')
+                                button.btn.btn-outline-dark.m-t-10(id='retry' type='submit') Resend Password Reset
+                        else
+                            p(id='instruct').m-t-10 Enter your email address if you exist within the auth group #{authGroupName} you will receive an email to reset your password.
+                            form.m-t-10(id='send' autocomplete='off' onsubmit="testing();")
+                                .form-group
+                                    input.form-control(id='t1' required='', type='text', name='email', placeholder='your email')
+                                button.btn.btn-block.btn-outline-dark.m-t-10(id='firstSend' type='submit') Send Password Reset
                         .m-t-10
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]

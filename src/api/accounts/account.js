@@ -54,7 +54,7 @@ export default {
 				sub: user.id,
 				email: user.email
 			};
-			iAccessToken = await iat.generateIAT(14400, ['auth_group'], authGroup, meta);
+			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
 			let data;
 			if(reset === true){
 				data = this.resetPasswordOptions(authGroup, user, iAccessToken, formats, activeUser);

@@ -56,6 +56,11 @@ const authGroup = new mongoose.Schema({
 		passwordLessSupport: {
 			type: Boolean,
 			default: false
+		},
+		// if true, allows UI based password reset to be initiated
+		centralPasswordReset: {
+			type: Boolean,
+			default: true
 		}
 	},
 	pluginOptions: {

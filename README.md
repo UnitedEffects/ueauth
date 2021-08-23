@@ -299,47 +299,20 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 
 ## Alpha TODO
-* Upgrade to 7+ on OP - core functionality (done)
-    * login (done)
-    * Views (done)
-        * migrate oidc views to pug (done)
-    * Get AccessTokens working again... (in-progress)
-        * Something is wrong with audience/resource and how I'm requesting them
-            * Figure out the new api functions... (done)
-            * Figure out if you need userinfo off for sure even with interceptor... (done)
-            * Need to add scopes to clients???? (done)
-        * you probably need to remove the custom format concept... (done)
-        * fix auth with new tokens... (done)
-        * scope not working... (fixed/done)
-            * Document the following: When scope is on client, only those scopes can be requested, even oidc. So if you want your client to support an oidc flow and you want to specify only some scopes, you need to include oidc on that client. (done)
-        * Fix UI Endpoints! (done)
-* Upgrade to v7 and fix remaining aux functionality (in-progress)
-    * Finish Remaining Upgrade Questions
-        * notifications / client credentials (done)
-        * claim account (done)
-        * how should aud/scopes work for client-credentials? (done)
-        * test AG create (done)
-        * AG patch and key rotation
-        * does a regular oidc request provide opaque tokens still or do I need to handle an error?
-            * I think when no aud its opaque, test this
-        * Can I request tokens without openid scope???
-    * General
-        * Test forgot password - forgot password screen should let you request it too...
-        * https://github.com/panva/node-oidc-provider/tree/main/example/views
-        * federated interaction?
-    * fix UI password Resend link on expired notice...
-    * initial access tokens
-        * reg
-        * invites
-        * etc
-    * nice to haves
-        * Can I use an array for aud yet?
-        * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
-        * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
+* nice to haves
+    * https://github.com/panva/node-oidc-provider/tree/main/example/views
+    * federated interaction?
+    * Can I use an array for aud yet?
+    * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
+    * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
 * clean up fonts!
+* figure out how logout flows will work
 * Register link on login?
 * logout does not revoke access tokens.... should it?
-* Is it easy to update client scopes?
+    * jwt probably will not - we should reduce (or allow config) for expiration
+        * we could implement a blacklist... or just check the db (configurable global option?)
+    * opaque should, test this
+    * make sure id-tokens don't allow api access
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
@@ -356,6 +329,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 * Setup CD to QA
 * Views
     * clean and brand
+    * common background page...
     * need login errors to rendor as a view rather than json (done)
     * Different views by tenant ?
         * login
@@ -379,6 +353,9 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 * MVP Alpha release
 
 ## UE Core MVP Todo
+* Security questions on password reset
+* password reset iat expiration option on config
+* lock account logic
 * Integrate Permissions/Organizations etc
 * Pkce...
 * MFA
