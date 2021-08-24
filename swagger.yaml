@@ -2222,6 +2222,9 @@ components:
       additionalProperties: false
       required:
         - name
+        - owner
+        - prettyName
+        - primaryDomain
       properties:
         name:
           type: string
@@ -2242,8 +2245,9 @@ components:
           type: object
           description: extend this with additional data if needed
         config:
-          type: object
-          description: oidc configurations (wip)
+          $ref: '#/components/schemas/agConfigOptions'
+        pluginOptions:
+          $ref: '#/components/schemas/agPluginOptions'
         primaryDomain:
           type: string
           format: url
@@ -2256,6 +2260,77 @@ components:
           type: string
           format: url
           description: link to your company privacty policy
+
+    agPluginOptions:
+      type: object
+      description: these are plugin configurations
+      properties:
+        notification:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+              description: allows notifications to be sent from the authgroup
+            ackRequiredOnOptional:
+              type: boolean
+              default: false
+              description: some notifications are not absolutely required for functionality, if this is false, that functionality will continue and a warning will be sent on notificiation failure. If this is true, the functionality will fail on a notification fail.
+
+    agConfigOptions:
+      type: object
+      description: these configurations alter how OIDC is processed
+      properties:
+        #keys:
+        #  type: array
+        #  description: These are the encryption keys of the authgroup. Manual entry is not recommended.
+        ttl:
+          type: object
+          description: milliseconds before expiration on all properties
+          properties:
+            accessToken:
+              type: number
+              default: 3600
+            authorizationCode:
+              type: number
+              default: 600
+            clientCredentials:
+              type: number
+              default: 3600
+            deviceCode:
+              type: number
+              default: 3600
+            idToken:
+              type: number
+              default: 3600
+            refreshToken:
+              type: number
+              default: 86400
+            interaction:
+              type: number
+              default: 3600
+            session:
+              type: number
+              default: 864000
+            grant:
+              type: number
+              default: 864000
+        requireVerified:
+          type: boolean
+          default: false
+          description: when true, this ensures that only verified accounts can complete a login
+        autoVerify:
+          type: boolean
+          default: false
+          description: when true, this sends a notification to a new account to verify automatically - MUST have notifications enabled first
+        passwordLessSupport:
+          type: boolean
+          default: false
+          description: when true, this allows magic link emails for login - MUST have notification enabled first
+        centralPasswordReset:
+          type: boolean
+          default: true
+          description: when true, this allows enables the centrally served password reset UI to be accessed publicaly
 
     authGroup:
       type: object
@@ -2301,9 +2376,7 @@ components:
           enum:
             - Auth Group
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/authGroup'
+          $ref: '#/components/schemas/authGroup'
 
     getGroups:
       properties:

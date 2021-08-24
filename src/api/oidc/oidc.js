@@ -272,15 +272,15 @@ function oidcConfig(g) {
 			ctx.body = await pug.render('error', {title: 'oops! something went wrong', message: 'You may have navigated here by mistake', details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')});
 		},
 		ttl: {
-			AccessToken: ms('1h') / 1000,
-			AuthorizationCode: ms('10m') / 1000,
-			ClientCredentials: ms('1h') / 1000,
-			DeviceCode: ms('1h') / 1000,
-			IdToken: ms('1h') / 1000,
-			RefreshToken: ms('1d') / 1000,
-			Interaction: ms('1h') / 1000,
-			Session: ms('10d') / 1000,
-			Grant: ms('10d') / 1000
+			AccessToken: g.config.ttl.accessToken, //ms('1h') / 1000,
+			AuthorizationCode: g.config.ttl.authorizationCode,//ms('10m') / 1000,
+			ClientCredentials: g.config.ttl.clientCredentials,//ms('1h') / 1000,
+			DeviceCode: g.config.ttl.deviceCode,//ms('1h') / 1000,
+			IdToken: g.config.ttl.idToken,//ms('1h') / 1000,
+			RefreshToken: g.config.ttl.refreshToken,//ms('1d') / 1000,
+			Interaction: g.config.ttl.interaction,//ms('1h') / 1000,
+			Session: g.config.ttl.session,//ms('10d') / 1000,
+			Grant: g.config.ttl.grant,//ms('10d') / 1000
 		},
 		allowOmittingSingleRegisteredRedirectUri: true,
 		pkce: {
