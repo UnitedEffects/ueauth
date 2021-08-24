@@ -1,4 +1,5 @@
 import Account from './model';
+import bcrypt from "bcryptjs";
 
 export default {
 	async writeAccount(data) {
@@ -15,8 +16,12 @@ export default {
 	async deleteAccount(authGroup, id) {
 		return Account.findOneAndRemove( { _id: id, authGroup });
 	},
-	async patchAccount(authGroup, id, data) {
+	async patchAccount(authGroup, id, data, bpwd = false) {
 		data.modifiedAt = Date.now();
+		if(bpwd) {
+			const salt = await bcrypt.genSalt(10);
+			data.password = await bcrypt.hash(data.password, salt);
+		}
 		return Account.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true });
 	},
 	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false) {

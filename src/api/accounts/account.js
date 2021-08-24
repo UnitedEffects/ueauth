@@ -3,6 +3,7 @@ import dal from './dal';
 import helper from '../../helper';
 import iat from "../oidc/initialAccess/iat";
 import n from "../plugins/notifications/notifications";
+import Boom from "@hapi/boom";
 
 const config = require('../../config');
 
@@ -26,11 +27,14 @@ export default {
 		return dal.deleteAccount(authGroupId, id);
 	},
 
-	async patchAccount(authGroupId, id, update, modifiedBy) {
-		const account = await dal.getAccount(authGroupId, id);
+	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false) {
+		const account = await dal.getAccount(authGroup.id, id);
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
 		patched.modifiedBy = modifiedBy;
-		return dal.patchAccount(authGroupId, id, patched);
+		if(patched.active === false) {
+			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
+		}
+		return dal.patchAccount(authGroup.id, id, patched, bpwd);
 	},
 
 	async updatePassword(authGroupId, id, password, modifiedBy) {

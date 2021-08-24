@@ -299,8 +299,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 
 ## Alpha TODO
-
-* Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
+* Validate delete user (with warning) and reactivate accounts if I’m the owner or admin (in-progress)
     * test super admin
     * test owner
     * test self
@@ -345,6 +344,8 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
     * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
 * Write high risk area Tests!!!!
 * implement with a client/app (mmv api portal)
+* PENDING status API for Orgs/domains/etc...
+* clean up documentation
 * Open Source this Library (add link in spec)
 * MVP Alpha release
 

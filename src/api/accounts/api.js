@@ -116,6 +116,12 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            let bpwd = false;
+            if(req.body && Array.isArray(req.body)){
+                for(let i=0; i<req.body.length; i++) {
+                    if(req.body[i].op === 'replace' && req.body[i].path === '/password') bpwd = true;
+                }
+            }
             if(req.user && req.user.decoded && req.user.decoded.kind === 'InitialAccessToken') {
                 if (req.body) {
                     if(req.body.length > 1 || req.body[0].path !== '/password' || req.body[0].op !== 'replace') {
@@ -124,7 +130,7 @@ const api = {
                 }
             }
             await permissions.enforceOwn(req.permissions, req.params.id);
-            const result = await acct.patchAccount(req.params.group, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
+            const result = await acct.patchAccount(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd);
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -132,10 +138,10 @@ const api = {
     },
     async deleteAccount(req, res, next) {
         try {
-            if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-            if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+            if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
             await permissions.enforceOwn(req.permissions, req.params.id);
-            if(req.authGroup.owner === req.params.id) return next(Boom.badRequest('You can not delete the owner of the auth group'));
+            if(req.authGroup.owner === req.params.id) throw Boom.badRequest('You can not delete the owner of the auth group');
             const result = await acct.deleteAccount(req.params.group, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));
