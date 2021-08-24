@@ -188,10 +188,9 @@ const api = {
 	},
 	async operations(req, res, next) {
 		try {
-			//todo add modifiedBy
 			const body = req.body;
 			if(!body.operation) next(Boom.badData('must specify operation'));
-			const result = await group.operations(req.authGroup.id, body.operation);
+			const result = await group.operations(req.authGroup.id, body.operation, req.user);
 			if(result.config) delete result.config.keys;
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

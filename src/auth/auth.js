@@ -45,6 +45,10 @@ async function introspect(token, authGroup) {
 }
 
 async function runDecodedChecks(token, issuer, decoded, authGroup) {
+	if(decoded.nonce) {
+		// check its not id-token
+		throw Boom.unauthorized('ID Tokens can not be used for API Access');
+	}
 	if(!issuer.includes(decoded.iss)) {
 		// check iss
 		throw Boom.unauthorized('Token issuer not recognized');

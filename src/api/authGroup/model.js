@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import keys from './generate-keys';
+import ms from "ms";
 
 mongoose.set('useCreateIndex', true);
 
@@ -61,6 +62,44 @@ const authGroup = new mongoose.Schema({
 		centralPasswordReset: {
 			type: Boolean,
 			default: true
+		},
+		ttl: {
+			accessToken: {
+				type: Number,
+				default: ms('1h') / 1000
+			},
+			authorizationCode: {
+				type: Number,
+				default: ms('10m') / 1000
+			},
+			clientCredentials: {
+				type: Number,
+				default: ms('1h') / 1000,
+			},
+			deviceCode: {
+				type: Number,
+				default: ms('1h') / 1000
+			},
+			idToken: {
+				type: Number,
+				default: ms('1h') / 1000
+			},
+			refreshToken: {
+				type: Number,
+				default: ms('1d') / 1000
+			},
+			interaction: {
+				type: Number,
+				default: ms('1h') / 1000
+			},
+			session: {
+				type: Number,
+				default: ms('10d') / 1000
+			},
+			grant: {
+				type: Number,
+				default: ms('10d') / 1000
+			}
 		}
 	},
 	pluginOptions: {

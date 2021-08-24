@@ -299,20 +299,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 
 ## Alpha TODO
-* nice to haves
-    * https://github.com/panva/node-oidc-provider/tree/main/example/views
-    * federated interaction?
-    * Can I use an array for aud yet?
-    * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
-    * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
-* clean up fonts!
-* figure out how logout flows will work
-* Register link on login?
-* logout does not revoke access tokens.... should it?
-    * jwt probably will not - we should reduce (or allow config) for expiration
-        * we could implement a blacklist... or just check the db (configurable global option?)
-    * opaque should, test this
-    * make sure id-tokens don't allow api access
+
 * Validate deactivate or delete user (with warning) and reactivate accounts if I’m the owner or admin
     * test super admin
     * test owner
@@ -327,6 +314,15 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * update modifiedby data
         * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
 * Setup CD to QA
+* nice to haves
+    * https://github.com/panva/node-oidc-provider/tree/main/example/views
+    * federated interaction?
+    * Can I use an array for aud yet?
+    * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
+    * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
+* clean up fonts!
+* figure out how logout flows will work
+* Register link on login?
 * Views
     * clean and brand
     * common background page...
@@ -394,5 +390,6 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 ## vNext Roadmap
 * Bulk user creation and notifications and/or invites
+* optional blacklist for jwts
 * Native AWS SES integration as an optional notifications config
 * Allow custom notification url per group instead of only global one

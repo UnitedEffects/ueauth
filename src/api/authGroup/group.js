@@ -99,11 +99,12 @@ export default {
 		return dal.patchNoOverwrite(id, data);
 	},
 
-	async operations(id, operation) {
+	async operations(id, operation, user) {
+		const userId = user.sub || 'SYSTEM'
 		switch (operation) {
 		case 'rotate_keys':
 			const keys = await k.write();
-			return dal.patchNoOverwrite(id, { config: { keys }});
+			return dal.patchNoOverwrite(id, { modifiedBy: userId, 'config.keys': keys });
 		default:
 			throw Boom.badData('Unknown operation specified');
 		}
