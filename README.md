@@ -299,7 +299,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 
 ## Alpha TODO
-* Validate delete user (with warning) and reactivate accounts if I’m the owner or admin
+* Validate delete user (with warning) and reactivate accounts if I’m the owner or admin (in-progress)
     * test super admin
     * test owner
     * test self
