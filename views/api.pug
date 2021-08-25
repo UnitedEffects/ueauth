@@ -13,5 +13,8 @@ head
             margin: 0;
             padding: 0;
         }
-redoc(spec-url='/swagger.json')
+if (group === undefined || group === null)
+    redoc(spec-url='/swagger.json')
+else
+    redoc(spec-url='/' + group + '/swagger.json')
 script(src='https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js')
