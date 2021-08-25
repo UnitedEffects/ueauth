@@ -19,6 +19,7 @@ async function getUser(authGroup, decoded, token) {
      * don't worry about scopes - we can access that data at anytime anyway.
      */
 	const userRecord = await oidc(authGroup).Account.findAccount({authGroup}, decoded.sub, token);
+	if(!userRecord) return undefined;
 	return await userRecord.claims();
 }
 
@@ -45,6 +46,8 @@ async function introspect(token, authGroup) {
 }
 
 async function runDecodedChecks(token, issuer, decoded, authGroup) {
+	console.info(authGroup);
+	console.info(issuer);
 	if(decoded.nonce) {
 		// check its not id-token
 		throw Boom.unauthorized('ID Tokens can not be used for API Access');
@@ -259,6 +262,15 @@ async (req, token, next) => {
 		if(inspect) {
 			if (inspect.active === false) return next(null, false);
 			try {
+				if(subAG.id !== inspect.group) {
+					//check to see if this is a root account
+					subAG = await group.getOneByEither(inspect.group);
+					if(subAG.prettyName !== 'root') return next(null, false) //we already know this is invalid
+					// now we know its a root account so we reset subAG
+					issuer = [];
+					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`);
+					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`)
+				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG);
 				if(!req.authGroup) req.authGroup = subAG;
 				return next(null, result, { token });
