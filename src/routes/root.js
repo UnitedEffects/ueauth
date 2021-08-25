@@ -24,5 +24,6 @@ router.get('/:group/swagger.json', m.validateAuthGroup, openapi.serveApiJson);
 router.get('/api', openapi.reDocApi);
 router.get('/swagger', openapi.serveSwaggerUI);
 router.get('/swagger.json', openapi.serveApiJson);
+router.get('/oauth2-redirect.html', openapi.oauth2Redirect);
 
 export default router;

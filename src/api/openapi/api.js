@@ -28,5 +28,8 @@ export default {
     },
     async reDocApi(req, res, next) {
         return res.render('api', { title: pJson.name, group: req.params.group || undefined })
+    },
+    async oauth2Redirect(req, res, next) {
+        return res.render('openapi-redirect');
     }
 }
