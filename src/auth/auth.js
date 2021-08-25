@@ -19,6 +19,7 @@ async function getUser(authGroup, decoded, token) {
      * don't worry about scopes - we can access that data at anytime anyway.
      */
 	const userRecord = await oidc(authGroup).Account.findAccount({authGroup}, decoded.sub, token);
+	if(!userRecord) return undefined;
 	return await userRecord.claims();
 }
 
