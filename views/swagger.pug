@@ -28,8 +28,9 @@ script(src='https://unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js')
 script(src='https://unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js')
 script.
     window.onload = function() {
+        const group = '#{group}';
         window.ui = SwaggerUIBundle({
-            url: "/swagger.json",
+            url: (!group) ? "/swagger.json" : `/${group}/swagger.json`,
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [
