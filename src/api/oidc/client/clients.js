@@ -8,7 +8,6 @@ import { v4 as uuid } from 'uuid';
 import { snakeCase } from 'lodash';
 import qs from "qs";
 import axios from "axios";
-import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
@@ -40,7 +39,7 @@ export default {
 			'grant_types': ['client_credentials', 'authorization_code', 'implicit'],
 			'response_types': ['code id_token', 'code', 'id_token'],
 			'redirect_uris': [`https://${config.UI_URL}`],
-			'post_logout_redirect_uris': [`https://${config.UI_URL}`],
+			'post_logout_redirect_uris': [`https://${config.UI_URL}`, `https://${config.SWAGGER}/oauth2-redirect.html`],
 			'auth_group': authGroup.id,
 		};
 		if(authGroup.primaryDomain) {

@@ -301,14 +301,15 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 ## Alpha TODO
 * cleanup 1
     * per authGroup Swagger/Redoc (done)
+    * fix https://qa.ueauth.io/oauth2-redirect.html routing
     * review inline todos
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
         * figure out permissions per endpoint required... (done)
         * update modifiedby data
         * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
-* integrate core scopes to permissions
 * Setup CD to QA
+* integrate core scopes to permissions
 * nice to haves
     * https://github.com/panva/node-oidc-provider/tree/main/example/views
     * federated interaction?
