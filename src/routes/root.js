@@ -1,5 +1,5 @@
 import express from 'express';
-import openapi from '../../src/api/openapi/api';
+import openapi from '../api/openapi/api';
 import m from '../middleware';
 
 const router = express.Router();
