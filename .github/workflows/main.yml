@@ -35,7 +35,7 @@ jobs:
 
       # Install serverless
       - name: Install Serverless
-        run: yarn add -g serverless
+        run: yarn global add serverless
 
       # Deploy to QA
       - name: Deploy
