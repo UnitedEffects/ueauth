@@ -148,7 +148,7 @@ const mid = {
                 //req.permissions.roles.owner = true;
                 req.permissions.roles.push('owner');
             }
-            // todo - plugin to capture permission claim or query external service
+            // Plugin to capture permission claim or query external service can go here
             return next();
         } catch (error) {
             next(error);

@@ -6,6 +6,7 @@ import { Strategy as BearerStrategy } from 'passport-http-bearer';
 import iat from '../api/oidc/initialAccess/iat';
 import account from '../api/accounts/account';
 import oidc from '../api/oidc/oidc';
+import cl from '../api/oidc/client/clients';
 import group from '../api/authGroup/group';
 import session from '../api/oidc/session/session';
 import helper from '../helper';
@@ -23,13 +24,25 @@ async function getUser(authGroup, decoded, token) {
 	return await userRecord.claims();
 }
 
+async function getClient(authGroup, decoded) {
+	/**
+	 * When client credential token comes, we look up the client itself
+	 */
+	return cl.getOne(authGroup, decoded.sub || decoded.client_id);
+}
+
 async function introspect(token, authGroup) {
 	/**
-     * Looking up the token directly for decoding since this is the system of record. External systems would make an http request to the
+     * Looking up the token directly for decoding since this is the system of record.
+	 * External systems would make an http request to the
      * introspect endpoint.
      * @type {AccessToken}
      */
-	const accessToken = await oidc(authGroup).AccessToken.find(token);
+	let accessToken = await oidc(authGroup).AccessToken.find(token);
+	if(!accessToken) {
+		// try client-credentials
+		accessToken = await oidc(authGroup).ClientCredentials.find(token);
+	}
 	if(!accessToken) return null;
 	return {
 		active: (accessToken.iat < accessToken.exp),
@@ -41,13 +54,12 @@ async function introspect(token, authGroup) {
 		iss: (accessToken.extra && accessToken.extra.group) ? `${config.PROTOCOL}://${config.SWAGGER}/${accessToken.extra.group}` : undefined,
 		jti: accessToken.jti,
 		scope: accessToken.scope,
+		aud: accessToken.aud,
 		token_type: 'Bearer'
 	};
 }
 
 async function runDecodedChecks(token, issuer, decoded, authGroup) {
-	console.info(authGroup);
-	console.info(issuer);
 	if(decoded.nonce) {
 		// check its not id-token
 		throw Boom.unauthorized('ID Tokens can not be used for API Access');
@@ -65,14 +77,12 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 		throw Boom.unauthorized('Auth Group does not match');
 	}
 	if(typeof decoded.aud === 'string') {
-		// todo - do we need to do this for client-credentials?
 		if(!issuer.includes(decoded.aud)) {
 			// check audience = client
 			throw Boom.unauthorized('Token audience not specific to this auth group client');
 		}
 	}
 	if(typeof decoded.aud === 'object') {
-		// todo - do we need to do this for client-credentials?
 		let found = false;
 		for(let i=0; i<decoded.aud.length; i++) {
 			if(issuer.includes(decoded.aud[i])) found = true;
@@ -94,7 +104,7 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 		}
 	}
 	//check sub if present
-	if(decoded.sub) {
+	if(decoded.sub && decoded.client_id !== decoded.sub) {
 		const user = await getUser(authGroup, decoded, token);
 		if(!user) throw Boom.unauthorized('User not recognized');
 		// Check auth group
@@ -104,6 +114,25 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 		return { ...user, decoded, subject_group: authGroup };
 	}
 	// client_credential - note, permissions may still stop the request
+	if((decoded.client_id === decoded.sub) || (!decoded.sub && decoded.client_id)) {
+		let client = JSON.parse(JSON.stringify(await getClient(authGroup, decoded)));
+		if (!client) throw Boom.unauthorized('Client not recognized');
+		if(!client.auth_group && client.auth_group !== decoded.group) {
+			throw Boom.unauthorized('Client not associated with indicated auth group');
+		}
+		const out = {
+			client_credential: true,
+			sub: client.client_id,
+			client_id: client.client_id,
+			client_name: client.client_name,
+			application_type: client.application_type,
+			subject_type: client.subject_type,
+			require_auth_time: client.require_auth_time,
+			auth_group: client.auth_group
+		}
+		return { ...out, decoded, subject_group: authGroup };
+	}
+
 	return decoded;
 }
 
@@ -169,7 +198,9 @@ async (req, token, next) => {
 }
 ));
 
-//todo is anything using this?
+/**
+ * comment for now, if nothing breaks, delete soon
+
 passport.use('iat-group-register', new BearerStrategy({
 	passReqToCallback: true
 },
@@ -193,6 +224,7 @@ async (req, token, next) => {
 	}
 }
 ));
+*/
 
 passport.use('oidc', new BearerStrategy({
 	passReqToCallback: true
@@ -303,7 +335,7 @@ async function whitelist(req, res, next) {
 export default {
 	isIatAuthenticatedForGroupActivation: passport.authenticate('iat-group-create', { session: false }),
 	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
-	isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }), //todo need this?
+	//isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
 	isWhitelisted: whitelist
 };
