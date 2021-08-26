@@ -2,6 +2,7 @@ import Boom from '@hapi/boom';
 import { say } from '../../../say';
 import client from './clients';
 import rat from '../regAccess/rat';
+import permissions from "../../../permissions";
 
 const RESOURCE = 'Clients';
 
@@ -20,6 +21,7 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await client.getOne(req.authGroup, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));
@@ -30,9 +32,11 @@ const api = {
 
     async patchOne(req, res, next) {
         try {
-            //todo metadata for modifiedBy...
+            // We may deprecate this in favor of the more secure update process built into OIDC
+            // Any audit log of modification (who and when) will need to be managed outside of the record
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            await permissions.enforceOwn(req.permissions, req.params.id);
             const pre = await client.getOneFull(req.authGroup, req.params.id);
             if(!pre) throw Boom.notFound(req.params.id);
             if(pre._id === req.authGroup.associatedClient) return next(Boom.badRequest('You can not edit your Auth Group primary client'));
@@ -73,7 +77,6 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            //todo check authGroup owner and req.user, must be the same
             if(req.params.id === req.authGroup.associatedClient) {
                 return next(Boom.badRequest('You can not delete your Auth Group primary client'));
             }
@@ -88,6 +91,7 @@ const api = {
     async clientOperations(req, res, next) {
         try {
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            await permissions.enforceOwn(req.permissions, req.params.id);
             if (!req.body.operation) return res.respond(say.noContent('Client Operation'));
             let result;
             switch (req.body.operation) {

@@ -9,11 +9,9 @@ const urlParser = bodyParser.urlencoded({extended:true});
 
 const router = express.Router();
 
-//todo authorization to use this required
 router.post('/:group/token/initial-access', [jsonParser, m.validateAuthGroup, m.captureAuthGroupInBody, m.isAuthenticated, m.permissions], api.getInitialAccessToken);
 
 // OIDC Interactions
-//todo - might need to render error pages here instead of just throwing the error...
 router.get('/:group/interaction/:uid', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.getInt);
 router.get('/:group/interaction/:uid/abort', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.abort);
 router.post('/:group/interaction/:uid/login', [jsonParser, urlParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.login);

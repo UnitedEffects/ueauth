@@ -148,6 +148,9 @@ const mid = {
                 //req.permissions.roles.owner = true;
                 req.permissions.roles.push('owner');
             }
+            if(req.user.client_credential === true) {
+                req.permissions.roles.push('client');
+            }
             // Plugin to capture permission claim or query external service can go here
             return next();
         } catch (error) {

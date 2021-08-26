@@ -116,7 +116,6 @@ router.put('/:group/notification/:id/process', [
 	m.access
 ], plugins.processNotification);
 
-//todo, ensure this works with client credentials
 router.post('/:group/notification/process', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
@@ -164,14 +163,12 @@ router.delete('/:group/account/:id', [
 ], account.deleteAccount);
 
 // Clients
-// todo - allow client_credential when from the client in question - this can be another role 'c'
 router.get('/:group/clients', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);
 router.get('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.getOne);
 router.patch('/:group/client/:id', [m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
 router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.deleteOne);
 
 // Operations
-//todo - client as well 'c'
 router.post('/:group/operations/client/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

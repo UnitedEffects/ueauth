@@ -57,7 +57,7 @@ export default {
 						}
 					});
 				}
-				//todo - this may need revising when full permissions are implemented via IAM
+				// This may need revising when full permissions are implemented via IAM
 				if (final[0].includes(':own')){
 					req.permissions.enforceOwn = true;
 				}
@@ -116,6 +116,9 @@ function returnActions(method, path, role) {
 		break;
 	case 'developer':
 		permissions = Developer;
+		break;
+	case 'client':
+		permissions = Client;
 		break;
 	default:
 		permissions = null;
@@ -178,6 +181,42 @@ function returnActions(method, path, role) {
  */
 //todo can we derive these??
 const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operations:client', 'operations:reset-user-password', 'operations:user', 'operations:invite', 'operations', 'token:initial-access', 'token', 'notification', 'notifications'];
+
+// this roles is for client-credential tokens
+const Client = [
+	{
+		target: 'group',
+		actions: 'read:own'
+	},
+	{
+		target: 'account',
+		actions: 'read:all'
+	},
+	{
+		target: 'invite',
+		actions: 'read:all'
+	},
+	{ //delete this
+		target: 'clients',
+		actions: 'read:all update:own'
+	},
+	{
+		target: 'client',
+		actions: 'read:own update:own'
+	},
+	{
+		target: 'notification',
+		actions: 'create read:all update:all'
+	},
+	{
+		target: 'operations:reset-user-password',
+		actions: 'create'
+	},
+	{
+		target: 'operations:client',
+		actions: 'create:own'
+	}
+]
 
 const Owner = [
 	{
