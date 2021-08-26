@@ -28,7 +28,7 @@ export default {
 		const notificationsNotProcessed = await dal.notificationsNotProcessed(agId);
 		let output = [];
 		const agR = await group.getOneByEither('root', false);
-		const cl = await client.getOne(agR, global.notifications.registeredClientId);
+		const cl = await client.getOneFull(agR, global.notifications.registeredClientId);
 		const token = await client.generateClientCredentialToken(agR, cl, `openid api:notifications group:${agR.id}`);
 		for(let i=0; i<notificationsNotProcessed.length; i++) {
 			try {

@@ -51,7 +51,6 @@ export default {
 				options.post_logout_redirect_uris.push(agDom);
 			}
 		}
-		console.info(options);
 		const client = new (oidc(authGroup).Client)(options);
 		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
 		const add = new Adapter('client');

@@ -3,7 +3,6 @@ import { say } from '../../say';
 import inv from './invites';
 import permissions from "../../permissions";
 import acc from "../accounts/account";
-import iat from "../oidc/initialAccess/iat";
 import grp from '../authGroup/group';
 import n from "../plugins/notifications/notifications";
 

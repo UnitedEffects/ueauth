@@ -5,17 +5,13 @@ import acc from '../../accounts/account';
 import iat from '../initialAccess/iat';
 import interactions from './interactions';
 import n from '../../plugins/notifications/notifications';
+import Boom from '@hapi/boom';
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
 const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
 
-/**
- *
- * FIX FOR BODYPARSE DEPRICATION
- * const { urlencoded } = require('express'); // eslint-disable-line import/no-unresolved
- */
 const keys = new Set();
 const debug = (obj) => querystring.stringify(Object.entries(obj).reduce((acc, [key, value]) => {
 	keys.add(key);
@@ -31,7 +27,6 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup);
 			const details = await provider.interactionDetails(req, res);
-			console.info(details);
 			const { uid, prompt, params, session } = details;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -41,9 +36,11 @@ export default {
 					req.authGroup.config.passwordLessSupport === true);
 			}
 
-			//todo client should be specific to authGroup as well...
 			const client = await provider.Client.find(params.client_id);
-
+			if(client.auth_group !== req.authGroup.id) {
+				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+			}
+			console.info(client);
 			switch (prompt.name) {
 			case 'login': {
 				return res.render('login', {
@@ -95,6 +92,9 @@ export default {
 			const provider = await oidc(req.authGroup);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			const client = await provider.Client.find(params.client_id);
+			if(client.auth_group !== req.authGroup.id) {
+				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+			}
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
@@ -153,6 +153,9 @@ export default {
 			const provider = await oidc(req.authGroup);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			const client = await provider.Client.find(params.client_id);
+			if(client.auth_group !== req.authGroup.id) {
+				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+			}
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
@@ -229,6 +232,9 @@ export default {
 			// if there is a problem, go back to login...
 			if (!accountId) {
 				const client = await provider.Client.find(params.client_id);
+				if(client.auth_group !== req.authGroup.id) {
+					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+				}
 				res.render('login', {
 					client,
 					uid,
@@ -279,6 +285,9 @@ export default {
 			_session = session;
 			_prompt = prompt;
 			client = await provider.Client.find(params.client_id);
+			if(client.auth_group !== req.authGroup.id) {
+				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+			}
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {

@@ -19,10 +19,9 @@ export default {
 		return Plugins.find({}, {}, {sort: { 'createdAt': -1, 'version': -1 }});
 	},
 	async toggleNotifications(version, data, userId) {
-		//const check = await Plugins.findOne({}, {}, {sort: {'createdAt': -1}});
 		let plugin;
 		plugin = new Plugins({
-			// todo - as new configs are added, we can preserve them here
+			// As new configs are added, we can preserve them here
 			createdBy: userId,
 			version,
 			notifications: data

@@ -174,11 +174,10 @@ const api = {
 	},
 	async patch(req, res, next) {
 		try {
-			//todo add modifiedBy
 			const grp = await group.getOne(req.params.id);
 			if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
 			await permissions.enforceOwn(req.permissions, grp.owner);
-			const result = await group.patch(grp, req.body);
+			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM');
 			const output = JSON.parse(JSON.stringify(result));
 			if(output.config) delete output.config.keys;
 			return res.respond(say.ok(output, RESOURCE));

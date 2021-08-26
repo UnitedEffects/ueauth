@@ -74,6 +74,10 @@ const mid = {
 		if (ctx.oidc){
 			if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.group) {
 				// returning a 404 rather than indicating that the auth group may exist but is not theirs
+				if(ctx.oidc.entities.Interaction && ctx.oidc.entities.Interaction.kind === 'Interaction') {
+					// letting the login interaction controller handle this for us
+					return;
+				}
 				return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
 			}
 

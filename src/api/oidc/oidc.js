@@ -1,6 +1,5 @@
 import { Provider } from 'oidc-provider';
 import { v4 as uuid } from 'uuid';
-import ms from 'ms';
 import Pug from 'koa-pug';
 import path from 'path';
 import Account from '../accounts/accountOidcInterface';
@@ -250,7 +249,7 @@ function oidcConfig(g) {
 					}
 				}
 			}
-			//todo permissions here?
+			//todo permissions reference (or object) likely added here...
 			return claims;
 		},
 		responseTypes: [
@@ -263,7 +262,6 @@ function oidcConfig(g) {
 			'none',
 		],
 		async renderError(ctx, out, error) {
-			console.error(error);
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../views'),
 				basedir: 'path/for/pug/extends',

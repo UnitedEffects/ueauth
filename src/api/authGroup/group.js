@@ -48,7 +48,7 @@ export default {
 		return dal.getOneByEither(q, onlyIncludeActive);
 	},
 
-	async patch(group, update) {
+	async patch(group, update, user) {
 		const patched = jsonPatch.apply_patch(group.toObject(), update);
 		if(patched.pluginOptions.notification.enabled === true && group.pluginOptions.notification.enabled === false) {
 			const globalSettings = await plugins.getLatestPluginOptions();
@@ -76,7 +76,7 @@ export default {
 				}
 			}
 		}
-
+		patched.modifiedBy = user;
 		return dal.patch(group.id, patched);
 	},
 
