@@ -12,6 +12,7 @@ const api = {
 			const tenant = await group.getOneByEither(req.params.group, false);
 			if(!tenant) return next(Boom.notFound('Auth Group'));
 			const provider = oidc(tenant);
+			//event emitter
 			provider.on('server_error', (ctx, error) => {
 				console.info('Found an Error');
 				console.info(error);

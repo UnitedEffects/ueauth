@@ -2,8 +2,6 @@ import Boom from '@hapi/boom';
 import clients from './api/oidc/client/clients';
 import group from './api/authGroup/group';
 import IAT from './api/oidc/initialAccess/iat';
-import Pug from "koa-pug";
-import path from "path";
 
 const config = require('./config');
 

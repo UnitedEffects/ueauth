@@ -40,6 +40,7 @@ export default {
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
+			console.info(client);
 			switch (prompt.name) {
 			case 'login': {
 				return res.render('login', {

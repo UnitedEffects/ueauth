@@ -7,10 +7,6 @@ block content
                 .container-login100
                     .wrap-login100
                         form.login100-form.validate-form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
-                            //todo test client-image
-                            .login-client-image
-                            if client.logoUri
-                                img(src=client.logoUri)
                             span.login100-form-title.p-b-10=title
                             if (client)
                                 span.login100-form-title.p-b-10=client.clientName
@@ -75,6 +71,10 @@ block content
                                         br
                                         #{dbg.prompt}
                         if (!splashImage)
-                            .login100-more(style="background-image: url('https://s3.amazonaws.com/ue-platform-content/background.jpg');")
+                            // todo update this with authgroup image next
+                            if client.logoUri
+                                .login100-more(style="background-image: url('" + client.logoUri + "');")
+                            else
+                                .login100-more(style="background-image: url('https://s3.amazonaws.com/ue-platform-content/background.jpg');")
                         else
                             .login100-more(style="background-image: url('"+splashImage+"');")

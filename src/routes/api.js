@@ -5,7 +5,6 @@ import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
 import access from '../api/oidc/access/api';
-
 import m from '../middleware';
 
 /**

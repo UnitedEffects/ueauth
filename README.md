@@ -299,17 +299,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 
 ## Alpha TODO
-* cleanup 1
-    * per authGroup Swagger/Redoc (done)
-    * fix https://qa.ueauth.io/oauth2-redirect.html routing (done)
-    * review inline todos
-    * work through access middleware and get it working correctly for all endpoints
-        * ensure endpoints using middleware correctly - do some negative tests
-        * figure out permissions per endpoint required... (done)
-        * update modifiedby data
-        * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
 * Setup CD to QA
-* integrate core scopes to permissions
 * nice to haves
     * https://github.com/panva/node-oidc-provider/tree/main/example/views
     * federated interaction?
@@ -317,8 +307,8 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
     * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
     * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
 * clean up fonts!
-* figure out how logout flows will work
 * Register link on login?
+* figure out how logout flows will work
 * Views
     * clean and brand
     * common background page...
@@ -347,10 +337,12 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 * MVP Alpha release
 
 ## UE Core MVP Todo
+* replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
 * Security questions on password reset
 * password reset iat expiration option on config
-* lock account logic
+* lock account logic - is this handled with deactivate?
 * Integrate Permissions/Organizations etc
+    * integrate core scopes to permissions
 * Pkce...
 * MFA
 * Create social login setup via API for Google, Twitter and GitHub

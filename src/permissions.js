@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom';
 const config = require('./config');
+
 export default {
 	async permissionEnforce(req, res, next) {
 		const ERROR_MESSAGE = 'You do not have the right permissions';
@@ -179,7 +180,6 @@ function returnActions(method, path, role) {
  * Roles: owner, member, developer (dev is only through plugin)
  * Actions: create update:all|own read:all|own delete:all|own
  */
-//todo can we derive these??
 const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operations:client', 'operations:reset-user-password', 'operations:user', 'operations:invite', 'operations', 'token:initial-access', 'token', 'notification', 'notifications'];
 
 // this roles is for client-credential tokens
