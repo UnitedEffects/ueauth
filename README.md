@@ -301,7 +301,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 ## Alpha TODO
 * cleanup 1
     * per authGroup Swagger/Redoc (done)
-    * fix https://qa.ueauth.io/oauth2-redirect.html routing
+    * fix https://qa.ueauth.io/oauth2-redirect.html routing (done)
     * review inline todos
     * work through access middleware and get it working correctly for all endpoints
         * ensure endpoints using middleware correctly - do some negative tests
