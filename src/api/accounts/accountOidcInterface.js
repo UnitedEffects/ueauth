@@ -40,8 +40,8 @@ class Account {
 	}
 
 	/**
-	 * todo: The interface specifies findByFederated
-	 * https://github.com/panva/node-oidc-provider/blob/d7a5ba5ba191d5af8e4bed9449cbb43a3d5a1619/example/support/account.js
+	 * @todo: The interface specifies findByFederated
+	 * @body: https://github.com/panva/node-oidc-provider/blob/d7a5ba5ba191d5af8e4bed9449cbb43a3d5a1619/example/support/account.js
 	 */
 }
 
