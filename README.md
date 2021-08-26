@@ -300,6 +300,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 ## Alpha TODO
 * Setup CD to QA
+* scopes to config
 * nice to haves
     * https://github.com/panva/node-oidc-provider/tree/main/example/views
     * federated interaction?
@@ -320,6 +321,7 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * passwordless
         * error
         * success
+* Write high risk area Tests!!!!
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * audit system
@@ -329,7 +331,6 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
         * different grant types - with/without confirmation
         * Setup CORS options
     * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
-* Write high risk area Tests!!!!
 * implement with a client/app (mmv api portal)
 * PENDING status API for Orgs/domains/etc...
 * clean up documentation
