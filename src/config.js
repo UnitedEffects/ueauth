@@ -44,7 +44,17 @@ const config = {
 			return [];
 		}
 	},
-	UI_CORE_AUDIENCE_ORIGIN: process.env.UI_CORE_AUDIENCE_ORIGIN || envVars.UI_CORE_AUDIENCE_ORIGIN || 'http://localhost:3000'
+	UI_CORE_AUDIENCE_ORIGIN: process.env.UI_CORE_AUDIENCE_ORIGIN || envVars.UI_CORE_AUDIENCE_ORIGIN || 'http://localhost:3000',
+	CORE_SCOPES () {
+		try {
+			if(process.env.CORE_SCOPES) return process.env.CORE_SCOPES.toString().split(',');
+			if(envVars.CORE_SCOPES) return envVars.CORE_SCOPES.toString().split(',');
+			return []
+		} catch (error) {
+			console.error(error);
+			return [];
+		}
+	}
 };
 
 module.exports = config;

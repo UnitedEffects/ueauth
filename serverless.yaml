@@ -31,7 +31,7 @@ provider:
     PLATFORM_NAME: ${env:PLATFORM_NAME, file(./.env/env.${self:provider.env}.json):PLATFORM_NAME}
     UI_WHITE_LIST: ${env:UI_WHITE_LIST, file(./.env/env.${self:provider.env}.json):UI_WHITE_LIST}
     UI_CORE_AUDIENCE_ORIGIN: ${env:UI_CORE_AUDIENCE_ORIGIN, file(./.env/env.${self:provider.env}.json):UI_CORE_AUDIENCE_ORIGIN}
-
+    CORE_SCOPES: ${env:CORE_SCOPES, file(./.env/env.${self:provider.env}.json):CORE_SCOPES}
 package:
   exclude:
     - src/**

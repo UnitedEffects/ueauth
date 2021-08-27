@@ -63,6 +63,7 @@ const authGroup = new mongoose.Schema({
 			type: Boolean,
 			default: true
 		},
+		scopes: [String],
 		ttl: {
 			accessToken: {
 				type: Number,

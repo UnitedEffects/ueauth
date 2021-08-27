@@ -2373,6 +2373,11 @@ components:
           type: boolean
           default: true
           description: when true, this allows enables the centrally served password reset UI to be accessed publicaly
+        scopes:
+          type: array
+          description: these are scopes that will be availabl to all clients within your authgroup oidc provider
+          items:
+            type: string
 
     authGroup:
       type: object

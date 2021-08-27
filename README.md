@@ -299,8 +299,6 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
 
 
 ## Alpha TODO
-* Setup CD to QA
-* scopes to config
 * nice to haves
     * https://github.com/panva/node-oidc-provider/tree/main/example/views
     * federated interaction?

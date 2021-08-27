@@ -63,3 +63,4 @@ jobs:
           PLATFORM_NAME: UE Core
           UI_WHITE_LIST: ${{ secrets.UI_WHITE_LIST }}
           UI_CORE_AUDIENCE_ORIGIN: ${{ secrets.UI_CORE_AUDIENCE_ORIGIN }}
+          CORE_SCOPES: "core:read,core:write,core:delete,core:update,api:read,api:write,api:delete,api:update"

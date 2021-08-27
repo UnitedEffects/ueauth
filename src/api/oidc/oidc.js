@@ -11,20 +11,7 @@ const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const MongoAdapter = require('./dal');
 
-//todo make this a ueauth config...
-const coreScopes = [
-	'core:read',
-	'core:write',
-	'core:delete',
-	'core:update'
-]
-const additionalScopes = [
-	'api:read',
-	'api:write',
-	'api:delete',
-	'api:update',
-	'api:test'
-]
+const coreScopes = config.CORE_SCOPES();
 
 const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
@@ -66,10 +53,9 @@ function oidcConfig(g) {
 			email: ['email', 'verified'],
 			username: ['username'],
 		},
-		//todo this MUST get added to config
 		scopes: [
 			'openid',
-			'offline_access'].concat(coreScopes).concat(additionalScopes),
+			'offline_access'].concat(coreScopes).concat(g.config.scopes),
 		interactions: {
 			url(ctx, interaction) {
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
@@ -151,7 +137,7 @@ function oidcConfig(g) {
 					const resource = {
 						audience: resourceIndicator,
 						accessTokenFormat: 'jwt',
-						scope: coreScopes.concat(additionalScopes).join(' ')
+						scope: coreScopes.concat(g.config.scopes).join(' ')
 					}
 					if(client.scope) {
 						resource.scope = client.scope.replace('openid', '').trim();
