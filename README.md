@@ -307,9 +307,8 @@ You can apply "client_skip_consent" = true to a client definition's metadata and
 ## Alpha TODO
 * clean up fonts!
 * Register link on login?
-* figure out how logout flows will work
 * Views
-    * clean and brand
+    * clean and brand (done)
     * common background page...
     * need login errors to rendor as a view rather than json (done)
     * Different views by tenant ?
@@ -319,6 +318,8 @@ You can apply "client_skip_consent" = true to a client definition's metadata and
         * passwordless
         * error
         * success
+        * logout
+* figure out how logout flows will work
 * Write high risk area Tests!!!!
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
