@@ -305,8 +305,8 @@ If you request an audience as a single string of multiple urls delimited by spac
 You can apply "client_skip_consent" = true to a client definition's metadata and this will signal the interaction to assume consent. Only do this for first-party clients (those controlled by the authgroup).
 
 ## Alpha TODO
+* Register link on login? Also test new interaction cleanup.
 * clean up fonts!
-* Register link on login?
 * Views
     * clean and brand (done)
     * common background page...
