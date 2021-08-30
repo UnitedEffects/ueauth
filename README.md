@@ -284,7 +284,6 @@ http://jsonpatch.com/
 -H 'accept: application/json' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
 -d 'client_secret=[CLIENTSECRET]&
-<br>audience=http://localhost:3000/[AUTHGROUP]&
 <br>redirect_uri=https://qa.ueauth.io &
 <br>code=[CODERECIEVED]&
 <br>client_id=[CLIENTID]&
@@ -297,14 +296,15 @@ http://jsonpatch.com/
 
 This service is an OAuth2 and OIDC provider. What that means is that you can create clients limited to scopes, providing those scopes are also defined for your Auth Group OP scopes. If you do this you will recieve an error whenever you request an authorization against that client on anything but the scopes explicitly added to the client. This is normal. What might trip you up is if you explicitly define scopes and then attempt to do an OIDC authorization, which would require the openid scope. This is not defaulted and if you want your client with limited scopes to also respect the OIDC flows, you will need to also add the "openid" scope.
 
+### Multiple Audience (AUD) as Array
+
+If you request an audience as a single string of multiple urls delimited by spaces (i.e. http:example1.com http:example2.com) they will be parsed as an array in the resulting jwt token.
+
+### Login Without Consent Screen
+
+You can apply "client_skip_consent" = true to a client definition's metadata and this will signal the interaction to assume consent. Only do this for first-party clients (those controlled by the authgroup).
 
 ## Alpha TODO
-* nice to haves
-    * https://github.com/panva/node-oidc-provider/tree/main/example/views
-    * federated interaction?
-    * Can I use an array for aud yet?
-    * Can I use the redirectURI from the client to populate aud if jwt is requested explicitly? Would then be able to add jwt format request back...
-    * Can I override the auth endpoint and add a rule that if I see audience, add it to resource as well?
 * clean up fonts!
 * Register link on login?
 * figure out how logout flows will work
@@ -344,7 +344,9 @@ This service is an OAuth2 and OIDC provider. What that means is that you can cre
     * integrate core scopes to permissions
 * Pkce...
 * MFA
-* Create social login setup via API for Google, Twitter and GitHub
+* Federated Interactions
+  * Create social login setup via API for Google, Twitter and GitHub
+  * https://github.com/panva/node-oidc-provider/tree/main/example/views
 * Move remaining OIDC configurations to authGroup
 * Global logout features
 * Investigate securing db or hashing client secrets

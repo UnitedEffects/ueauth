@@ -26,8 +26,8 @@ export default {
 	async getInt(req, res, next) {
 		try {
 			const provider = await oidc(req.authGroup);
-			const details = await provider.interactionDetails(req, res);
-			const { uid, prompt, params, session } = details;
+			const intDetails = await provider.interactionDetails(req, res);
+			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
 			req.globalSettings.notifications.enabled === true) {
@@ -40,45 +40,84 @@ export default {
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
-			console.info(client);
 			switch (prompt.name) {
-			case 'login': {
-				return res.render('login', {
-					client,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					uid,
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					details: prompt.details,
-					params,
-					title: 'Sign-in',
-					session: session ? debug(session) : undefined,
-					flash: undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
+				case 'login': {
+					return res.render('login', {
+						client,
+						authGroup: req.authGroup._id,
+						authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+						uid,
+						tos: req.authGroup.primaryTOS,
+						policy: req.authGroup.primaryPrivacyPolicy,
+						details: prompt.details,
+						params,
+						title: 'Sign-in',
+						session: session ? debug(session) : undefined,
+						flash: undefined,
+						dbg: {
+							params: debug(params),
+							prompt: debug(prompt)
+						}
+					});
+				}
+				case 'consent': {
+					if(client.client_skip_consent === true) {
+						const { prompt: { name, details }, params, session: { accountId } } = intDetails;
+						assert.equal(name, 'consent');
+						let { grantId } = intDetails;
+						let grant;
+
+						if (grantId) {
+							grant = await provider.Grant.find(grantId);
+						} else {
+							grant = new (provider.Grant)({
+								accountId,
+								clientId: params.client_id,
+								authGroup: req.authGroup.id
+							});
+						}
+						if (details.missingOIDCScope) {
+							grant.addOIDCScope(details.missingOIDCScope.join(' '));
+						}
+						if (details.missingOIDCClaims) {
+							grant.addOIDCClaims(details.missingOIDCClaims);
+						}
+						if (details.missingResourceScopes) {
+							// eslint-disable-next-line no-restricted-syntax
+							for (const [indicator, scopes] of Object.entries(details.missingResourceScopes)) {
+								grant.addResourceScope(indicator, scopes.join(' '));
+							}
+						}
+
+						grantId = await grant.save();
+
+						const consent = {};
+						if (!intDetails.grantId) {
+							// we don't have to pass grantId to consent, we're just modifying existing one
+							consent.grantId = grantId;
+						}
+
+						const result = { consent };
+						return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 					}
-				});
-			}
-			case 'consent': {
-				return res.render('interaction', {
-					client,
-					uid,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					details: prompt.details,
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					params,
-					title: 'Authorize',
-					session: session ? debug(session) : undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
-					}
-				});
-			}
+
+					return res.render('interaction', {
+						client,
+						uid,
+						authGroup: req.authGroup._id,
+						authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+						details: prompt.details,
+						tos: req.authGroup.primaryTOS,
+						policy: req.authGroup.primaryPrivacyPolicy,
+						params,
+						title: 'Authorize',
+						session: session ? debug(session) : undefined,
+						dbg: {
+							params: debug(params),
+							prompt: debug(prompt)
+						}
+					});
+				}
 			default:
 				return undefined;
 			}
@@ -124,6 +163,7 @@ export default {
 					}
 				});
 			}
+
 			return res.render('passwordless', {
 				client,
 				authGroup: req.authGroup._id,
@@ -141,6 +181,7 @@ export default {
 					prompt: debug(prompt)
 				}
 			});
+
 		} catch (err) {
 			return next(err);
 		}
@@ -169,6 +210,7 @@ export default {
 			if (tok) {
 				token = JSON.parse(JSON.stringify(tok));
 			}
+
 			if (!account ||
 				account.authGroup !== req.authGroup.id ||
 				!token ||

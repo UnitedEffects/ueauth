@@ -9,23 +9,91 @@ const urlParser = bodyParser.urlencoded({extended:true});
 
 const router = express.Router();
 
-router.post('/:group/token/initial-access', [jsonParser, m.validateAuthGroup, m.captureAuthGroupInBody, m.isAuthenticated, m.permissions], api.getInitialAccessToken);
+router.post('/:group/token/initial-access', [
+    jsonParser,
+    m.validateAuthGroup,
+    m.captureAuthGroupInBody,
+    m.isAuthenticated,
+    m.permissions
+], api.getInitialAccessToken);
 
-// OIDC Interactions
-router.get('/:group/interaction/:uid', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.getInt);
-router.get('/:group/interaction/:uid/abort', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.abort);
-router.post('/:group/interaction/:uid/login', [jsonParser, urlParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.login);
-router.post('/:group/interaction/:uid/confirm', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.confirm);
-router.get('/:group/interaction/:uid/passwordless-request', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.passwordless);
-router.post('/:group/interaction/:uid/passwordless', [jsonParser, urlParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.sendPasswordFree);
-router.get('/:group/interaction/:uid/passwordless', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.noPassLogin);
+/**
+ * OP Defined Interactions
+ */
+// primary interaction controller
+router.get('/:group/interaction/:uid', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.getInt);
+// abort interaction
+router.get('/:group/interaction/:uid/abort', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup
+], interactions.abort);
+// login interaction
+router.post('/:group/interaction/:uid/login', [
+    jsonParser,
+    urlParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.login);
+// confirm / consent interaction
+router.post('/:group/interaction/:uid/confirm', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.confirm);
 
-// Custom Interactions
-router.post('/:group/setpass', [jsonParser, m.setNoCache, m.validateAuthGroup, m.isAuthenticatedOrIAT], interactions.forgot);
-router.get('/:group/forgotpassword', [jsonParser, m.setNoCache, m.validateAuthGroup, m.getGlobalPluginSettings], interactions.forgotPasswordScreen);
-router.get('/:group/verifyaccount', [jsonParser, m.setNoCache, m.validateAuthGroup], interactions.verifyAccountScreen);
+/**
+ * Password-less routes, not defined directly by OP Library
+ */
+router.get('/:group/interaction/:uid/passwordless-request', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.passwordless);
+router.post('/:group/interaction/:uid/passwordless', [
+    jsonParser,
+    urlParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.sendPasswordFree);
+router.get('/:group/interaction/:uid/passwordless', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.noPassLogin);
 
-//rest of OIDC
+/**
+ * Password Reset and Account Verify
+ */
+router.post('/:group/setpass', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.isAuthenticatedOrIAT
+], interactions.forgot);
+router.get('/:group/forgotpassword', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup,
+    m.getGlobalPluginSettings
+], interactions.forgotPasswordScreen);
+router.get('/:group/verifyaccount', [
+    jsonParser,
+    m.setNoCache,
+    m.validateAuthGroup
+], interactions.verifyAccountScreen);
+
+//pass all other requests to the OP caller
 router.use('/:group', api.oidcCaller);
 
 

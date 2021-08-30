@@ -129,7 +129,9 @@ function oidcConfig(g) {
 			},
 			resourceIndicators: {
 				defaultResource: (ctx, client, oneOf) => {
-					if(oneOf) return oneOf;
+					if(oneOf) {
+						return oneOf;
+					}
 					return undefined;
 				},
 				enabled: true,
@@ -150,7 +152,7 @@ function oidcConfig(g) {
 			}
 		},
 		extraClientMetadata: {
-			properties: ['auth_group', 'client_name', 'tosUri', 'policyUri'],
+			properties: ['auth_group', 'client_name', 'tosUri', 'policyUri', 'client_skip_consent'],
 			validator(key, value, metadata) {
 				if (key === 'auth_group') {
 					try {
@@ -173,11 +175,22 @@ function oidcConfig(g) {
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
+				if (key === 'client_skip_consent') {
+					try {
+						if (value === undefined || value === null) value = false;
+						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
 			}
 		},
 		formats: {
 			customizers: {
 				async jwt(ctx, token, jwt) {
+					const audience = jwt.payload.aud.split(' ');
+					if(audience.length > 1) jwt.payload.aud = audience;
 					if(ctx && ctx.oidc && ctx.oidc.body && ctx.oidc.body.custom) jwt.payload.custom = ctx.oidc.body.custom;
 				}
 			},
@@ -253,7 +266,11 @@ function oidcConfig(g) {
 				basedir: 'path/for/pug/extends',
 			});
 			ctx.type = 'html';
-			ctx.body = await pug.render('error', {title: 'oops! something went wrong', message: 'You may have navigated here by mistake', details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')});
+			ctx.body = await pug.render('error', {
+				title: 'oops! something went wrong',
+				message: 'You may have navigated here by mistake',
+				details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
+			});
 		},
 		ttl: {
 			AccessToken: g.config.ttl.accessToken, //ms('1h') / 1000,
@@ -307,7 +324,14 @@ async function logoutSource(ctx, form) {
 			basedir: 'path/for/pug/extends',
 		});
 
-		const options = {title: 'Log Out', message: `Are you sure you want to sign-out from ${name}?`, formId: 'op.logoutForm', actionUrl: action, secret: ctx.oidc.session.state.secret, inName:'xsrf' };
+		const options = {
+			title: 'Log Out',
+			message: `Are you sure you want to sign-out from ${name}?`,
+			formId: 'op.logoutForm',
+			actionUrl: action,
+			secret: ctx.oidc.session.state.secret,
+			inName:'xsrf'
+		};
 		ctx.type = 'html';
 		ctx.body = await pug.render('logout', options);
 	} catch (error) {
@@ -327,11 +351,22 @@ async function postLogoutSuccessSource(ctx) {
 	});
 	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
 	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
-	const options = {title: 'Success', message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl, authGroup: {
-		name: ctx.authGroup.name,
-		primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
-		primaryTOS: ctx.authGroup.primaryTOS,
-		primaryDomain: ctx.authGroup.primaryDomain }};
+	const options = {
+		title: 'Success',
+		message,
+		clientUri,
+		initiateLoginUri,
+		logoUri,
+		policyUri,
+		tosUri,
+		loginUrl,
+		authGroup: {
+			name: ctx.authGroup.name,
+			primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
+			primaryTOS: ctx.authGroup.primaryTOS,
+			primaryDomain: ctx.authGroup.primaryDomain
+		}
+	};
 	ctx.type = 'html';
 	ctx.body = await pug.render('logoutSuccess', options);
 }
