@@ -64,5 +64,5 @@ jobs:
           UI_WHITE_LIST: ${{ secrets.UI_WHITE_LIST }}
           UI_CORE_AUDIENCE_ORIGIN: ${{ secrets.UI_CORE_AUDIENCE_ORIGIN }}
           CORE_SCOPES: "core:read,core:write,core:delete,core:update,api:read,api:write,api:delete,api:update"
-          STATIC_ASSETS: "https://assets.uecore.io/ueauth/",
+          STATIC_ASSETS: "https://assets.uecore.io/ueauth/"
           CUSTOM_FONTS_URL: ${{ secrets.UE_FONTS }}
