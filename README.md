@@ -305,7 +305,6 @@ If you request an audience as a single string of multiple urls delimited by spac
 You can apply "client_skip_consent" = true to a client definition's metadata and this will signal the interaction to assume consent. Only do this for first-party clients (those controlled by the authgroup).
 
 ## Alpha TODO
-* Register link on login? Also test new interaction cleanup.
 * clean up fonts!
 * Views
     * clean and brand (done)
@@ -320,6 +319,7 @@ You can apply "client_skip_consent" = true to a client definition's metadata and
         * success
         * logout
 * figure out how logout flows will work
+* PENDING status API for Orgs/domains/etc...
 * Write high risk area Tests!!!!
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
@@ -330,11 +330,10 @@ You can apply "client_skip_consent" = true to a client definition's metadata and
         * different grant types - with/without confirmation
         * Setup CORS options
     * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
-* implement with a client/app (mmv api portal)
-* PENDING status API for Orgs/domains/etc...
 * clean up documentation
 * Open Source this Library (add link in spec)
 * MVP Alpha release
+* implement with a client/app (mmv api portal)
 
 ## UE Core MVP Todo
 * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
