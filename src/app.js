@@ -12,6 +12,7 @@ const app = express();
 
 app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'pug');
+app.use(middle.assets);
 if(config.ENV!=='production') app.use(logger('tiny'));
 
 app.use(middle.responseIntercept);

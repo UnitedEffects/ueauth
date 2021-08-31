@@ -304,12 +304,15 @@ If you request an audience as a single string of multiple urls delimited by spac
 
 You can apply "client_skip_consent" = true to a client definition's metadata and this will signal the interaction to assume consent. Only do this for first-party clients (those controlled by the authgroup).
 
+### Assets and Fonts
+
+The primary CSS, JS and Images used for the UIs are served from "https://assets.uecore.io/". The service can be configured to utilize them or from that address through the environment variable STATIC_ASSETS set in CICD/config.js (.env.dev.json.STATIC_ASSETS). If you want to copy the files from assets.uecore.io and serve them directly from this code, simply add them under the ./public directory and change the value of STATIC_ASSETS to "/". You can also point to any other source for these files you wish and update them as desired with this configuration. Additionally, we have included a CUSTOM_FONTS_URL configuration which should point to a "fonts.css" file. If you set this configuration, that file and all subsequent font definitions it points to will be loaded as well. You may then need to update the other asset files to utilize those fonts.
+
 ## Alpha TODO
-* clean up fonts!
 * Views
     * clean and brand (done)
     * common background page...
-    * need login errors to rendor as a view rather than json (done)
+    * need login errors to render as a view rather than json (done)
     * Different views by tenant ?
         * login
         * verify

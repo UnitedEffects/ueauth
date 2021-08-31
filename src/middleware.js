@@ -17,6 +17,17 @@ const date = new Date();
 const schema = new OpenApiValidator(swag, { ajvOptions: { formats: { email: true, password: true, uri: true, url: true, uuid: true } } });
 
 const mid = {
+    assets (req, res, next) {
+        try {
+            res.locals.assets = config.STATIC_ASSETS;
+            if(config.CUSTOM_FONTS_URL) {
+                res.locals.customFonts = config.CUSTOM_FONTS_URL;
+            }
+            next()
+        } catch (error) {
+            next(error);
+        }
+    },
     cores (req, res, next) {
         try {
             res.header('Access-Control-Allow-Origin', '*');
@@ -26,7 +37,6 @@ const mid = {
         } catch (error) {
             next(error);
         }
-
     },
     catch404 (req, res, next) {
         try {
