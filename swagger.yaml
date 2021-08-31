@@ -2113,6 +2113,19 @@ components:
           items:
             type: string
             format: uri
+        client_skip_consent:
+          type: boolean
+          default: false
+          description: only use this for first-party clients (those you control directly)
+        register_url:
+          type: string
+          format: url
+          description: used to populate the href for the register link on login using this client
+        tos_url:
+          type: string
+        policy_url:
+          type: string
+
 
     clientObject:
       type: object
@@ -2267,6 +2280,7 @@ components:
         - owner
         - prettyName
         - primaryDomain
+        - primaryEmail
       properties:
         name:
           type: string
@@ -2302,6 +2316,14 @@ components:
           type: string
           format: url
           description: link to your company privacty policy
+        primaryEmail:
+          type: string
+          format: email
+          description: this should be a contact email for your authgroup for assistance or inquiry
+        registerUrl:
+          type: string
+          format: url
+          description: link to your company primary registration link, if one exists. This will be overrided by client registration links.
 
     agPluginOptions:
       type: object

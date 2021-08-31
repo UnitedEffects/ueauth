@@ -40,9 +40,12 @@ block content
                                     label.label-checkbox100(for='ckb1')
                                         | Remember me
                                 div
-                                    // todo :group/forgotpassword
                                     a.txt1(href='/'+authGroup+'/forgotpassword')
                                         | Forgot Password?
+                                if (locked === false && registerUrl)
+                                    div
+                                        a.txt1(href=registerUrl)
+                                            | Register
                             .container-login100-form-btn
                                 button.login100-form-btn(type='submit')
                                     | Login

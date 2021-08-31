@@ -42,6 +42,8 @@ const authGroup = new mongoose.Schema({
 	primaryDomain: String,
 	primaryTOS: String,
 	primaryPrivacyPolicy: String,
+	registerUrl: String,
+	primaryEmail: String,
 	config: {
 		keys: Array,
 		requireVerified: {

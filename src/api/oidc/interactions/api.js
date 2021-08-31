@@ -42,81 +42,14 @@ export default {
 			}
 			switch (prompt.name) {
 				case 'login': {
-					return res.render('login', {
-						client,
-						authGroup: req.authGroup._id,
-						authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-						uid,
-						tos: req.authGroup.primaryTOS,
-						policy: req.authGroup.primaryPrivacyPolicy,
-						details: prompt.details,
-						params,
-						title: 'Sign-in',
-						session: session ? debug(session) : undefined,
-						flash: undefined,
-						dbg: {
-							params: debug(params),
-							prompt: debug(prompt)
-						}
-					});
+					return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params));
 				}
 				case 'consent': {
 					if(client.client_skip_consent === true) {
-						const { prompt: { name, details }, params, session: { accountId } } = intDetails;
-						assert.equal(name, 'consent');
-						let { grantId } = intDetails;
-						let grant;
-
-						if (grantId) {
-							grant = await provider.Grant.find(grantId);
-						} else {
-							grant = new (provider.Grant)({
-								accountId,
-								clientId: params.client_id,
-								authGroup: req.authGroup.id
-							});
-						}
-						if (details.missingOIDCScope) {
-							grant.addOIDCScope(details.missingOIDCScope.join(' '));
-						}
-						if (details.missingOIDCClaims) {
-							grant.addOIDCClaims(details.missingOIDCClaims);
-						}
-						if (details.missingResourceScopes) {
-							// eslint-disable-next-line no-restricted-syntax
-							for (const [indicator, scopes] of Object.entries(details.missingResourceScopes)) {
-								grant.addResourceScope(indicator, scopes.join(' '));
-							}
-						}
-
-						grantId = await grant.save();
-
-						const consent = {};
-						if (!intDetails.grantId) {
-							// we don't have to pass grantId to consent, we're just modifying existing one
-							consent.grantId = grantId;
-						}
-
-						const result = { consent };
+						const result = await interactions.confirmAuthorization(provider, intDetails, req.authGroup);
 						return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 					}
-
-					return res.render('interaction', {
-						client,
-						uid,
-						authGroup: req.authGroup._id,
-						authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-						details: prompt.details,
-						tos: req.authGroup.primaryTOS,
-						policy: req.authGroup.primaryPrivacyPolicy,
-						params,
-						title: 'Authorize',
-						session: session ? debug(session) : undefined,
-						dbg: {
-							params: debug(params),
-							prompt: debug(prompt)
-						}
-					});
+					return res.render('interaction', interactions.consentLogin(req.authGroup, client, debug, session, prompt, uid, params));
 				}
 			default:
 				return undefined;
@@ -145,43 +78,9 @@ export default {
 			if (params.passwordless === false ||
 				req.authGroup.pluginOptions.notification.enabled === false ||
 				req.globalSettings.notifications.enabled === false) {
-				return res.render('login', {
-					client,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					uid,
-					details: prompt.details,
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					params,
-					title: 'Sign-in',
-					flash: 'Passwordless authentication is not enabled, please use another method.',
-					session: session ? debug(session) : undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
-					}
-				});
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'))
 			}
-
-			return res.render('passwordless', {
-				client,
-				authGroup: req.authGroup._id,
-				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-				uid,
-				details: prompt.details,
-				tos: req.authGroup.primaryTOS,
-				policy: req.authGroup.primaryPrivacyPolicy,
-				params,
-				title: 'Sign-in Password Free',
-				session: session ? debug(session) : undefined,
-				flash: undefined,
-				dbg: {
-					params: debug(params),
-					prompt: debug(prompt)
-				}
-			});
-
+			return res.render('passwordless', interactions.pwdlessLogin(req.authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
 			return next(err);
 		}
@@ -218,27 +117,7 @@ export default {
 				token.payload.sub !== id ||
 				token.payload.email !== account.email ||
 				token.payload.uid !== uid) {
-				res.render('login', {
-					client,
-					uid,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					details: prompt.details,
-					params: {
-						...params,
-						login_hint: req.body.email,
-					},
-					title: 'Sign-in',
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					flash: 'Invalid credentials. Your password free link may have expired.',
-					session: session ? debug(session) : undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
-					}
-				});
-				return;
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
 			}
 
 			// clean up
@@ -277,27 +156,7 @@ export default {
 				if(client.auth_group !== req.authGroup.id) {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
-				res.render('login', {
-					client,
-					uid,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					details: prompt.details,
-					params: {
-						...params,
-						login_hint: req.body.email,
-					},
-					title: 'Sign-in',
-					flash: 'Invalid email or password.',
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					session: session ? debug(session) : undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
-					}
-				});
-				return;
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
 
 			const result = {
@@ -337,49 +196,11 @@ export default {
 					req.authGroup.config &&
 					req.authGroup.config.passwordLessSupport === true);
 			} else {
-				return res.render('login', {
-					client,
-					uid,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					details: prompt.details,
-					params: {
-						...params,
-						login_hint: req.body.email,
-					},
-					title: 'Sign-in',
-					flash: 'Password free login is not available at this time.',
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					session: session ? debug(session) : undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
-					}
-				});
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
 			}
 			const account = await acc.getAccountByEmailOrUsername(req.authGroup.id, req.body.email);
 			if (!account) {
-				return res.render('login', {
-					client,
-					uid,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					details: prompt.details,
-					params: {
-						...params,
-						login_hint: req.body.email,
-					},
-					title: 'Sign-in',
-					flash: 'Invalid email or password.',
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					session: session ? debug(session) : undefined,
-					dbg: {
-						params: debug(params),
-						prompt: debug(prompt)
-					}
-				});
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
 			const meta = {
 				auth_group: req.authGroup.id,
@@ -399,26 +220,7 @@ export default {
 				await iat.deleteOne(iAccessToken.jti, req.authGroup.id);
 			}
 			if (_uid && client && _params) {
-				return res.render('login', {
-					client,
-					_uid,
-					authGroup: req.authGroup._id,
-					authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-					details: _prompt.details,
-					params: {
-						..._params,
-						login_hint: req.body.email,
-					},
-					title: 'Sign-in',
-					flash: 'Password free login is not available right now. You can try traditional login or come back later.',
-					tos: req.authGroup.primaryTOS,
-					policy: req.authGroup.primaryPrivacyPolicy,
-					session: _session ? debug(_session) : undefined,
-					dbg: {
-						params: debug(_params),
-						prompt: debug(_prompt)
-					}
-				});
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
 			}
 			return next(err);
 		}
@@ -428,43 +230,7 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup);
 			const interactionDetails = await provider.interactionDetails(req, res);
-			const { prompt: { name, details }, params, session: { accountId } } = interactionDetails;
-			assert.equal(name, 'consent');
-
-			let { grantId } = interactionDetails;
-			let grant;
-
-			if (grantId) {
-				grant = await provider.Grant.find(grantId);
-			} else {
-				grant = new (provider.Grant)({
-					accountId,
-					clientId: params.client_id,
-					authGroup: req.authGroup.id
-				});
-			}
-			if (details.missingOIDCScope) {
-				grant.addOIDCScope(details.missingOIDCScope.join(' '));
-			}
-			if (details.missingOIDCClaims) {
-				grant.addOIDCClaims(details.missingOIDCClaims);
-			}
-			if (details.missingResourceScopes) {
-				// eslint-disable-next-line no-restricted-syntax
-				for (const [indicator, scopes] of Object.entries(details.missingResourceScopes)) {
-					grant.addResourceScope(indicator, scopes.join(' '));
-				}
-			}
-
-			grantId = await grant.save();
-
-			const consent = {};
-			if (!interactionDetails.grantId) {
-				// we don't have to pass grantId to consent, we're just modifying existing one
-				consent.grantId = grantId;
-			}
-
-			const result = { consent };
+			const result = await interactions.confirmAuthorization(provider, interactionDetails, req.authGroup);
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 		} catch (err) {
 			next(err);
@@ -520,17 +286,7 @@ export default {
 				});
 
 			}
-			return res.render('verify', {
-				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-				tos: req.authGroup.primaryTOS,
-				policy: req.authGroup.primaryPrivacyPolicy,
-				title: 'Verify And Claim Your Account',
-				iat: req.query.code,
-				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
-				flash: 'Verification requires you to reset your password. Type the new one and confirm.',
-				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
-				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/user/reset-password`
-			});
+			return res.render('verify', interactions.verifyScreen(req.authGroup, req.query));
 		} catch (err) {
 			next (err);
 		}
@@ -563,17 +319,7 @@ export default {
 				}
 
 			}
-			return res.render('forgot', {
-				authGroupName: (req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
-				title: 'Forgot Password',
-				tos: req.authGroup.primaryTOS,
-				policy: req.authGroup.primaryPrivacyPolicy,
-				iat: req.query.code,
-				redirect: req.query.redirect || req.authGroup.primaryDomain || undefined,
-				flash: 'Type in your new password to reset',
-				url: `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup._id}/setpass`,
-				retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${req.authGroup._id}/operations/reset-user-password`
-			});
+			return res.render('forgot', interactions.forgotScreen(req.authGroup, req.query));
 		} catch (err) {
 			next (err);
 		}
