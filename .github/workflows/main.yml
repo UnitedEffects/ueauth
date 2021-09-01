@@ -67,3 +67,6 @@ jobs:
           STATIC_ASSETS: "https://assets.uecore.io/ueauth/"
           CUSTOM_FONTS_URL: ${{ secrets.UE_FONTS }}
           ROOT_GROUP_REGISTRATION_UI_URL: "https://qa.ueauth.io"
+          DEFAULT_UI_SKIN_SPLASH: "https://assets.uecore.io/ueauth/img/default-splash-test.png"
+          DEFAULT_UI_SKIN_GRADIENT_LOW: "#131525"
+          DEFAULT_UI_SKIN_GRADIENT_HIGH: "#1D2035"

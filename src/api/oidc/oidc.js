@@ -4,7 +4,7 @@ import Pug from 'koa-pug';
 import path from 'path';
 import Account from '../accounts/accountOidcInterface';
 import middle from '../../oidcMiddleware';
-
+import interactions from './interactions/interactions';
 import IAT from './models/initialAccessToken';
 
 const bodyParser = require('koa-bodyparser');
@@ -266,11 +266,8 @@ function oidcConfig(g) {
 				basedir: 'path/for/pug/extends',
 			});
 			ctx.type = 'html';
-			ctx.body = await pug.render('error', {
-				title: 'oops! something went wrong',
-				message: 'You may have navigated here by mistake',
-				details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
-			});
+			const options = await interactions.oidcRenderErrorOptions(ctx.authGroup, out);
+			ctx.body = await pug.render('error', options);
 		},
 		ttl: {
 			AccessToken: g.config.ttl.accessToken, //ms('1h') / 1000,
@@ -323,15 +320,7 @@ async function logoutSource(ctx, form) {
 			viewPath: path.resolve(__dirname, '../../../views'),
 			basedir: 'path/for/pug/extends',
 		});
-
-		const options = {
-			title: 'Log Out',
-			message: `Are you sure you want to sign-out from ${name}?`,
-			formId: 'op.logoutForm',
-			actionUrl: action,
-			secret: ctx.oidc.session.state.secret,
-			inName:'xsrf'
-		};
+		const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret);
 		ctx.type = 'html';
 		ctx.body = await pug.render('logout', options);
 	} catch (error) {
@@ -351,22 +340,7 @@ async function postLogoutSuccessSource(ctx) {
 	});
 	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
 	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
-	const options = {
-		title: 'Success',
-		message,
-		clientUri,
-		initiateLoginUri,
-		logoUri,
-		policyUri,
-		tosUri,
-		loginUrl,
-		authGroup: {
-			name: ctx.authGroup.name,
-			primaryPrivacyPolicy: ctx.authGroup.primaryPrivacyPolicy,
-			primaryTOS: ctx.authGroup.primaryTOS,
-			primaryDomain: ctx.authGroup.primaryDomain
-		}
-	};
+	const options = await interactions.oidcPostLogoutSourceOptions(ctx.authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl);
 	ctx.type = 'html';
 	ctx.body = await pug.render('logoutSuccess', options);
 }

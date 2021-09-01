@@ -31,4 +31,18 @@ html
         //script(src=assets + 'js/template/countdowntime/countdowntime.js')
         script(src=assets + 'js/main.js')
         script(src=assets + 'js/popper/popper.min.js')
+        if (bgGradientLow && bgGradientHigh)
+            style.
+                body {
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(279.3deg, #{bgGradientLow} 4.36%, #{bgGradientHigh} 96.71%);
+                }
+        else
+            style.
+                body {
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(279.3deg, #131525 4.36%, #1D2035 96.71%);
+                }
         block content

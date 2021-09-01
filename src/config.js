@@ -59,6 +59,10 @@ const config = {
 	// if you wish to serve static assets locally, add the appropriate files to ./public and change this to "/"
 	STATIC_ASSETS: process.env.STATIC_ASSETS || envVars.STATIC_ASSETS || 'https://assets.uecore.io/ueauth/',
 	CUSTOM_FONTS_URL: process.env.CUSTOM_FONTS_URL || envVars.CUSTOM_FONTS_URL || undefined,
+	// UI SKIN
+	DEFAULT_UI_SKIN_SPLASH: process.env.DEFAULT_UI_SKIN_SPLASH || envVars.DEFAULT_UI_SKIN_SPLASH || "https://assets.uecore.io/ueauth/img/default-splash-test.png",
+	DEFAULT_UI_SKIN_GRADIENT_LOW: process.env.DEFAULT_UI_SKIN_GRADIENT_LOW || envVars.DEFAULT_UI_SKIN_GRADIENT_LOW || "#131525",
+	DEFAULT_UI_SKIN_GRADIENT_HIGH: process.env.DEFAULT_UI_SKIN_GRADIENT_HIGH || envVars.DEFAULT_UI_SKIN_GRADIENT_HIGH || "#1D2035"
 };
 
 module.exports = config;

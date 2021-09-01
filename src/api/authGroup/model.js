@@ -3,6 +3,8 @@ import { nanoid } from 'nanoid';
 import keys from './generate-keys';
 import ms from "ms";
 
+const config = require('../../config');
+
 mongoose.set('useCreateIndex', true);
 
 const authGroup = new mongoose.Schema({
@@ -66,6 +68,29 @@ const authGroup = new mongoose.Schema({
 			default: true
 		},
 		scopes: [String],
+		ui: {
+			// fullCustom is for a future update that allows the AG to implement a fully custom UI of their choosing
+			// keeping this false until later
+			fullCustom: {
+				type: Boolean,
+				default: false
+			},
+			// these customize the Login and Authorization screens and set background color gradients everywhere
+			skin: {
+				splashImage: {
+					type: String,
+					default: config.DEFAULT_UI_SKIN_SPLASH
+				},
+				bgGradientLow: {
+					type: String,
+					default: config.DEFAULT_UI_SKIN_GRADIENT_LOW
+				},
+				bgGradientHigh: {
+					type: String,
+					default: config.DEFAULT_UI_SKIN_GRADIENT_HIGH
+				}
+			}
+		},
 		ttl: {
 			accessToken: {
 				type: Number,

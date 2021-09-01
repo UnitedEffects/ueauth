@@ -70,11 +70,7 @@ block content
                                     div
                                         br
                                         #{dbg.prompt}
-                        if (!splashImage)
-                            // todo update this with authgroup image next
-                            if client.logoUri
-                                .login100-more(style="background-image: url('" + client.logoUri + "');")
-                            else
-                                .login100-more(style="background-image: url('" + assets + "img/legacy-background.jpeg');")
+                        if (splashImage)
+                            .login100-more(style="background-image: url('" + splashImage + "');")
                         else
-                            .login100-more(style="background-image: url('"+splashImage+"');")
+                            .login100-more(style="background: linear-gradient(279.3deg, " + bgGradientLow + " 4.36%, " + bgGradientHigh + " 96.71%);")

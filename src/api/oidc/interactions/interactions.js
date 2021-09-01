@@ -25,8 +25,11 @@ export default {
     standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
         return {
             client,
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
             authGroup: authGroup._id,
             authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
+            splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
             locked: authGroup.locked,
             registerUrl: client.register_url || authGroup.registerUrl || undefined,
             uid,
@@ -46,8 +49,11 @@ export default {
     pwdlessLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
         return {
             client,
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
             authGroup: authGroup._id,
             authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+            splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
             uid,
             locked: authGroup.locked,
             registerUrl: client.register_url || authGroup.registerUrl || undefined,
@@ -67,9 +73,12 @@ export default {
     consentLogin(authGroup, client, debug, session, prompt, uid, params) {
         return {
             client,
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
             uid,
             authGroup: authGroup._id,
             authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
+            splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
             details: prompt.details,
             tos: authGroup.primaryTOS,
             policy: authGroup.primaryPrivacyPolicy,
@@ -92,7 +101,9 @@ export default {
             redirect: query.redirect || authGroup.primaryDomain || undefined,
             flash: 'Verification requires you to reset your password. Type the new one and confirm.',
             url: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup._id}/setpass`,
-            retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup._id}/operations/user/reset-password`
+            retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup._id}/operations/user/reset-password`,
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
         }
     },
     forgotScreen(authGroup, query) {
@@ -105,7 +116,9 @@ export default {
             redirect: query.redirect || authGroup.primaryDomain || undefined,
             flash: 'Type in your new password to reset',
             url: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup._id}/setpass`,
-            retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup._id}/operations/reset-user-password`
+            retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup._id}/operations/reset-user-password`,
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
         }
     },
     async confirmAuthorization(provider, intDetails, authGroup) {
@@ -145,5 +158,46 @@ export default {
         }
 
         return { consent };
+    },
+    async oidcRenderErrorOptions(authGroup, out) {
+        return {
+            title: 'oops! something went wrong',
+            message: 'You may have navigated here by mistake',
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
+            details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
+        }
+    },
+    async oidcLogoutSourceOptions(authGroup, name, action, secret) {
+        return {
+            title: 'Log Out',
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
+            message: `Are you sure you want to sign-out from ${name}?`,
+            formId: 'op.logoutForm',
+            actionUrl: action,
+            secret,
+            inName:'xsrf'
+        }
+    },
+    async oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl) {
+        return {
+            title: 'Success',
+            message,
+            clientUri,
+            initiateLoginUri,
+            logoUri,
+            policyUri,
+            tosUri,
+            loginUrl,
+            bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+            bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
+            authGroup: {
+                name: authGroup.name,
+                primaryPrivacyPolicy: authGroup.primaryPrivacyPolicy,
+                primaryTOS: authGroup.primaryTOS,
+                primaryDomain: authGroup.primaryDomain
+            }
+        }
     }
 }

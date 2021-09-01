@@ -2400,6 +2400,24 @@ components:
           description: these are scopes that will be availabl to all clients within your authgroup oidc provider
           items:
             type: string
+        ui:
+          type: object
+          properties:
+            #fullCustom:
+            #  type: boolean
+            #  description: if this is selected, we attempt to load a custom UI. NOT YET IMPLEMENTED
+            skin:
+              type: object
+              properties:
+                splashImage:
+                  type: string
+                  description: this is the splash image used on login and authorization screens. there is a system default
+                bgGradientLow:
+                  type: string
+                  description: this is the background color lower end gradient color
+                bgGradientHigh:
+                  type: string
+                  description: this is the background color higher end gradient color
 
     authGroup:
       type: object
