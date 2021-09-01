@@ -2,12 +2,10 @@ import Boom from '@hapi/boom';
 import { say } from '../../say';
 import group from './group';
 import helper from '../../helper';
-import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
 import acct from '../accounts/account';
 import plugs from '../plugins/plugins';
 import permissions from '../../permissions';
-import n from '../plugins/notifications/notifications';
 const config = require('../../config');
 
 
@@ -117,29 +115,9 @@ const api = {
 			if (req.body.prettyName) {
 				if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
 			}
-			//todo move this logic to group.js
-			req.body.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
-			if(req.body.primaryDomain && !req.body.primaryDomain.includes('://')) {
-				req.body.primaryDomain = `https://${req.body.primaryDomain}`;
-			}
-			result = JSON.parse(JSON.stringify(await group.write(req.body)));
-			const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
-			const token = await iat.generateIAT(expiresIn, ['auth_group'], result);
-			result.initialAccessToken = token.jti;
-			if(result.config) delete result.config.keys;
-			if(req.globalSettings.notifications.enabled === true){
-				try {
-					const nOps = group.groupCreationNotifyOptions(result, req.body.owner);
-					await n.notify(req.globalSettings, nOps, result);
-				} catch (e) {
-					//console.error(e);
-					result.warning = {
-						message: 'Owner will not get a notification, there was an error',
-						info: e.message
-					};
-				}
-			} else result.warning = 'Owner will nto get a notification, global settings are not enabled';
-			return res.respond(say.created(result, RESOURCE));
+			result = await group.write(req.body);
+			const output = await group.completeGroupSignup(result, req.globalSettings, req.body.owner);
+			return res.respond(say.created(output, RESOURCE));
 		} catch (error) {
 			if (result && result.id) {
 				try {

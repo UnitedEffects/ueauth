@@ -4,16 +4,27 @@ import dal from './dal';
 import plugins from '../plugins/plugins';
 import helper from '../../helper';
 import k from './generate-keys';
+import iat from "../oidc/initialAccess/iat";
+import n from "../plugins/notifications/notifications";
 
 const config = require('../../config');
 
-export default {
+const agp = {
 	async check(pName) {
 		const docs = await dal.checkPrettyName(pName);
 		return docs === 0;
 	},
 
-	async write(data) {
+	async write(body) {
+		const data = JSON.parse(JSON.stringify(body));
+		// set expiration date
+		data.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
+
+		// set primary domain
+		if(data.primaryDomain && !data.primaryDomain.includes('://')) {
+			data.primaryDomain = `https://${data.primaryDomain}`;
+		}
+
 		// if notifications are off
 		if (data.pluginOptions && data.pluginOptions.notification && data.pluginOptions.notification.enabled !== true){
 			// if no config was set, there is no issue
@@ -28,6 +39,26 @@ export default {
 			}
 		}
 		return dal.write(data);
+	},
+
+	async completeGroupSignup (group, globalSettings, owner) {
+		const result = JSON.parse(JSON.stringify(group));
+		const expiresIn = 86400 + config.GROUP_SECURE_EXPIRES;
+		const token = await iat.generateIAT(expiresIn, ['auth_group'], result);
+		result.initialAccessToken = token.jti;
+		if(result.config) delete result.config.keys;
+		if(globalSettings.notifications.enabled === true && config.ROOT_GROUP_REGISTRATION_UI_URL !== undefined){
+			try {
+				const nOps = agp.groupCreationNotifyOptions(result, owner);
+				await n.notify(globalSettings, nOps, result);
+			} catch (e) {
+				result.warning = {
+					message: 'Owner will not get a notification, there was an error',
+					info: e.message
+				};
+			}
+		} else result.warning = 'Owner will nto get a notification, global settings are not enabled';
+		return result;
 	},
 
 	async get(q) {
@@ -111,15 +142,14 @@ export default {
 	},
 
 	groupCreationNotifyOptions(authGroup, owner) {
-		//console.info(authGroup);
+		console.info(owner);
 		return {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
 			createdBy: owner,
 			type: 'general',
 			formats: ['email'],
 			recipientEmail: owner,
-			// todo - finalize the screen url after UX
-			screenUrl: `${config.PROTOCOL}://${config.UI_URL}/${authGroup.id}/register?code=${authGroup.initialAccessToken}`,
+			screenUrl: `${config.ROOT_GROUP_REGISTRATION_UI_URL}?group=${authGroup.id}&code=${authGroup.initialAccessToken}`,
 			subject: `${authGroup.name} - Register Your Ownership Account`,
 			message: `You created a new auth group called '${authGroup.name}'. In order to complete the creation process and activate the group, you must register your account with the same email address that you used to create the group.`,
 			meta: {
@@ -137,3 +167,5 @@ export default {
 		};
 	},
 };
+
+export default agp;

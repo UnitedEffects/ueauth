@@ -292,6 +292,10 @@ http://jsonpatch.com/
     
 ## Important Tips and Examples
 
+### ROOT_GROUP_REGISTRATION_UI_URL
+
+This environment variable should point to your implementation of final registration of an authgroup. It is optional. If included, whenever a new authgroup is created, and if notifications are neabled, an email will be sent to the creator of the authgroup with a link to https://ROOT_GROUP_REGISTRATION_UI_URL?group=YOURGROUP&code=InitialAccessToken. This allows them to complete registration if it was interrupted for some reason.
+
 ### OIDC Scopes with Clients
 
 This service is an OAuth2 and OIDC provider. What that means is that you can create clients limited to scopes, providing those scopes are also defined for your Auth Group OP scopes. If you do this you will recieve an error whenever you request an authorization against that client on anything but the scopes explicitly added to the client. This is normal. What might trip you up is if you explicitly define scopes and then attempt to do an OIDC authorization, which would require the openid scope. This is not defaulted and if you want your client with limited scopes to also respect the OIDC flows, you will need to also add the "openid" scope.
@@ -309,7 +313,6 @@ You can apply "client_skip_consent" = true to a client definition's metadata and
 The primary CSS, JS and Images used for the UIs are served from "https://assets.uecore.io/". The service can be configured to utilize them or from that address through the environment variable STATIC_ASSETS set in CICD/config.js (.env.dev.json.STATIC_ASSETS). If you want to copy the files from assets.uecore.io and serve them directly from this code, simply add them under the ./public directory and change the value of STATIC_ASSETS to "/". You can also point to any other source for these files you wish and update them as desired with this configuration. Additionally, we have included a CUSTOM_FONTS_URL configuration which should point to a "fonts.css" file. If you set this configuration, that file and all subsequent font definitions it points to will be loaded as well. You may then need to update the other asset files to utilize those fonts.
 
 ## Alpha TODO
-* parameterize the register url notification on authgroup create
 * Views
     * clean and brand (done)
     * common background page...

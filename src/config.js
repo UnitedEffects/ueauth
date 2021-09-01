@@ -9,6 +9,7 @@ const config = {
 	MONGO: process.env.MONGO || envVars.MONGO || 'mongodb://localhost:27017/your-db',
 	SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',
 	UI_URL: process.env.UI_URL || envVars.UI_URL || 'example.com',
+	ROOT_GROUP_REGISTRATION_UI_URL: process.env.ROOT_GROUP_REGISTRATION_UI_URL || envVars.ROOT_GROUP_REGISTRATION_UI_URL || undefined,
 	REPLICA: process.env.REPLICA || envVars.REPLICA || 'rs0',
 	PERSIST_HTTP_ERRORS: process.env.PERSIST_HTTP_ERRORS || envVars.PERSIST_HTTP_ERRORS || false,
 	WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB || envVars.WRITE_LOGS_TO_DB || false,
@@ -34,9 +35,6 @@ const config = {
 	INIT_ROOT_PRIMARY_TOS: process.env.INIT_ROOT_PRIMARY_TOS || envVars.INIT_ROOT_PRIMARY_TOS || 'https://unitedeffects.com/tos',
 	INIT_ROOT_PRIMARY_POLICY: process.env.INIT_ROOT_PRIMARY_POLICY || envVars.INIT_ROOT_PRIMARY_POLICY || 'https://unitedeffects.com/privacy',
 	PLATFORM_NAME: process.env.PLATFORM_NAME || envVars.PLATFORM_NAME || 'UE Auth',
-	// if you wish to serve static assets locally, add the appropriate files to ./public and change this to "/"
-	STATIC_ASSETS: process.env.STATIC_ASSETS || envVars.STATIC_ASSETS || 'https://assets.uecore.io/ueauth/',
-	CUSTOM_FONTS_URL: process.env.CUSTOM_FONTS_URL || envVars.CUSTOM_FONTS_URL || undefined,
 	UI_WHITE_LIST () {
 		try {
 			if(process.env.UI_WHITE_LIST) return process.env.UI_WHITE_LIST.toString().split(',');
@@ -57,7 +55,10 @@ const config = {
 			console.error(error);
 			return [];
 		}
-	}
+	},
+	// if you wish to serve static assets locally, add the appropriate files to ./public and change this to "/"
+	STATIC_ASSETS: process.env.STATIC_ASSETS || envVars.STATIC_ASSETS || 'https://assets.uecore.io/ueauth/',
+	CUSTOM_FONTS_URL: process.env.CUSTOM_FONTS_URL || envVars.CUSTOM_FONTS_URL || undefined,
 };
 
 module.exports = config;
