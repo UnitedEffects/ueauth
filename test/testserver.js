@@ -9,6 +9,7 @@ const requestListener = function (req, res) {
             json += chunk.toString('utf8');
         });
         req.on('end', function (){
+            console.info(json);
             console.info(JSON.stringify(JSON.parse(json), null, 2));
         });
         console.info('headers....');

@@ -67,7 +67,10 @@ function oidcConfig(g) {
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},
-			backchannelLogout: { enabled: false },
+			backchannelLogout: {
+				enabled: true,
+				ack: 'draft-06'
+			},
 			rpInitiatedLogout: {
 				enabled: true,
 				logoutSource,
@@ -152,7 +155,7 @@ function oidcConfig(g) {
 			}
 		},
 		extraClientMetadata: {
-			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url'],
+			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url', 'client_optional_skip_logout_prompt'],
 			validator(key, value, metadata) {
 				if (key === 'auth_group') {
 					try {
@@ -176,6 +179,15 @@ function oidcConfig(g) {
 					}
 				}
 				if (key === 'client_skip_consent') {
+					try {
+						if (value === undefined || value === null) value = false;
+						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'client_optional_skip_logout_prompt') {
 					try {
 						if (value === undefined || value === null) value = false;
 						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
@@ -315,19 +327,32 @@ function oidcWrapper(tenant) {
 async function logoutSource(ctx, form) {
 	try {
 		const action = ctx.oidc.urlFor('end_session_confirm');
-		console.info(action);
 		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../views'),
 			basedir: 'path/for/pug/extends',
 		});
 		const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret);
-		ctx.type = 'html';
-		ctx.body = await pug.render('logout', options);
+		// todo if we see skip-prompt=true
+		// if clientSkipLogoutOption=true
+		// return the post confirm
+
+		if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
+			// enable REST response
+			ctx.type='json';
+			ctx.body = {
+				action: options.title,
+				confirmUri: `${options.actionUrl}`,
+				xsrf: options.secret
+			};
+		} else {
+			// otherwise show the prompt
+			ctx.type = 'html';
+			ctx.body = await pug.render('logout', options);
+		}
 	} catch (error) {
 		throw new OIDCProviderError(error.message);
 	}
-
 }
 
 async function postLogoutSuccessSource(ctx) {
@@ -339,10 +364,14 @@ async function postLogoutSuccessSource(ctx) {
 		viewPath: path.resolve(__dirname, '../../../views'),
 		basedir: 'path/for/pug/extends',
 	});
-	const loginUrl = `${ctx.oidc.urlFor('authorization')}?client_id=${ctx.authGroup.associatedClient}&response_type=code id_token&scope=openid%20email&nonce=${uuid()}&state=${uuid()}`;
-	const message = `Logout action ${name ? `with ${name}`: ''} was successful`;
-	const options = await interactions.oidcPostLogoutSourceOptions(ctx.authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl);
+	const message = (!ctx.oidc.client) ? `Logout action ${name ? `with ${name}`: ''} was successful` : 'You are still logged in';
+	const options = await interactions.oidcPostLogoutSourceOptions(ctx.authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
 	ctx.type = 'html';
+	ctx.set('json-data', JSON.stringify({
+		title: options.title,
+		message: options.message,
+		authGroup: options.authGroup
+	}));
 	ctx.body = await pug.render('logoutSuccess', options);
 }
 

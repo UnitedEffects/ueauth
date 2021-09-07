@@ -312,8 +312,21 @@ You can apply "client_skip_consent" = true to a client definition's metadata and
 
 The primary CSS, JS and Images used for the UIs are served from "https://assets.uecore.io/". The service can be configured to utilize them or from that address through the environment variable STATIC_ASSETS set in CICD/config.js (.env.dev.json.STATIC_ASSETS). If you want to copy the files from assets.uecore.io and serve them directly from this code, simply add them under the ./public directory and change the value of STATIC_ASSETS to "/". You can also point to any other source for these files you wish and update them as desired with this configuration. Additionally, we have included a CUSTOM_FONTS_URL configuration which should point to a "fonts.css" file. If you set this configuration, that file and all subsequent font definitions it points to will be loaded as well. You may then need to update the other asset files to utilize those fonts.
 
+### Headless OIDC Logout
+
+With the rpInitiatedLogout feature enabled, it is possible to initiate logout using the /{group}/session/end endpoint. In UEAuth, you can also do this headless by passing the query parameter json=true to this endpoint. This will return the necessary data for you to confirm the logout with a GET request to /{group}/session/end/confirm using x-www-form-urlencoded parameters "xsrf={secret}" and "logout=yes". The response to this endpoint will be a redirect GET with html as data. At the moment this is unavoidable; however, you can validate your information by reading the header, where a parameter called "json-data" will include a stringified JSON object with the information you need to validate success (assuming you don't want to parse the html). So the steps for headless logout are:
+
+1. GET /{group}/session/end?json=true
+  * make note of your secret
+2. POST /{group}/session/end/confirm (x-www-form-urlencoded)
+  * xsrf=secret
+  * logout=yes
+  * read the resulting header "json-data" or parse html response
+
 ## Alpha TODO
-* figure out how logout flows will work
+* logout
+    * implement Headless (not really rest) version (done)
+    * implement option without prompt - must include redirectUrl and id-token-hint
 * PENDING status API for Orgs/domains/etc...
 * Write high risk area Tests!!!!
 * translate oidc errors to local format in the oidc post middleware

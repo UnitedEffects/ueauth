@@ -8,10 +8,10 @@ block content
                     .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
                         h2=title
                         p=message
-                        if (logoUri || authGroup.primaryDomain)
-                            a.btn.btn-outline-dark(href=(logoUri || authGroup.primaryDomain)) Home to #{authGroup.name}
-                        //if (initiateLoginUri || loginUrl)
-                            a.btn.btn-outline-dark(href=(initiateLoginUri || loginUrl) style="margin-left: 5px") Login Again
+                        if (clientUri || authGroup.primaryDomain)
+                            a.btn.btn-outline-dark(href=(clientUri || authGroup.primaryDomain)) Home to #{clientName || authGroup.name}
+                        if (initiateLoginUri)
+                            a.btn.btn-outline-dark(href=initiateLoginUri style="margin-left: 5px") Login
                         .m-t-10
                             if (tosUri || authGroup.primaryTOS)
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]

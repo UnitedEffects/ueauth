@@ -180,16 +180,16 @@ export default {
             inName:'xsrf'
         }
     },
-    async oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, loginUrl) {
+    async oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName) {
         return {
             title: 'Success',
+            clientName,
             message,
             clientUri,
             initiateLoginUri,
             logoUri,
             policyUri,
             tosUri,
-            loginUrl,
             bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
             bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
             authGroup: {
