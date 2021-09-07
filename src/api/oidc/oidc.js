@@ -315,6 +315,7 @@ function oidcWrapper(tenant) {
 async function logoutSource(ctx, form) {
 	try {
 		const action = ctx.oidc.urlFor('end_session_confirm');
+		console.info(action);
 		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../views'),

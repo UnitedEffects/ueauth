@@ -262,7 +262,7 @@ export default {
 					value: true
 				}
 			];
-			await acc.patchAccount(req.authGroup.id, req.user.sub, update, req.user.sub);
+			await acc.patchAccount(req.authGroup, req.user.sub, update, req.user.sub, true);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
 	    	next (err);
