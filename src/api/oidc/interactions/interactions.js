@@ -168,7 +168,7 @@ export default {
             details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
         }
     },
-    async oidcLogoutSourceOptions(authGroup, name, action, secret) {
+    async oidcLogoutSourceOptions(authGroup, name, action, secret, skipPrompt = false) {
         return {
             title: 'Log Out',
             bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
@@ -177,7 +177,10 @@ export default {
             formId: 'op.logoutForm',
             actionUrl: action,
             secret,
-            inName:'xsrf'
+            inName:'xsrf',
+            skipPrompt,
+            'bdf635x': skipPrompt, // duplicate entry to be less obvious in js
+            'a42ce03': 'op.logoutForm' // duplicate entry to be less obvious in js
         }
     },
     async oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName) {

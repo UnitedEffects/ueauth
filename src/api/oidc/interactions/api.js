@@ -6,11 +6,17 @@ import iat from '../initialAccess/iat';
 import interactions from './interactions';
 import n from '../../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
+import Pug from "koa-pug";
+import path from "path";
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
 const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
+
+const {
+	errors: { OIDCProviderError },
+} = require('oidc-provider');
 
 const keys = new Set();
 const debug = (obj) => querystring.stringify(Object.entries(obj).reduce((acc, [key, value]) => {
@@ -323,5 +329,82 @@ export default {
 		} catch (err) {
 			next (err);
 		}
+	},
+	async logoutSource(ctx, form) {
+		try {
+			const action = ctx.oidc.urlFor('end_session_confirm');
+			let skipPrompt = false;
+			if (ctx.req.query && ctx.req.query.skipPrompt && ctx.req.query.skipPrompt === 'true') {
+				// this must be set at the client level and only works if there is a redirectUrl present
+				if (ctx.oidc && ctx.oidc.client && ctx.oidc.client.client_optional_skip_logout_prompt === true) {
+					// post_logout_redirect_uri further requires an id_token_hint or client_id
+					if(ctx.req.query.post_logout_redirect_uri) {
+						skipPrompt = true
+					}
+				}
+			}
+			const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
+			const pug = new Pug({
+				viewPath: path.resolve(__dirname, '../../../../views'),
+				basedir: 'path/for/pug/extends',
+			});
+			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, skipPrompt);
+
+			if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
+				// enable REST response
+				ctx.type='json';
+				ctx.body = {
+					action: options.title,
+					confirmUri: `${options.actionUrl}`,
+					xsrf: options.secret
+				};
+			} else {
+				// otherwise show the prompt
+				ctx.type = 'html';
+				options.assets = config.STATIC_ASSETS;
+				if(config.CUSTOM_FONTS_URL) {
+					options.customFonts = config.CUSTOM_FONTS_URL;
+				}
+				ctx.body = await pug.render('logout', options);
+			}
+		} catch (error) {
+			throw new OIDCProviderError(error.message);
+		}
+	},
+	async postLogoutSuccessSource(ctx) {
+		const {
+			clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
+		} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+		const name = (clientName) ? clientName : ctx.authGroup.name;
+		const pug = new Pug({
+			viewPath: path.resolve(__dirname, '../../../../views'),
+			basedir: 'path/for/pug/extends',
+		});
+		const message = (!ctx.oidc.client) ? `Logout action ${name ? `with ${name}`: ''} was successful` : 'You are still logged in';
+		const options = await interactions.oidcPostLogoutSourceOptions(ctx.authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
+		ctx.type = 'html';
+		ctx.set('json-data', JSON.stringify({
+			title: options.title,
+			message: options.message,
+			authGroup: options.authGroup
+		}));
+		options.assets = config.STATIC_ASSETS;
+		if(config.CUSTOM_FONTS_URL) {
+			options.customFonts = config.CUSTOM_FONTS_URL;
+		}
+		ctx.body = await pug.render('logoutSuccess', options);
+	},
+	async renderError(ctx, out, error) {
+		const pug = new Pug({
+			viewPath: path.resolve(__dirname, '../../../../views'),
+			basedir: 'path/for/pug/extends',
+		});
+		ctx.type = 'html';
+		const options = await interactions.oidcRenderErrorOptions(ctx.authGroup, out);
+		options.assets = config.STATIC_ASSETS;
+		if(config.CUSTOM_FONTS_URL) {
+			options.customFonts = config.CUSTOM_FONTS_URL;
+		}
+		ctx.body = await pug.render('error', options);
 	}
 };

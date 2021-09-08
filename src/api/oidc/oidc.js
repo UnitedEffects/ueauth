@@ -1,10 +1,8 @@
 import { Provider } from 'oidc-provider';
 import { v4 as uuid } from 'uuid';
-import Pug from 'koa-pug';
-import path from 'path';
 import Account from '../accounts/accountOidcInterface';
 import middle from '../../oidcMiddleware';
-import interactions from './interactions/interactions';
+import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
 
 const bodyParser = require('koa-bodyparser');
@@ -73,8 +71,8 @@ function oidcConfig(g) {
 			},
 			rpInitiatedLogout: {
 				enabled: true,
-				logoutSource,
-				postLogoutSuccessSource
+				logoutSource: intApi.logoutSource,
+				postLogoutSuccessSource: intApi.postLogoutSuccessSource
 			},
 			encryption: { enabled: true },
 			registration: {
@@ -272,25 +270,17 @@ function oidcConfig(g) {
 			'id_token',
 			'none',
 		],
-		async renderError(ctx, out, error) {
-			const pug = new Pug({
-				viewPath: path.resolve(__dirname, '../../../views'),
-				basedir: 'path/for/pug/extends',
-			});
-			ctx.type = 'html';
-			const options = await interactions.oidcRenderErrorOptions(ctx.authGroup, out);
-			ctx.body = await pug.render('error', options);
-		},
+		renderError: intApi.renderError,
 		ttl: {
-			AccessToken: g.config.ttl.accessToken, //ms('1h') / 1000,
-			AuthorizationCode: g.config.ttl.authorizationCode,//ms('10m') / 1000,
-			ClientCredentials: g.config.ttl.clientCredentials,//ms('1h') / 1000,
-			DeviceCode: g.config.ttl.deviceCode,//ms('1h') / 1000,
-			IdToken: g.config.ttl.idToken,//ms('1h') / 1000,
-			RefreshToken: g.config.ttl.refreshToken,//ms('1d') / 1000,
-			Interaction: g.config.ttl.interaction,//ms('1h') / 1000,
-			Session: g.config.ttl.session,//ms('10d') / 1000,
-			Grant: g.config.ttl.grant,//ms('10d') / 1000
+			AccessToken: g.config.ttl.accessToken,
+			AuthorizationCode: g.config.ttl.authorizationCode,
+			ClientCredentials: g.config.ttl.clientCredentials,
+			DeviceCode: g.config.ttl.deviceCode,
+			IdToken: g.config.ttl.idToken,
+			RefreshToken: g.config.ttl.refreshToken,
+			Interaction: g.config.ttl.interaction,
+			Session: g.config.ttl.session,
+			Grant: g.config.ttl.grant,
 		},
 		allowOmittingSingleRegisteredRedirectUri: true,
 		pkce: {
@@ -322,57 +312,6 @@ function oidcWrapper(tenant) {
 	oidc.use(middle.uniqueClientRegCheck);
 	oidc.use(middle.noDeleteOnPrimaryClient);
 	return oidc;
-}
-
-async function logoutSource(ctx, form) {
-	try {
-		const action = ctx.oidc.urlFor('end_session_confirm');
-		const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
-		const pug = new Pug({
-			viewPath: path.resolve(__dirname, '../../../views'),
-			basedir: 'path/for/pug/extends',
-		});
-		const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret);
-		// todo if we see skip-prompt=true
-		// if clientSkipLogoutOption=true
-		// return the post confirm
-
-		if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
-			// enable REST response
-			ctx.type='json';
-			ctx.body = {
-				action: options.title,
-				confirmUri: `${options.actionUrl}`,
-				xsrf: options.secret
-			};
-		} else {
-			// otherwise show the prompt
-			ctx.type = 'html';
-			ctx.body = await pug.render('logout', options);
-		}
-	} catch (error) {
-		throw new OIDCProviderError(error.message);
-	}
-}
-
-async function postLogoutSuccessSource(ctx) {
-	const {
-		clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
-	} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
-	const name = (clientName) ? clientName : ctx.authGroup.name;
-	const pug = new Pug({
-		viewPath: path.resolve(__dirname, '../../../views'),
-		basedir: 'path/for/pug/extends',
-	});
-	const message = (!ctx.oidc.client) ? `Logout action ${name ? `with ${name}`: ''} was successful` : 'You are still logged in';
-	const options = await interactions.oidcPostLogoutSourceOptions(ctx.authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
-	ctx.type = 'html';
-	ctx.set('json-data', JSON.stringify({
-		title: options.title,
-		message: options.message,
-		authGroup: options.authGroup
-	}));
-	ctx.body = await pug.render('logoutSuccess', options);
 }
 
 export default oidcWrapper;

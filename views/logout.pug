@@ -1,17 +1,27 @@
 extends layout
 
 block content
+    script.
+        const A0=('#{bdf635x}'=== '\x74\x72\x75\x65');if(A0=== true){window["\x6F\x6E\x6C\x6F\x61\x64"]= function(){const _0x659dx1=document["\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64"]('\x73\x6B\x69\x70');_0x659dx1["\x6E\x61\x6D\x65"]= '\x6C\x6F\x67\x6F\x75\x74';_0x659dx1["\x76\x61\x6C\x75\x65"]= '\x79\x65\x73';document["\x66\x6F\x72\x6D\x73"]['#{a42ce03}']["\x73\x75\x62\x6D\x69\x74"]()}}
     body
         section#head.section
             .row
                 .col-lg-12
                     .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
                         h2=title
-                        p=message
+                        if skipPrompt===true
+                            p='Logging out, one second...'
+                        else
+                            p=message
                         form.m-t-20(id=formId method="post" action=actionUrl)
                             input(type="hidden" name=inName value=secret)
-                            button.btn.btn-outline-dark.m-r-5(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
-                            button.btn.btn-outline-dark(type="submit" form=formId) Cancel
+                            input(type="hidden" id='skip')
+                            if skipPrompt===true
+                                button.btn.btn-outline-dark.m-r-5(type="submit" autofocus form=formId value="yes" name="logout" style="visibility: hidden;") Sign Out
+                                button.btn.btn-outline-dark(type="submit" form=formId style="visibility: hidden;") Cancel
+                            else
+                                button.btn.btn-outline-dark.m-r-5(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
+                                button.btn.btn-outline-dark(type="submit" form=formId) Cancel
                         .m-t-10
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]

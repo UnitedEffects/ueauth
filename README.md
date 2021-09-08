@@ -323,10 +323,18 @@ With the rpInitiatedLogout feature enabled, it is possible to initiate logout us
   * logout=yes
   * read the resulting header "json-data" or parse html response
 
+### Logout Without Prompt
+
+It is possible to logout without having to click through the confirmation prompt. This feature only works for specific clients, not globally. Additionally, this only works when you include a post_logout_redirect_uri on logout (the redirect uri itself requires that you include an id_token_hint or client_id). To do this the following configurations must be set:
+
+1. On your client, ensure you have set client_optional_skip_logout_prompt=true
+2. In the browser, navigate or link to /{group}/session/end?skipPrompt=true&post_logout_redirect_uri=[your redirect uri]&client_id=[your client id]
+  * Note: you could use id_token_hint and your id_token instead of the client_id
+
+This will load session/end screen and auto submit the form to move past and redirect to the provided uri
+
 ## Alpha TODO
-* logout
-    * implement Headless (not really rest) version (done)
-    * implement option without prompt - must include redirectUrl and id-token-hint
+
 * PENDING status API for Orgs/domains/etc...
 * Write high risk area Tests!!!!
 * translate oidc errors to local format in the oidc post middleware
