@@ -352,6 +352,7 @@ This will load session/end screen and auto submit the form to move past and redi
 * implement with a client/app (mmv api portal)
 
 ## UE Core MVP Todo
+* Admin initiated Session kill by user across authGroup (operation)
 * Full Custom UIs
 * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
 * Security questions on password reset
