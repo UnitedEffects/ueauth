@@ -335,7 +335,6 @@ This will load session/end screen and auto submit the form to move past and redi
 
 ## Alpha TODO
 
-* PENDING status API for Orgs/domains/etc...
 * Write high risk area Tests!!!!
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
@@ -352,6 +351,7 @@ This will load session/end screen and auto submit the form to move past and redi
 * implement with a client/app (mmv api portal)
 
 ## UE Core MVP Todo
+* Admin initiated Session kill by user across authGroup (operation)
 * Full Custom UIs
 * replace custom logging with winston or just use your logger... https://github.com/winstonjs/winston
 * Security questions on password reset
