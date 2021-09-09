@@ -2328,7 +2328,7 @@ paths:
       tags:
         - Roles - PENDING
       description: get roles info for a product
-      operationId: getProductRoles
+      operationId: getProductRolesByOrg
       parameters:
         - name: group
           in: path
@@ -2408,7 +2408,7 @@ paths:
       tags:
         - Roles - PENDING
       description: Create new roles. If domain/organization context are provided, this is a custom role and mapped. Otherwise it is assumed to be globally applicable (i.e. a default role) and only authGroupAdmins can do that.
-      operationId: createRole
+      operationId: createRoleByOrg
       parameters:
         - name: group
           in: path
