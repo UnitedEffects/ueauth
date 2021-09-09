@@ -198,34 +198,6 @@ async (req, token, next) => {
 }
 ));
 
-/**
- * comment for now, if nothing breaks, delete soon
-
-passport.use('iat-group-register', new BearerStrategy({
-	passReqToCallback: true
-},
-async (req, token, next) => {
-	try {
-		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
-		if (req.authGroup.locked === false) return next(null, true);
-		if (!req.body.email) throw Boom.preconditionRequired('email/username is required');
-		if (!req.body.password) throw Boom.preconditionRequired('password is required');
-		const reqBody = req.body;
-		const authGroupId = req.authGroup._id;
-		const access = await iat.getOne(token, authGroupId);
-		if(!access) return next(null, false);
-		const payload = JSON.parse(JSON.stringify(access.payload));
-		if(payload.email === undefined) return next(null, false);
-		if(payload.email !== req.body.email) return next(null, false);
-		await iat.deleteOne(access._id, req.authGroup.id);
-		return next(null, true, { ...reqBody, authGroup: authGroupId, token: access });
-	} catch (error) {
-		return next(error);
-	}
-}
-));
-*/
-
 passport.use('oidc', new BearerStrategy({
 	passReqToCallback: true
 },

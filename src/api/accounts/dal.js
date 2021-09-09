@@ -35,6 +35,10 @@ export default {
 		return Account.findOne(query);
 	},
 	async updatePassword(authGroup, id, update) {
+		if(update.password) {
+			const salt = await bcrypt.genSalt(10);
+			update.password = await bcrypt.hash(update.password, salt);
+		}
 		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	}
 };

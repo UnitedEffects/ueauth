@@ -1,4 +1,3 @@
-import oidc from '../oidc';
 import Boom from '@hapi/boom';
 import helper from '../../../helper';
 import jwt from 'jsonwebtoken';
@@ -6,10 +5,6 @@ import group from '../../authGroup/group';
 import njwk from 'node-jwk';
 import access from './access';
 import client from '../client/clients';
-import interactions from "../interactions/interactions";
-import {say} from "../../../say";
-
-const RESOURCE = 'OIDC';
 
 export default {
 	async getUIAccessTokens(req, res, next) {

@@ -14,6 +14,7 @@ export default {
 		return dal.writeAccount(data);
 	},
 
+	// @notTested - filters not tested, general query is
 	async getAccounts(authGroupId, q) {
 		const query = await helper.parseOdataQuery(q);
 		return dal.getAccounts(authGroupId, query);
@@ -23,18 +24,19 @@ export default {
 		return dal.getAccount(authGroupId, id);
 	},
 
+	// @notTested
 	async deleteAccount(authGroupId, id) {
 		return dal.deleteAccount(authGroupId, id);
 	},
 
 	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false) {
-		const account = await dal.getAccount(authGroup.id, id);
+		const account = await dal.getAccount(authGroup.id || authGroup._id, id);
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
 		}
-		return dal.patchAccount(authGroup.id, id, patched, bpwd);
+		return dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
 	},
 
 	async updatePassword(authGroupId, id, password, modifiedBy) {
@@ -50,6 +52,7 @@ export default {
 		return dal.getAccountByEmailOrUsername(authGroupId, email);
 	},
 
+	// @notTested
 	async resetOrVerify(authGroup, globalSettings, user, formats = [], activeUser = undefined, reset=true) {
 		let iAccessToken;
 		try {
@@ -73,6 +76,7 @@ export default {
 		}
 	},
 
+	// @notTested
 	verifyAccountOptions(authGroup, user, iAccessToken, formats = [], activeUser = undefined) {
 		const data = {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
@@ -114,6 +118,7 @@ export default {
 		return data;
 	},
 
+	// @notTested
 	resetPasswordOptions(authGroup, user, iAccessToken, formats = [], activeUser = undefined) {
 		const data = {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
