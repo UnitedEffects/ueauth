@@ -1,5 +1,5 @@
-import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
+const config = require('../../src/config');
 
 const agMocks = {
     group: {
@@ -75,7 +75,7 @@ const agMocks = {
             "passwordLessSupport": true,
             "centralPasswordReset": true,
             "scopes": [
-                "Bo"
+                "example"
             ]
         },
         "pluginOptions": {
@@ -101,13 +101,24 @@ const agMocks = {
         "__v": 0,
         "associatedClient": "42ce0392-4cda-46ff-9514-acb8b0bdf635"
     },
-    newGroup(name, pretty, active, locked) {
+    newGroup(name, pretty, active, locked, preInit = false) {
         const out = JSON.parse(JSON.stringify(agMocks.group));
         out._id = nanoid(21);
         out.name = name;
         out.prettyName = pretty;
         out.active = active;
         out.locked = locked;
+        if (preInit === true) {
+            out.active = false;
+            out.owner = 'test@unitedeffects.com';
+            out.pluginOptions.notification.enabled = false;
+            out.config.passwordLessSupport = false;
+            out.config.autoVerify = false;
+            out.config.requireVerified = false;
+            out.config.scopes = [];
+            out.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
+            delete out.associatedClient
+        }
         return out;
     }
 }

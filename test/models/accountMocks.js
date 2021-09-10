@@ -16,12 +16,23 @@ const acMocks = {
         "authGroup":"X2lgt285uWdzq5kKOdAOj",
         "__v":0
     },
-    accounts (count, verified = undefined) {
+    randomAccount () {
+        let act = JSON.parse(JSON.stringify(acMocks.account));
+        act._id = uuid();
+        act.username = `${nanoid()}@unitedeffects.com`;
+        act.email = act.username;
+        act.verified = true;
+        act.active = true;
+        return act;
+    },
+    accounts (count, verified = undefined, unSameAsEm = true) {
         const output = [];
         for(let i = 0; i<count; i++) {
             let temp = JSON.parse(JSON.stringify(acMocks.account));
             temp._id = uuid();
-            temp.username = `${nanoid()}@unitedeffects.com`
+            temp.username = `${nanoid()}@unitedeffects.com`;
+            if(unSameAsEm === true) temp.email = temp.username;
+            else temp.email = `${nanoid()}@unitedeffects.com`;
             if(verified !== undefined) {
                 temp.verified = verified;
             }

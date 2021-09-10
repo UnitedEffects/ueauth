@@ -13,7 +13,9 @@ describe('Accounts', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockingoose.resetAll();
+        Model.Query.prototype.save.mockClear();
         Model.Query.prototype.findOne.mockClear();
+        Model.Query.prototype.findOneAndUpdate.mockClear();
     });
 
     it('Create an account with username', async () => {

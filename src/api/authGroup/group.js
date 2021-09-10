@@ -10,6 +10,7 @@ import n from "../plugins/notifications/notifications";
 const config = require('../../config');
 
 const agp = {
+	// @notTested
 	async check(pName) {
 		const docs = await dal.checkPrettyName(pName);
 		return docs === 0;
@@ -61,20 +62,23 @@ const agp = {
 					info: e.message
 				};
 			}
-		} else result.warning = 'Owner will nto get a notification, global settings are not enabled';
+		} else result.warning = 'Owner will not get a notification, global settings are not enabled';
 		return result;
 	},
 
+	// @notTested
 	async get(q) {
 		const query = await helper.parseOdataQuery(q);
 		query.projection['config.keys'] = 0;
 		return dal.get(query);
 	},
 
+	// @notTested
 	async getOne(id) {
 		return dal.getOneByEither(id, false);
 	},
 
+	// @notTested
 	async deleteOne(id) {
 		return dal.deleteOne(id);
 	},
@@ -112,11 +116,11 @@ const agp = {
 			}
 		}
 		patched.modifiedBy = user;
-		return dal.patch(group.id, patched);
+		return dal.patch(group.id || group._id, patched);
 	},
 
 	async switchGroupOwner(group, owner) {
-		return dal.switchGroupOwner(group.id, owner);
+		return dal.switchGroupOwner(group.id || group._id, owner);
 	},
 
 	async activateNewAuthGroup(authGroup, account, clientId) {
@@ -130,6 +134,7 @@ const agp = {
 		return dal.activatePatch(authGroup._id || authGroup.id, copy);
 	},
 
+	// @notTested
 	async partialUpdate(id, data) {
 		return dal.patchNoOverwrite(id, data);
 	},
@@ -145,6 +150,7 @@ const agp = {
 		}
 	},
 
+	// @notTested
 	groupCreationNotifyOptions(authGroup, owner) {
 		console.info(owner);
 		return {
