@@ -17,6 +17,9 @@ const agp = {
 
 	async write(body) {
 		const data = JSON.parse(JSON.stringify(body));
+		// initial write should always be active false
+		data.active = false;
+
 		// set expiration date
 		data.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
 
@@ -26,7 +29,7 @@ const agp = {
 		}
 
 		// if notifications are off
-		if (data.pluginOptions && data.pluginOptions.notification && data.pluginOptions.notification.enabled !== true){
+		if (!data.pluginOptions || !data.pluginOptions.notification || (data.pluginOptions && data.pluginOptions.notification && data.pluginOptions.notification.enabled !== true)){
 			// if no config was set, there is no issue
 			if (data.config) {
 				// can not have passwordless support without notifications
@@ -38,6 +41,7 @@ const agp = {
 				}
 			}
 		}
+		console.info(data);
 		return dal.write(data);
 	},
 

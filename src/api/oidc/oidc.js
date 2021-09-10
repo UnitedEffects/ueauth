@@ -8,6 +8,7 @@ import IAT from './models/initialAccessToken';
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const MongoAdapter = require('./dal');
+const cors = require('koa2-cors');
 
 const coreScopes = config.CORE_SCOPES();
 
@@ -297,12 +298,21 @@ function oidcConfig(g) {
 	return oidcOptions;
 }
 
+const corsOptions = {
+	origin: function(ctx) {
+		//can get more restrictive later
+		return '*';
+	},
+	allowMethods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+}
+
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
 	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`;
 	const oidc = new Provider(issuer, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());
+	oidc.use(cors(corsOptions));
 	oidc.use(middle.parseKoaOIDC);
 	oidc.use(async (ctx, next) => {
 		ctx.authGroup = tenant;

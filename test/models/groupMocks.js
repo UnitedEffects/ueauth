@@ -87,12 +87,8 @@ const agMocks = {
                 "ackRequiredOnOptional": false
             }
         },
-        "createdAt": {
-            "$date": "2021-08-23T15:51:18.626Z"
-        },
-        "modifiedAt": {
-            "$date": "2021-08-24T15:31:51.507Z"
-        },
+        "createdAt": "2021-08-23T15:51:18.626Z",
+        "modifiedAt": "2021-08-24T15:31:51.507Z",
         "modifiedBy": "fe031227-e90b-444b-81cb-29bfc2b64810",
         "active": true,
         "locked": true,
@@ -104,6 +100,15 @@ const agMocks = {
         "owner": "fe031227-e90b-444b-81cb-29bfc2b64810",
         "__v": 0,
         "associatedClient": "42ce0392-4cda-46ff-9514-acb8b0bdf635"
+    },
+    newGroup(name, pretty, active, locked) {
+        const out = JSON.parse(JSON.stringify(agMocks.group));
+        out._id = nanoid(21);
+        out.name = name;
+        out.prettyName = pretty;
+        out.active = active;
+        out.locked = locked;
+        return out;
     }
 }
 
