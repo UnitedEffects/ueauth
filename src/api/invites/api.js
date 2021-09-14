@@ -1,17 +1,16 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import inv from './invites';
-import permissions from "../../permissions";
-import acc from "../accounts/account";
+import permissions from '../../permissions';
+import acc from '../accounts/account';
 import grp from '../authGroup/group';
-import n from "../plugins/notifications/notifications";
+import n from '../plugins/notifications/notifications';
 
 const RESOURCE = 'INVITE';
 
 const api = {
     async createInvite(req, res, next) {
         try {
-            console.info(req.permissions);
             if (req.authGroup.active === false) throw Boom.forbidden('You can not transfer an inactive group');
             if (!req.body.sub) throw Boom.preconditionRequired('user/sub Id is required');
             if(!req.body.resources && req.body.resources.length === 0) throw Boom.badRequest('No resources identified');

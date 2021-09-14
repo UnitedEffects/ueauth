@@ -16,6 +16,6 @@ const pmocks = {
         out.notifications.enabled = bNot;
         return out;
     }
-}
+};
 
 export default pmocks

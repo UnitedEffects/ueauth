@@ -8,7 +8,7 @@ const config = require('../../config');
 const inv = {
 	async createInvite(userId, data, authGroup) {
 		const invite = JSON.parse(JSON.stringify(data));
-		invite.authGroup = authGroup.id;
+		invite.authGroup = authGroup.id || authGroup._id;
 		const days = (invite.daysToExpire || invite.daysToExpire === 0) ? invite.daysToExpire : 7;
 		invite.expiresAt = new Date().setDate(new Date().getDate() + days);
 		const valEr = [];
@@ -18,7 +18,7 @@ const inv = {
 			} catch (error) {
 				valEr.push(error);
 			}
-		}))
+		}));
 		if(valEr.length!==0) throw Boom.badRequest(valEr.join('; '));
 		return dal.createInvite(invite);
 	},
@@ -26,9 +26,10 @@ const inv = {
 		const update = {
 			status: 'sent',
 			$inc : { xSent : 1 }
-		}
+		};
 		return dal.updateSent(authGroupId, id, update);
 	},
+	// @notTested
 	inviteNotificationObject(authGroup, user, invite, formats = [], activeUser) {
 		const options = { year: "numeric", month: "long", day: "numeric" };
 		const data = {
@@ -59,6 +60,7 @@ const inv = {
 		}
 		return data;
 	},
+
 	async validateResourceIds(r, id) {
 		switch (r) {
 			case 'group':
@@ -70,6 +72,7 @@ const inv = {
 		}
 	},
 
+	// @notTested
 	async getInvites(authGroupId, q) {
 		const query = await helper.parseOdataQuery(q);
 		return dal.getInvites(authGroupId, query);
@@ -79,6 +82,7 @@ const inv = {
 		return dal.getInvite(authGroupId, id);
 	},
 
+	// @notTested
 	async deleteInvite(authGroupId, id) {
 		return dal.deleteInvite(authGroupId, id);
 	},
