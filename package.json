@@ -1,6 +1,6 @@
 {
   "name": "UE-Auth",
-  "version": "0.13.8",
+  "version": "0.13.9",
   "description": "UE Auth is a multi-tenant OIDC Provider intended to serve small to midsize organization that require functionality similar to those provided by enterprise Identity and Access SaaS providers but without the costs associated to the full scale of those solutions.",
   "private": true,
   "scripts": {
@@ -86,10 +86,10 @@
   "devDependencies": {
     "@babel/cli": "^7.6.4",
     "babel-eslint": "^10.0.3",
-    "babel-jest": "^25.1.0",
+    "babel-jest": "^27.2.0",
     "eslint": "^7.29.0",
     "eslint-plugin-jest": "^24.4.0",
-    "jest": "^26.6.3",
+    "jest": "^27.2.0",
     "mockingoose": "^2.15.2",
     "nodemon": "^2.0.7",
     "serverless-apigw-binary": "^0.4.4",
