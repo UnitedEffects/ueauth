@@ -5,7 +5,7 @@ export default {
 		Object.keys(query.query).forEach((key) => {
 			query.query[`payload.${key}`] = query.query[key];
 			delete query.query[key];
-		})
+		});
 		query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
 		if(query.projection && Object.keys(query.projection).length === 0) {
 			query.projection['payload'] = 1;
@@ -13,12 +13,12 @@ export default {
 			Object.keys(query.projection).forEach((key) => {
 				query.projection[`payload.${key}`] = query.projection[key];
 				delete query.projection[key];
-			})
+			});
 		}
 		Object.keys(query.sort).forEach((key) => {
 			query.sort[`payload.${key}`] = query.sort[key];
 			delete query.sort[key];
-		})
+		});
 		const pipeline = [
 			{ $match: query.query },
 			{ $project: query.projection}
