@@ -373,11 +373,17 @@ This will load session/end screen and auto submit the form to move past and redi
 * Define custom jwks key configuration rather than using default for AuthGroups
 * Remember password cookies
 
-## TESTING TODO
+## TODO TESTING
 
-* all account
-* clients
+### HIGH RISK API TESTING TODO
+
+* account
 * auth Groups
+* invites
+
+### OTHER TESTING TODO
+  
+* clients
 * open group registration on/off
 * auth Group jwks and Config Generation
 * jwks keys
@@ -396,8 +402,7 @@ This will load session/end screen and auto submit the form to move past and redi
 * auth layer and permissions
 * notifications plugin
 * password reset - ensure user is logged out
-* account verify
-* invites
+
 
 ## vNext Roadmap
 * Bulk user creation and notifications and/or invites

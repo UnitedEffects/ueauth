@@ -1,9 +1,11 @@
 import '@babel/register';
 import "regenerator-runtime/runtime";
+import { v4 as uuid } from 'uuid';
 import Model from '../src/api/accounts/model';
 import dal from '../src/api/accounts/dal';
 import helper from '../src/helper';
 import account from '../src/api/accounts/account';
+import oidcAcc from '../src/api/accounts/accountOidcInterface';
 import { AccountMocks, GroupMocks } from './models';
 const mockingoose = require('mockingoose');
 import t from './testhelper';
@@ -90,6 +92,31 @@ describe('Accounts', () => {
             expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ "_id": AccountMocks.account._id, "authGroup": AccountMocks.account.authGroup }, undefined);
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
+        } catch (error) {
+            console.error(error);
+            t.fail();
+        }
+    });
+
+    it('attempt authentication with unverified account - should return undefined', async () => {
+        try {
+            const act = JSON.parse(JSON.stringify(AccountMocks.account));
+            act.verified = false;
+            const expected = JSON.parse(JSON.stringify(act));
+            expected.id = expected._id;
+            delete expected.blocked;
+            delete expected._id;
+            delete expected.password;
+            delete expected.__v;
+            mockingoose(Model).toReturn(act, 'findOne');
+            const tempGroup = {
+                id: uuid(),
+                config: {
+                    requireVerified: true
+                }
+            };
+            const result = await oidcAcc.authenticate(tempGroup, act.email, 'testingpass');
+            expect(result).toBe(undefined);
         } catch (error) {
             console.error(error);
             t.fail();
