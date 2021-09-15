@@ -31,6 +31,7 @@ async function getClient(authGroup, decoded) {
 	return cl.getOne(authGroup, decoded.sub || decoded.client_id);
 }
 
+// @notTested
 async function introspect(token, authGroup) {
 	/**
      * Looking up the token directly for decoding since this is the system of record.
@@ -82,7 +83,7 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 			throw Boom.unauthorized('Token audience not specific to this auth group client');
 		}
 	}
-	if(typeof decoded.aud === 'object') {
+	if(Array.isArray(decoded.aud)) {
 		let found = false;
 		for(let i=0; i<decoded.aud.length; i++) {
 			if(issuer.includes(decoded.aud[i])) found = true;
@@ -115,7 +116,9 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 	}
 	// client_credential - note, permissions may still stop the request
 	if((decoded.client_id === decoded.sub) || (!decoded.sub && decoded.client_id)) {
-		let client = JSON.parse(JSON.stringify(await getClient(authGroup, decoded)));
+		const cl = await getClient(authGroup, decoded);
+		if(!cl) throw Boom.unauthorized('Client not found');
+		let client = JSON.parse(JSON.stringify(cl));
 		if (!client) throw Boom.unauthorized('Client not recognized');
 		if(!client.auth_group && client.auth_group !== decoded.group) {
 			throw Boom.unauthorized('Client not associated with indicated auth group');
@@ -129,7 +132,7 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 			subject_type: client.subject_type,
 			require_auth_time: client.require_auth_time,
 			auth_group: client.auth_group
-		}
+		};
 		return { ...out, decoded, subject_group: authGroup };
 	}
 
@@ -291,6 +294,7 @@ async (req, token, next) => {
 }
 ));
 
+// @notTested
 async function whitelist(req, res, next) {
 	try {
 		if(config.ENV !== 'dev'){
@@ -309,5 +313,8 @@ export default {
 	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
 	//isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
-	isWhitelisted: whitelist
+	isWhitelisted: whitelist,
+	getUser, // for testing
+	getClient, // for testing
+	runDecodedChecks // for testing
 };
