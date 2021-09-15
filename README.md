@@ -382,26 +382,24 @@ This will load session/end screen and auto submit the form to move past and redi
 * invites
 
 ### OTHER TESTING TODO
-  
+
+* notifications plugin  
+* password reset - ensure user is logged out
 * clients
 * open group registration on/off
 * auth Group jwks and Config Generation
-* jwks keys
-* iat for authGroups
 * auth functions
 * middleware
 * oidcMiddleware
 * permissions
-* root access vs not
+  * root access vs not
 * interactions_api
 * mongo_adapter
 * initial access token
 * oidc options validate
 * error handling - duplicate mongo error
 * config cookie secrets
-* auth layer and permissions
-* notifications plugin
-* password reset - ensure user is logged out
+
 
 
 ## vNext Roadmap

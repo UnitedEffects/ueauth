@@ -3,27 +3,31 @@ import axios from 'axios';
 import client from '../../oidc/client/clients';
 import group from '../../authGroup/group';
 import helper from "../../../helper";
+import plugins from '../plugins';
 
 export default {
 	async createNotification(data) {
 		return dal.createNotification(data);
 	},
+	// @notTested
 	async markNotificationProcessed(id) {
 		return dal.markProcessed(id);
 	},
+	// @notTested
 	async sendNotificationById(id) {
 		const notification = await dal.getOne(id);
-		if(!notification) throw new Error(`Unknown notification id: ${id}`)
+		if(!notification) throw new Error(`Unknown notification id: ${id}`);
 		return this.sendNotification(notification);
 	},
 	async processNotification(global, ag, id) {
 		const notification = await dal.getNotification(ag.id, id);
-		if(!notification) throw new Error(`Unknown notification id: ${id}`)
+		if(!notification) throw new Error(`Unknown notification id: ${id}`);
 		if(notification.processed === true) return notification;
 		await this.sendNotification(notification, global);
 		notification.processed = true;
 		return notification;
 	},
+	// @notTested
 	async bulkNotificationProcess(global, agId) {
 		const notificationsNotProcessed = await dal.notificationsNotProcessed(agId);
 		let output = [];
@@ -42,13 +46,16 @@ export default {
 		return output;
 	},
 	async sendNotification(notification, global, token = null){
-		if(!notification.destinationUri || !notification.id) throw new Error('Requested notification does not seem to be valid');
+		if(!notification.destinationUri || !(notification.id || notification._id)) throw new Error('Requested notification does not seem to be valid');
 		const payload = JSON.parse(JSON.stringify(notification));
 		if(payload.processed) delete payload.processed;
+		if(!global) {
+			global = await plugins.getLatestPluginOptions();
+		}
 		if(!token){
 			const ag = await group.getOneByEither('root', false);
 			const cl = await client.getOneFull(ag, global.notifications.registeredClientId);
-			token = await client.generateClientCredentialToken(ag, cl, `api:write group:${ag.id}`, global.notifications.notificationServiceUri);
+			token = await client.generateClientCredentialToken(ag, cl, `api:write group:${ag.id || ag._id}`, global.notifications.notificationServiceUri);
 		}
 		const options = {
 			method: 'POST',
@@ -57,21 +64,25 @@ export default {
 			},
 			data: payload,
 			url: notification.destinationUri
-		}
+		};
 		const result = await axios(options);
-		await dal.markProcessed(notification.id);
+		await dal.markProcessed(notification.id || notification._id);
 		return result;
 	},
+	// @notTested
 	async getNotifications(ag, q) {
 		const query = await helper.parseOdataQuery(q);
 		return dal.getNotifications(ag.id, query);
 	},
+	// @notTested
 	async getNotification(ag, id) {
 		return dal.getNotification(ag.id, id);
 	},
+	// @notTested
 	async deleteNotification(ag, id) {
 		return dal.deleteNotification(ag.id, id);
 	},
+	// @notTested
 	async notify(global, data, ag) {
 		data.authGroupId = ag.id;
 		data.destinationUri = global.notifications.notificationServiceUri;

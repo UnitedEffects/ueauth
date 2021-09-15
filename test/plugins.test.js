@@ -4,7 +4,7 @@ import Model from '../src/api/plugins/model';
 import { v4 as uuid } from 'uuid';
 import dal from '../src/api/plugins/dal';
 import plugins from '../src/api/plugins/plugins';
-import { GroupMocks, InviteMocks, PluginMocks } from './models';
+import { GroupMocks, PluginMocks } from './models';
 
 // mocks for Group
 import ModelG from '../src/api/authGroup/model';
@@ -27,7 +27,6 @@ describe('Plugins', () => {
 		ModelG.Query.prototype.findOne.mockClear();
 	});
 
-
 	it('Initialize plugins', async () => {
 		try {
 			const plg = PluginMocks.global;
@@ -39,6 +38,7 @@ describe('Plugins', () => {
 			mockingoose(Model).toReturn(plg, 'save');
 			const result = await plugins.initPlugins();
 			const res = JSON.parse(JSON.stringify(result));
+			expect(Model.prototype.save).toHaveBeenCalled();
 			expect(res).toMatchObject(expected);
 		} catch (error) {
 			console.error(error);
@@ -64,7 +64,7 @@ describe('Plugins', () => {
 					notificationServiceClientSecret: client.client_secret,
 					plugins: {version: 2}
 				}
-			}
+			};
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, true);
 			const data = { enabled: true, currentVersion: 1, notificationServiceUri: 'http://localhost:8080' };
 			cl.generateNotificationServiceClient.mockResolvedValue(client);
@@ -73,6 +73,8 @@ describe('Plugins', () => {
 			mockingoose(Model).toReturn(updated, 'save');
 			const result = await plugins.toggleGlobalNotifications(data, uuid(), grp);
 			expect(cl.generateNotificationServiceClient).toHaveBeenCalledWith(grp);
+			expect(Model.prototype.save).toHaveBeenCalled();
+			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
 			expect(result).toMatchObject(expected);
 		} catch (error) {
 			console.error(error);
@@ -107,6 +109,8 @@ describe('Plugins', () => {
 			mockingoose(Model).toReturn(plg, 'save');
 			const result = await plugins.toggleGlobalNotifications(data, uuid(), grp);
 			expect(cl.deleteNotificationsServiceClient).toHaveBeenCalled();
+			expect(Model.prototype.save).toHaveBeenCalled();
+			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
 			expect(result).toMatchObject(expected);
 		} catch (error) {
 			console.error(error);
@@ -164,5 +168,23 @@ describe('Plugins', () => {
 		}
 	});
 
-	//todo: create notification, process notification, send, notify
+	it('get latest global plugins', async () => {
+		try {
+			const plg = PluginMocks.global;
+			const expected = JSON.parse(JSON.stringify(plg));
+			expected.id = expected._id;
+			delete expected._id;
+			delete expected.__v;
+			delete expected.createdAt; // not important for validation
+			mockingoose(Model).toReturn(plg, 'findOne');
+			const spy = jest.spyOn(dal, 'getLatestPlugins');
+			const result = await plugins.getLatestPluginOptions();
+			expect(spy).toHaveBeenCalledWith({ 'createdAt': -1, 'version': -1 });
+			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
+			expect(result).toMatchObject(expected);
+		} catch (error) {
+			console.error(error);
+			t.fail();
+		}
+	});
 });

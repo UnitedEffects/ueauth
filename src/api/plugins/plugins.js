@@ -33,8 +33,9 @@ export default {
 		};
 	},
 	async getLatestPluginOptions() {
-		return dal.getLatestPlugins();
+		return dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
 	},
+	// @notTested
 	async auditPluginOptions() {
 		return dal.auditPluginOptions();
 	}

@@ -12,8 +12,8 @@ export default {
 		});
 		return plugin.save();
 	},
-	async getLatestPlugins() {
-		return Plugins.findOne({}, {}, {sort: { 'createdAt': -1, 'version': -1 }});
+	async getLatestPlugins(sort) {
+		return Plugins.findOne({}, {}, { sort });
 	},
 	async auditPluginOptions() {
 		return Plugins.find({}, {}, {sort: { 'createdAt': -1, 'version': -1 }});
