@@ -95,7 +95,7 @@ describe('OIDC OP interface functions', () => {
 			delete grp.primaryDomain;
 			const result = await client.generateNotificationServiceClient(grp);
 			console.info(result);
-			//expect(ModelC.Query.prototype.findOneAndUpdate).toHaveBeenCalled();
+			expect(ModelC.Query.prototype.findOneAndUpdate).toHaveBeenCalled();
 			expect(result.auth_group).toBe(grp.id);
 			expect(result.grant_types).toMatchObject(['client_credentials']);
 			expect(result.response_types).toMatchObject([]);
@@ -103,8 +103,8 @@ describe('OIDC OP interface functions', () => {
 			expect(result.post_logout_redirect_uris).toMatchObject([]);
 			expect(result.scope).toBe('api:read api:write');
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			console.info(error);
+			t.fail(error);
 		}
 	});
 
