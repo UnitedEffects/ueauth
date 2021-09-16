@@ -95,6 +95,7 @@ describe('OIDC OP interface functions', () => {
 			delete grp.primaryDomain;
 			const result = await client.generateNotificationServiceClient(grp);
 			expect(ModelC.Query.prototype.findOneAndUpdate).toHaveBeenCalled();
+			console.info(result);
 			expect(result.auth_group).toBe(grp.id);
 			expect(result.grant_types).toMatchObject(['client_credentials']);
 			expect(result.response_types).toMatchObject([]);
