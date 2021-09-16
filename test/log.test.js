@@ -62,8 +62,7 @@ describe('Log DAL tests', () => {
             expect(res).toMatchObject(expected);
             expect(res.persisted).toBe(true);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
 
     });
@@ -88,8 +87,7 @@ describe('Log DAL tests', () => {
             expect(res.message).toBe(expected.message);
             expect(res.details).toStrictEqual(expected.details);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
 
     });
@@ -105,8 +103,7 @@ describe('Log DAL tests', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -124,8 +121,7 @@ describe('Log DAL tests', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -139,8 +135,7 @@ describe('Log DAL tests', () => {
             expect(res.message).toBe('Error recorded and sent out as http response.');
             expect(res.details).toStrictEqual({ info: 'testing http errors'});
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 

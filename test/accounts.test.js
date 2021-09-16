@@ -45,8 +45,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -74,8 +73,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -93,8 +91,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -118,8 +115,7 @@ describe('Accounts', () => {
             const result = await oidcAcc.authenticate(tempGroup, act.email, 'testingpass');
             expect(result).toBe(undefined);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -143,8 +139,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -190,8 +185,7 @@ describe('Accounts', () => {
             //check final expected result
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -223,8 +217,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -256,8 +249,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     });
 
@@ -297,8 +289,7 @@ describe('Accounts', () => {
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
-            console.error(error);
-            t.fail();
+            t.fail(error);
         }
     })
 });

@@ -50,7 +50,7 @@ const config = {
 		try {
 			if(process.env.CORE_SCOPES) return process.env.CORE_SCOPES.toString().split(',');
 			if(envVars.CORE_SCOPES) return envVars.CORE_SCOPES.toString().split(',');
-			return []
+			return [];
 		} catch (error) {
 			console.error(error);
 			return [];

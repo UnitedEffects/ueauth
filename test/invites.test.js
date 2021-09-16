@@ -58,8 +58,7 @@ describe('Invites', () => {
 			expect(tempInvite.status).toBe('new');
 			expect(tempInvite.xSent).toBe(0);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -110,8 +109,7 @@ describe('Invites', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -131,8 +129,7 @@ describe('Invites', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -159,8 +156,7 @@ describe('Invites', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -185,8 +181,7 @@ describe('Invites', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 });

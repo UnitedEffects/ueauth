@@ -55,8 +55,7 @@ describe('OIDC OP interface functions', () => {
 				expect(result.post_logout_redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 			}
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -78,8 +77,7 @@ describe('OIDC OP interface functions', () => {
 			expect(result.redirect_uris).toMatchObject([`https://${config.UI_URL}`]);
 			expect(result.post_logout_redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -103,7 +101,6 @@ describe('OIDC OP interface functions', () => {
 			expect(result.post_logout_redirect_uris).toMatchObject([]);
 			expect(result.scope).toBe('api:read api:write');
 		} catch (error) {
-			console.info(error);
 			t.fail(error);
 		}
 	});
@@ -144,8 +141,7 @@ describe('OIDC OP interface functions', () => {
 			};
 			expect(axios).toHaveBeenCalledWith(options);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 

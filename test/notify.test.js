@@ -53,8 +53,7 @@ describe('Plugins', () => {
 			expect(Model.prototype.save).toHaveBeenCalled();
 			expect(res).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -71,8 +70,7 @@ describe('Plugins', () => {
 			expect(result._id).toBeDefined();
 			expect(result.createdAt).toBeDefined();
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -108,8 +106,7 @@ describe('Plugins', () => {
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res._id).toBe(updated._id);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -157,8 +154,7 @@ describe('Plugins', () => {
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res._id).toBe(updated._id);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -204,8 +200,7 @@ describe('Plugins', () => {
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res._id).toBe(updated._id);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -304,8 +299,7 @@ describe('Plugins', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res.id).toBe(updated._id);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -319,7 +313,6 @@ describe('Plugins', () => {
 			await notify.processNotification(global, grp, not._id);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.message).toBe(`Unknown notification id: ${not._id}`);
 		}
 	});
@@ -340,8 +333,7 @@ describe('Plugins', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(payload);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 

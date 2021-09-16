@@ -65,8 +65,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.error).toBe('Precondition Required');
 			expect(args[0].body.message).toBe('authGroup is required');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -91,8 +90,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.error).toBe('Precondition Required');
 			expect(args[0].body.message).toBe('authGroup is required');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -125,8 +123,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
 			expect(ctx.req.params.group).toBe(authGroup.id);
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
     
@@ -159,8 +156,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.error).toBe('Not Found');
 			expect(args[0].body.message).toBe('auth group not found');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -189,8 +185,7 @@ describe('OIDC Pre/Post Middleware', () => {
             expect(args[0].body.error).toBe('Bad Request');
             expect(args[0].body.message).toBe('You can not delete the primary client of your auth group');
         } catch (error) {
-            console.info(error);
-            t.fail();
+			t.fail(error);
         }
     });
 
@@ -215,8 +210,7 @@ describe('OIDC Pre/Post Middleware', () => {
             await middle.noDeleteOnPrimaryClient(ctx, jest.fn());
             expect(spy).not.toHaveBeenCalled();
         } catch (error) {
-            console.info(error);
-            t.fail();
+			t.fail(error);
         }
     });
 
@@ -242,8 +236,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			await middle.uniqueClientRegCheck(ctx, jest.fn());
 			expect(spy).not.toHaveBeenCalled();
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -273,8 +266,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(ctx.request.body.auth_group).toBe(authGroup.id);
 			expect(spy).not.toHaveBeenCalled();
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -308,8 +300,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.error).toBe('Bad Request');
 			expect(args[0].body.message).toBe('client_id should be included in the request body');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -341,8 +332,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(ctx.request.body.auth_group).toBe(authGroup.id);
 			expect(spy).not.toHaveBeenCalled();
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -378,8 +368,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.error).toBe('Conflict');
 			expect(args[0].body.message).toBe('This client name already exists in your auth group');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -414,8 +403,7 @@ describe('OIDC Pre/Post Middleware', () => {
 				"headers": {}
 			});
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -450,15 +438,10 @@ describe('OIDC Pre/Post Middleware', () => {
 				"headers": {}
 			});
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
-	//ctx.response.body.error ctx.response.body.error === 'server_error'
-	//ctx.response.body.error ctx.response.body.error !== 'server_error'
-	//ctx.oidc.entities.Client.auth_group != ctx.req.params.group && ctx.oidc.entities.Interaction.kind = "Interaction" -ok
-	//ctx.oidc.entities.Client.auth_group != ctx.req.params.group && ctx.oidc.entities.Interaction.kind != "Interaction" -bad
-	//if config.SINGLE_USE_IAT && ctx.oidc.entities.Client && ctx.oidc.entities.InitialAccessToken && ctx.response.status === 201 call delete
+
 	test('parseKoaOIDC - ctx.response.body.error = server_error', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
@@ -489,8 +472,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.message).toBe('An internal server error occurred');
 			expect(args[0].body.details[0].detail).toBe('Unknown error thrown by OIDC. See Logs');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -521,8 +503,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			await middle.parseKoaOIDC(ctx, jest.fn());
 			expect(spy).not.toHaveBeenCalled();
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -562,8 +543,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			await middle.parseKoaOIDC(ctx, jest.fn());
 			expect(spy).not.toHaveBeenCalled();
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -606,8 +586,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].body.error).toBe('Not Found');
 			expect(args[0].body.message).toBe('auth group not found');
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -658,8 +637,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			}
 			expect(spy).not.toHaveBeenCalled();
 		} catch (error) {
-			console.info(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 });

@@ -3,14 +3,11 @@ import 'regenerator-runtime/runtime';
 import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
 import Model from '../src/api/accounts/model';
-import dal from '../src/api/accounts/dal';
-import helper from '../src/helper';
-import account from '../src/api/accounts/account';
 import auth from '../src/auth/auth';
-import oidcAcc from '../src/api/accounts/accountOidcInterface';
+
 import {AccountMocks, GroupMocks, NotifyMocks, PluginMocks, Tokens} from './models';
 import t from './testhelper';
-import bcrypt from 'bcryptjs';
+
 
 // Clients
 import ModelC from '../src/api/oidc/models/client';
@@ -54,8 +51,7 @@ describe('Auth Functions', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -71,8 +67,7 @@ describe('Auth Functions', () => {
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(client);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -101,8 +96,7 @@ describe('Auth Functions', () => {
 			};
 			expect(result).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -132,8 +126,7 @@ describe('Auth Functions', () => {
 			};
 			expect(result).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -166,8 +159,7 @@ describe('Auth Functions', () => {
 			};
 			expect(result).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -341,7 +333,6 @@ describe('Auth Functions', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -375,8 +366,7 @@ describe('Auth Functions', () => {
 			};
 			expect(result).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
@@ -409,8 +399,7 @@ describe('Auth Functions', () => {
 			};
 			expect(result).toMatchObject(expected);
 		} catch (error) {
-			console.error(error);
-			t.fail();
+			t.fail(error);
 		}
 	});
 
