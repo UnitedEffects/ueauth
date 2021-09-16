@@ -34,6 +34,7 @@ const mid = {
 			return mid.koaErrorOut(ctx, error);
 		}
 	},
+
 	async uniqueClientRegCheck(ctx, next) {
 		try {
 			if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.group;
@@ -54,23 +55,33 @@ const mid = {
 			return mid.koaErrorOut(ctx, error);
 		}
 	},
+
 	async koaErrorOut(ctx, error) {
 		let tE = error;
 		if (!Boom.isBoom(error)) tE = Boom.boomify(error);
 		const output = tE.output.payload;
+		if(error.data) {
+			output.details = error.data;
+		}
 		delete output.statusCode;
 		ctx.type = 'json';
 		ctx.status = error.output.statusCode;
 		ctx.body = output;
 		ctx.app.emit('error', error, ctx);
 	},
+
 	async parseKoaOIDC(ctx, next) {
 		await next();
 		if(ctx.response && ctx.response.body && ctx.response.body.error) {
 			if (ctx.response.body.error === 'server_error') {
-				return mid.koaErrorOut(ctx, Boom.badImplementation(ctx.response.body.error, (ctx.response.body.error_description) ?  ctx.response.body.error_description : 'Unknown error thrown by ODIC. See Logs.'));
+				const data = [{ detail: 'Unknown error thrown by OIDC. See Logs' }];
+				if(ctx.response.body.error_description) {
+					data.push({ detail: ctx.response.body.error_description });
+				}
+				return mid.koaErrorOut(ctx, Boom.badImplementation(ctx.response.body.error, data));
 			}
 		}
+
 		if (ctx.oidc){
 			if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.group) {
 				// returning a 404 rather than indicating that the auth group may exist but is not theirs

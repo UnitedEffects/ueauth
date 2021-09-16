@@ -336,22 +336,24 @@ This will load session/end screen and auto submit the form to move past and redi
 ## Alpha TODO
 
 * Write high risk area Tests!!!!
-* add userinfo to swagger
+* add oidc /me (userinfo) to swagger
 * translate oidc errors to local format in the oidc post middleware
     * You can probably do this with a try catch on the route
 * audit system
     * Event emitter... possibility of something being missed though in a lambda env
 * Cleanup 2
     * go feature by feature on the options...
-        * different grant types - with/without confirmation
-        * Setup CORS options
     * clean up babel build and dev dependencies - no more src/start outside dev - UPDATE BOILERPLATE
-* clean up documentation
+    * clean up documentation
 * Open Source this Library (add link in spec)
 * MVP Alpha release
 * implement with a client/app (mmv api portal)
 
 ## UE Core MVP Todo
+* Pkce...
+* BUILD ACCESS - Integrate Permissions/Organizations etc
+  * integrate core scopes to permissions
+* MFA
 * Admin initiated Session kill by user across authGroup (operation)
 * https://github.com/panva/node-oidc-provider/blob/main/recipes/client_based_origins.md
 * authgroup defined extra fields for clients
@@ -360,10 +362,6 @@ This will load session/end screen and auto submit the form to move past and redi
 * Security questions on password reset
 * password reset iat expiration option on config
 * lock account logic - is this handled with deactivate?
-* Integrate Permissions/Organizations etc
-    * integrate core scopes to permissions
-* Pkce...
-* MFA
 * Federated Interactions
   * Create social login setup via API for Google, Twitter and GitHub
   * https://github.com/panva/node-oidc-provider/tree/main/example/views
@@ -380,15 +378,13 @@ This will load session/end screen and auto submit the form to move past and redi
 * account
 * auth Groups
 * invites
+* notifications
 
 ### OTHER TESTING TODO
 
-* notifications plugin  
 * password reset - ensure user is logged out
 * clients
 * open group registration on/off
-* auth Group jwks and Config Generation
-* auth functions
 * middleware
 * oidcMiddleware
 * permissions
