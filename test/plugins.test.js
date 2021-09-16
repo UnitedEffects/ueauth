@@ -162,7 +162,6 @@ describe('Plugins', () => {
 			await plugins.toggleGlobalNotifications(data, uuid(), grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(400);
 			expect(error.output.payload.message).toBe( 'Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}

@@ -129,35 +129,6 @@ describe('Log DAL tests', () => {
         }
     });
 
-    /*
-    //todo leaving this as example only, remove from final
-    it('patch log', async () => {
-        try {
-            const expected = JSON.parse(JSON.stringify(oneLog));
-            expected.message = "new message";
-
-            mockingoose(Model).toReturn(expected, 'findOneAndUpdate');
-            mockingoose(Model).toReturn(oneLog, 'findOne');
-            expected.id = expected._id;
-            delete expected._id;
-            const update = [
-                {
-                    "op":"replace",
-                    "path":"/message",
-                    "value": expected.message
-                }
-            ];
-            const result = await log.patchLog(oneLog._id, update);
-            expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ "_id": oneLog._id }, undefined);
-            expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ "_id": oneLog._id }, expected, { "new": true, "overwrite": true}, undefined);
-            const res = JSON.parse(JSON.stringify(result));
-            expect(res.message).toBe(expected.message);
-        } catch (error) {
-            console.error(error);
-            t.fail();
-        }
-    });
-*/
     it('record a log', async () => {
         try {
             mockingoose(Model).toReturn({}, 'save');

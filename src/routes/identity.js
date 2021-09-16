@@ -26,7 +26,8 @@ router.get('/health', m.health);
 // Auth Group Functional
 router.get('/groupcheck/:prettyName', [m.isWhitelisted], group.check);
 router.get('/:group/group', [m.isWhitelisted], group.getPublicGroupInfo);
-router.post('/token', [m.schemaCheck, m.isWhitelisted], access.getUIAccessTokens);
+//deprecated because we can use pkce instead
+//router.post('/token', [m.schemaCheck, m.isWhitelisted], access.getUIAccessTokens);
 
 // Auth Groups
 router.post('/group', [

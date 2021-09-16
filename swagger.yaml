@@ -90,71 +90,72 @@ paths:
       security:
         - bearer: [ ]
         - openId: [ ]
-  /api/token:
-    post:
-      tags:
-        - UI Functions
-      summary: looks up authgroup using id_token then return access and id tokens from code
-      description: looks up authgroup using id_token then return access and id tokens from code. secured by UI host whitelist
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/accessTokens'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - idToken
-                - code
-                - redirectUri
-                - clientId
-              properties:
-                idToken:
-                  type: string
-                  description: an idToken provided as part of the code authorization flow
-                code:
-                  type: string
-                  description: a code provided as part of the code authorization flow
-                redirectUri:
-                  type: string
-                  description: redirect uri to use, should match expected from client
-                clientId:
-                  type: string
-                  description: the client id used for the authorization code
-            encoding:
-              grant_type:
-                style: form
-              client_secret:
-                style: form
-              redirect_uri:
-                style: form
-              format:
-                style: form
-              code:
-                style: form
-              client_id:
-                style: form
-              scope:
-                style: form
-        required: true
+  #/api/token:
+  #  post:
+  #    tags:
+  #      - UI Functions
+  #    summary: looks up authgroup using id_token then return access and id tokens from code
+  #    description: looks up authgroup using id_token then return access and id tokens from code. secured by UI host whitelist
+  #    deprecated: true
+  #    responses:
+  #      '200':
+  #        description: successful operation
+  #        content:
+  #          application/json:
+  #            schema:
+  #              $ref: '#/components/schemas/accessTokens'
+  #      '400':
+  #        $ref: '#/components/responses/BadRequest'
+  #      '401':
+  #        $ref: '#/components/responses/Unauthorized'
+  #      '404':
+  #        $ref: '#/components/responses/NotFound'
+  #      '405':
+  #        $ref: '#/components/responses/InvalidInput'
+  #      '417':
+  #        $ref: '#/components/responses/ExpectationFailed'
+  #    security:
+  #      - bearer: []
+  #      - openId: []
+  #    requestBody:
+  #      content:
+  #        application/json:
+  #          schema:
+  #            type: object
+  #            required:
+  #              - idToken
+  #              - code
+  #              - redirectUri
+  #              - clientId
+  #            properties:
+  #              idToken:
+  #                type: string
+  #                description: an idToken provided as part of the code authorization flow
+  #              code:
+  #                type: string
+  #                description: a code provided as part of the code authorization flow
+  #              redirectUri:
+  #                type: string
+  #                description: redirect uri to use, should match expected from client
+  #              clientId:
+  #                type: string
+  #                description: the client id used for the authorization code
+  #          encoding:
+  #            grant_type:
+  #              style: form
+  #            client_secret:
+  #              style: form
+  #            redirect_uri:
+  #              style: form
+  #            format:
+  #              style: form
+  #            code:
+  #              style: form
+  #            client_id:
+  #              style: form
+  #            scope:
+  #              style: form
+  #      required: true
   /api/groupcheck/{prettyName}:
     get:
       tags:

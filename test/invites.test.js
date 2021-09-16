@@ -89,7 +89,6 @@ describe('Invites', () => {
 			await invite.createInvite(inv.sub, data, group);
 			t.fail();
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(400);
 			expect(error.output.payload.error).toBe('Bad Request');
 		}

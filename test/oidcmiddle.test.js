@@ -13,7 +13,7 @@ const mockingoose = require('mockingoose');
 const config = require('../src/config');
 const cryptoRandomString = require('crypto-random-string');
 
-describe('Error handler tests', () => {
+describe('OIDC Pre/Post Middleware', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockingoose.resetAll();
@@ -526,9 +526,6 @@ describe('Error handler tests', () => {
 		}
 	});
 
-	//ctx.oidc.entities.Client.auth_group != ctx.req.params.group && ctx.oidc.entities.Interaction.kind = "Interaction" -ok
-	//ctx.oidc.entities.Client.auth_group != ctx.req.params.group && ctx.oidc.entities.Interaction.kind != "Interaction" -bad
-	//if config.SINGLE_USE_IAT && ctx.oidc.entities.Client && ctx.oidc.entities.InitialAccessToken && ctx.response.status === 201 call delete
 	test('parseKoaOIDC - interactions are ok if group and client.auth_group do not match', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);

@@ -18,7 +18,7 @@ import ModelC from '../src/api/oidc/models/client';
 const mockingoose = require('mockingoose');
 const config = require('../src/config');
 
-describe('Accounts', () => {
+describe('Auth Functions', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockingoose.resetAll();
@@ -189,7 +189,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -212,7 +211,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -235,7 +233,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -258,7 +255,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -281,7 +277,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -303,7 +298,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -326,7 +320,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});
@@ -439,7 +432,6 @@ describe('Accounts', () => {
 			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			console.error(error);
 			expect(error.output.statusCode).toBe(401);
 		}
 	});

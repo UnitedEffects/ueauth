@@ -4,3 +4,4 @@ export { default as PluginMocks } from './pluginMocks';
 export { default as Tokens } from './tokenMocks';
 export { default as InviteMocks } from './inviteMocks';
 export { default as NotifyMocks } from './notifyMocks';
+export { default as ClientMocks } from './clientMock';

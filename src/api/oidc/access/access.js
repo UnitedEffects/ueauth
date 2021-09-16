@@ -4,6 +4,7 @@ import qs from 'qs';
 const config = require('../../../config');
 
 export default {
+	// DEPRECATED - NOT NEEDED BECAUSE OF PKCE
 	async getUIAccessTokens(group, iss, code, client, redirectUri) {
 		const cl = JSON.parse(JSON.stringify(client));
 		const data = {

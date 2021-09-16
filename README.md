@@ -386,7 +386,6 @@ This will load session/end screen and auto submit the form to move past and redi
 * clients
 * open group registration on/off
 * middleware
-* oidcMiddleware
 * permissions
   * root access vs not
 * interactions_api

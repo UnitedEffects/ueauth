@@ -88,12 +88,12 @@ export default {
 	async generateClientCredentialToken(authGroup, client, scope, audience) {
 		if(!authGroup) throw new Error('authGroupId not defined');
 		const cl = JSON.parse(JSON.stringify(client));
-		const iss = `${config.PROTOCOL}://${config.SWAGGER}/root`
+		const iss = `${config.PROTOCOL}://${config.SWAGGER}/root`;
 		const data = {
 			'grant_type': 'client_credentials',
 			'scope': scope,
 			'resource': audience
-		}
+		};
 		const options = {
 			method: 'POST',
 			headers: {

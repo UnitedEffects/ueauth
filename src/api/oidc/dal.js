@@ -13,7 +13,7 @@ class MongoAdapter {
 			expiresAt = new Date(Date.now() + (expiresIn * 1000));
 		}
 
-		await this.coll().findOneAndUpdate(
+		return this.coll().findOneAndUpdate(
 			{ _id },
 			{ $set: { payload, ...(expiresAt ? { expiresAt } : undefined) } },
 			{ upsert: true, setDefaultsOnInsert: true },
@@ -55,11 +55,11 @@ class MongoAdapter {
 	}
 
 	async revokeByGrantId(grantId) {
-		await this.coll().deleteMany({ 'payload.grantId': grantId });
+		return this.coll().deleteMany({ 'payload.grantId': grantId });
 	}
 
 	async consume(_id) {
-		await this.coll().findOneAndUpdate(
+		return this.coll().findOneAndUpdate(
 			{ _id },
 			{ $set: { 'payload.consumed': Math.floor(Date.now() / 1000) } },
 		);

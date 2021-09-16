@@ -1,5 +1,5 @@
-import Default from "./default";
-import Session from "./session";
+import Default from './default';
+import Session from './session';
 import AccessToken from './accessToken';
 import AuthorizationCode from './authorizationCode';
 import Client from './client';
@@ -14,36 +14,36 @@ import ReplayDetection from './replayDetection';
 import Grant from './grant';
 
 function getModel (name) {
-    switch (name) {
-        case Session.modelName:
-            return Session;
-        case AccessToken.modelName:
-            return AccessToken;
-        case AuthorizationCode.modelName:
-            return AuthorizationCode;
-        case Client.modelName:
-            return Client;
-        case ClientCredentials.modelName:
-            return ClientCredentials;
-        case DeviceCode.modelName:
-            return DeviceCode;
-        case InitialAccessToken.modelName:
-            return InitialAccessToken;
-        case Interactions.modelName:
-            return Interactions;
-        case PushedAuthorizationRequest.modelName:
-            return PushedAuthorizationRequest;
-        case RefreshToken.modelName:
-            return RefreshToken;
-        case RegistrationAccessToken.modelName:
-            return RegistrationAccessToken;
-        case ReplayDetection.modelName:
-            return ReplayDetection;
-        case Grant.modelName:
-            return Grant;
-        default:
-            return Default(name);
-    }
+	switch (name) {
+	case Session.modelName:
+		return Session;
+	case AccessToken.modelName:
+		return AccessToken;
+	case AuthorizationCode.modelName:
+		return AuthorizationCode;
+	case Client.modelName:
+		return Client;
+	case ClientCredentials.modelName:
+		return ClientCredentials;
+	case DeviceCode.modelName:
+		return DeviceCode;
+	case InitialAccessToken.modelName:
+		return InitialAccessToken;
+	case Interactions.modelName:
+		return Interactions;
+	case PushedAuthorizationRequest.modelName:
+		return PushedAuthorizationRequest;
+	case RefreshToken.modelName:
+		return RefreshToken;
+	case RegistrationAccessToken.modelName:
+		return RegistrationAccessToken;
+	case ReplayDetection.modelName:
+		return ReplayDetection;
+	case Grant.modelName:
+		return Grant;
+	default:
+		return Default(name);
+	}
 }
 
 export default getModel;
