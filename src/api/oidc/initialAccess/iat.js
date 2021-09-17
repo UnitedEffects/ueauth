@@ -3,7 +3,7 @@ import dal from './dal';
 
 export default {
 	async generateIAT(expiresIn, policies, authGroup, meta = {}) {
-		if(!authGroup) throw new Error('authGroupId not defined');
+		if(!authGroup) throw new Error('authGroup not defined');
 		return new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies }).save().then(async (x) => {
 			const metaData = {
 				auth_group: authGroup.id,

@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 const config = require('../../src/config');
+const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
 
 const agMocks = {
     group: {
@@ -101,8 +102,10 @@ const agMocks = {
         "__v": 0,
         "associatedClient": "42ce0392-4cda-46ff-9514-acb8b0bdf635"
     },
-    newGroup(name, pretty, active, locked, preInit = false) {
+    newGroup(nm, pn, active = true, locked = false, preInit = false) {
         const out = JSON.parse(JSON.stringify(agMocks.group));
+        const name = (nm) ? nm : uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] });
+        const pretty = (pn) ? pn : name.toLowerCase().split(' ').join('_');
         out._id = nanoid(21);
         out.name = name;
         out.prettyName = pretty;

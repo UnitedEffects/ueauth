@@ -57,7 +57,7 @@ export default {
 		await add.upsert(client.clientId, fixed);
 		return fixed;
 	},
-
+	// @notTested
 	async deleteNotificationsServiceClient(authGroup) {
 		const check = await dal.getOneByName(authGroup, `${authGroup.id}_Global_Notification_Service`);
 		if(check) return dal.deleteOne(authGroup, check._id);
@@ -106,12 +106,12 @@ export default {
 
 		return axios(options);
 	},
-
+	// @notTested
 	async get(authGroup, q) {
 		const query = await helper.parseOdataQuery(q);
 		return dal.get(authGroup, query);
 	},
-
+	// @notTested
 	async getOne(authGroup, id) {
 		const result = await dal.getOne(authGroup, id);
 		if (result && result.payload) {
@@ -119,15 +119,15 @@ export default {
 		}
 		return undefined;
 	},
-
+	// @notTested
 	async getOneFull(authGroup, id) {
 		return dal.getOneFull(authGroup, id);
 	},
-
+	// @notTested
 	async preparePatch(client, update) {
 		return jsonPatch.apply_patch(client.toObject(), update);
 	},
-
+	// @notTested
 	async checkSchema(client) {
 		const v = new Validator();
 		const swag = require('../../../swagger');
@@ -136,20 +136,21 @@ export default {
 		return result.errors;
 	},
 
+	// Limits the ability to patch a client outside of the OP flow
 	async checkAllowed(client, patched) {
 		const pay1 = JSON.parse(JSON.stringify(client.payload));
 		const pay2 = JSON.parse(JSON.stringify(patched.payload));
 		const jDiff = diff(pay1, pay2);
 		return validateDiff(jDiff);
 	},
-
+	// @notTested
 	async validateOIDC(client) {
 		if (client.response_types.includes('code') && !client.grant_types.includes('authorization_code')) return 'CODE';
 		if (client.response_types.includes('id_token') && !client.grant_types.includes('implicit')) return 'ID_TOKEN';
 		if (client.response_types.includes('token') && !client.grant_types.includes('implicit')) return 'TOKEN';
 		return null;
 	},
-
+	// @notTested
 	async patchOne(authGroup, id, patched) {
 		const result = await dal.patchOne(authGroup, id, patched);
 		if (result && result.payload) {
@@ -157,7 +158,7 @@ export default {
 		}
 		return undefined;
 	},
-
+	// @notTested
 	async deleteOne(authGroup, id) {
 		const result = await dal.deleteOne(authGroup, id);
 		if (result && result.payload) {
