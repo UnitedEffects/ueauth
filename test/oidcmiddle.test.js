@@ -2,6 +2,7 @@ import '@babel/register';
 import 'regenerator-runtime/runtime';
 import t from './testhelper';
 import middle from '../src/oidcMiddleware';
+import errHandler from '../src/customErrorHandler';
 import Boom from '@hapi/boom';
 import {GroupMocks} from './models';
 import Model from '../src/api/authGroup/model';
@@ -456,21 +457,22 @@ describe('OIDC Pre/Post Middleware', () => {
 					}
 				},
 				response: {
+					message: 'TESTING',
 					body: {
-						error: 'server_error'
+						error: 'server_error',
+						error_description: 'testing internal server error'
 					}
 				},
 				app: {
 					emit: jest.fn()
 				}
 			};
-			const spy = jest.spyOn(middle, 'koaErrorOut');
+			const spy = jest.spyOn(errHandler, 'oidcLogger');
 			await middle.parseKoaOIDC(ctx, jest.fn());
 			const args = spy.mock.calls[0];
-			expect(args[0].status).toBe(500);
-			expect(args[0].body.error).toBe('Internal Server Error');
-			expect(args[0].body.message).toBe('An internal server error occurred');
-			expect(args[0].body.details[0].detail).toBe('Unknown error thrown by OIDC. See Logs');
+			expect(args[0].error).toBe('server_error');
+			expect(args[0].message).toBe( 'Unexpected OIDC error. testing internal server error. Work with admin to review Logs');
+			expect(args[0].id).toBeDefined();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -492,16 +494,20 @@ describe('OIDC Pre/Post Middleware', () => {
 				},
 				response: {
 					body: {
-						error: 'other_error'
+						error: 'other_error',
+						error_description: 'details here'
 					}
 				},
 				app: {
 					emit: jest.fn()
 				}
 			};
-			const spy = jest.spyOn(middle, 'koaErrorOut');
+			const spy = jest.spyOn(errHandler, 'oidcLogger');
 			await middle.parseKoaOIDC(ctx, jest.fn());
-			expect(spy).not.toHaveBeenCalled();
+			const args = spy.mock.calls[0];
+			expect(args[0].error).toBe('other_error');
+			expect(args[0].message).toBe('OIDC - details here');
+			expect(args[0].id).toBeDefined();
 		} catch (error) {
 			t.fail(error);
 		}

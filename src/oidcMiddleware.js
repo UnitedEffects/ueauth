@@ -75,15 +75,15 @@ const mid = {
 	async parseKoaOIDC(ctx, next) {
 		await next();
 		if(ctx.response && ctx.response.body && ctx.response.body.error) {
-			ctx.response.body = await errHandler.oidcLogger({
+			const error = {
 				error: ctx.response.body.error,
 				message: `OIDC - ${(ctx.response.message) ?
 					`${ctx.response.message} - ${ctx.response.body.error_description}` : ctx.response.body.error_description}`
-			});
-
-			if (ctx.response.body.error === 'server_error') {
-				ctx.response.body.message = `Unexpected OIDC error. ${ctx.response.body.error_description}. Work with admin to review Logs`;
+			};
+			if (error.error === 'server_error') {
+				error.message = `Unexpected OIDC error. ${ctx.response.body.error_description}. Work with admin to review Logs`;
 			}
+			ctx.response.body = await errHandler.oidcLogger(error);
 		}
 
 		if (ctx.oidc){

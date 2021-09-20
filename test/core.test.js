@@ -88,9 +88,25 @@ describe('Middleware tests', () => {
 		}
 	});
 
+	test('make sure catchError response works for non-api GET when accept header is application/json', async () => {
+		try {
+			const err = Boom.badRequest('This is a test'), req = { path: '/test', method: 'GET', headers: { accept: 'application/json'} }, res = { respond: jest.fn(), header: jest.fn() }, next = jest.fn();
+			await m.catchErrors(err, req, res, next);
+			const expected = {
+				error: 'Bad Request',
+				id: expect.any(String),
+				message: 'This is a test',
+				statusCode: 400,
+			};
+			expect(res.respond).toHaveBeenCalledWith(expected);
+		} catch (error) {
+			t.fail(error);
+		}
+	});
+
 	test('make sure catchError for badRequest on html render response works for non-api GET', async () => {
 		try {
-			const err = Boom.badRequest('This is a test'), req = { path: '/test', method: 'GET' }, res = { render: jest.fn(), header: jest.fn() }, next = jest.fn();
+			const err = Boom.badRequest('This is a test'), req = { path: '/test', method: 'GET', headers: { 'accept': 'html' } }, res = { render: jest.fn(), header: jest.fn() }, next = jest.fn();
 			await m.catchErrors(err, req, res, next);
 			const expected = {
 				title: 'oops! something went wrong',
@@ -105,7 +121,7 @@ describe('Middleware tests', () => {
 
 	test('make sure catchError for page not found on html render response works for non-api GET', async () => {
 		try {
-			const err = Boom.notFound('This is a test'), req = { path: '/test', method: 'GET' }, res = { render: jest.fn(), header: jest.fn() }, next = jest.fn();
+			const err = Boom.notFound('This is a test'), req = { path: '/test', method: 'GET', headers: { 'accept': 'html' } }, res = { render: jest.fn(), header: jest.fn() }, next = jest.fn();
 			await m.catchErrors(err, req, res, next);
 			const expected = {
 				title: 'Not sure what you\'re looking for...',
