@@ -32,8 +32,6 @@ tags:
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Notification
     description: Manage notifications sent to the http notification plugin
-  - name: OIDC
-    description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
   - name: Organizations - PENDING
     description: Create or View organization data - NOT YET FUNCTIONAL
   - name: Domains - PENDING
@@ -48,6 +46,8 @@ tags:
     description: Commands for Artifact or Security Updates
   - name: UI Functions
     description: APIs specifically for the United Effects UI implementation
+  - name: OIDC
+    description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
   - name: Health
 
 paths:
@@ -1716,6 +1716,7 @@ paths:
       security:
         - bearer: []
         - openId: []
+
   # A few of the OIDC specific API Endpoints
   /{group}/token:
     post:
@@ -1812,6 +1813,7 @@ paths:
             schema:
               $ref: '#/components/schemas/initialAccessTokenRequest'
         required: false
+
   /{group}/reg:
     post:
       tags:
@@ -1922,6 +1924,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/clientObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /{group}/me:
+    get:
+      tags:
+        - OIDC
+      summary: Standard OIDC UserInfo endpoint
+      description: UserInfo endpoint will not work with a JWT token. It must be opaque.
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userInfoObject'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3900,6 +3935,29 @@ components:
         auth_group:
           type: string
           description: the tenant ID (or prettyName) for the authorization group of clients, accounts and oidc configs
+
+    userInfoObject:
+      type: object
+      additionalProperties: true
+      required:
+        - sub
+        - group
+        - email
+      properties:
+        sub:
+          type: string
+          description: the userId of the account
+        group:
+          type: string
+          description: the auth group id the account belongs to
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        verified:
+          type: boolean
+          description: if the account has been verified via external email or text message
 
     accountObject:
       type: object
