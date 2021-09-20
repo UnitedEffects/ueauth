@@ -3,6 +3,7 @@ import iat from './initialAccess/iat';
 import oidc from './oidc';
 import helper from '../../helper';
 import group from '../authGroup/group';
+import events from '../../events';
 
 const api = {
 	async oidcCaller(req, res, next) {
@@ -12,11 +13,8 @@ const api = {
 			const tenant = await group.getOneByEither(req.params.group, false);
 			if(!tenant) throw Boom.notFound('Auth Group');
 			const provider = oidc(tenant);
-			//event emitter
-			provider.on('server_error', (ctx, error) => {
-				console.info('Found an Error');
-				console.info(error);
-			});
+			//async event emitter
+			events.eventEmitter(provider, tenant);
 			return provider.callback()(req, res, next);
 		} catch (error) {
 			next(error);
