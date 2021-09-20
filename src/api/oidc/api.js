@@ -7,10 +7,10 @@ import group from '../authGroup/group';
 const api = {
 	async oidcCaller(req, res, next) {
 		try {
-			if (!req.params.group) return next();
+			if (!req.params.group) throw Boom.notFound('Auth Group');
 			if (helper.protectedNames(req.params.group)) return next();
 			const tenant = await group.getOneByEither(req.params.group, false);
-			if(!tenant) return next(Boom.notFound('Auth Group'));
+			if(!tenant) throw Boom.notFound('Auth Group');
 			const provider = oidc(tenant);
 			//event emitter
 			provider.on('server_error', (ctx, error) => {

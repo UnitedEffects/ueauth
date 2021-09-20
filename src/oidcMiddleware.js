@@ -2,6 +2,8 @@ import Boom from '@hapi/boom';
 import clients from './api/oidc/client/clients';
 import group from './api/authGroup/group';
 import IAT from './api/oidc/initialAccess/iat';
+import errHandler from './customErrorHandler';
+import { v4 as uuid } from 'uuid';
 
 const config = require('./config');
 
@@ -73,12 +75,14 @@ const mid = {
 	async parseKoaOIDC(ctx, next) {
 		await next();
 		if(ctx.response && ctx.response.body && ctx.response.body.error) {
+			ctx.response.body = await errHandler.oidcLogger({
+				error: ctx.response.body.error,
+				message: `OIDC - ${(ctx.response.message) ?
+					`${ctx.response.message} - ${ctx.response.body.error_description}` : ctx.response.body.error_description}`
+			});
+
 			if (ctx.response.body.error === 'server_error') {
-				const data = [{ detail: 'Unknown error thrown by OIDC. See Logs' }];
-				if(ctx.response.body.error_description) {
-					data.push({ detail: ctx.response.body.error_description });
-				}
-				return mid.koaErrorOut(ctx, Boom.badImplementation(ctx.response.body.error, data));
+				ctx.response.body.message = `Unexpected OIDC error. ${ctx.response.body.error_description}. Work with admin to review Logs`;
 			}
 		}
 

@@ -304,7 +304,7 @@ const corsOptions = {
 		return '*';
 	},
 	allowMethods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
-}
+};
 
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
