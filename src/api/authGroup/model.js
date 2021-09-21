@@ -68,6 +68,11 @@ const authGroup = new mongoose.Schema({
 			default: true
 		},
 		scopes: [String],
+		// if true, logins must use pkce
+		pkceRequired: {
+			type: Boolean,
+			default: false
+		},
 		ui: {
 			// fullCustom is for a future update that allows the AG to implement a fully custom UI of their choosing
 			// keeping this false until later

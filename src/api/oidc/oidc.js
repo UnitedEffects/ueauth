@@ -285,7 +285,7 @@ function oidcConfig(g) {
 		},
 		allowOmittingSingleRegisteredRedirectUri: true,
 		pkce: {
-			required: () => false,
+			required: () => g.config.pkceRequired,
 		},
 	};
 
