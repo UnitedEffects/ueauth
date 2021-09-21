@@ -133,13 +133,12 @@ const authGroup = new mongoose.Schema({
 		eventEmitter: {
 			general: {
 				type: Boolean,
-				default: false //jwks, discovery, server_error, revocation
+				default: true //jwks, discovery, server_error, revocation
 			},
 			accessToken: {
 				type: Boolean,
 				default: false
 			},
-
 			authorization: {
 				type: Boolean,
 				default: false

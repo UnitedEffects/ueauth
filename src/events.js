@@ -1,84 +1,130 @@
+import { v4 as uuid } from 'uuid';
 
 const et = {
-	eventEmitter(provider, tenant) {
-		if (tenant.config.eventEmitter.general === true) {
-			provider.on('server_error', (ctx, error) => {
-				console.info('Found an Error');
-				console.info(error);
+	eventEmitter(provider, group) {
+		const list = getEventList(group);
+		list.forEach((item) => {
+			OP_EVENTS[item].forEach((event) => {
+				processStream(provider, event);
 			});
-		}
-
-		if (tenant.config.eventEmitter.authorization === true) {
-			provider.on('authorization.success', (ctx) => {
-				console.info('Successful login');
-				console.info(ctx.oidc.entities);
-			});
-		}
-        
-		if (tenant.config.eventEmitter.session === true) {
-			provider.on('session.destroyed', (session) => {
-				console.info('Session Destroyed');
-				console.info(session);
-			});
-		}
+		});
 	}
 };
 
-/**
- * access_token.destroyed	(token)	... whenever an access token is destroyed
- access_token.saved	(token)	... whenever an opaque access token is saved
- access_token.issued	(token)	... whenever a structured access token is issued
- authorization_code.consumed	(code)	... whenever an authorization code is consumed
- authorization_code.destroyed	(code)	... whenever an authorization code is destroyed
- authorization_code.saved	(code)	... whenever an authorization code is saved
- authorization.accepted	(ctx)	... with every syntactically correct authorization request pending resolving
- authorization.error	(ctx, error)	... whenever a handled error is encountered in the authorization endpoint
- authorization.success	(ctx)	... with every successfully completed authorization request
- backchannel.error	(ctx, error, client, accountId, sid)	... whenever an error is encountered for a client during backchannel-logout
- backchannel.success	(ctx, client, accountId, sid)	... whenever a client is successfully notified about logout through backchannel-logout features
- jwks.error	(ctx, error)	... whenever a handled error is encountered in the jwks endpoint
- client_credentials.destroyed	(token)	... whenever client credentials token is destroyed
- client_credentials.saved	(token)	... whenever an opaque client credentials token is saved
- client_credentials.issued	(token)	... whenever a structured client credentials token is issued
- device_code.consumed	(code)	... whenever a device code is consumed
- device_code.destroyed	(code)	... whenever a device code is destroyed
- device_code.saved	(code)	... whenever a device code is saved
- discovery.error	(ctx, error)	... whenever a handled error is encountered in the discovery endpoint
- end_session.error	(ctx, error)	... whenever a handled error is encountered in the end_session endpoint
- end_session.success	(ctx)	... with every success end session request
- grant.error	(ctx, error)	... whenever a handled error is encountered in the grant endpoint
- grant.revoked	(ctx, grantId)	... whenever tokens resulting from a single grant are about to be revoked. grantId is a random string. Use this to cascade the token revocation in cases where your adapter cannot provide this functionality
- grant.success	(ctx)	... with every successful grant request. Useful i.e. for collecting metrics or triggering any action you need to execute after succeeded grant
- initial_access_token.destroyed	(token)	... whenever inital access token is destroyed
- initial_access_token.saved	(token)	... whenever inital access token is saved
- interaction.destroyed	(interaction)	... whenever interaction session is destroyed
- interaction.ended	(ctx)	... whenever interaction has been resolved and the authorization request continues being processed
- interaction.saved	(interaction)	... whenever interaction session is saved
- interaction.started	(ctx, prompt)	... whenever interaction is being requested from the end-user
- introspection.error	(ctx, error)	... whenever a handled error is encountered in the introspection endpoint
- replay_detection.destroyed	(token)	... whenever a replay detection object is destroyed
- replay_detection.saved	(token)	... whenever a replay detection object is saved
- pushed_authorization_request.error	(ctx, error)	... whenever a handled error is encountered in the POST pushed_authorization_request endpoint
- pushed_authorization_request.success	(ctx, client)	... with every successful request object endpoint response
- pushed_authorization_request.destroyed	(token)	... whenever a pushed authorization request object is destroyed
- pushed_authorization_request.saved	(token)	... whenever a pushed authorization request object is saved
- refresh_token.consumed	(token)	... whenever a refresh token is consumed
- refresh_token.destroyed	(token)	... whenever a refresh token is destroyed
- refresh_token.saved	(token)	... whenever a refresh token is saved
- registration_access_token.destroyed	(token)	... whenever registration access token is destroyed
- registration_access_token.saved	(token)	... whenever registration access token is saved
- registration_create.error	(ctx, error)	... whenever a handled error is encountered in the POST registration endpoint
- registration_create.success	(ctx, client)	... with every successful client registration request
- registration_delete.error	(ctx, error)	... whenever a handled error is encountered in the DELETE registration endpoint
- registration_delete.success	(ctx, client)	... with every successful delete client registration request
- registration_read.error	(ctx, error)	... whenever a handled error is encountered in the GET registration endpoint
- registration_update.error	(ctx, error)	... whenever a handled error is encountered in the PUT registration endpoint
- registration_update.success	(ctx, client)	... with every successful update client registration request
- revocation.error	(ctx, error)	... whenever a handled error is encountered in the revocation endpoint
- server_error	(ctx, error)	... whenever an exception is thrown or promise rejected from either the Provider or your provided adapters. If it comes from the library you should probably report it
- session.destroyed	(session)	... whenever session is destroyed
- session.saved	(session)	... whenever session is saved
- userinfo.error	(ctx, error)	... whenever a handled error is encountered in the userinfo endpoint
- */
+function getEventList(group) {
+	const list = [];
+	Object.keys(group.config.eventEmitter).map((key) => {
+		if(group.config.eventEmitter[key] === true) list.push(key);
+	});
+	return list;
+}
+
+
+function processStream(provider, event) {
+	provider.on(event, (ctx, ...args) => {
+		const emit = {
+			id: uuid(), //to help find this in a log
+			event,
+			eventTime: Date.now(),
+		};
+		const msg = event.split('.');
+		if(msg.length>1) {
+			emit.message = msg[msg.length-1];
+		}
+		emit.data = (ctx.oidc) ? JSON.parse(JSON.stringify(ctx.oidc.entities)) : JSON.parse(JSON.stringify(ctx));
+		if(args.length > 0) {
+			emit.details = args;
+		}
+		console.info(emit);
+	});
+}
+
+
+const OP_EVENTS = {
+	general: [
+		'jwks.error',	//(ctx, error)
+		'revocation.error',	//(ctx, error)
+		'server_error',	//(ctx, error)
+		'discovery.error',	//(ctx, error)
+		'introspection.error',	//(ctx, error)
+	],
+	accessToken: [
+		'access_token.destroyed', //token
+		'access_token.saved', //token
+		'access_token.issued', //token
+	],
+	authorization: [
+		'authorization_code.consumed', //code
+		'authorization_code.destroyed', //code
+		'authorization_code.saved', //code
+		'authorization.accepted', //ctx
+		'authorization.error', //ctx, error
+		'authorization.success', //ctx
+	],
+	backChannel: [
+		'backchannel.error', //(ctx, error, client, accountId, sid)
+		'backchannel.success',	//(ctx, client, accountId, sid)
+	],
+	clientCredentials: [
+		'client_credentials.saved',	//(token)
+		'client_credentials.destroyed',	//(token)
+		'client_credentials.issued',	//(token)
+	],
+	deviceCode: [
+		'device_code.consumed',	//(code)
+		'device_code.destroyed',	//(code)
+		'device_code.saved',	//(code)
+	],
+	session: [
+		'end_session.error',	//(ctx, error)
+		'end_session.success',	//(ctx)
+		'session.destroyed',	//(session)
+		'session.saved',	//(session)
+	],
+	grant: [
+		'grant.error',	//(ctx, error)
+		'grant.revoked',	//(ctx, grantId)
+		'grant.success',	//(ctx)
+	],
+	iat: [
+		'initial_access_token.destroyed',	//(token)
+		'initial_access_token.saved',	//(token)
+	],
+	uiInteraction: [
+		'interaction.destroyed',	//(interaction)
+		'interaction.ended',	//(ctx)
+		'interaction.saved',	//(interaction)
+		'interaction.started',	//(ctx, prompt)
+	],
+	replayDetection: [
+		'replay_detection.destroyed',	//(token)
+		'replay_detection.saved',	//(token)
+	],
+	pushedAuthorization: [
+		'pushed_authorization_request.error',	//(ctx, error)
+		'pushed_authorization_request.success',	//(ctx, client)
+		'pushed_authorization_request.destroyed',	//(token)
+		'pushed_authorization_request.saved',	//(token)
+	],
+	refreshToken: [
+		'refresh_token.consumed',	//(token)
+		'refresh_token.destroyed',	//(token)
+		'refresh_token.saved',	//(token)
+	],
+	registration: [
+		'registration_access_token.destroyed',	//(token)
+		'registration_access_token.saved',	//(token)
+		'registration_create.error',	//(ctx, error)
+		'registration_create.success',	//(ctx, client)
+		'registration_delete.error',	//(ctx, error)
+		'registration_delete.success',	//(ctx, client)
+		'registration_read.error',	//(ctx, error)
+		'registration_update.error',	//(ctx, error)
+		'registration_update.success',	//(ctx, client)
+	],
+	account: [
+		'userinfo.error'	//(ctx, error)
+	]
+};
 
 export default et;
