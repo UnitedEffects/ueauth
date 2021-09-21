@@ -4152,6 +4152,11 @@ components:
           description: these are scopes that will be availabl to all clients within your authgroup oidc provider
           items:
             type: string
+        pkceRequired:
+          type: boolean
+          description: when this is true, only pkce logins are possible
+          example: false
+          default: false
         eventEmitter:
           type: object
           description: if active specified events in the system are collected async
