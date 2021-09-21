@@ -6,6 +6,7 @@ import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
 import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
+import ueEvents from '../../events/ueEvents';
 const cryptoRandomString = require('crypto-random-string');
 
 const RESOURCE = 'Account';
@@ -36,6 +37,13 @@ const api = {
             }
             const output = JSON.parse(JSON.stringify(result));
             output.password = password;
+            /**
+             *         'ue.account.create',
+             'ue.account.edit',
+             'ue.account.destroy',
+             'ue.account.error'
+             */
+            ueEvents.stream.emit(`ue.account.create-${req.authGroup.id}`, output);
             return res.respond(say.created(output, RESOURCE));
         } catch (error) {
             next(error);

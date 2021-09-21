@@ -4163,7 +4163,7 @@ components:
           properties:
             general:
               type: boolean
-              descriptoin: jwks, discovery, server_error, revocation
+              description: jwks, discovery, server_error, revocation
               example: false
             accessToken:
               type: boolean

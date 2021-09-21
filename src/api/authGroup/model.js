@@ -135,6 +135,10 @@ const authGroup = new mongoose.Schema({
 			}
 		},
 		// this may not work very well in a serverless function environment
+		eventEmitterCleanSensative: {
+			type: Boolean,
+			default: true
+		},
 		eventEmitter: {
 			general: {
 				type: Boolean,

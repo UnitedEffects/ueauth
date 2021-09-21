@@ -10,6 +10,7 @@ import enforce from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from "./api/plugins/plugins";
+import ueEvents from "./events/ueEvents";
 
 const config = require('./config');
 const p = require('../package.json');
@@ -130,6 +131,7 @@ const mid = {
             if (!result) throw Boom.notFound('auth group not found');
             req.authGroup = result;
             req.params.group = result._id;
+            ueEvents.eventEmitter(req.authGroup);
             return next();
         } catch (error) {
             next(error);
@@ -205,6 +207,7 @@ const mid = {
             if (!result) throw Boom.notFound('auth group not found');
             req.authGroup = result;
             req.params.group = result._id;
+            ueEvents.eventEmitter(req.authGroup);
             return next();
         } catch (error) {
             next(error);
