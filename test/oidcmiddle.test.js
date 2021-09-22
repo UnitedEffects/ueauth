@@ -194,7 +194,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			t.fail(error);
 		}
 	});
-	/*
+
 	test('validate authgroup for OP koa routes - group provided and cached - cache refresh requested', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
@@ -718,6 +718,4 @@ describe('OIDC Pre/Post Middleware', () => {
 			t.fail(error);
 		}
 	});
-
-	 */
 });
