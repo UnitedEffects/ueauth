@@ -1,16 +1,16 @@
-import { Provider } from 'oidc-provider';
 import { v4 as uuid } from 'uuid';
 import Account from '../accounts/accountOidcInterface';
 import middle from '../../oidcMiddleware';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
-
+import UEProvider from './ueProvider';
 const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const MongoAdapter = require('./dal');
 const cors = require('koa2-cors');
 
 const coreScopes = config.CORE_SCOPES();
+const ueP = new UEProvider();
 
 const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
@@ -309,7 +309,7 @@ const corsOptions = {
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
 	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`;
-	const oidc = new Provider(issuer, options);
+	const oidc = ueP.find(tenant, issuer, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());
 	oidc.use(cors(corsOptions));

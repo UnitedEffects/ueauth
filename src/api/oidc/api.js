@@ -13,8 +13,6 @@ const api = {
 			const tenant = await group.getOneByEither(req.params.group, false);
 			if(!tenant) throw Boom.notFound('Auth Group');
 			const provider = oidc(tenant);
-			//async event emitter
-			events.providerEventEmitter(provider, tenant);
 			return provider.callback()(req, res, next);
 		} catch (error) {
 			next(error);

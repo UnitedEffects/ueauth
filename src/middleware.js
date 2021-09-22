@@ -134,7 +134,6 @@ const mid = {
 			if(!cache) {
 				result = await group.getOneByEither(req.params.group);
 			} else {
-				console.info('using cache');
 				result = JSON.parse(cache);
 			}
 			if (!result) throw Boom.notFound('auth group not found');
@@ -147,9 +146,6 @@ const mid = {
 			}
 			req.authGroup = result;
 			req.params.group = result._id || result.id;
-
-			//async event emitter for ue events...
-			ueEvents.eventEmitter(req.authGroup);
 			return next();
 		} catch (error) {
 			next(error);
@@ -236,8 +232,6 @@ const mid = {
 			}
 			req.authGroup = result;
 			req.params.group = result._id;
-			//async event emitter for ue events...
-			ueEvents.eventEmitter(req.authGroup);
 			return next();
 		} catch (error) {
 			next(error);

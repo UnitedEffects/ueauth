@@ -125,7 +125,7 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 		provider.on(event, (ctx, ...args) => {
 			const emit = {
 				id: uuid(), //to help find this in a log
-				group: group.id || group._id,
+				group,
 				event: event.split(':')[0],
 				eventTime: Date.now(),
 			};
