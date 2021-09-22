@@ -340,7 +340,6 @@ This will load session/end screen and auto submit the form to move past and redi
   * Validate emitter
 
 * finish accounts and other ue events
-  * accounts
   * groups
   * invites
   * notification

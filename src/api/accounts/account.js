@@ -1,9 +1,10 @@
 import jsonPatch from 'jsonpatch';
 import dal from './dal';
 import helper from '../../helper';
-import iat from "../oidc/initialAccess/iat";
-import n from "../plugins/notifications/notifications";
-import Boom from "@hapi/boom";
+import iat from '../oidc/initialAccess/iat';
+import n from '../plugins/notifications/notifications';
+import Boom from '@hapi/boom';
+import ueEvents from '../../events/ueEvents';
 
 const config = require('../../config');
 
@@ -44,7 +45,9 @@ export default {
 			modifiedBy,
 			password
 		};
-		return dal.updatePassword(authGroupId, id, update);
+		const output = await dal.updatePassword(authGroupId, id, update);
+		ueEvents.emit({ id: authGroupId }, 'ue.account.edit', output);
+		return output;
 	},
 
 	async getAccountByEmailOrUsername(authGroupId, em) {
