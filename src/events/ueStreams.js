@@ -11,12 +11,14 @@ class UEStreams {
 		return this.streamList[agId];
 	}
 	deleteStream(agId) {
+		this.streamList[agId].removeAllListeners();
 		delete this.streamList[agId];
 	}
 	newStream(agId) {
 		// manage the number of instances
 		if(Object.keys(this.streamList).length > 100) {
-			this.deleteStream(agId);
+			const oldStream = Object.keys(this.streamList)[0];
+			this.deleteStream(oldStream);
 		}
 		this.streamList[agId] = new events.EventEmitter();
 		return this.streamList[agId];
@@ -35,7 +37,7 @@ class UEStreams {
 function eventEmitter(stream, groupId) {
 	const clean = config.EVENT_EMITTER_CLEAN_SENSITIVE;
 	const list = factory.getEventList();
-    console.info(`Building API Listeners for AG: ${groupId}`);
+	console.info(`Building API Listeners for AG: ${groupId}`);
 	list.forEach((item) => {
 		if(factory.items[item]){
 			factory.items[item].forEach((event) => {

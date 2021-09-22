@@ -11,9 +11,9 @@ class UEProvider {
     define(group, issuer, options) {
         const agId = group.id || group._id;
         // Do not let this get bigger than 100 instances, you can always reinitialize
-        // todo test cleanup
         if(Object.keys(this.providerList).length > 100) {
-            this.delete(Object.keys(this.providerList)[0]);
+            const oldStream = Object.keys(this.providerList)[0];
+            this.delete(oldStream);
         }
         this.providerList[agId] = new Provider(issuer, options);
         //async event emitter
@@ -29,6 +29,7 @@ class UEProvider {
         return op;
     }
     delete(agId) {
+        this.providerList[agId].removeAllListeners();
         delete this.providerList[agId];
     }
 }
