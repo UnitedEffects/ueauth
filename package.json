@@ -1,6 +1,6 @@
 {
   "name": "UE-Auth",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "UE Auth is a multi-tenant OIDC Provider intended to serve small to midsize organization that require functionality similar to those provided by enterprise Identity and Access SaaS providers but without the costs associated to the full scale of those solutions.",
   "private": true,
   "scripts": {
@@ -71,6 +71,7 @@
     "morgan": "^1.9.1",
     "ms": "^2.1.3",
     "nanoid": "^3.1.3",
+    "node-cache": "^5.1.2",
     "node-jwk": "^0.1.0",
     "odata-v4-mongodb": "^0.1.12",
     "oidc-provider": "^7.5.1",

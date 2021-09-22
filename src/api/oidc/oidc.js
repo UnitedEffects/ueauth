@@ -286,7 +286,7 @@ function oidcConfig(g) {
 		allowOmittingSingleRegisteredRedirectUri: true,
 		pkce: {
 			required: () => g.config.pkceRequired,
-		},
+		}
 	};
 
 	// make sure we've activated initial access token correctly

@@ -1,4 +1,6 @@
 import {v4 as uuid} from 'uuid';
+const config = require('../config');
+
 const OP_EVENTS = {
 	general: [
 		'jwks.error',	//(ctx, error)
@@ -20,7 +22,7 @@ const OP_EVENTS = {
 		'authorization.error', //ctx, error
 		'authorization.success', //ctx
 	],
-	backChannel: [
+	backchannel: [
 		'backchannel.error', //(ctx, error, client, accountId, sid)
 		'backchannel.success',	//(ctx, client, accountId, sid)
 	],
@@ -90,10 +92,10 @@ const OP_EVENTS = {
 	]
 };
 
-function getEventList(group) {
+function getEventList() {
 	const list = [];
-	Object.keys(group.config.eventEmitter).map((key) => {
-		if(group.config.eventEmitter[key] === true) list.push(key);
+	Object.keys(config.EVENT_EMITTER).map((key) => {
+		if(config.EVENT_EMITTER[key] === true) list.push(key);
 	});
 	return list;
 }
@@ -105,12 +107,12 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 			const emit = {
 				id: uuid(), //to help find this in a log
 				group: group.id || group._id,
-				event: event.split('-')[0],
+				event: event.split(':')[0],
 				eventTime: Date.now(),
 			};
 			const msg = event.split('.');
 			if (msg.length > 1) {
-				emit.message = msg[msg.length - 1].split('-')[0];
+				emit.message = msg[msg.length - 1].split(':')[0];
 			}
 			if (!clean) {
 				emit.data = (ctx.oidc) ? JSON.parse(JSON.stringify(ctx.oidc.entities)) : JSON.parse(JSON.stringify(ctx));

@@ -62,7 +62,25 @@ const config = {
 	// UI SKIN
 	DEFAULT_UI_SKIN_SPLASH: process.env.DEFAULT_UI_SKIN_SPLASH || envVars.DEFAULT_UI_SKIN_SPLASH || "https://assets.uecore.io/ueauth/img/default-splash-test.png",
 	DEFAULT_UI_SKIN_GRADIENT_LOW: process.env.DEFAULT_UI_SKIN_GRADIENT_LOW || envVars.DEFAULT_UI_SKIN_GRADIENT_LOW || "#131525",
-	DEFAULT_UI_SKIN_GRADIENT_HIGH: process.env.DEFAULT_UI_SKIN_GRADIENT_HIGH || envVars.DEFAULT_UI_SKIN_GRADIENT_HIGH || "#1D2035"
+	DEFAULT_UI_SKIN_GRADIENT_HIGH: process.env.DEFAULT_UI_SKIN_GRADIENT_HIGH || envVars.DEFAULT_UI_SKIN_GRADIENT_HIGH || "#1D2035",
+	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
+	EVENT_EMITTER: {
+		general: true,
+		accessToken: true,
+		authorization: true,
+		backchannel: true,
+		clientCredentials: true,
+		deviceCode: true,
+		session: true,
+		grant: true,
+		iat: true,
+		uiInteraction: true,
+		replayDetection: true,
+		pushedAuthorization: true,
+		refreshToken: true,
+		registration: true,
+		account: true
+	}
 };
 
 module.exports = config;

@@ -43,7 +43,7 @@ const api = {
              'ue.account.destroy',
              'ue.account.error'
              */
-            ueEvents.stream.emit(`ue.account.create-${req.authGroup.id}`, output);
+            ueEvents.emit(req.authGroup.id, 'ue.account.create', output);
             return res.respond(say.created(output, RESOURCE));
         } catch (error) {
             next(error);

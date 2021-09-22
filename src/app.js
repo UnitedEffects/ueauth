@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 
 import { Root, Identity, Access, OIDC } from './routes';
-import ueEvents from "./events/ueEvents";
 import middle from './middleware';
 
 const config = require('./config');

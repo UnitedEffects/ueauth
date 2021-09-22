@@ -4157,57 +4157,6 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
-        eventEmitter:
-          type: object
-          description: if active specified events in the system are collected async
-          properties:
-            general:
-              type: boolean
-              description: jwks, discovery, server_error, revocation
-              example: false
-            accessToken:
-              type: boolean
-              example: false
-            authorization:
-              type: boolean
-              example: false
-            backchannel:
-              type: boolean
-              example: false
-            clientCredentials:
-              type: boolean
-              example: false
-            deviceCode:
-              type: boolean
-              example: false
-            session:
-              type: boolean
-              example: false
-            grant:
-              type: boolean
-              example: false
-            iat:
-              type: boolean
-              example: false
-            uiInteraction:
-              type: boolean
-              example: false
-            replayDetection:
-              type: boolean
-              example: false
-            pushedAuthorization:
-              type: boolean
-              example: false
-            refreshToken:
-              type: boolean
-              example: false
-            registration:
-              type: boolean
-              example: false
-            account:
-              type: boolean
-              example: false
-              #includes user_info.error
         ui:
           type: object
           properties:

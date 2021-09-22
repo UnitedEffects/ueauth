@@ -1,24 +1,37 @@
 import events from 'events';
-import {v4 as uuid} from 'uuid';
 import factory from './factory';
+import NodeCache from 'node-cache';
 
 const stream = new events.EventEmitter();
-const testing = uuid();
+const myCache = new NodeCache();
+const config = require('../config');
+
 const et = {
 	stream,
-	testing,
+	emit(groupId, event, data) {
+		const e = `${event}:${groupId}`;
+		et.stream.emit(e, data);
+	},
 	eventEmitter(group) {
-		const clean = group.config.eventEmitterCleanSensative;
-		const list = factory.getEventList(group);
-		list.forEach((item) => {
-			factory.items[item].forEach((event) => {
-				const e = `${event}-${group.id || group._id}`;
-				const temp = et.stream._events;
-				if(!Object.keys(temp).includes(e)) {
-					factory.processProviderStream(et.stream, e, clean, group, true);
+		const groupId = group.id || group._id;
+		const isSet = myCache.get(`ue.events.${groupId}`);
+		if(isSet !== true) {
+			console.info(`Building API Listeners for AG: ${groupId}`);
+			const clean = config.EVENT_EMITTER_CLEAN_SENSITIVE;
+			const list = factory.getEventList();
+			list.forEach((item) => {
+				if(factory.items[item]){
+					factory.items[item].forEach((event) => {
+						const e = `${event}:${groupId}`;
+						const temp = et.stream._events;
+						if(!Object.keys(temp).includes(e)) {
+							factory.processProviderStream(et.stream, e, clean, group, true);
+						}
+					});
 				}
 			});
-		});
+			myCache.set(`ue.events.${groupId}`, true);
+		}
 	}
 };
 
