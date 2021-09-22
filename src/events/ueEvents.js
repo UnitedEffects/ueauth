@@ -12,9 +12,9 @@ const et = {
 		const e = `${event}:${groupId}`;
 		et.stream.emit(e, data);
 	},
-	eventEmitter(group) {
+	async eventEmitter(group) {
 		const groupId = group.id || group._id;
-		const isSet = myCache.get(`ue.events.${groupId}`);
+		const isSet = await myCache.get(`ue.events.${groupId}`);
 		if(isSet !== true) {
 			console.info(`Building API Listeners for AG: ${groupId}`);
 			const clean = config.EVENT_EMITTER_CLEAN_SENSITIVE;

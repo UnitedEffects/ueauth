@@ -14,6 +14,9 @@ const mockingoose = require('mockingoose');
 const config = require('../src/config');
 const cryptoRandomString = require('crypto-random-string');
 
+import NodeCache from 'node-cache';
+jest.mock('node-cache');
+
 describe('OIDC Pre/Post Middleware', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -99,12 +102,14 @@ describe('OIDC Pre/Post Middleware', () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
 			authGroup.id = authGroup._id;
+			NodeCache.prototype.get.mockResolvedValue(undefined);
 			mockingoose(Model).toReturn(authGroup, 'findOne');
 			const ctx = {
 				req: {
 					params: {
 						group: 'root'
-					}
+					},
+					query: {}
 				},
 				app: {
 					emit: jest.fn()
@@ -127,15 +132,17 @@ describe('OIDC Pre/Post Middleware', () => {
 			t.fail(error);
 		}
 	});
-    
+
 	test('validate authgroup for OP koa routes - authgroup not defined - group provided - not found', async () => {
 		try {
 			mockingoose(Model).toReturn(undefined, 'findOne');
+			NodeCache.prototype.get.mockResolvedValue(undefined);
 			const ctx = {
 				req: {
 					params: {
 						group: 'root'
-					}
+					},
+					query: {}
 				},
 				app: {
 					emit: jest.fn()
@@ -156,6 +163,71 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].status).toBe(404);
 			expect(args[0].body.error).toBe('Not Found');
 			expect(args[0].body.message).toBe('auth group not found');
+		} catch (error) {
+			t.fail(error);
+		}
+	});
+
+	test('validate authgroup for OP koa routes - authgroup not defined - group provided and cached', async () => {
+		try {
+			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
+			authGroup.id = authGroup._id;
+			NodeCache.prototype.get.mockResolvedValue(authGroup);
+			const ctx = {
+				req: {
+					params: {
+						group: 'root'
+					},
+					query: {}
+				},
+				app: {
+					emit: jest.fn()
+				}
+			};
+			await middle.validateAuthGroup(ctx);
+			expect(NodeCache.prototype.get).toHaveBeenCalled();
+			expect(ctx.authGroup.id).toBe(authGroup.id);
+			expect(ctx.authGroup.name).toBe(authGroup.name);
+			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
+			expect(ctx.req.params.group).toBe(authGroup.id);
+		} catch (error) {
+			t.fail(error);
+		}
+	});
+
+	test('validate authgroup for OP koa routes - group provided and cached - cache refresh requested', async () => {
+		try {
+			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
+			authGroup.id = authGroup._id;
+			NodeCache.prototype.get.mockResolvedValue(authGroup);
+			mockingoose(Model).toReturn(authGroup, 'findOne');
+			const ctx = {
+				req: {
+					params: {
+						group: 'root'
+					},
+					query: {
+						resetCache: 'true'
+					}
+				},
+				app: {
+					emit: jest.fn()
+				}
+			};
+			const query = {
+				active: true,
+				$or: [
+					{ _id: ctx.req.params.group },
+					{ prettyName: ctx.req.params.group }
+				]
+			};
+			await middle.validateAuthGroup(ctx);
+			expect(NodeCache.prototype.get).not.toHaveBeenCalled();
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(ctx.authGroup.id).toBe(authGroup.id);
+			expect(ctx.authGroup.name).toBe(authGroup.name);
+			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
+			expect(ctx.req.params.group).toBe(authGroup.id);
 		} catch (error) {
 			t.fail(error);
 		}

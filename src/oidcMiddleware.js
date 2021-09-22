@@ -3,8 +3,9 @@ import clients from './api/oidc/client/clients';
 import group from './api/authGroup/group';
 import IAT from './api/oidc/initialAccess/iat';
 import errHandler from './customErrorHandler';
-import { v4 as uuid } from 'uuid';
+import NodeCache from 'node-cache';
 
+const myCache = new NodeCache();
 const config = require('./config');
 
 const mid = {
@@ -15,8 +16,16 @@ const mid = {
 				return next();
 			}
 			if (!ctx.req.params.group) throw Boom.preconditionRequired('authGroup is required');
-			const result = await group.getOneByEither(ctx.req.params.group);
+			let result;
+			//todo validate query on ctx
+			const cache = (ctx.req.query.resetCache) ? undefined : await myCache.get(`AG:${ctx.req.params.group}`);
+			if(!cache) {
+				result = await group.getOneByEither(ctx.req.params.group);
+			} else {
+				result = cache;
+			}
 			if (!result) throw Boom.notFound('auth group not found');
+			if (!cache) await myCache.set(`AG:${ctx.req.params.group}`, result, 3600);
 			ctx.authGroup = result;
 			ctx.req.params.group = result._id;
 			return next();

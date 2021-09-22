@@ -4,9 +4,9 @@ const myCache = new NodeCache();
 const config = require('../config');
 
 const et = {
-	providerEventEmitter(provider, group) {
+	async providerEventEmitter(provider, group) {
 		const groupId = group.id || group._id;
-		const isSet = myCache.get(`oidc.events.${groupId}`);
+		const isSet = await myCache.get(`oidc.events.${groupId}`);
 		if(isSet !== true) {
 			console.info(`Building OP Listeners for AG: ${groupId}`);
 			const clean = config.EVENT_EMITTER_CLEAN_SENSITIVE;
