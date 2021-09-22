@@ -6,6 +6,7 @@ import cl from '../oidc/client/clients';
 import acct from '../accounts/account';
 import plugs from '../plugins/plugins';
 import permissions from '../../permissions';
+import ueEvents from "../../events/ueEvents";
 const config = require('../../config');
 
 
@@ -94,6 +95,7 @@ const api = {
 					console.info('Client Rollback: There was a problem and you may need to debug this install');
 				}
 			}
+			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
 			next(error);
 		}
 	},
@@ -126,6 +128,7 @@ const api = {
 					console.error('Attempted and failed cleanup');
 				}
 			}
+			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
 			next(error);
 		}
 	},
@@ -160,6 +163,7 @@ const api = {
 			if(output.config) delete output.config.keys;
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
 			next(error);
 		}
 	},
@@ -171,6 +175,7 @@ const api = {
 			if(result.config) delete result.config.keys;
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
 			next(error);
 		}
 	},

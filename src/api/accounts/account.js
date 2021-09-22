@@ -12,7 +12,9 @@ export default {
 	async writeAccount(data) {
 		data.email = data.email.toLowerCase();
 		if(!data.username) data.username = data.email;
-		return dal.writeAccount(data);
+		const output = await dal.writeAccount(data);
+		ueEvents.emit(data.authGroup, 'ue.account.create', output);
+		return output;
 	},
 
 	// @notTested - filters not tested, general query is
@@ -27,7 +29,8 @@ export default {
 
 	// @notTested
 	async deleteAccount(authGroupId, id) {
-		return dal.deleteAccount(authGroupId, id);
+		const result = await dal.deleteAccount(authGroupId, id);
+		ueEvents.emit(authGroupId, 'ue.account.destroy', result);
 	},
 
 	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false) {
@@ -37,7 +40,9 @@ export default {
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
 		}
-		return dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
+		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
+		ueEvents.emit(authGroup.id || authGroup._id, 'ue.account.edit', result);
+		return result;
 	},
 
 	async updatePassword(authGroupId, id, password, modifiedBy) {
@@ -46,7 +51,7 @@ export default {
 			password
 		};
 		const output = await dal.updatePassword(authGroupId, id, update);
-		ueEvents.emit({ id: authGroupId }, 'ue.account.edit', output);
+		ueEvents.emit(authGroupId, 'ue.account.edit', output);
 		return output;
 	},
 

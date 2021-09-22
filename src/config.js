@@ -79,7 +79,10 @@ const config = {
 		pushedAuthorization: true,
 		refreshToken: true,
 		registration: true,
-		account: true
+		account: true,
+		group: true,
+		invite: true,
+		pluginNotification: true
 	}
 };
 

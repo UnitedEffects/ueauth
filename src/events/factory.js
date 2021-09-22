@@ -89,6 +89,25 @@ const OP_EVENTS = {
 		'ue.account.edit',
 		'ue.account.destroy',
 		'ue.account.error'
+	],
+	group: [
+		'ue.group.create',
+		'ue.group.edit',
+		'ue.group.error',
+		'ue.group.destroy',
+		'ue.group.initialize'
+	],
+	invite: [
+		'ue.invite.create',
+		'ue.invite.destroy',
+		'ue.invite.accepted',
+		'ue.invite.rejected',
+		'ue.invite.error'
+	],
+	pluginNotification: [
+		'ue.plugin.notification.create',
+		'ue.plugin.notification.sent',
+		'ue.plugin.notification.error'
 	]
 };
 
@@ -208,6 +227,9 @@ function cleanObject(obj, name) {
 		delete temp.scope;
 		delete temp.resource;
 		delete temp.redirectUri;
+		if(temp.config) {
+			delete temp.config.keys;
+		}
 		return temp;
 	}
 }

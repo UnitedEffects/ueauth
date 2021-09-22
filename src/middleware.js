@@ -133,11 +133,20 @@ const mid = {
 			const cache = (req.query.resetCache) ? undefined : await myCache.get(`AG:${req.params.group}`);
 			if(!cache) {
 				result = await group.getOneByEither(req.params.group);
-			} else result = cache;
+			} else {
+				console.info('using cache');
+				result = JSON.parse(cache);
+			}
 			if (!result) throw Boom.notFound('auth group not found');
-			if (!cache) await myCache.set(`AG:${req.params.group}`, result, 3600);
+			if (!cache) {
+				const holdThis = JSON.parse(JSON.stringify(result));
+				holdThis._id = result._id;
+				holdThis.owner = result.owner;
+				holdThis.active = result.active;
+				await myCache.set(`AG:${req.params.group}`, JSON.stringify(holdThis), 3600);
+			}
 			req.authGroup = result;
-			req.params.group = result._id;
+			req.params.group = result._id || result.id;
 
 			//async event emitter for ue events...
 			ueEvents.eventEmitter(req.authGroup);
@@ -216,9 +225,15 @@ const mid = {
 			const cache = (req.query.resetCache) ? undefined : await myCache.get(`AG.ALT:${req.params.group}`);
 			if(!cache) {
 				result = await group.getOneByEither(req.params.group, false);
-			} else result = cache;
+			} else result = JSON.parse(cache);
 			if (!result) throw Boom.notFound('auth group not found');
-			if(!cache) await myCache.set(`AG.ALT:${req.params.group}`, result, 900);
+			if(!cache) {
+				const holdThis = JSON.parse(JSON.stringify(result));
+				holdThis._id = result._id;
+				holdThis.owner = result.owner;
+				holdThis.active = result.active;
+				await myCache.set(`AG.ALT:${req.params.group}`, JSON.stringify(holdThis), 900);
+			}
 			req.authGroup = result;
 			req.params.group = result._id;
 			//async event emitter for ue events...

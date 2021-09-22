@@ -37,7 +37,6 @@ const api = {
 			}
 			const output = JSON.parse(JSON.stringify(result));
 			output.password = password;
-			ueEvents.emit(req.authGroup.id, 'ue.account.create', output);
 			return res.respond(say.created(output, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
@@ -135,7 +134,6 @@ const api = {
 			}
 			await permissions.enforceOwn(req.permissions, req.params.id);
 			const result = await acct.patchAccount(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd);
-			ueEvents.emit(req.authGroup.id, 'ue.account.edit', result);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
@@ -150,7 +148,6 @@ const api = {
 			if(req.authGroup.owner === req.params.id) throw Boom.badRequest('You can not delete the owner of the auth group');
 			const result = await acct.deleteAccount(req.params.group, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-			ueEvents.emit(req.authGroup.id, 'ue.account.destroy', result);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);

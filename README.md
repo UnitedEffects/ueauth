@@ -339,7 +339,7 @@ This will load session/end screen and auto submit the form to move past and redi
   * validate caching
   * Validate emitter
 
+* can you get an existing instance of provider?
 * finish accounts and other ue events
-  * groups
   * invites
   * notification

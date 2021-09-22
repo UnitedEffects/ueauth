@@ -31,6 +31,9 @@ const et = {
 				}
 			});
 			myCache.set(`ue.events.${groupId}`, true);
+		} else {
+			//console.info('its already set');
+			//console.info(Object.keys(et.stream._events));
 		}
 	}
 };

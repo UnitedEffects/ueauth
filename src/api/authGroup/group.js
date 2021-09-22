@@ -6,6 +6,7 @@ import helper from '../../helper';
 import k from './generate-keys';
 import iat from "../oidc/initialAccess/iat";
 import n from "../plugins/notifications/notifications";
+import ueEvents from "../../events/ueEvents";
 
 const config = require('../../config');
 
@@ -42,8 +43,9 @@ const agp = {
 				}
 			}
 		}
-		console.info(data);
-		return dal.write(data);
+		const output = await dal.write(data);
+		ueEvents.emit(output._id || output.id, 'ue.group.create', output);
+		return output;
 	},
 
 	async completeGroupSignup (group, globalSettings, owner) {
@@ -63,6 +65,7 @@ const agp = {
 				};
 			}
 		} else result.warning = 'Owner will not get a notification, global settings are not enabled';
+		ueEvents.emit(group._id || group.id, 'ue.group.initialize', result);
 		return result;
 	},
 
@@ -80,7 +83,9 @@ const agp = {
 
 	// @notTested
 	async deleteOne(id) {
-		return dal.deleteOne(id);
+		const result = await dal.deleteOne(id);
+		ueEvents.emit(id, 'ue.group.destroy', result);
+		return result;
 	},
 
 	async getOneByEither(q, onlyIncludeActive=true) {
@@ -116,7 +121,9 @@ const agp = {
 			}
 		}
 		patched.modifiedBy = user;
-		return dal.patch(group.id || group._id, patched);
+		const result = await dal.patch(group.id || group._id, patched);
+		ueEvents.emit(group.id || group._id, 'ue.group.edit', result);
+		return result;
 	},
 
 	async switchGroupOwner(group, owner) {
@@ -131,20 +138,28 @@ const agp = {
 		copy.__v = authGroup.__v;
 		copy.associatedClient = clientId;
 		delete copy.securityExpiration;
-		return dal.activatePatch(authGroup._id || authGroup.id, copy);
+		const result = await dal.activatePatch(authGroup._id || authGroup.id, copy);
+		ueEvents.emit(authGroup.id || authGroup._id, 'ue.group.initialize', result);
+		return result;
 	},
 
 	// @notTested
 	async partialUpdate(id, data) {
-		return dal.patchNoOverwrite(id, data);
+		const result = await dal.patchNoOverwrite(id, data);
+		ueEvents.emit(id, 'ue.group.edit', result);
+		return result;
 	},
 
 	async operations(id, operation, user) {
-		const userId = user.sub || 'SYSTEM'
+		const userId = user.sub || 'SYSTEM';
+		let keys;
+		let result;
 		switch (operation) {
 		case 'rotate_keys':
-			const keys = await k.write();
-			return dal.patchNoOverwrite(id, { modifiedBy: userId, 'config.keys': keys });
+			keys = await k.write();
+			result = await dal.patchNoOverwrite(id, { modifiedBy: userId, 'config.keys': keys });
+			ueEvents.emit(id, 'ue.group.edit', result);
+			return result;
 		default:
 			throw Boom.badData('Unknown operation specified');
 		}
