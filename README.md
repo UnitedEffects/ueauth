@@ -339,7 +339,7 @@ This will load session/end screen and auto submit the form to move past and redi
   * validate caching
   * Validate emitter
 
-* can you get an existing instance of provider?
+* can you get an existing instance of provider? When are classes cleaned up? Is there a memory leak?
 * finish accounts and other ue events
   * invites
   * notification

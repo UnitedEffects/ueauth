@@ -23,13 +23,13 @@ const mid = {
 				result = await group.getOneByEither(ctx.req.params.group);
 			} else {
 				console.info('using cached group');
-				console.info(cache);
+				//console.info(cache);
 				result = JSON.parse(cache);
 			}
 			if (!result) throw Boom.notFound('auth group not found');
 			if (!cache) {
 				const holdThis = JSON.parse(JSON.stringify(result));
-				holdThis._id = result._id;
+				holdThis._id = result._id || result.id;
 				holdThis.owner = result.owner;
 				holdThis.active = result.active;
 				await myCache.set(`AG:${ctx.req.params.group}`, JSON.stringify(holdThis), 3600);
