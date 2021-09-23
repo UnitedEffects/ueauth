@@ -338,8 +338,4 @@ This will load session/end screen and auto submit the form to move past and redi
 * Testing
   * validate caching
   * Validate emitter
-
 * make ag caching a function and reusable
-* finish accounts and other ue events
-  * invites
-  * notification

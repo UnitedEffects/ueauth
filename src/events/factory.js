@@ -101,7 +101,8 @@ const OP_EVENTS = {
 		'ue.invite.create',
 		'ue.invite.destroy',
 		'ue.invite.accepted',
-		'ue.invite.rejected',
+		'ue.invite.declined',
+		'ue.invite.resent',
 		'ue.invite.error'
 	],
 	pluginNotification: [

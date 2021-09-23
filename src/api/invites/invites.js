@@ -2,6 +2,7 @@ import dal from './dal';
 import helper from '../../helper';
 import group from '../authGroup/group';
 import Boom from '@hapi/boom';
+import ueEvents from "../../events/ueEvents";
 
 const config = require('../../config');
 
@@ -20,7 +21,9 @@ const inv = {
 			}
 		}));
 		if(valEr.length!==0) throw Boom.badRequest(valEr.join('; '));
-		return dal.createInvite(invite);
+		const result = await dal.createInvite(invite);
+		ueEvents.emit(authGroup.id || authGroup._id, 'ue.invite.create', result);
+		return result;
 	},
 	async incSent(authGroupId, id) {
 		const update = {
@@ -84,7 +87,9 @@ const inv = {
 
 	// @notTested
 	async deleteInvite(authGroupId, id) {
-		return dal.deleteInvite(authGroupId, id);
+		const result = await dal.deleteInvite(authGroupId, id);
+		ueEvents.emit(authGroupId, 'ue.invite.destroy', result);
+		return result;
 	},
 
 	async inviteAuthorizedLookup(authGroupId, sub, type) {

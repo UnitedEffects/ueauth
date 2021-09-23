@@ -10,8 +10,11 @@ class UEStreams {
 	getStream(agId) {
 		return this.streamList[agId];
 	}
-	deleteStream(agId) {
+	removeListeners(agId) {
 		this.streamList[agId].removeAllListeners();
+	}
+	deleteStream(agId) {
+		this.removeListeners(agId);
 		delete this.streamList[agId];
 	}
 	newStream(agId) {

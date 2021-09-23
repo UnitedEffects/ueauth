@@ -4,10 +4,13 @@ import client from '../../oidc/client/clients';
 import group from '../../authGroup/group';
 import helper from "../../../helper";
 import plugins from '../plugins';
+import ueEvents from "../../../events/ueEvents";
 
 export default {
 	async createNotification(data) {
-		return dal.createNotification(data);
+		const result = await dal.createNotification(data);
+		ueEvents.emit(data.authGroupId, 'ue.plugin.notification.create', result);
+		return result;
 	},
 	// @notTested
 	async markNotificationProcessed(id) {
@@ -66,7 +69,8 @@ export default {
 			url: notification.destinationUri
 		};
 		const result = await axios(options);
-		await dal.markProcessed(notification.id || notification._id);
+		const output = await dal.markProcessed(notification.id || notification._id);
+		ueEvents.emit(notification.authGroupId, 'ue.plugin.notification.sent', output);
 		return result;
 	},
 	// @notTested

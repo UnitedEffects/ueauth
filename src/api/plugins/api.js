@@ -3,6 +3,7 @@ import { say } from '../../say';
 import pins from './plugins';
 import notifications from './notifications/notifications';
 import permissions from "../../permissions";
+import ueEvents from "../../events/ueEvents";
 
 const config = require('../../config');
 
@@ -68,8 +69,11 @@ const api = {
 		} catch (error) {
 			if (error.isAxiosError) {
 				await notifications.deleteNotification(req.authGroup, result.id);
-				return next(Boom.failedDependency('The notification plugin service did not process this request'));
+				const newError = Boom.failedDependency(`The notification plugin service did not process the request for notification: ${result.id}`);
+				ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', newError);
+				return next(newError);
 			}
+			ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', error);
 			return next(error);
 		}
 	},
@@ -103,6 +107,7 @@ const api = {
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', error);
 			next(error);
 		}
 	},
@@ -116,8 +121,11 @@ const api = {
 			return res.respond(say.ok(result, RESOURCE));
 		}catch (error) {
 			if (error.isAxiosError) {
-				return next(Boom.failedDependency('The notification plugin service did not process this request'));
+				const newError = Boom.failedDependency(`The notification plugin service did not process this request for notification: ${req.params.id}`);
+				ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', newError);
+				return next(newError);
 			}
+			ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', error);
 			return next(error);
 		}
 	},
@@ -128,10 +136,11 @@ const api = {
 			const out = {
 				message: 'Request received and processing attempted. Validate processed property on each result. This API returns 200 upon completion of the task regardless of outcome for each result',
 				result
-			}
+			};
 			return res.respond(say.ok(out, RESOURCE));
 		}catch (error) {
-			next(error)
+			ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', error);
+			next(error);
 		}
 	}
 };
