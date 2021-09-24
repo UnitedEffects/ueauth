@@ -39,7 +39,7 @@ jobs:
 
       # Deploy to QA
       - name: Deploy
-        run: SLS_ENV=QA NODE_ENV=QA yarn simple-deploy
+        run: yarn simple-deploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -57,7 +57,7 @@ jobs:
           COOKIE_KEYS: ${{ secrets.COOKIE_KEYS }}
           ALLOW_ROOT_CREATION: false
           ROOT_EMAIL: ${{ secrets.ROOT_EMAIL }}
-          ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ""
+          ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${{ secrets.ONE_TIME_PERSONAL_ROOT_CREATION_KEY }}
           FULL_SUPER_CONTROL: true
           OPEN_GROUP_REG: ${{ secrets.OPEN_GROUP_REG }}
           ROOT_COMPANY_NAME: United Effects
