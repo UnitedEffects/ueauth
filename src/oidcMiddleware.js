@@ -3,6 +3,7 @@ import clients from './api/oidc/client/clients';
 import group from './api/authGroup/group';
 import IAT from './api/oidc/initialAccess/iat';
 import errHandler from './customErrorHandler';
+import helper from './helper';
 import NodeCache from 'node-cache';
 
 const myCache = new NodeCache();
@@ -16,24 +17,7 @@ const mid = {
 				return next();
 			}
 			if (!ctx.req.params.group) throw Boom.preconditionRequired('authGroup is required');
-			let result;
-			console.info(ctx.req);
-			const cache = (ctx.req.query.resetCache) ? undefined : await myCache.get(`AG:${ctx.req.params.group}`);
-			if(!cache) {
-				result = await group.getOneByEither(ctx.req.params.group);
-			} else {
-				console.info('using cached group');
-				//console.info(cache);
-				result = JSON.parse(cache);
-			}
-			if (!result) throw Boom.notFound('auth group not found');
-			if (!cache) {
-				const holdThis = JSON.parse(JSON.stringify(result));
-				holdThis._id = result._id || result.id;
-				holdThis.owner = result.owner;
-				holdThis.active = result.active;
-				await myCache.set(`AG:${ctx.req.params.group}`, JSON.stringify(holdThis), 3600);
-			}
+			const result = await helper.cacheAG(ctx.req.query.resetCache, 'AG', ctx.req.params.group);
 			ctx.authGroup = result;
 			ctx.req.params.group = result._id;
 			return next();

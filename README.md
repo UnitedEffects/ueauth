@@ -332,10 +332,3 @@ It is possible to logout without having to click through the confirmation prompt
   * Note: you could use id_token_hint and your id_token instead of the client_id
 
 This will load session/end screen and auto submit the form to move past and redirect to the provided uri
-
-## Todo
-
-* Testing
-  * validate caching
-  * Validate emitter
-* make ag caching a function and reusable

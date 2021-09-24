@@ -10,7 +10,6 @@ import enforce from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from './api/plugins/plugins';
-import ueEvents from './events/ueEvents';
 import NodeCache from 'node-cache';
 
 const myCache = new NodeCache();
@@ -129,27 +128,32 @@ const mid = {
 
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
 			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
-			let result;
-			const cache = (req.query.resetCache) ? undefined : await myCache.get(`AG:${req.params.group}`);
-			if(!cache) {
-				result = await group.getOneByEither(req.params.group);
-			} else {
-				result = JSON.parse(cache);
-			}
-			if (!result) throw Boom.notFound('auth group not found');
-			if (!cache) {
-				const holdThis = JSON.parse(JSON.stringify(result));
-				holdThis._id = result._id;
-				holdThis.owner = result.owner;
-				holdThis.active = result.active;
-				await myCache.set(`AG:${req.params.group}`, JSON.stringify(holdThis), 3600);
-			}
+			const result = await helper.cacheAG(req.query.resetCache, 'AG', req.params.group);
 			req.authGroup = result;
 			req.params.group = result._id || result.id;
 			return next();
 		} catch (error) {
 			next(error);
 		}
+	},
+	// send to helper
+	async cacheAG(reset, prefix, id) {
+		let result;
+		const cache = (reset) ? undefined : await myCache.get(`${prefix}:${id}`);
+		if(!cache) {
+			result = await group.getOneByEither(id);
+		} else {
+			result = JSON.parse(cache);
+		}
+		if (!result) throw Boom.notFound('auth group not found');
+		if (!cache) {
+			const holdThis = JSON.parse(JSON.stringify(result));
+			holdThis._id = result._id;
+			holdThis.owner = result.owner;
+			holdThis.active = result.active;
+			await myCache.set(`${prefix}:${id}`, JSON.stringify(holdThis), 3600);
+		}
+		return result;
 	},
 	async permissions( req, res, next) {
 		try {
@@ -217,19 +221,7 @@ const mid = {
 		try {
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
 			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
-			let result;
-			const cache = (req.query.resetCache) ? undefined : await myCache.get(`AG.ALT:${req.params.group}`);
-			if(!cache) {
-				result = await group.getOneByEither(req.params.group, false);
-			} else result = JSON.parse(cache);
-			if (!result) throw Boom.notFound('auth group not found');
-			if(!cache) {
-				const holdThis = JSON.parse(JSON.stringify(result));
-				holdThis._id = result._id;
-				holdThis.owner = result.owner;
-				holdThis.active = result.active;
-				await myCache.set(`AG.ALT:${req.params.group}`, JSON.stringify(holdThis), 900);
-			}
+			const result = await helper.cacheAG(req.query.resetCache, 'AG.ALT', req.params.group);
 			req.authGroup = result;
 			req.params.group = result._id;
 			return next();
