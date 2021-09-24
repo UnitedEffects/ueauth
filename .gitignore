@@ -47,4 +47,4 @@ src/api/ueAuth/
 *.icloud
 src/jwks-old.json
 src/jwks.json
-debug/
+debugging/
