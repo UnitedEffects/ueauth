@@ -1,6 +1,3 @@
-require('@babel/register');
-require('regenerator-runtime');
-
 const app = require('./app').default;
 const http = require('http');
 

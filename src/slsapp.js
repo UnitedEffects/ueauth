@@ -1,5 +1,3 @@
-require('regenerator-runtime');
-
 const sls = require('serverless-http');
 const app = require('./app').default;
 const connection = require('./connection').default;

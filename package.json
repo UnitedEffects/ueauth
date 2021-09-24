@@ -1,17 +1,17 @@
 {
-  "name": "UE-Auth",
-  "version": "0.14.15",
+  "name": "ue-auth",
+  "version": "0.14.16",
   "description": "UE Auth is a multi-tenant OIDC Provider intended to serve small to midsize organization that require functionality similar to those provided by enterprise Identity and Access SaaS providers but without the costs associated to the full scale of those solutions.",
   "private": true,
   "scripts": {
-    "start": "node ./src/start.js",
-    "dev": "NODE_ENV=dev nodemon ./src/start.js",
-    "dist": "nodemon ./dist/start.js",
-    "build": "yarn && yarn test && babel src -d dist",
-    "package": "yarn && yarn test && babel src -d dist && sls package",
-    "deploy": "yarn && yarn test && babel src -d dist && sls deploy",
+    "start": "node ./dist/start.js",
+    "dev": "NODE_ENV=dev nodemon ./src/debug/start.js",
+    "build": "babel src -d dist",
+    "package": "yarn test && yarn build && sls package",
+    "deploy": "yarn test && yarn build && sls deploy",
     "simple-deploy": "sls deploy",
-    "test": "jest",
+    "test": "yarn && jest",
+    "clean": "rm -rf ./node_modules",
     "test-notifications": "nodemon ./test/testserver.js"
   },
   "keywords": [
@@ -42,9 +42,6 @@
   },
   "logo": "https://ue-platform-content.s3.amazonaws.com/6e5eab3d-d4e6-4a18-87c5-18be5e46f507",
   "dependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/register": "^7.7.4",
     "@hapi/boom": "^9.1.0",
     "axios": "^0.21.1",
     "basic-auth": "^2.0.1",
@@ -79,12 +76,15 @@
     "passport-http-bearer": "^1.0.1",
     "pug": "^3.0.1",
     "qs": "^6.10.1",
-    "regenerator-runtime": "^0.13.3",
     "serverless-http": "^2.3.2",
     "uuid": "^8.3.2",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/register": "^7.7.4",
+    "regenerator-runtime": "^0.13.3",
     "@babel/cli": "^7.6.4",
     "babel-eslint": "^10.0.3",
     "babel-jest": "^27.2.0",

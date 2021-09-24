@@ -25,9 +25,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Install, Build and Test
+      # Install, Test & Build
       - name: Build
-        run: yarn build
+        run: yarn test && yarn build
 
       # Install serverless
       - name: Install Serverless

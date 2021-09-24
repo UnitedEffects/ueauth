@@ -4,7 +4,7 @@ RUN mkdir /app
 
 COPY . /app
 WORKDIR /app
-RUN yarn --production
+RUN yarn test && yarn build && yarn clean && yarn --production
 
 EXPOSE 3000
 
