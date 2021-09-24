@@ -46,4 +46,4 @@ https://github.com/UnitedEffects/ueauth/wiki/Developer-Info
 
 ## Notifications Plugin
 
-https://github.com/UnitedEffects/ueauth/wiki/Notificatin-Plugin
+https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
