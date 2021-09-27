@@ -1,5 +1,5 @@
 import express from 'express';
-import account from '../api/accounts/api';
+import org from '../api/orgs/api';
 import group from '../api/authGroup/api';
 import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
@@ -19,11 +19,38 @@ router.get('/:group/access/account/:id', PENDING);
 router.get('/:group/access/validate', PENDING);
 
 // Organizations
-router.get('/:group/organizations', PENDING);
-router.post('/:group/organizations', PENDING);
-router.get('/:group/organizations/:id', PENDING);
-router.patch('/:group/organizations/:id', PENDING);
-router.delete('/:group/organizations/:id', PENDING);
+router.get('/:group/organizations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], org.getOrgs);
+router.post('/:group/organizations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], org.writeOrg);
+router.get('/:group/organizations/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], org.getOrg);
+router.patch('/:group/organizations/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], org.patchOrg);
+router.delete('/:group/organizations/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], org.deleteOrg);
 
 // Domains
 router.get('/:group/organizations/:org/domains', PENDING);

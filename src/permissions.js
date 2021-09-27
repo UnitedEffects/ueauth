@@ -266,6 +266,10 @@ const Owner = [
 	{
 		target: 'notification',
 		actions: 'create read:all delete:all update:all'
+	},
+	{
+		target: 'organizations',
+		actions: 'create read:all delete:all update:all'
 	}
 ];
 

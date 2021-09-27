@@ -82,7 +82,8 @@ const config = {
 		account: true,
 		group: true,
 		invite: true,
-		pluginNotification: true
+		pluginNotification: true,
+		organization: true
 	}
 };
 

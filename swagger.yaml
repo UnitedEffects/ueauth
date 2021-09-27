@@ -32,8 +32,8 @@ tags:
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Notification
     description: Manage notifications sent to the http notification plugin
-  - name: Organizations - PENDING
-    description: Create or View organization data - NOT YET FUNCTIONAL
+  - name: Organizations
+    description: Create or View organization data
   - name: Domains - PENDING
     description: Create, Update, View or Delete domains within a Org - NOT YET FUNCTIONAL
   - name: Products - PENDING
@@ -2799,7 +2799,7 @@ paths:
   /api/{group}/organizations:
     get:
       tags:
-        - Organizations - PENDING
+        - Organizations
       description: Get organizations
       parameters:
         - name: group
@@ -2864,7 +2864,7 @@ paths:
         - openId: []
     post:
       tags:
-        - Organizations - PENDING
+        - Organizations
       description: Create a organization
       parameters:
         - name: group
@@ -2905,7 +2905,7 @@ paths:
   /api/{group}/organizations/{id}:
     get:
       tags:
-        - Organizations - PENDING
+        - Organizations
       description: Get organization by Id
       operationId: getOrg
       parameters:
@@ -2945,7 +2945,7 @@ paths:
         - openId: []
     patch:
       tags:
-        - Organizations - PENDING
+        - Organizations
       description: Refresh Org Data manually by hitting the source of truth
       operationId: updateOrg
       parameters:
@@ -2980,12 +2980,19 @@ paths:
           $ref: '#/components/responses/InvalidInput'
         '417':
           $ref: '#/components/responses/ExpectationFailed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your account object
+        required: true
       security:
         - bearer: []
         - openId: []
     delete:
       tags:
-        - Organizations - PENDING
+        - Organizations
       description: Delete local IAM record of the organization
       operationId: deleteOrg
       parameters:
