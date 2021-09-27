@@ -34,8 +34,8 @@ tags:
     description: Manage notifications sent to the http notification plugin
   - name: Organizations
     description: Create or View organization data
-  - name: Domains - PENDING
-    description: Create, Update, View or Delete domains within a Org - NOT YET FUNCTIONAL
+  - name: Domains
+    description: Create, Update, View or Delete domains within a Org
   - name: Products - PENDING
     description: Create, Update, View or Delete Products - NOT YET FUNCTIONAL
   - name: Roles - PENDING
@@ -3030,7 +3030,7 @@ paths:
   /api/{group}/organizations/{org}/domains/{id}:
     get:
       tags:
-        - Domains - PENDING
+        - Domains
       description: Get domain info by Id
       operationId: getDomain
       parameters:
@@ -3077,7 +3077,7 @@ paths:
 
     patch:
       tags:
-        - Domains - PENDING
+        - Domains
       description: Update domain Info
       operationId: updateDomain
       parameters:
@@ -3122,7 +3122,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/domain'
+              $ref: '#/components/schemas/jsonPatch'
         description: Create a new role
         required: true
       security:
@@ -3130,7 +3130,7 @@ paths:
         - openId: []
     delete:
       tags:
-        - Domains - PENDING
+        - Domains
       description: Delete domain
       operationId: deleteDomain
       parameters:
@@ -3174,7 +3174,7 @@ paths:
   /api/{group}/organizations/{org}/domains:
     get:
       tags:
-        - Domains - PENDING
+        - Domains
       description: Get all domains by organizations Id
       operationId: getDomains
       parameters:
@@ -3246,7 +3246,7 @@ paths:
         - openId: []
     post:
       tags:
-        - Domains - PENDING
+        - Domains
       description: Create a domain in a specified organizations
       operationId: createDomain
       parameters:
@@ -4799,6 +4799,17 @@ components:
           type: string
         authGroup:
           type: string
+        active:
+          type: boolean
+        associatedProducts:
+          description: these are products for which the organization has purchased a license
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: unique ID of the product from the global list associated to the authgroup
 
     writeOrganization:
       type: object
@@ -4838,27 +4849,37 @@ components:
     domain:
       type: object
       additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/writeDomain'
       properties:
         id:
           type: string
           format: guid
-        name:
-          type: string
-        description:
-          type: string
-        updateAt:
+        modifiedAt:
           type: string
           format: date-time
         createdAt:
           type: string
           format: date-time
+        modifiedBy:
+          type: string
+        createdBy:
+          type: string
+        authGroup:
+          type: string
         organization:
           type: string
-          format: guid
-        associatedProducts:
+        active:
+          type: boolean
+          example: true
+        associatedOrgProducts:
           type: array
           items:
-            $ref: '#/components/schemas/product'
+            type: object
+            properties:
+              id:
+                type: string
+                description: products associated to the org, now associated to the domain
 
     writeDomain:
       type: object
@@ -4868,10 +4889,9 @@ components:
           type: string
         description:
           type: string
-        associatedProductIds:
-          type: array
-          items:
-            type: string
+        externalId:
+          type: string
+          description: linking to external systems
 
     permission:
       type: object

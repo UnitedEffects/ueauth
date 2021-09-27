@@ -1,6 +1,6 @@
 import express from 'express';
 import org from '../api/orgs/api';
-import group from '../api/authGroup/api';
+import dom from '../api/domains/api';
 import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
@@ -53,11 +53,43 @@ router.delete('/:group/organizations/:id', [
 ], org.deleteOrg);
 
 // Domains
-router.get('/:group/organizations/:org/domains', PENDING);
-router.post('/:group/organizations/:org/domains', PENDING);
-router.get('/:group/organizations/:org/domains/:id', PENDING);
-router.patch('/:group/organizations/:org/domains/:id', PENDING);
-router.delete('/:group/organizations/:org/domains/:id', PENDING);
+router.get('/:group/organizations/:org/domains', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], dom.getDomains);
+router.post('/:group/organizations/:org/domains', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], dom.writeDomain);
+router.get('/:group/organizations/:org/domains/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], dom.getDomain);
+router.patch('/:group/organizations/:org/domains/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], dom.patchDomain);
+router.delete('/:group/organizations/:org/domains/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], dom.deleteDomain);
 
 // Products
 router.get('/:group/organizations/:org/products', PENDING);

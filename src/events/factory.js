@@ -115,6 +115,12 @@ const OP_EVENTS = {
 		'ue.organization.edit',
 		'ue.organization.destroy',
 		'ue.organization.error'
+	],
+	domain: [
+		'ue.domain.create',
+		'ue.domain.edit',
+		'ue.domain.destroy',
+		'ue.domain.error'
 	]
 };
 

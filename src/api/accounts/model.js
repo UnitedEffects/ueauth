@@ -46,6 +46,15 @@ const accountSchema = new mongoose.Schema({
 		type: Boolean,
 		default: true
 	},
+	// Organizations the User has accepted access to
+	organizations: [{
+		id: String
+	}],
+	// Domains within the organization the user has access to
+	orgDomains: [{
+		organizationId: String,
+		id: String
+	}],
 	metadata: Object,
 	_id: {
 		type: String,

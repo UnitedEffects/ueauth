@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 mongoose.set('useCreateIndex', true);
 
-const orgSchema = new mongoose.Schema({
+const domainSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
 		default: Date.now()
@@ -24,6 +24,10 @@ const orgSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	organization: {
+		type: String,
+		required: true
+	},
 	name: {
 		type: String,
 		required: true
@@ -33,47 +37,38 @@ const orgSchema = new mongoose.Schema({
 		default: true
 	},
 	description: String,
-	type: {
-		type: String,
-		default: 'customer',
-		enum: ['customer', 'external', 'internal', 'other']
-	},
-	contactName: String,
-	contactAddress: String,
-	contactPhone: String,
-	externalId: String,
-	metadata: Object,
-	// products purchased/licensed/accessed by the organization
-	associatedProducts: [{
-		id: String,
+	// products from the organization now associated to this domain
+	associatedOrgProducts: [{
+		id: String
 	}],
+	externalId: String,
 	_id: {
 		type: String,
 		default: uuid
 	}
 },{ _id: false });
 
-orgSchema.index({ name: 1, authGroup: 1}, { unique: true });
+domainSchema.index({ name: 1, organization: 1}, { unique: true });
 
 
-orgSchema.pre('save', function(callback) {
+domainSchema.pre('save', function(callback) {
 	//license check
 	callback();
 });
 
-orgSchema.virtual('id').get(function(){
+domainSchema.virtual('id').get(function(){
 	return this._id.toString();
 });
 
-orgSchema.set('toJSON', {
+domainSchema.set('toJSON', {
 	virtuals: true
 });
 
-orgSchema.options.toJSON.transform = function (doc, ret, options) {
+domainSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
 };
 
 // Export the Mongoose model
-export default mongoose.model('organizations', orgSchema);
+export default mongoose.model('domains', domainSchema);

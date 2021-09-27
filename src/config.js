@@ -83,7 +83,8 @@ const config = {
 		group: true,
 		invite: true,
 		pluginNotification: true,
-		organization: true
+		organization: true,
+		domain: true
 	}
 };
 

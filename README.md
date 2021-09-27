@@ -47,3 +47,12 @@ https://github.com/UnitedEffects/ueauth/wiki/Developer-Info
 ## Notifications Plugin
 
 https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
+
+
+## Todo
+
+* TEST - Make sure you can't POST with assocaitedProducts, account.orgs or account.domains
+* Ensure products added to organization are added 1 at a time and that they exist in the authgroup first
+* Ensure products added to a domain are added 1 at a time and that they exist in the organization first
+* Ensure org added to an account exsists first
+* Ensure domain added to an account exists and is part of the associated org first
