@@ -127,6 +127,12 @@ const OP_EVENTS = {
 		'ue.product.edit',
 		'ue.product.destroy',
 		'ue.product.error'
+	],
+	role: [
+		'ue.role.create',
+		'ue.role.edit',
+		'ue.role.destroy',
+		'ue.role.error'
 	]
 };
 

@@ -270,6 +270,22 @@ const Owner = [
 	{
 		target: 'organizations',
 		actions: 'create read:all delete:all update:all'
+	},
+	{
+		target: 'products',
+		actions: 'create read:all delete:all update:all'
+	},
+	{
+		target: 'organizations:domains',
+		actions: 'create read:all delete:all update:all'
+	},
+	{
+		target: 'products:roles',
+		actions: 'create read:all delete:all update:all'
+	},
+	{
+		target: 'roles',
+		actions: 'create read:all delete:all update:all'
 	}
 ];
 

@@ -51,6 +51,11 @@ https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
 
 ## Todo
 
+* roles - TEST all
+----
+* permissions
+* replace internal permissions system and modify initialization
+* scoped access queries
 * Setup invites to orgs and/or domains
 * Document useful queries
     * all users in an organization

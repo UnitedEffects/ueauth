@@ -2,7 +2,7 @@ import express from 'express';
 import org from '../api/orgs/api';
 import dom from '../api/domains/api';
 import prod from '../api/products/api';
-import client from '../api/oidc/client/api';
+import role from '../api/roles/api';
 import plugins from '../api/plugins/api';
 import access from '../api/oidc/access/api';
 import m from '../middleware';
@@ -126,13 +126,70 @@ router.delete('/:group/products/:id', [
 ], prod.deleteProduct);
 
 // Roles
-router.get('/:group/products/:product/roles', PENDING);
-router.post('/:group/products/:product/roles', PENDING);
-router.get('/:group/products/:product/roles/:id', PENDING);
-router.patch('/:group/products/:product/roles/:id', PENDING);
-router.delete('/:group/products/:product/roles/:id', PENDING);
-router.get('/:group/organizations/:org/products/:product/roles', PENDING);
-router.post('/:group/organizations/:org/products/:product/roles', PENDING);
+router.get('/:group/products/:product/roles', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], role.getRoles);
+router.post('/:group/products/:product/roles', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], role.writeRole);
+router.get('/:group/products/:product/roles/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], role.getRole);
+router.patch('/:group/products/:product/roles/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], role.patchRole);
+router.delete('/:group/products/:product/roles/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], role.deleteRole);
+// Roles Across Products
+router.get('/:group/roles', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], role.getAllRoles);
+// custom roles
+router.get('/:group/organizations/:org/products/:product/roles', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], role.getOrganizationRoles);
+router.post('/:group/organizations/:org/products/:product/roles', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], role.writeCustom);
 
 // Permissions
 router.get('/:group/organization/:org/permissions', PENDING);
