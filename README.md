@@ -52,8 +52,8 @@ https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
 ## Todo
 
 * TEST - Make sure you can't POST with account.orgs or account.domains
-* Ensure products added to organization are added 1 at a time and that they exist in the authgroup first
-* Ensure products added to a domain are added 1 at a time and that they exist in the organization first
+* if product is deleted, it must be removed from all organizations and all domains
+* if product is removed from organization, it must be removed from all associated domains
 * Ensure org added to an account exsists first
 * Ensure domain added to an account exists and is part of the associated org first
 * Setup invites to orgs and/or domains

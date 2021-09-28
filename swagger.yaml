@@ -2103,12 +2103,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
-          in: path
-          description: organization Id
-          required: true
-          schema:
-            type: string
         - name: $filter
           in: query
           description: oData filter Query
@@ -2173,12 +2167,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
-          in: path
-          description: organization Id
-          required: true
-          schema:
-            type: string
       responses:
         '201':
           description: successful operation
@@ -2222,12 +2210,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
-          in: path
-          description: organization Id
-          required: true
-          schema:
-            type: string
         - name: id
           in: path
           description: >-
@@ -2266,12 +2248,6 @@ paths:
         - name: group
           in: path
           description: Auth Group Id or name
-          required: true
-          schema:
-            type: string
-        - name: org
-          in: path
-          description: organization Id
           required: true
           schema:
             type: string
@@ -2320,12 +2296,6 @@ paths:
         - name: group
           in: path
           description: Auth Group Id or name
-          required: true
-          schema:
-            type: string
-        - name: org
-          in: path
-          description: organization Id
           required: true
           schema:
             type: string
@@ -4817,11 +4787,8 @@ components:
           description: these are products for which the organization has purchased a license
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: unique ID of the product from the global list associated to the authgroup
+            type: string
+            description: unique IDs of the product from the global list associated to the authgroup
 
     writeOrganization:
       type: object
@@ -4887,11 +4854,8 @@ components:
         associatedOrgProducts:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: products associated to the org, now associated to the domain
+            type: string
+            description: products associated to the org, now associated to the domain
 
     writeDomain:
       type: object

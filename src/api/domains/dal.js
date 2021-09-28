@@ -18,6 +18,10 @@ export default {
 	},
 	async patchDomain(authGroup, organization, id, data) {
 		data.modifiedAt = Date.now();
-		return Domain.findOneAndUpdate({ _id: id, authGroup, organization }, data, { new: true, overwrite: true });
+		const options = { new: true, overwrite: true };
+		if(data.associatedOrgProducts.length > 0) {
+			options.runValidators = true;
+		}
+		return Domain.findOneAndUpdate({ _id: id, authGroup, organization }, data, options);
 	}
 };

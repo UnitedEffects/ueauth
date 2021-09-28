@@ -1,7 +1,7 @@
 import Product from './model';
 
 export default {
-	async writeDomain(data) {
+	async writeProduct(data) {
 		const product =  new Product(data);
 		return product.save();
 	},

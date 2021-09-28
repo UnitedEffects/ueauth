@@ -1,7 +1,7 @@
 import express from 'express';
 import org from '../api/orgs/api';
 import dom from '../api/domains/api';
-import invite from '../api/invites/api';
+import prod from '../api/products/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
 import access from '../api/oidc/access/api';
@@ -92,20 +92,38 @@ router.delete('/:group/organizations/:org/domains/:id', [
 ], dom.deleteDomain);
 
 // Products
-router.get('/:group/organizations/:org/products', PENDING);
-router.post('/:group/organizations/:org/products', PENDING);
-router.get('/:group/organizations/:org/products/:id', PENDING);
-router.patch('/:group/organizations/:org/products/:id', PENDING);
-router.delete('/:group/organizations/:org/products/:id', PENDING);
-
-// Products
-router.get('/:group/products', PENDING);
-router.post('/:group/products', PENDING);
-router.get('/:group/products/:id', PENDING);
-router.patch('/:group/products/:id', PENDING);
-router.delete('/:group/products/:id', PENDING);
-router.get('/:group/organizations/:org/products', PENDING);
-router.post('/:group/organizations/:org/products', PENDING);
+router.get('/:group/products', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], prod.getProducts);
+router.post('/:group/products', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], prod.writeProduct);
+router.get('/:group/products/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], prod.getProduct);
+router.patch('/:group/products/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], prod.patchProduct);
+router.delete('/:group/products/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], prod.deleteProduct);
 
 // Roles
 router.get('/:group/products/:product/roles', PENDING);

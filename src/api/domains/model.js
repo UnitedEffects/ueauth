@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
+import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
 
@@ -38,9 +39,17 @@ const domainSchema = new mongoose.Schema({
 	},
 	description: String,
 	// products from the organization now associated to this domain
-	associatedOrgProducts: [{
-		id: String
-	}],
+	associatedOrgProducts: [
+		{
+			type: String,
+			validate: {
+				validator: function (v) {
+					return h.validateOrgProductReference(mongoose.model('organizations'), this.organization, this.authGroup, v);
+				},
+				message: 'Product does not exist as part of the organization'
+			}
+		}
+	],
 	externalId: String,
 	_id: {
 		type: String,
@@ -53,6 +62,12 @@ domainSchema.index({ name: 1, organization: 1}, { unique: true });
 
 domainSchema.pre('save', function(callback) {
 	//license check
+	callback();
+});
+
+domainSchema.pre('findOneAndUpdate', function(callback) {
+	// deduplicate list
+	this._update.associatedOrgProducts= [...new Set(this._update.associatedOrgProducts)];
 	callback();
 });
 

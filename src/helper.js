@@ -116,4 +116,13 @@ export default {
 		}
 		return result;
 	},
+	async validateProductReference (model, id, authGroup) {
+		const result = await model.findOne({ _id: id, authGroup });
+		return !!result;
+	},
+	async validateOrgProductReference (model, orgId, authGroup, productId) {
+		const result = await model.findOne({ _id: orgId, authGroup }).select( { associatedProducts: 1 });
+		if(!result) return false;
+		return (result.associatedProducts.includes(productId));
+	}
 };

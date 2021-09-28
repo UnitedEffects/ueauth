@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
-
+import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
 const orgSchema = new mongoose.Schema({
@@ -44,9 +44,18 @@ const orgSchema = new mongoose.Schema({
 	externalId: String,
 	metadata: Object,
 	// products purchased/licensed/accessed by the organization
-	associatedProducts: [{
-		id: String,
-	}],
+	associatedProducts: [
+		{
+			type: String,
+			validate: {
+				validator: function (v) {
+					const ag = this.authGroup;
+					return h.validateProductReference(mongoose.model('products'), v, ag);
+				},
+				message: 'Product does not exist'
+			}
+		}
+	],
 	_id: {
 		type: String,
 		default: uuid
@@ -55,9 +64,14 @@ const orgSchema = new mongoose.Schema({
 
 orgSchema.index({ name: 1, authGroup: 1}, { unique: true });
 
-
 orgSchema.pre('save', function(callback) {
 	//license check
+	callback();
+});
+
+orgSchema.pre('findOneAndUpdate', function(callback) {
+	// deduplicate list
+	this._update.associatedProducts= [...new Set(this._update.associatedProducts)];
 	callback();
 });
 

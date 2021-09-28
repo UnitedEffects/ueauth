@@ -17,6 +17,10 @@ export default {
 	},
 	async patchOrg(authGroup, id, data) {
 		data.modifiedAt = Date.now();
-		return Organization.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true });
+		const options = { new: true, overwrite: true };
+		if(data.associatedProducts.length > 0) {
+			options.runValidators = true;
+		}
+		return Organization.findOneAndUpdate({ _id: id, authGroup }, data, options);
 	}
 };
