@@ -1,5 +1,7 @@
 import jsonPatch from 'jsonpatch';
+import Boom from '@hapi/boom';
 import dal from './dal';
+import org from '../orgs/orgs';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 
@@ -22,6 +24,10 @@ export default {
 
 	// @notTested
 	async deleteProduct(authGroupId, id) {
+		const checkOrgs = await org.checkProduct(authGroupId, id);
+		if(checkOrgs) {
+			throw Boom.badRequest('You must remove this product from the following organizations before deleting', checkOrgs);
+		}
 		const result = await dal.deleteProduct(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.product.destroy', result);
 	},

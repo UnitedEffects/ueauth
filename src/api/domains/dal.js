@@ -23,5 +23,8 @@ export default {
 			options.runValidators = true;
 		}
 		return Domain.findOneAndUpdate({ _id: id, authGroup, organization }, data, options);
+	},
+	async checkProducts(authGroup, organization, productId) {
+		return Domain.find({ authGroup, organization, associatedOrgProducts: productId }).select({ _id: 1, name: 1, description: 1, active: 1, externalId: 1 });
 	}
 };

@@ -33,5 +33,11 @@ export default {
 		const result = await dal.patchDomain(authGroup.id || authGroup._id, orgId, id, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.domain.edit', result);
 		return result;
+	},
+
+	async checkProducts(authGroup, organization, id) {
+		const result = await dal.checkProducts(authGroup, organization, id);
+		if(result.length === 0) return false;
+		return result;
 	}
 };
