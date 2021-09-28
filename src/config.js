@@ -84,7 +84,8 @@ const config = {
 		invite: true,
 		pluginNotification: true,
 		organization: true,
-		domain: true
+		domain: true,
+		product: true
 	}
 };
 

@@ -36,8 +36,8 @@ tags:
     description: Create or View organization data
   - name: Domains
     description: Create, Update, View or Delete domains within a Org
-  - name: Products - PENDING
-    description: Create, Update, View or Delete Products - NOT YET FUNCTIONAL
+  - name: Products
+    description: Create, Update, View or Delete Products
   - name: Roles - PENDING
     description: Create, Update, View or Delete roles globally for all products and all organizations - NOT YET FUNCTIONAL
   - name: Permissions - PENDING
@@ -1971,129 +1971,129 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organizations/{org}/products:
-    get:
-      tags:
-        - Products - PENDING
-      description: Get all products associated to an organization
-      operationId: getProductsByOrg
-      parameters:
-        - name: group
-          in: path
-          description: Auth Group Id or name
-          required: true
-          schema:
-            type: string
-        - name: org
-          in: path
-          description: organization Id
-          required: true
-          schema:
-            type: string
-        - name: $filter
-          in: query
-          description: oData filter Query
-          required: false
-          schema:
-            type: string
-        - name: $select
-          in: query
-          description: oData select Query
-          required: false
-          schema:
-            type: string
-        - name: $orderby
-          in: query
-          description: oData orderby Query
-          required: false
-          schema:
-            type: string
-        - name: $skip
-          in: query
-          description: oData skip Query
-          required: false
-          schema:
-            type: integer
-        - name: $top
-          in: query
-          description: oData top Query
-          required: false
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/product'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-    post:
-      tags:
-        - Products - PENDING
-      description: Create new product to organization association
-      operationId: associateProduct
-      parameters:
-        - name: group
-          in: path
-          description: Auth Group Id or name
-          required: true
-          schema:
-            type: string
-        - name: org
-          in: path
-          description: organization Id
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/product'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/writeProduct'
-        description: Updated user object
-        required: true
+#  /api/{group}/organizations/{org}/products:
+#    get:
+#      tags:
+#        - Products
+#      description: Get all products associated to an organization
+#      operationId: getProductsByOrg
+#      parameters:
+#        - name: group
+#          in: path
+#          description: Auth Group Id or name
+#          required: true
+#          schema:
+#            type: string
+#        - name: org
+#          in: path
+#          description: organization Id
+#          required: true
+#          schema:
+#            type: string
+#        - name: $filter
+#          in: query
+#          description: oData filter Query
+#          required: false
+#          schema:
+#            type: string
+#        - name: $select
+#          in: query
+#          description: oData select Query
+#          required: false
+#          schema:
+#            type: string
+#        - name: $orderby
+#          in: query
+#          description: oData orderby Query
+#          required: false
+#          schema:
+#            type: string
+#        - name: $skip
+#          in: query
+#          description: oData skip Query
+#          required: false
+#          schema:
+#            type: integer
+#        - name: $top
+#          in: query
+#          description: oData top Query
+#          required: false
+#          schema:
+#            type: integer
+#      responses:
+#        '200':
+#          description: successful operation
+#          content:
+#            application/json:
+#              schema:
+#                type: array
+#                items:
+#                  $ref: '#/components/schemas/product'
+#        '400':
+#          $ref: '#/components/responses/BadRequest'
+#        '401':
+#          $ref: '#/components/responses/Unauthorized'
+#        '403':
+#          $ref: '#/components/responses/Forbidden'
+#        '405':
+#          $ref: '#/components/responses/InvalidInput'
+#        '417':
+#          $ref: '#/components/responses/ExpectationFailed'
+#      security:
+#        - bearer: []
+#        - openId: []
+#    post:
+#      tags:
+#        - Products
+#      description: Create new product to organization association
+#      operationId: associateProduct
+#      parameters:
+#        - name: group
+#          in: path
+#          description: Auth Group Id or name
+#          required: true
+#          schema:
+#            type: string
+#        - name: org
+#          in: path
+#          description: organization Id
+#          required: true
+#          schema:
+#            type: string
+#      responses:
+#        '201':
+#          description: successful operation
+#          content:
+#            application/json:
+#              schema:
+#                type: array
+#                items:
+#                  $ref: '#/components/schemas/product'
+#        '400':
+#          $ref: '#/components/responses/BadRequest'
+#        '401':
+#          $ref: '#/components/responses/Unauthorized'
+#        '403':
+#          $ref: '#/components/responses/Forbidden'
+#        '405':
+#          $ref: '#/components/responses/InvalidInput'
+#        '417':
+#          $ref: '#/components/responses/ExpectationFailed'
+#      security:
+#        - bearer: []
+#        - openId: []
+#      requestBody:
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/writeProduct'
+#        description: Updated user object
+#        required: true
 
   /api/{group}/products:
     get:
       tags:
-        - Products - PENDING
+        - Products
       description: Get all products
       operationId: getProducts
       parameters:
@@ -2163,7 +2163,7 @@ paths:
         - openId: []
     post:
       tags:
-        - Products - PENDING
+        - Products
       description: Create new products
       operationId: createProduct
       parameters:
@@ -2212,7 +2212,7 @@ paths:
   /api/{group}/products/{id}:
     get:
       tags:
-        - Products - PENDING
+        - Products
       description: Get products info
       operationId: getProduct
       parameters:
@@ -2259,7 +2259,7 @@ paths:
         - openId: []
     patch:
       tags:
-        - Products - PENDING
+        - Products
       description: Create products for the DELETE
       operationId: updateProduct
       parameters:
@@ -2313,7 +2313,7 @@ paths:
         required: true
     delete:
       tags:
-        - Products - PENDING
+        - Products
       description: Delete products info
       operationId: deleteProduct
       parameters:
@@ -4686,6 +4686,18 @@ components:
           description: name of the product
         description:
           type: string
+          description: explain what the product does
+        type:
+          type: string
+          description: optional categorization of the product
+          enum:
+            - global
+            - app
+            - service
+            - module
+            - domain
+            - entity
+            - other
 
     product:
       type: object
@@ -4696,7 +4708,7 @@ components:
           type: string
           format: guid
           description: unique id of the product - globally unique
-        updateAt:
+        modifiedAt:
           type: string
           format: date-time
         createdAt:

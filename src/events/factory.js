@@ -121,6 +121,12 @@ const OP_EVENTS = {
 		'ue.domain.edit',
 		'ue.domain.destroy',
 		'ue.domain.error'
+	],
+	product: [
+		'ue.product.create',
+		'ue.product.edit',
+		'ue.product.destroy',
+		'ue.product.error'
 	]
 };
 

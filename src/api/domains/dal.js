@@ -2,8 +2,8 @@ import Domain from './model';
 
 export default {
 	async writeDomain(data) {
-		const org =  new Domain(data);
-		return org.save();
+		const dom =  new Domain(data);
+		return dom.save();
 	},
 	async getDomains(g, o, query) {
 		query.query.authGroup = g;
