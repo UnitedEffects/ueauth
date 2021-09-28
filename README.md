@@ -51,7 +51,17 @@ https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
 
 ## Todo
 
-* TEST - Make sure you can't POST with account.orgs or account.domains
-* Ensure org added to an account exsists first
-* Ensure domain added to an account exists and is part of the associated org first
 * Setup invites to orgs and/or domains
+* Document useful queries
+    * all users in an organization
+    * products in an organization
+    * all users in a domain
+    * all domains in an organization
+    * all organization in an authgroup
+    
+### Nice to Haves
+* bulk user import to authgroup -> async only and docker only
+* bulk users to org -> async only, and docker only
+    * bulk users remove org
+* bulk users to domain -> async only, and docker only
+    * bulk users remove domain

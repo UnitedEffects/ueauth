@@ -116,8 +116,19 @@ export default {
 		}
 		return result;
 	},
+	async validateOrganizationReference (model, id, authGroup) {
+		const result = await model.findOne({ _id: id, authGroup });
+		return !!result;
+	},
 	async validateProductReference (model, id, authGroup) {
 		const result = await model.findOne({ _id: id, authGroup });
+		return !!result;
+	},
+	async validateDomainReference (model, id, authGroup, currentOrganizations) {
+		const data = id.split(':');
+		if(data.length !== 2) return false;
+		if(!currentOrganizations.includes(data[0])) return false;
+		const result = await model.findOne({ _id: data[1], authGroup, organization: data[0] });
 		return !!result;
 	},
 	async validateOrgProductReference (model, orgId, authGroup, productId) {

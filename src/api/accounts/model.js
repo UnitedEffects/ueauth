@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
+import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
 
@@ -47,14 +48,29 @@ const accountSchema = new mongoose.Schema({
 		default: true
 	},
 	// Organizations the User has accepted access to
-	organizations: [{
-		id: String
-	}],
-	// Domains within the organization the user has access to
-	orgDomains: [{
-		organizationId: String,
-		id: String
-	}],
+	organizations: [
+		{
+			type: String,
+			validate: {
+				validator: function (v) {
+					return h.validateOrganizationReference(mongoose.model('organizations'), v, this.authGroup);
+				},
+				message: 'Organization does not exist'
+			}
+		}
+	],
+	// Takes a magic string "organization:domain", this is only for internal storage
+	orgDomains: [
+		{
+			type: String,
+			validate: {
+				validator: function (v) {
+					return h.validateDomainReference(mongoose.model('domains'), v, this.authGroup, this.organizations);
+				},
+				message: 'Either the domain does not exist as part of the specified organization, or you do not have access to this organization'
+			}
+		}
+	],
 	metadata: Object,
 	_id: {
 		type: String,
@@ -81,6 +97,13 @@ accountSchema.pre('save', function(callback) {
 	});
 });
 
+accountSchema.pre('findOneAndUpdate', function(callback) {
+	// deduplicate list
+	this._update.organizations= [...new Set(this._update.organizations)];
+	this._update.orgDomains= [...new Set(this._update.orgDomains)];
+	callback();
+});
+
 accountSchema.methods.verifyPassword = function(password) {
 	return new Promise((resolve, reject) => {
 		bcrypt.compare(password, this.password, (err, isMatch) => {
@@ -103,6 +126,8 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret._id;
 	delete ret.password;
 	delete ret.blocked;
+	delete ret.organizations;
+	delete ret.orgDomains;
 	delete ret.__v;
 };
 

@@ -1,7 +1,9 @@
 import jsonPatch from 'jsonpatch';
 import dal from './dal';
+import account from '../accounts/account';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
+import Boom from "@hapi/boom";
 
 export default {
 	async writeDomain(data) {
@@ -10,7 +12,6 @@ export default {
 		return output;
 	},
 
-	// @notTested - filters not tested, general query is
 	async getDomains(authGroupId, orgId, q) {
 		const query = await helper.parseOdataQuery(q);
 		return dal.getDomains(authGroupId, orgId, query);
@@ -20,8 +21,11 @@ export default {
 		return dal.getDomain(authGroupId, org, id);
 	},
 
-	// @notTested
 	async deleteDomain(authGroupId, orgId, id) {
+		const checkAccounts = await account.checkDomains(authGroupId, `${orgId}:${id}`);
+		if(checkAccounts) {
+			throw Boom.badRequest('You have users associated to this organization domain. You must remove them before deleting it.', checkAccounts);
+		}
 		const result = await dal.deleteDomain(authGroupId, orgId, id);
 		ueEvents.emit(authGroupId, 'ue.domain.destroy', result);
 	},
