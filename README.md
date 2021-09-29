@@ -65,7 +65,8 @@ https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
     * all users in a domain
     * all domains in an organization
     * all organization in an authgroup
-    
+* fix CI so it doesn't deploy on PR
+
 ### Nice to Haves
 * bulk user import to authgroup -> async only and docker only
 * bulk users to org -> async only, and docker only
