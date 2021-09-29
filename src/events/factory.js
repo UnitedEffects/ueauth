@@ -109,6 +109,35 @@ const OP_EVENTS = {
 		'ue.plugin.notification.create',
 		'ue.plugin.notification.sent',
 		'ue.plugin.notification.error'
+	],
+	organization: [
+		'ue.organization.create',
+		'ue.organization.edit',
+		'ue.organization.destroy',
+		'ue.organization.error'
+	],
+	domain: [
+		'ue.domain.create',
+		'ue.domain.edit',
+		'ue.domain.destroy',
+		'ue.domain.error'
+	],
+	product: [
+		'ue.product.create',
+		'ue.product.edit',
+		'ue.product.destroy',
+		'ue.product.error'
+	],
+	role: [
+		'ue.role.create',
+		'ue.role.edit',
+		'ue.role.destroy',
+		'ue.role.error'
+	],
+	access: [
+		'ue.access.defined',
+		'ue.access.destroy',
+		'ue.access.error'
 	]
 };
 

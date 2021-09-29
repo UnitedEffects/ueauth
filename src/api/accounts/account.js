@@ -31,6 +31,7 @@ export default {
 	async deleteAccount(authGroupId, id) {
 		const result = await dal.deleteAccount(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.account.destroy', result);
+		return result;
 	},
 
 	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false) {
@@ -39,6 +40,20 @@ export default {
 		patched.modifiedBy = modifiedBy;
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
+		}
+		const originalOrgs = [...new Set(account.organizations)];
+		const updatedOrgs = [...new Set(patched.organizations)];
+		const domains = [...new Set(patched.orgDomains)];
+		if(updatedOrgs.length < originalOrgs.length) {
+			const newDomains = [];
+			for(let i=0; i<updatedOrgs.length; i++) {
+				for(let x=0; x<domains.length; x++) {
+					if (domains[x].includes(updatedOrgs[i])) {
+						newDomains.push(domains[x]);
+					}
+				}
+			}
+			patched.orgDomains = newDomains;
 		}
 		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.account.edit', result);
@@ -165,5 +180,15 @@ export default {
 			if(user.sms) data.formats.push('sms');
 		}
 		return data;
+	},
+	async checkOrganizations(ag, orgId) {
+		const result = await dal.checkOrganizations(ag, orgId);
+		if(result.length === 0) return false;
+		return result;
+	},
+	async checkDomains(ag, orgDomain) {
+		const result = await dal.checkDomains(ag, orgDomain);
+		if(result.length === 0) return false;
+		return result;
 	}
 };

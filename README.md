@@ -47,3 +47,28 @@ https://github.com/UnitedEffects/ueauth/wiki/Developer-Info
 ## Notifications Plugin
 
 https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
+
+
+## Todo
+* add filter on access for product itself
+* clean swagger - fix access objects, they are wrong
+* clean user record, fix org/domain/product delete checks
+* checks for deleting role
+----
+* permissions
+* replace internal permissions system and modify initialization
+* scoped access queries
+* Setup invites to orgs and/or domains
+* Document useful queries
+    * all users in an organization
+    * products in an organization
+    * all users in a domain
+    * all domains in an organization
+    * all organization in an authgroup
+    
+### Nice to Haves
+* bulk user import to authgroup -> async only and docker only
+* bulk users to org -> async only, and docker only
+    * bulk users remove org
+* bulk users to domain -> async only, and docker only
+    * bulk users remove domain

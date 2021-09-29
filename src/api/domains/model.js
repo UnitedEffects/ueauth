@@ -1,0 +1,89 @@
+import mongoose from 'mongoose';
+import { nanoid } from 'nanoid';
+import h from "../../helper";
+
+mongoose.set('useCreateIndex', true);
+
+const domainSchema = new mongoose.Schema({
+	createdAt: {
+		type: Date,
+		default: Date.now()
+	},
+	createdBy: {
+		type: String,
+		default: 'SYSTEM_ADMIN'
+	},
+	modifiedAt: {
+		type: Date,
+		default: Date.now()
+	},
+	modifiedBy: {
+		type: String,
+		default: 'SYSTEM_ADMIN'
+	},
+	authGroup: {
+		type: String,
+		required: true
+	},
+	organization: {
+		type: String,
+		required: true
+	},
+	name: {
+		type: String,
+		required: true
+	},
+	active: {
+		type: Boolean,
+		default: true
+	},
+	description: String,
+	// products from the organization now associated to this domain
+	associatedOrgProducts: [
+		{
+			type: String,
+			validate: {
+				validator: function (v) {
+					return h.validateOrgProductReference(mongoose.model('organizations'), this.organization, this.authGroup, v);
+				},
+				message: 'Product does not exist as part of the organization'
+			}
+		}
+	],
+	externalId: String,
+	_id: {
+		type: String,
+		default: nanoid
+	}
+},{ _id: false });
+
+domainSchema.index({ name: 1, organization: 1}, { unique: true });
+
+
+domainSchema.pre('save', function(callback) {
+	//license check
+	callback();
+});
+
+domainSchema.pre('findOneAndUpdate', function(callback) {
+	// deduplicate list
+	this._update.associatedOrgProducts= [...new Set(this._update.associatedOrgProducts)];
+	callback();
+});
+
+domainSchema.virtual('id').get(function(){
+	return this._id.toString();
+});
+
+domainSchema.set('toJSON', {
+	virtuals: true
+});
+
+domainSchema.options.toJSON.transform = function (doc, ret, options) {
+	ret.id = ret._id;
+	delete ret._id;
+	delete ret.__v;
+};
+
+// Export the Mongoose model
+export default mongoose.model('domains', domainSchema);

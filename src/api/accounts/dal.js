@@ -13,6 +13,16 @@ export default {
 	async getAccount(authGroup, id) {
 		return Account.findOne( { _id: id, authGroup });
 	},
+	async getAccountByAccess(authGroup, id, org) {
+		const selectOptions = {
+			authGroup: 1,
+			access: 1
+		};
+		if(org) {
+			selectOptions.access = { $elemMatch: { 'organization.id': org } };
+		}
+		return Account.findOne( { _id: id, authGroup }).select(selectOptions);
+	},
 	async deleteAccount(authGroup, id) {
 		return Account.findOneAndRemove( { _id: id, authGroup });
 	},
@@ -22,7 +32,11 @@ export default {
 			const salt = await bcrypt.genSalt(10);
 			data.password = await bcrypt.hash(data.password, salt);
 		}
-		return Account.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true });
+		const options = { new: true, overwrite: true };
+		if(data.organizations || data.orgDomains || data.access ) {
+			options.runValidators = true;
+		}
+		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);
 	},
 	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false) {
 		const query = { authGroup, blocked: false, active: true, $or: [
@@ -40,5 +54,11 @@ export default {
 			update.password = await bcrypt.hash(update.password, salt);
 		}
 		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
+	},
+	async checkOrganizations(authGroup, organizations) {
+		return Account.find({ authGroup, organizations }).select({ _id: 1 });
+	},
+	async checkDomains(authGroup, orgDomains) {
+		return Account.find({ authGroup, orgDomains }).select({ _id: 1 });
 	}
 };

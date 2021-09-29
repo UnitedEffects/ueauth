@@ -5,6 +5,8 @@ import { sayMiddleware } from './say';
 import authorizer from './auth/auth';
 import helper from './helper';
 import group from './api/authGroup/group';
+import orgs from './api/orgs/orgs';
+import product from './api/products/product';
 import account from './api/accounts/account';
 import enforce from './permissions';
 import mongoose from 'mongoose';
@@ -136,6 +138,27 @@ const mid = {
 			next(error);
 		}
 	},
+	async validateOrganization (req, res, next) {
+		try {
+			if (!req.params.org) throw Boom.preconditionRequired('organization ID is required');
+			if (!req.authGroup) throw Boom.preconditionRequired('AuthGroup is required');
+			req.organization = await orgs.getOrg(req.authGroup.id, req.params.org);
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
+	async validateProduct (req, res, next) {
+		try {
+			if (!req.params.product) throw Boom.preconditionRequired('product ID is required');
+			if (!req.authGroup) throw Boom.preconditionRequired('AuthGroup is required');
+			req.product = await product.getProduct(req.authGroup.id, req.params.product);
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
+
 	// send to helper
 	async cacheAG(reset, prefix, id) {
 		let result;
