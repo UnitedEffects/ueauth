@@ -50,8 +50,11 @@ https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
 
 
 ## Todo
-
-* roles - TEST all
+* remove access
+* add filter on access for product itself
+* clean swagger - fix access objects, they are wrong
+* clean user record, fix org/domain/product delete checks
+* checks for deleting role
 ----
 * permissions
 * replace internal permissions system and modify initialization

@@ -28,6 +28,7 @@ export default {
 		}
 		const result = await dal.deleteDomain(authGroupId, orgId, id);
 		ueEvents.emit(authGroupId, 'ue.domain.destroy', result);
+		return result;
 	},
 
 	async patchDomain(authGroup, orgId, id, update, modifiedBy) {

@@ -6,10 +6,20 @@ import ueEvents from '../../events/ueEvents';
 const RESOURCE = 'Role';
 
 const api = {
+	async getAllRolesAcrossProductsByOrg (req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide organization');
+			const result = await role.getAllRolesAcrossProductsByOrg(req.authGroup.id, req.organization.id, req.query);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async getAllRoles (req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-			const result = await role.getRoles(req.authGroup.id, req.query);
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			const result = await role.getAllRoles(req.authGroup.id, req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -17,7 +27,7 @@ const api = {
 	},
 	async getOrganizationRoles(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (!req.organization) throw Boom.forbidden('Custom roles must be associated to one organization');
 			const result = await role.getOrganizationRoles(req.authGroup.id, req.product.id, req.organization.id, req.query);
@@ -66,7 +76,7 @@ const api = {
 	},
 	async getRoles(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			const result = await role.getRoles(req.authGroup.id, req.product.id, req.query);
 			return res.respond(say.ok(result, RESOURCE));
@@ -76,12 +86,12 @@ const api = {
 	},
 	async getRole(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
-			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			//todo access?
 			const result = await role.getRole(req.authGroup.id, req.product.id, req.params.id);
-			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -89,10 +99,10 @@ const api = {
 	},
 	async patchRole(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
-			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			// todo access?
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			// todo access - if the role is custom, only owner and admin from that org can update
 			const result = await role.patchRole(req.authGroup, req.params.id, req.product.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -108,7 +118,7 @@ const api = {
 			// todo access
 
 			const result = await role.deleteRole(req.authGroup.id, req.product.id, req.params.id);
-			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.role.error', error);

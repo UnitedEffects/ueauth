@@ -47,6 +47,17 @@ const accountSchema = new mongoose.Schema({
 		type: Boolean,
 		default: true
 	},
+	// organization.domains.products.roles.permissions
+	// every entry is a flattened org.domain.role
+	access: [
+		{
+			organization: {
+				id: String,
+				domains: [String],
+				roles: [String]
+			}
+		}
+	],
 	// Organizations the User has accepted access to
 	organizations: [
 		{

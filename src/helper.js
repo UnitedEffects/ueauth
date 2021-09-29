@@ -2,6 +2,10 @@ import { createQuery } from 'odata-v4-mongodb';
 import Boom from '@hapi/boom';
 import group from './api/authGroup/group';
 import NodeCache from 'node-cache';
+import org from '../src/api/orgs/orgs';
+import dom from '../src/api/domains/domain';
+import role from '../src/api/roles/roles';
+import auth from "./auth/auth";
 
 const myCache = new NodeCache();
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
@@ -135,5 +139,29 @@ export default {
 		const result = await model.findOne({ _id: orgId, authGroup }).select( { associatedProducts: 1 });
 		if(!result) return false;
 		return (result.associatedProducts.includes(productId));
+	},
+	async validateAccessReferences(obj, authGroup) {
+		if(!obj.organization) return false;
+		if(!obj.organization.id) return false;
+		const organization = await org.getOrg(authGroup, obj.organization.id);
+		if(!organization) return false;
+		let domCheck = true;
+		let temp;
+		if(obj.organization.domains && obj.organization.domains.length !== 0) {
+			for(let i = 0; i<obj.organization.domains.length; i++) {
+				temp = await dom.getDomain(authGroup, obj.organization.id, obj.organization.domains[i]);
+				if(temp.id !== obj.organization.domains[i]) domCheck = false;
+			}
+		}
+		if(domCheck === false) return false;
+		let roleCheck = true;
+		if(obj.organization.roles && obj.organization.roles.length !== 0) {
+			for(let i = 0; i<obj.organization.roles.length; i++) {
+				temp = await role.getRoleByOrganizationAndId(authGroup, obj.organization.id, obj.organization.roles[i]);
+				if(temp.id !== obj.organization.roles[i]) roleCheck = false;
+			}
+		}
+		if (roleCheck === false) return false;
+		return true;
 	}
 };

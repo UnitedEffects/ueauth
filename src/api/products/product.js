@@ -30,6 +30,7 @@ export default {
 		}
 		const result = await dal.deleteProduct(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.product.destroy', result);
+		return result;
 	},
 
 	async patchProduct(authGroup, id, update, modifiedBy) {

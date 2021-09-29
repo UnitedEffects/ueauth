@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid';
 
 mongoose.set('useCreateIndex', true);
 
@@ -35,7 +35,7 @@ const productSchema = new mongoose.Schema({
 	},
 	_id: {
 		type: String,
-		default: uuid
+		default: nanoid
 	}
 },{ _id: false });
 

@@ -3,6 +3,7 @@ import org from '../api/orgs/api';
 import dom from '../api/domains/api';
 import prod from '../api/products/api';
 import role from '../api/roles/api';
+import user from '../api/accounts/api';
 import plugins from '../api/plugins/api';
 import access from '../api/oidc/access/api';
 import m from '../middleware';
@@ -14,9 +15,26 @@ async function PENDING(req, res, next) {
 }
 
 // User Access
-router.put('/:group/access/account/:id', PENDING);
-router.get('/:group/access/account/:id', PENDING);
-router.get('/:group/access/validate', PENDING);
+router.post('/:group/access/organization/:org/account/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], user.createAccess);
+router.get('/:group/access/account/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], user.getUserAccess);
+router.get('/:group/access/validate', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], user.getUserAccess);
 
 // Organizations
 router.get('/:group/organizations', [
@@ -166,12 +184,18 @@ router.delete('/:group/products/:product/roles/:id', [
 // Roles Across Products
 router.get('/:group/roles', [
 	m.validateAuthGroup,
-	m.validateProduct,
-	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
 	m.access
 ], role.getAllRoles);
+// Roles Across Products By Org
+router.get('/:group/organization/:org/roles', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], role.getAllRolesAcrossProductsByOrg);
 // custom roles
 router.get('/:group/organizations/:org/products/:product/roles', [
 	m.validateAuthGroup,

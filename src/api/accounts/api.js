@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import acct from './account';
+import access from './access';
 import group from '../authGroup/group';
 import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
@@ -15,12 +16,12 @@ const api = {
 	async writeAccount(req, res, next) {
 		try {
 			if (req.groupActivationEvent === true) return api.activateGroupWithAccount(req, res, next);
-			if (req.authGroup.active === false) return next(Boom.forbidden('You can not add members to an inactive group'));
-			if (!req.body.email) return next(Boom.preconditionRequired('username is required'));
+			if (req.authGroup.active === false) throw Boom.forbidden('You can not add members to an inactive group');
+			if (!req.body.email) throw Boom.preconditionRequired('username is required');
 			if (req.body.generatePassword === true) {
 				req.body.password = cryptoRandomString({length: 32, type: 'url-safe'});
 			}
-			if (!req.body.password) return next(Boom.preconditionRequired('password is required'));
+			if (!req.body.password) throw Boom.preconditionRequired('password is required');
 			const password = req.body.password;
 			delete req.body.generatePassword; //clean up
 			if (req.user && req.user.sub) req.body.modifiedBy = req.user.sub;
@@ -95,7 +96,7 @@ const api = {
 	},
 	async getAccounts(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			const result = await acct.getAccounts(req.params.group, req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -104,12 +105,12 @@ const api = {
 	},
 	async getAccount(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
 			await permissions.enforceOwn(req.permissions, id);
 			const result = await acct.getAccount(req.params.group, id);
-			if (!result) return next(Boom.notFound(`id requested was ${id}`));
+			if (!result) throw Boom.notFound(`id requested was ${id}`);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -126,6 +127,7 @@ const api = {
 					if(req.body[i].op === 'replace' && req.body[i].path === '/password') bpwd = true;
 					if(req.body[i].path.includes('/organizations')) access = true;
 					if(req.body[i].path.includes('/orgDomains')) access = true;
+					if(req.body[i].path.includes('/access')) access = true;
 				}
 			}
 			if(access === true) throw Boom.badRequest('You cannot set access properties through this API');
@@ -151,7 +153,7 @@ const api = {
 			await permissions.enforceOwn(req.permissions, req.params.id);
 			if(req.authGroup.owner === req.params.id) throw Boom.badRequest('You can not delete the owner of the auth group');
 			const result = await acct.deleteAccount(req.params.group, req.params.id);
-			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
@@ -183,7 +185,7 @@ const api = {
 	},
 	async userOperations(req, res, next) {
 		try {
-			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if (!req.body.operation) return res.respond(say.noContent('User Operation'));
 			let result;
 			switch (req.body.operation) {
@@ -233,6 +235,36 @@ const api = {
 				return next(Boom.failedDependency('There is an error with the global notifications service plugin - contact the admin'));
 			}
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
+	async createAccess(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
+			// todo access to this?
+			const result = await access.createAccess(req.authGroup.id, req.organization.id, req.params.id, req.body);
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, 'Access'));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);
+			next(error);
+		}
+	},
+	async getUserAccess(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.id) {
+				if(!req.user || !req.user.sub ) throw Boom.preconditionRequired('Must provide id or valid user token');
+				req.params.id = req.user.sub;
+			}
+			// todo access to this?
+			const result = await access.getUserAccess(req.authGroup, req.params.id, req.query);
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, 'Access'));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);
 			next(error);
 		}
 	}

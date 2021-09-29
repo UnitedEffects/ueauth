@@ -5,7 +5,6 @@ import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
-import dom from "../domains/domain";
 
 const config = require('../../config');
 
@@ -32,6 +31,7 @@ export default {
 	async deleteAccount(authGroupId, id) {
 		const result = await dal.deleteAccount(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.account.destroy', result);
+		return result;
 	},
 
 	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false) {
@@ -41,7 +41,6 @@ export default {
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
 		}
-		console.info(patched);
 		const originalOrgs = [...new Set(account.organizations)];
 		const updatedOrgs = [...new Set(patched.organizations)];
 		const domains = [...new Set(patched.orgDomains)];
@@ -56,7 +55,6 @@ export default {
 			}
 			patched.orgDomains = newDomains;
 		}
-		console.info(patched);
 		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.account.edit', result);
 		return result;

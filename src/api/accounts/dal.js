@@ -13,6 +13,15 @@ export default {
 	async getAccount(authGroup, id) {
 		return Account.findOne( { _id: id, authGroup });
 	},
+	async getAccountByAccess(authGroup, id, org) {
+		const selectOptions = {
+			authGroup: 1
+		};
+		if(org) {
+			selectOptions.access = { $elemMatch: { 'organization.id': org } };
+		}
+		return Account.findOne( { _id: id, authGroup }).select(selectOptions);
+	},
 	async deleteAccount(authGroup, id) {
 		return Account.findOneAndRemove( { _id: id, authGroup });
 	},
@@ -23,7 +32,7 @@ export default {
 			data.password = await bcrypt.hash(data.password, salt);
 		}
 		const options = { new: true, overwrite: true };
-		if(data.organizations || data.orgDomains) {
+		if(data.organizations || data.orgDomains || data.access ) {
 			options.runValidators = true;
 		}
 		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);

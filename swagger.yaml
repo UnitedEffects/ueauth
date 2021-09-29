@@ -24,8 +24,8 @@ tags:
     description: Plugin configurations for the service
   - name: Users
     description: User Accounts
-  - name: User Access - PENDING
-    description: roles and permissions by account - NOT YET FUNCTIONAL
+  - name: User Access
+    description: roles and permissions by account
   - name: Invite Dashboard
     description: API to manage invites to ownership or access
   - name: Clients
@@ -90,72 +90,6 @@ paths:
       security:
         - bearer: [ ]
         - openId: [ ]
-  #/api/token:
-  #  post:
-  #    tags:
-  #      - UI Functions
-  #    summary: looks up authgroup using id_token then return access and id tokens from code
-  #    description: looks up authgroup using id_token then return access and id tokens from code. secured by UI host whitelist
-  #    deprecated: true
-  #    responses:
-  #      '200':
-  #        description: successful operation
-  #        content:
-  #          application/json:
-  #            schema:
-  #              $ref: '#/components/schemas/accessTokens'
-  #      '400':
-  #        $ref: '#/components/responses/BadRequest'
-  #      '401':
-  #        $ref: '#/components/responses/Unauthorized'
-  #      '404':
-  #        $ref: '#/components/responses/NotFound'
-  #      '405':
-  #        $ref: '#/components/responses/InvalidInput'
-  #      '417':
-  #        $ref: '#/components/responses/ExpectationFailed'
-  #    security:
-  #      - bearer: []
-  #      - openId: []
-  #    requestBody:
-  #      content:
-  #        application/json:
-  #          schema:
-  #            type: object
-  #            required:
-  #              - idToken
-  #              - code
-  #              - redirectUri
-  #              - clientId
-  #            properties:
-  #              idToken:
-  #                type: string
-  #                description: an idToken provided as part of the code authorization flow
-  #              code:
-  #                type: string
-  #                description: a code provided as part of the code authorization flow
-  #              redirectUri:
-  #                type: string
-  #                description: redirect uri to use, should match expected from client
-  #              clientId:
-  #                type: string
-  #                description: the client id used for the authorization code
-  #          encoding:
-  #            grant_type:
-  #              style: form
-  #            client_secret:
-  #              style: form
-  #            redirect_uri:
-  #              style: form
-  #            format:
-  #              style: form
-  #            code:
-  #              style: form
-  #            client_id:
-  #              style: form
-  #            scope:
-  #              style: form
-  #      required: true
   /api/groupcheck/{prettyName}:
     get:
       tags:
@@ -699,17 +633,23 @@ paths:
         required: true
 
   # User Access APIs
-  /api/{group}/access/account/{id}:
-    put:
+  /api/{group}/access/organization/{org}/account/{id}:
+    post:
       tags:
-        - User Access - PENDING
-      summary: Apply roles to a user
-      description: Updates a user roles
-      operationId: updateUserAccess
+        - User Access
+      summary: Apply org, domain, or roles to a user
+      description: Create a user access
+      operationId: createUserAccess
       parameters:
         - name: group
           in: path
           description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: Organization id access is being applied to
           required: true
           schema:
             type: string
@@ -745,12 +685,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/writeUserAccess'
-        description: Updated user object
+#              $ref: '#/components/schemas/writeUserAccess'
+              type: object
+              additionalProperties: false
+              properties:
+                domains:
+                  type: array
+                  items:
+                    type: string
+                roles:
+                  type: array
+                  items:
+                    type: string
+        description: Updated access object
         required: true
+
+  /api/{group}/access/account/{id}:
     get:
       tags:
-        - User Access - PENDING
+        - User Access
       description: Get user roles & permissions
       operationId: getUserAccess
       parameters:
@@ -779,9 +732,21 @@ paths:
           required: false
           schema:
             type: string
+        - name: includeMiscRoles
+          in: query
+          description: these are roles attributed to the user that do not correlate to the domains or products provided access
+          required: false
+          schema:
+            type: boolean
         - name: permissions
           in: query
           description: flag to let us know to return both roles and permissions, or just roles
+          required: false
+          schema:
+            type: boolean
+        - name: minimized
+          in: query
+          description: if true, this creates arrays of ids in string form to reduce the size of the data
           required: false
           schema:
             type: boolean
@@ -810,7 +775,7 @@ paths:
   /api/{group}/access/validate:
     get:
       tags:
-        - User Access - PENDING
+        - User Access
       description: returns the roles and permissions(optional) that the token is specifically authorized for
       operationId: validateToken
       parameters:
@@ -820,9 +785,33 @@ paths:
           required: true
           schema:
             type: string
+        - name: org
+          in: query
+          description: allows a AuthGroup Admin to query a specific organization context. Otherwise, orgId is restricted to the domainId and token context
+          required: false
+          schema:
+            type: string
+        - name: domain
+          in: query
+          description: if ID provided, it restricts the response to this domain
+          required: false
+          schema:
+            type: string
+        - name: includeMiscRoles
+          in: query
+          description: these are roles attributed to the user that do not correlate to the domains or products provided access
+          required: false
+          schema:
+            type: boolean
         - name: permissions
           in: query
           description: flag to let us know to return both roles and permissions, or just roles
+          required: false
+          schema:
+            type: boolean
+        - name: minimized
+          in: query
+          description: if true, this creates arrays of ids in string form to reduce the size of the data
           required: false
           schema:
             type: boolean
@@ -1971,125 +1960,6 @@ paths:
         - bearer: []
         - openId: []
 
-#  /api/{group}/organizations/{org}/products:
-#    get:
-#      tags:
-#        - Products
-#      description: Get all products associated to an organization
-#      operationId: getProductsByOrg
-#      parameters:
-#        - name: group
-#          in: path
-#          description: Auth Group Id or name
-#          required: true
-#          schema:
-#            type: string
-#        - name: org
-#          in: path
-#          description: organization Id
-#          required: true
-#          schema:
-#            type: string
-#        - name: $filter
-#          in: query
-#          description: oData filter Query
-#          required: false
-#          schema:
-#            type: string
-#        - name: $select
-#          in: query
-#          description: oData select Query
-#          required: false
-#          schema:
-#            type: string
-#        - name: $orderby
-#          in: query
-#          description: oData orderby Query
-#          required: false
-#          schema:
-#            type: string
-#        - name: $skip
-#          in: query
-#          description: oData skip Query
-#          required: false
-#          schema:
-#            type: integer
-#        - name: $top
-#          in: query
-#          description: oData top Query
-#          required: false
-#          schema:
-#            type: integer
-#      responses:
-#        '200':
-#          description: successful operation
-#          content:
-#            application/json:
-#              schema:
-#                type: array
-#                items:
-#                  $ref: '#/components/schemas/product'
-#        '400':
-#          $ref: '#/components/responses/BadRequest'
-#        '401':
-#          $ref: '#/components/responses/Unauthorized'
-#        '403':
-#          $ref: '#/components/responses/Forbidden'
-#        '405':
-#          $ref: '#/components/responses/InvalidInput'
-#        '417':
-#          $ref: '#/components/responses/ExpectationFailed'
-#      security:
-#        - bearer: []
-#        - openId: []
-#    post:
-#      tags:
-#        - Products
-#      description: Create new product to organization association
-#      operationId: associateProduct
-#      parameters:
-#        - name: group
-#          in: path
-#          description: Auth Group Id or name
-#          required: true
-#          schema:
-#            type: string
-#        - name: org
-#          in: path
-#          description: organization Id
-#          required: true
-#          schema:
-#            type: string
-#      responses:
-#        '201':
-#          description: successful operation
-#          content:
-#            application/json:
-#              schema:
-#                type: array
-#                items:
-#                  $ref: '#/components/schemas/product'
-#        '400':
-#          $ref: '#/components/responses/BadRequest'
-#        '401':
-#          $ref: '#/components/responses/Unauthorized'
-#        '403':
-#          $ref: '#/components/responses/Forbidden'
-#        '405':
-#          $ref: '#/components/responses/InvalidInput'
-#        '417':
-#          $ref: '#/components/responses/ExpectationFailed'
-#      security:
-#        - bearer: []
-#        - openId: []
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: '#/components/schemas/writeProduct'
-#        description: Updated user object
-#        required: true
-
   /api/{group}/products:
     get:
       tags:
@@ -2328,6 +2198,7 @@ paths:
       security:
         - bearer: []
         - openId: []
+
   /api/{group}/roles:
     get:
       tags:
@@ -2338,6 +2209,81 @@ paths:
         - name: group
           in: path
           description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: integer
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/organization/{org}/roles:
+    get:
+      tags:
+        - Roles
+      description: get all roles across products in your organization
+      operationId: getAllRolesAcrossProductsByOrg
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization Id
           required: true
           schema:
             type: string
@@ -2754,8 +2700,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/role'
+              $ref: '#/components/schemas/jsonPatch'
         description: Created user object
         required: true
       security:
@@ -4572,7 +4517,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
           description: id of the profile (NOT THE ACCOUNT)
         authGroup:
           type: string
@@ -4593,7 +4538,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
           description: associated domainId
         products:
           type: array
@@ -4602,7 +4547,7 @@ components:
             properties:
               id:
                 type: string
-                format: guid
+                format: uuid
               roles:
                 type: array
                 items:
@@ -4618,7 +4563,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
           description: associated domainId
         products:
           type: array
@@ -4627,7 +4572,7 @@ components:
             properties:
               id:
                 type: string
-                format: guid
+                format: uuid
               roles:
                 type: array
                 items:
@@ -4714,7 +4659,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
           description: unique id of the product - globally unique
         modifiedAt:
           type: string
@@ -4734,7 +4679,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
         updateAt:
           type: string
           format: date-time
@@ -4747,14 +4692,14 @@ components:
           type: string
         product:
           type: string
-          format: guid
+          format: uuid
           description: product associated
         custom:
           type: boolean
           default: false
         organization:
           type: string
-          format: guid
+          format: uuid
           description: organization this role is associated to if this is custom
         authGroup:
           type: string
@@ -4775,7 +4720,7 @@ components:
           type: array
           items:
             type: string
-            format: guid
+            format: uuid
             description: permissionIds
 
     organization:
@@ -4785,7 +4730,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
         modifiedAt:
           type: string
           format: date-time
@@ -4850,7 +4795,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
         modifiedAt:
           type: string
           format: date-time
@@ -4894,7 +4839,7 @@ components:
       properties:
         id:
           type: string
-          format: guid
+          format: uuid
         createdAt:
           type: string
           format: date-time

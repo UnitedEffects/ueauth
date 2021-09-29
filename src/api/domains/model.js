@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid';
 import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
@@ -53,7 +53,7 @@ const domainSchema = new mongoose.Schema({
 	externalId: String,
 	_id: {
 		type: String,
-		default: uuid
+		default: nanoid
 	}
 },{ _id: false });
 

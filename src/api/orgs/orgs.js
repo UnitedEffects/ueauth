@@ -30,6 +30,7 @@ export default {
 		}
 		const result = await dal.deleteOrg(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.organization.destroy', result);
+		return result;
 	},
 
 	async patchOrg(authGroup, id, update, modifiedBy) {

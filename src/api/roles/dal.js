@@ -9,6 +9,14 @@ export default {
 		query.query.authGroup = g;
 		return Role.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
+	async getAllRolesAcrossProductsByOrg(g, o, query) {
+		query.query.authGroup = g;
+		query.query.$or = [
+			{ organization: o },
+			{ organization: { $exists: false } }
+		];
+		return Role.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
 	async getOrganizationRoles(g, p, o, query) {
 		query.query.authGroup = g;
 		query.query.product = p;
@@ -27,6 +35,17 @@ export default {
 	},
 	async getRole(authGroup, product, id) {
 		return Role.findOne( { _id: id, authGroup, product });
+	},
+	async getRoleByOrganizationAndId(authGroup, organization, id) {
+		const query = {
+			_id: id,
+			authGroup,
+			$or: [
+				{ organization },
+				{ organization: { $exists: false } }
+			]
+		};
+		return Role.findOne(query);
 	},
 	async deleteRole(authGroup, product, id) {
 		return Role.findOneAndRemove( { _id: id, authGroup, product });
