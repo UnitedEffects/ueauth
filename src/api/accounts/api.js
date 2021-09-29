@@ -238,13 +238,41 @@ const api = {
 			next(error);
 		}
 	},
-	async createAccess(req, res, next) {
+	async defineAccess(req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
 			// todo access to this?
-			const result = await access.createAccess(req.authGroup.id, req.organization.id, req.params.id, req.body);
+			const result = await access.defineAccess(req.authGroup.id, req.organization.id, req.params.id, req.body);
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, 'Access'));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);
+			next(error);
+		}
+	},
+	async getDefinedAccess(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to get access from');
+			// todo access to this?
+			const result = await access.getDefinedAccess(req.authGroup.id, req.organization.id, req.params.id);
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, 'Access'));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);
+			next(error);
+		}
+	},
+	async removeOrgFromAccess(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to remove');
+			// todo access to this?
+			const result = await access.removeOrgFromAccess(req.authGroup.id, req.organization.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {

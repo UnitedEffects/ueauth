@@ -50,7 +50,6 @@ https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
 
 
 ## Todo
-* remove access
 * add filter on access for product itself
 * clean swagger - fix access objects, they are wrong
 * clean user record, fix org/domain/product delete checks

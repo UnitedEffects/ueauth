@@ -10,7 +10,23 @@ import role from '../roles/roles';
 const config = require('../../config');
 
 export default {
-	async createAccess(authGroup, organization, id, access) {
+	async getDefinedAccess(authGroup, organization, id) {
+		const user = await dal.getAccount(authGroup, id);
+		if (!user) throw Boom.notFound(`user not found: ${id}`);
+		const userAccess = user.access || [];
+		let orgRecord;
+		userAccess.map((ac) => {
+			if (ac.organization && ac.organization.id === organization) {
+				orgRecord = ac;
+			}
+		});
+		if (!orgRecord) throw Boom.notFound(`No access record for organization ${organization} on user ${id}`);
+		return {
+			domains: orgRecord.organization.domains,
+			roles: orgRecord.organization.roles
+		};
+	},
+	async defineAccess(authGroup, organization, id, access) {
 		// pull user record
 		const user = await dal.getAccount(authGroup, id);
 		if(!user) throw Boom.notFound(`user not found: ${id}`);
@@ -42,30 +58,17 @@ export default {
 				recordIndex = index;
 			}
 		});
-		// craft update
-		// if nothing is found, simply add it to the array
-		if(!orgRecord) {
-			orgRecord = {
-				organization: {
-					id: organization,
-					domains: access.domains,
-					roles: access.roles
-				}
-			};
-			userAccess.push(orgRecord);
-			user.access = userAccess;
-		} else {
-			// otherwise lets concat and dedup the values of domain and roles
-			if(!orgRecord.organization.domains) orgRecord.organization.domains = [];
-			if(!orgRecord.organization.roles) orgRecord.organization.roles = [];
-			orgRecord.organization.domains = orgRecord.organization.domains.concat(access.domains);
-			orgRecord.organization.domains = [...new Set(orgRecord.organization.domains)];
-			orgRecord.organization.roles = orgRecord.organization.roles.concat(access.roles);
-			orgRecord.organization.roles = [...new Set(orgRecord.organization.roles)];
-			userAccess[recordIndex] = orgRecord;
-			user.access = userAccess;
-		}
-		ueEvents.emit(authGroup, 'ue.access.create', { sub: id, access: orgRecord });
+		// Because this is a put, we will overwrite the entry
+		orgRecord = {
+			organization: {
+				id: organization,
+				domains: access.domains,
+				roles: access.roles
+			}
+		};
+		userAccess[recordIndex] = orgRecord;
+		user.access = userAccess;
+		ueEvents.emit(authGroup, 'ue.access.defined', { sub: id, access: orgRecord });
 		return user.save();
 	},
 	async getUserAccess(authGroup, id, query) {
@@ -180,5 +183,24 @@ export default {
             return condensed;
 		}
 		return response;
-	}
+	},
+	async removeOrgFromAccess (authGroup, organization, id) {
+		const user = await dal.getAccount(authGroup, id);
+		if (!user) throw Boom.notFound(`user not found: ${id}`);
+		const userAccess = user.access || [];
+		let orgRecord;
+		let orgIndex;
+		if(userAccess.length === 0) throw Boom.notFound(`No access record for organization ${organization} on user ${id}`);
+		userAccess.map((ac, index) => {
+			if (ac.organization && ac.organization.id === organization) {
+				orgRecord = ac;
+				orgIndex = index;
+			}
+		});
+		if (!orgRecord) throw Boom.notFound(`No access record for organization ${organization} on user ${id}`);
+		if (!orgIndex && orgRecord) throw Boom.notFound(`Unexpected error finding organization ${organization} on user ${id}`);
+		userAccess.splice(orgIndex, 1);
+		user.access = userAccess;
+		return user.save();
+	},
 };

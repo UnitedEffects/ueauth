@@ -85,7 +85,8 @@ const config = {
 		pluginNotification: true,
 		organization: true,
 		domain: true,
-		product: true
+		product: true,
+		access: true
 	}
 };
 

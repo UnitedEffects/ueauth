@@ -15,14 +15,28 @@ async function PENDING(req, res, next) {
 }
 
 // User Access
-router.post('/:group/access/organization/:org/account/:id', [
+router.put('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
 	m.access
-], user.createAccess);
+], user.defineAccess);
+router.get('/:group/access/organization/:org/account/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], user.getDefinedAccess);
+router.delete('/:group/access/organization/:org/account/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], user.removeOrgFromAccess);
 router.get('/:group/access/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

@@ -135,8 +135,7 @@ const OP_EVENTS = {
 		'ue.role.error'
 	],
 	access: [
-		'ue.access.create',
-		'ue.access.edit', //??
+		'ue.access.defined',
 		'ue.access.destroy',
 		'ue.access.error'
 	]
