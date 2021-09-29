@@ -2,10 +2,9 @@ import { createQuery } from 'odata-v4-mongodb';
 import Boom from '@hapi/boom';
 import group from './api/authGroup/group';
 import NodeCache from 'node-cache';
-import org from '../src/api/orgs/orgs';
-import dom from '../src/api/domains/domain';
-import role from '../src/api/roles/roles';
-import auth from "./auth/auth";
+import org from './api/orgs/orgs';
+import dom from './api/domains/domain';
+import role from './api/roles/roles';
 
 const myCache = new NodeCache();
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
