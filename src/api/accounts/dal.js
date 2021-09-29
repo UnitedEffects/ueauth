@@ -33,9 +33,10 @@ export default {
 			data.password = await bcrypt.hash(data.password, salt);
 		}
 		const options = { new: true, overwrite: true };
+		/*
 		if(data.organizations || data.orgDomains || data.access ) {
 			options.runValidators = true;
-		}
+		}*/
 		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);
 	},
 	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false) {
