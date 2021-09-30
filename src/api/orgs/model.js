@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { nanoid } from 'nanoid';
+import { v4 as uuid } from 'uuid';
 import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
@@ -58,7 +58,7 @@ const orgSchema = new mongoose.Schema({
 	],
 	_id: {
 		type: String,
-		default: nanoid
+		default: uuid
 	}
 },{ _id: false });
 

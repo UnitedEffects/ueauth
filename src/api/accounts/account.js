@@ -181,14 +181,4 @@ export default {
 		}
 		return data;
 	},
-	async checkOrganizations(ag, orgId) {
-		const result = await dal.checkOrganizations(ag, orgId);
-		if(result.length === 0) return false;
-		return result;
-	},
-	async checkDomains(ag, orgDomain) {
-		const result = await dal.checkDomains(ag, orgDomain);
-		if(result.length === 0) return false;
-		return result;
-	}
 };

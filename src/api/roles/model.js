@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
 import h from '../../helper';
 mongoose.set('useCreateIndex', true);
@@ -54,13 +55,18 @@ const roleSchema = new mongoose.Schema({
 			}
 		}
 	],*/
+	codedId: {
+		type: String,
+		default: nanoid(10)
+	},
 	_id: {
 		type: String,
-		default: nanoid
+		default: uuid
 	}
 },{ _id: false });
 
 roleSchema.index({ name: 1, authGroup: 1}, { unique: true });
+roleSchema.index({ codedId: 1, authGroup: 1, product: 1}, { unique: true });
 
 roleSchema.pre('save', function(callback) {
 	//license check

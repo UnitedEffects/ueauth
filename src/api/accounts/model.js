@@ -58,7 +58,7 @@ const accountSchema = new mongoose.Schema({
 			}
 		}
 	],
-	// Organizations the User has accepted access to
+/*	// Organizations the User has accepted access to
 	organizations: [
 		{
 			type: String,
@@ -81,7 +81,7 @@ const accountSchema = new mongoose.Schema({
 				message: 'Either the domain does not exist as part of the specified organization, or you do not have access to this organization'
 			}
 		}
-	],
+	],*/
 	metadata: Object,
 	_id: {
 		type: String,
@@ -108,12 +108,12 @@ accountSchema.pre('save', function(callback) {
 	});
 });
 
-accountSchema.pre('findOneAndUpdate', function(callback) {
+/*accountSchema.pre('findOneAndUpdate', function(callback) {
 	// deduplicate list
 	this._update.organizations= [...new Set(this._update.organizations)];
 	this._update.orgDomains= [...new Set(this._update.orgDomains)];
 	callback();
-});
+});*/
 
 accountSchema.methods.verifyPassword = function(password) {
 	return new Promise((resolve, reject) => {
@@ -137,8 +137,9 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret._id;
 	delete ret.password;
 	delete ret.blocked;
-	delete ret.organizations;
-	delete ret.orgDomains;
+	//delete ret.organizations;
+	//delete ret.orgDomains;
+	delete ret.access;
 	delete ret.__v;
 };
 

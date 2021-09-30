@@ -203,4 +203,20 @@ export default {
 		user.access = userAccess;
 		return user.save();
 	},
+	async checkOrganizations(ag, orgId) {
+		const result = await dal.checkOrganizations(ag, orgId);
+		if(result.length === 0) return false;
+		return result;
+	},
+	async checkDomains(ag, orgId, id) {
+		const result = await dal.checkDomains(ag, orgId, id);
+		if(result.length === 0) return false;
+		return result;
+	},
+	async checkRoles(ag, id) {
+		const result = await dal.checkRoles(ag, id);
+		if(result.length === 0) return false;
+		return result;
+	}
+
 };

@@ -2,7 +2,7 @@ import jsonPatch from 'jsonpatch';
 import Boom from '@hapi/boom';
 import dal from './dal';
 import dom from '../domains/domain';
-import account from '../accounts/account';
+import access from '../accounts/access';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 
@@ -24,10 +24,11 @@ export default {
 	},
 
 	async deleteOrg(authGroupId, id) {
-		const checkAccounts = await account.checkOrganizations(authGroupId, id);
+		const checkAccounts = await access.checkOrganizations(authGroupId, id);
 		if(checkAccounts) {
 			throw Boom.badRequest('You have users associated to this organization. You must remove them before deleting it.', checkAccounts);
 		}
+
 		const result = await dal.deleteOrg(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.organization.destroy', result);
 		return result;

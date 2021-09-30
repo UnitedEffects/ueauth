@@ -75,6 +75,7 @@ paths:
                 properties:
                   id:
                     type: string
+                    example: V1StGXR8_Z5jdHi6B-myT
                   prettyName:
                     type: string
                   clientId:
@@ -780,18 +781,7 @@ paths:
         content:
           application/json:
             schema:
-#              $ref: '#/components/schemas/writeUserAccess'
-              type: object
-              additionalProperties: false
-              properties:
-                domains:
-                  type: array
-                  items:
-                    type: string
-                roles:
-                  type: array
-                  items:
-                    type: string
+              $ref: '#/components/schemas/writeAccess'
         description: Updated access object
         required: true
 
@@ -916,7 +906,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccessByToken'
+                $ref: '#/components/schemas/userAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3639,6 +3629,7 @@ components:
           description: Additional information regarding the error
         id:
           type: string
+          format: uuid
           description: Unique ID to help find the error in a logging stack
 
     operations:
@@ -4020,6 +4011,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
           description: guid for this account
         createdAt:
           type: string
@@ -4237,6 +4229,7 @@ components:
       properties:
         id:
           type: string
+          example: V1StGXR8_Z5jdHi6B-myT
           description: nanoid for this account
         createdAt:
           type: string
@@ -4372,6 +4365,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -4567,7 +4561,6 @@ components:
                 type: string
                 description: 'Path to copy or move to'
 
-# Access Schemas
     userProfileWrite:
       type: object
       additionalProperties: false
@@ -4628,100 +4621,40 @@ components:
         modifiedBy:
           type: string
 
-    userAccessWithPermissions:
+    writeAccess:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-          description: associated domainId
-        products:
+        domains:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                format: uuid
-              roles:
-                type: array
-                items:
-                  type: string
-              permissions:
-                type: array
-                items:
-                  type: string
-                  example: 'resource:action:scope'
-
-    userAccessWithOutPermissions:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: associated domainId
-        products:
+            type: string
+            format: uuid
+        roles:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                format: uuid
-              roles:
-                type: array
-                items:
-                  type: string
+            type: string
+            format: uuid
 
-    userAccessByToken:
-      type: object
-      properties:
-        authGroup:
-          type: string
-          description: which AuthGroup
-        organization:
-          type: object
-          properties:
-            id:
-              type: string
-            domain:
-              type: object
-              oneOf:
-                - $ref: '#/components/schemas/userAccessWithPermissions'
-                - $ref: '#/components/schemas/userAccessWithOutPermissions'
-
-    userAccess:
+    access:
       type: array
       items:
         type: object
         properties:
-          authGroup:
-            type: string
-            description: which AuthGroup
           organization:
             type: object
+            allOf:
+              - $ref: '#/components/schemas/writeAccess'
             properties:
               id:
                 type: string
-              domains:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/userAccessWithPermissions'
+                format: uuid
 
-    writeUserAccess:
-      type: object
-      additionalProperties: false
+    userAccess:
+      allOf:
+        - $ref: '#/components/schemas/accountObject'
       properties:
-        organization:
-          type: object
-          properties:
-            id:
-              type: string
-            domain:
-              type: object
-              allOf:
-                - $ref: '#/components/schemas/userAccessWithOutPermissions'
+        access:
+          $ref: '#/components/schemas/access'
 
     writeProduct:
       type: object
@@ -4934,7 +4867,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
+          example: IRFa-VaY2b
+          description: small nano uuid
         createdAt:
           type: string
           format: date-time

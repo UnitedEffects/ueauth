@@ -1,7 +1,9 @@
 import jsonPatch from 'jsonpatch';
+import Boom from '@hapi/boom';
 import dal from './dal';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
+import access from '../accounts/access';
 
 export default {
 	async writeCustomRole(data) {
@@ -48,12 +50,10 @@ export default {
 	},
 
 	async deleteRole(authGroupId, product, id) {
-		/** will need this...
-		const checkAccounts = await account.checkOrganizations(authGroupId, id);
+		const checkAccounts = await access.checkRoles(authGroupId, id);
 		if(checkAccounts) {
-			throw Boom.badRequest('You have users associated to this organization. You must remove them before deleting it.', checkAccounts);
+			throw Boom.badRequest('There are users associated to this role. You must remove them before deleting it.', checkAccounts);
 		}
-		 */
 		const result = await dal.deleteRole(authGroupId, product, id);
 		ueEvents.emit(authGroupId, 'ue.role.destroy', result);
 		return result;

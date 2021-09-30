@@ -1,9 +1,10 @@
 import jsonPatch from 'jsonpatch';
 import dal from './dal';
-import account from '../accounts/account';
+import access from '../accounts/access';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import Boom from "@hapi/boom";
+import account from "../accounts/account";
 
 export default {
 	async writeDomain(data) {
@@ -22,7 +23,7 @@ export default {
 	},
 
 	async deleteDomain(authGroupId, orgId, id) {
-		const checkAccounts = await account.checkDomains(authGroupId, `${orgId}:${id}`);
+		const checkAccounts = await access.checkDomains(authGroupId, orgId, id);
 		if(checkAccounts) {
 			throw Boom.badRequest('You have users associated to this organization domain. You must remove them before deleting it.', checkAccounts);
 		}
