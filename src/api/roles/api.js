@@ -47,6 +47,7 @@ const api = {
 				req.body.modifiedBy = req.user.sub;
 			}
 			req.body.product = req.product.id;
+			req.body.productCodedId = req.product.codedId;
 			req.body.organization = req.organization.id;
 			req.body.authGroup = req.authGroup.id;
 			const result = await role.writeCustomRole(req.body);
@@ -66,6 +67,7 @@ const api = {
 				req.body.modifiedBy = req.user.sub;
 			}
 			req.body.product = req.product.id;
+			req.body.productCodedId = req.product.codedId;
 			req.body.authGroup = req.authGroup.id;
 			const result = await role.writeRole(req.body);
 			return res.respond(say.created(result, RESOURCE));
@@ -89,7 +91,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
-			//todo access?
+			//todo access - if role is custom, user must have access to the associated organization
 			const result = await role.getRole(req.authGroup.id, req.product.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));
@@ -115,8 +117,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
-			// todo access
-
+			// todo access - if role is custom, user must be from the org
 			const result = await role.deleteRole(req.authGroup.id, req.product.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));

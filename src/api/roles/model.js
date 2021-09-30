@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
-import { nanoid } from 'nanoid';
-import h from '../../helper';
+//import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
 const roleSchema = new mongoose.Schema({
@@ -40,6 +39,7 @@ const roleSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	productCodedId: String,
 	permissions: [String],
 	// permissions associated to this role
 	/*
@@ -57,7 +57,7 @@ const roleSchema = new mongoose.Schema({
 	],*/
 	codedId: {
 		type: String,
-		default: nanoid(10)
+		required: true
 	},
 	_id: {
 		type: String,

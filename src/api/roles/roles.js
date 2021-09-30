@@ -66,5 +66,10 @@ export default {
 		const result = await dal.patchRole(authGroup.id || authGroup._id, id, product, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.role.edit', result);
 		return result;
+	},
+	async checkProduct(authGroup, productId) {
+		const result = await dal.checkProduct(authGroup, productId);
+		if(result.length === 0) return false;
+		return result;
 	}
 };

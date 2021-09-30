@@ -85,8 +85,14 @@ export default {
 			},
 			access: []
 		};
-		if(userAccess.length === 0) return response;
+		const condensed = {};
+		let orgs = [];
+		let domains = [];
+		let products = [];
+		let roles = [];
+		let miscRoles = [];
 		for(let i=0; i<userAccess.length; i++) {
+			orgs.push(userAccess[i].organization.id);
 			const accessItem = {
 				organization: {
 					id: userAccess[i].organization.id,
@@ -99,13 +105,32 @@ export default {
 				const domain = await dom.getDomain(authGroup, userAccess[i].organization.id, d);
 				if(domain) {
 				    if(query.domain) {
-				        if(domain.id === query.domain) {
-                            accessItem.organization.domainAccess.push(domain.id);
-                            accessItem.organization.productAccess = accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
-                        }
+				    	if (domain.id === query.domain) {
+							accessItem.organization.domainAccess.push(domain.id);
+							domains.push(`${userAccess[i].organization.id}::${domain.id}`);
+							if (query.product) {
+								if(domain.associatedOrgProducts.includes(query.product)) {
+									accessItem.organization.productAccess = accessItem.organization.productAccess.concat([query.product]);
+									products = products.concat([query.product]);
+								}
+							} else {
+								accessItem.organization.productAccess =
+									accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
+								products = products.concat(domain.associatedOrgProducts);
+							}
+						}
                     } else {
                         accessItem.organization.domainAccess.push(domain.id);
-                        accessItem.organization.productAccess = accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
+						domains.push(`${userAccess[i].organization.id}::${domain.id}`);
+						if(query.product) {
+							if(domain.associatedOrgProducts.includes(query.product)) {
+								accessItem.organization.productAccess = accessItem.organization.productAccess.concat([query.product]);
+								products = products.concat([query.product]);
+							}
+						} else {
+							accessItem.organization.productAccess = accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
+							products = products.concat(domain.associatedOrgProducts);
+						}
                     }
 				}
 				return domain;
@@ -119,58 +144,33 @@ export default {
 							name: rl.name,
 							associatedProduct: rl.product
 						});
-					} else {
-					    if(query.includeMiscRoles === 'true' || query.includeMiscRoles === true) {
-					        if(!accessItem.organization.miscRoles) accessItem.organization.miscRoles = [];
-                            accessItem.organization.miscRoles.push({
-                                id: rl.id,
-                                name: rl.name,
-                                associatedProduct: rl.product
-                            });
-                        }
+						const rolePush = (rl.organization) ?
+							`${rl.organization}::${rl.productCodedId || rl.product}::${rl.codedId}` :
+							`${rl.productCodedId || rl.product}::${rl.codedId}`;
+						roles.push(rolePush);
+					} else if(query.includeMiscRoles === 'true' || query.includeMiscRoles === true) {
+						if(!accessItem.organization.miscRoles) accessItem.organization.miscRoles = [];
+						accessItem.organization.miscRoles.push({
+							id: rl.id,
+							name: rl.name,
+							associatedProduct: rl.product
+						});
+						const rolePush = (rl.organization) ?
+							`${rl.organization}::${rl.productCodedId || rl.product}::${rl.codedId}` :
+							`${rl.productCodedId || rl.product}::${rl.codedId}`;
+						miscRoles.push(rolePush);
 					}
 				}
 				return rl;
 			}));
 			// deduplicating the string arrays
 			accessItem.organization.domainAccess = [...new Set(accessItem.organization.domainAccess)];
+			domains = [...new Set(domains)];
 			accessItem.organization.productAccess = [...new Set(accessItem.organization.productAccess)];
+			products = [...new Set(products)];
 			response.access.push(accessItem);
 		}
 		if(query.minimized === 'true' || query.minimized === true) {
-		    const condensed = {};
-		    let orgs = [];
-		    let domains = [];
-		    let products = [];
-		    let roles = [];
-		    let miscRoles = [];
-            response.access.map((o) => {
-                if(o.organization) {
-                    const org = o.organization;
-                    if(org.id) {
-                        orgs.push(org.id);
-                    }
-                    if(org.domainAccess) {
-                        org.domainAccess.map((d) => {
-                            domains.push(`${org.id}::${d}`);
-                        });
-                    }
-                    if(org.productAccess) {
-                        products = products.concat(org.productAccess);
-                    }
-                    if(org.productRoles) {
-                        org.productRoles.map((r) => {
-                            roles.push(`${r.associatedProduct}::${r.id}`);
-                        });
-                    }
-                    if(org.miscRoles) {
-                        org.miscRoles.map((r) => {
-                            miscRoles.push(`${r.associatedProduct}::${r.id}`);
-                        });
-                    }
-                }
-
-            });
             condensed.sub = id;
             condensed.authGroup = response.authGroup.id;
             condensed.owner = response.authGroup.owner;

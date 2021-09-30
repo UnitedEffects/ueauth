@@ -1,7 +1,10 @@
 import Role from './model';
+import { nanoid } from 'nanoid';
+import Organization from "../orgs/model";
 
 export default {
 	async writeRole(data) {
+		data.codedId = nanoid(10);
 		const role =  new Role(data);
 		return role.save();
 	},
@@ -34,7 +37,13 @@ export default {
 		return Role.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
 	async getRole(authGroup, product, id) {
-		return Role.findOne( { _id: id, authGroup, product });
+		return Role.findOne( { $and: [ {$or: [
+			{ _id: id },
+			{ codedId: id }
+		]}, {$or: [
+			{ product },
+			{ productCodedId: product }
+		]}], authGroup });
 	},
 	async getRoleByOrganizationAndId(authGroup, organization, id) {
 		const query = {
@@ -54,5 +63,8 @@ export default {
 		data.modifiedAt = Date.now();
 		const options = { new: true, overwrite: true };
 		return Role.findOneAndUpdate({ _id: id, authGroup, product }, data, options);
+	},
+	async checkProduct(authGroup, productId) {
+		return Role.find( { authGroup, product: productId }).select( { _id: 1, name: 1, description: 1, productCodedId: 1});
 	}
 };

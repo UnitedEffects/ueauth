@@ -817,6 +817,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: product
+          in: query
+          description: if ID provided, it restricts the response to this product
+          required: false
+          schema:
+            type: string
         - name: includeMiscRoles
           in: query
           description: these are roles attributed to the user that do not correlate to the domains or products provided access
@@ -879,6 +885,12 @@ paths:
         - name: domain
           in: query
           description: if ID provided, it restricts the response to this domain
+          required: false
+          schema:
+            type: string
+        - name: product
+          in: query
+          description: if ID provided, it restricts the response to this product
           required: false
           schema:
             type: string

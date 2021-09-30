@@ -33,6 +33,10 @@ const productSchema = new mongoose.Schema({
 		type: String,
 		enum: ['global', 'app', 'service', 'module', 'domain', 'entity', 'other']
 	},
+	codedId: {
+		type: String,
+		required: true
+	},
 	_id: {
 		type: String,
 		default: uuid
@@ -40,6 +44,7 @@ const productSchema = new mongoose.Schema({
 },{ _id: false });
 
 productSchema.index({ name: 1, authGroup: 1}, { unique: true });
+productSchema.index({ codedId: 1, authGroup: 1}, { unique: true });
 
 
 productSchema.pre('save', function(callback) {
