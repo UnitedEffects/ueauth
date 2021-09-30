@@ -666,7 +666,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                $ref: '#/components/schemas/updateUserAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -713,7 +713,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                $ref: '#/components/schemas/access'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -761,7 +761,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                $ref: '#/components/schemas/updateUserAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4661,10 +4661,32 @@ components:
                 type: string
                 format: uuid
 
-    userAccess:
+    updateUserAccess:
       allOf:
         - $ref: '#/components/schemas/accountObject'
       properties:
+        access:
+          $ref: '#/components/schemas/access'
+
+    userAccess:
+      properties:
+        sub:
+          type: string
+          description: user/account id
+          format: uuid
+        authGroup:
+          type: object
+          properties:
+            id:
+              type: string
+            owner:
+              type: boolean
+              example: false
+              description: if true, this person owns the authgroup
+            member:
+              type: boolean
+              example: true
+              description: if true, this person belongs to this authgroup - expect this to usually be true
         access:
           $ref: '#/components/schemas/access'
 
