@@ -40,8 +40,8 @@ tags:
     description: Create, Update, View or Delete Products
   - name: Roles
     description: Create, Update, View or Delete roles globally for all products and all organizations
-  - name: Permissions - PENDING
-    description: Create, Update, View or Delete permissions - NOT YET FUNCTIONAL
+  - name: Permissions
+    description: Create, Update, View or Delete permissions
   - name: Operations
     description: Commands for Artifact or Security Updates
   - name: UI Functions
@@ -2257,7 +2257,7 @@ paths:
     delete:
       tags:
         - Products
-      description: Delete products info
+      description: Delete products. Deleting a product will delete all associated permissions.
       operationId: deleteProduct
       parameters:
         - name: group
@@ -3342,10 +3342,10 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organization/{org}/permissions:
+  /api/{group}/products/{product}/permissions:
     get:
       tags:
-        - Permissions - PENDING
+        - Permissions
       description: get permissions
       operationId: getPermissions
       parameters:
@@ -3355,9 +3355,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3417,7 +3417,7 @@ paths:
         - openId: []
     post:
       tags:
-        - Permissions - PENDING
+        - Permissions
       summary: Create a permission. Once created, it can't be updated. You must delete and create new.
       operationId: createPermission
       parameters:
@@ -3427,9 +3427,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3463,10 +3463,10 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organization/{org}/permissions/{id}:
+  /api/{group}/products/{product}/permissions/{id}:
     get:
       tags:
-        - Permissions - PENDING
+        - Permissions
       summary: Get a permission by Id
       description: Get a permission by Id
       operationId: getPermission
@@ -3477,9 +3477,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3513,8 +3513,8 @@ paths:
         - openId: []
     delete:
       tags:
-        - Permissions - PENDING
-      description: delete permission. Should fail if the permission is currently assigned to a role.
+        - Permissions
+      description: Delete permission will automatically clear all references from roles. Use /permissions/check/role to see which
       operationId: deletePermission
       parameters:
         - name: group
@@ -3523,9 +3523,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -4910,8 +4910,14 @@ components:
       properties:
         id:
           type: string
-          example: IRFa-VaY2b
-          description: small nano uuid
+          format: uuid
+        codedId:
+          type: string
+          description: small nano id for easy reference. unique to authgroup and product
+        product:
+          type: string
+          description: the id of the associated product
+          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -4933,10 +4939,10 @@ components:
           type: string
           description: the action allowed by this permission
           example: write
-        scope:
-          type: string
-          description: the scope attributed by this permission
-          example: self
+        ownershipRequired:
+          type: boolean
+          description: if true, this means the action is only possible on the target if the target is owned by the user
+          example: false
         description:
           type: string
           description: something to present on the screen explaining what this is for

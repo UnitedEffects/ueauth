@@ -4,7 +4,7 @@ import dom from '../api/domains/api';
 import prod from '../api/products/api';
 import role from '../api/roles/api';
 import user from '../api/accounts/api';
-import plugins from '../api/plugins/api';
+import perm from '../api/permissions/api';
 import access from '../api/oidc/access/api';
 import m from '../middleware';
 
@@ -230,9 +230,34 @@ router.post('/:group/organizations/:org/products/:product/roles', [
 ], role.writeCustom);
 
 // Permissions
-router.get('/:group/organization/:org/permissions', PENDING);
-router.post('/:group/organization/:org/permissions', PENDING);
-router.get('/:group/organization/:org/permissions/:id', PENDING);
-router.delete('/:group/organization/:org/permissions/:id', PENDING);
+router.get('/:group/products/:product/permissions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], perm.getPermissions);
+router.post('/:group/products/:product/permissions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access
+], perm.writePermission);
+router.get('/:group/products/:product/permissions/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], perm.getPermission);
+router.delete('/:group/products/:product/permissions/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], perm.deletePermission);
 
 module.exports = router;

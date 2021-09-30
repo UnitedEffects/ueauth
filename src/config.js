@@ -86,7 +86,9 @@ const config = {
 		organization: true,
 		domain: true,
 		product: true,
-		access: true
+		access: true,
+		role: true,
+		permission: true
 	}
 };
 

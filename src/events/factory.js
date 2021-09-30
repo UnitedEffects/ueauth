@@ -138,6 +138,11 @@ const OP_EVENTS = {
 		'ue.access.defined',
 		'ue.access.destroy',
 		'ue.access.error'
+	],
+	permission: [
+		'ue.permission.create',
+		'ue.permission.destroy',
+		'ue.permission.error'
 	]
 };
 
