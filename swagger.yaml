@@ -4723,6 +4723,9 @@ components:
           type: string
           format: uuid
           description: unique id of the product - globally unique
+        codedId:
+          type: string
+          description: this is a 10 character small id that is unique to the authgroup and can be used in place of id
         modifiedAt:
           type: string
           format: date-time
@@ -4742,6 +4745,9 @@ components:
         id:
           type: string
           format: uuid
+        codedId:
+          type: string
+          description: this is a small 10 char id unique to authgroup/product that can be used in place of id
         updateAt:
           type: string
           format: date-time
@@ -4756,6 +4762,9 @@ components:
           type: string
           format: uuid
           description: product associated
+        productCodedId:
+          type: string
+          description: this is the codedId of the product
         custom:
           type: boolean
           default: false
