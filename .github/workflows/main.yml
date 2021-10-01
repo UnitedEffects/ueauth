@@ -7,8 +7,8 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -75,3 +75,4 @@ jobs:
           DEFAULT_UI_SKIN_GRADIENT_LOW: "#131525"
           DEFAULT_UI_SKIN_GRADIENT_HIGH: "#1D2035"
           EVENT_EMITTER_CLEAN_SENSITIVE: true
+          ACCESS_OBJECT_SIZE_LIMIT: 4000

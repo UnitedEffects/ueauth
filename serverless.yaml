@@ -39,6 +39,7 @@ provider:
     DEFAULT_UI_SKIN_GRADIENT_LOW: ${env:DEFAULT_UI_SKIN_GRADIENT_LOW, file(./.env/env.${self:provider.env}.json):DEFAULT_UI_SKIN_GRADIENT_LOW}
     DEFAULT_UI_SKIN_GRADIENT_HIGH: ${env:DEFAULT_UI_SKIN_GRADIENT_HIGH, file(./.env/env.${self:provider.env}.json):DEFAULT_UI_SKIN_GRADIENT_HIGH}
     EVENT_EMITTER_CLEAN_SENSITIVE: ${env:EVENT_EMITTER_CLEAN_SENSITIVE, file(./.env/env.${self:provider.env}.json):EVENT_EMITTER_CLEAN_SENSITIVE}
+    ACCESS_OBJECT_SIZE_LIMIT: ${env:ACCESS_OBJECT_SIZE_LIMIT, file(./.env/env.${self:provider.env}.json):ACCESS_OBJECT_SIZE_LIMIT}
 package:
   exclude:
     - src/**
