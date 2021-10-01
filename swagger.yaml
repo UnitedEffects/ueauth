@@ -1857,6 +1857,12 @@ paths:
                 style: form
               scope:
                 style: form
+              access_filter_organization:
+                style: form
+              access_filter_domain:
+                style: form
+              access_filter_product:
+                style: form
         required: true
 
   /{group}/token/initial-access:
@@ -3832,9 +3838,23 @@ components:
           type: string
         audience:
           type: string
-        custom:
+        code_verifier:
           type: string
-          description: this will be added to jwt encoding returned but not the claims in the OIDC provider
+        resource:
+          type: string
+        client_assertion:
+          type: string
+        client_assertion_type:
+          type: string
+        x_access_filter_organization:
+          type: string
+          description: Not part of the OIDC specification - used for UEAuth
+        x_access_filter_domain:
+          type: string
+          description: Not part of the OIDC specification - used for UEAuth
+        x_access_filter_product:
+          type: string
+          description: Not part of the OIDC specification - used for UEAuth
 
     inviteOperation:
       type: object

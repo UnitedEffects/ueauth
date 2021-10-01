@@ -1,5 +1,7 @@
 import { v4 as uuid } from 'uuid';
+import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
+import access from '../accounts/access';
 import middle from '../../oidcMiddleware';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
@@ -15,6 +17,18 @@ const ueP = new UEProvider();
 const {
 	errors: { InvalidClientMetadata, AccessDenied, OIDCProviderError, InvalidRequest },
 } = require('oidc-provider');
+
+const ACCESS_SCOPES = [
+	'access',
+	'access:group',
+	'access:organizations',
+	'access:products',
+	'access:roles',
+	'access:permissions'
+];
+const BASE_SCOPES = [
+	'openid',
+	'offline_access'].concat(ACCESS_SCOPES);
 
 function oidcConfig(g) {
 	const jwks = JSON.parse(JSON.stringify({
@@ -52,9 +66,7 @@ function oidcConfig(g) {
 			email: ['email', 'verified'],
 			username: ['username'],
 		},
-		scopes: [
-			'openid',
-			'offline_access'].concat(coreScopes).concat(g.config.scopes),
+		scopes: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes),
 		interactions: {
 			url(ctx, interaction) {
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
@@ -141,8 +153,8 @@ function oidcConfig(g) {
 					const resource = {
 						audience: resourceIndicator,
 						accessTokenFormat: 'jwt',
-						scope: coreScopes.concat(g.config.scopes).join(' ')
-					}
+						scope: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes).join(' ')
+					};
 					if(client.scope) {
 						resource.scope = client.scope.replace('openid', '').trim();
 					}
@@ -202,7 +214,6 @@ function oidcConfig(g) {
 				async jwt(ctx, token, jwt) {
 					const audience = jwt.payload.aud.split(' ');
 					if(audience.length > 1) jwt.payload.aud = audience;
-					if(ctx && ctx.oidc && ctx.oidc.body && ctx.oidc.body.custom) jwt.payload.custom = ctx.oidc.body.custom;
 				}
 			},
 			ClientCredentials(ctx, token) {
@@ -259,7 +270,71 @@ function oidcConfig(g) {
 					}
 				}
 			}
-			//todo permissions reference (or object) likely added here...
+			// backing up claim before attempting access inclusion
+			const backup = JSON.parse(JSON.stringify(claims));
+			// getting access information for the user
+			try {
+				const scopes = token.scope.split(' ');
+				let bAccess = false;
+				scopes.map((s) => {
+					if(ACCESS_SCOPES.includes(s)) {
+						bAccess = true;
+					}
+				});
+				const query = {
+					minimized: true
+				};
+				if(ctx.oidc.body.x_access_filter_organization){
+					query.org = ctx.oidc.body.x_access_filter_organization;
+				}
+				if(ctx.oidc.body.x_access_filter_domain){
+					query.domain = ctx.oidc.body.x_access_filter_domain;
+				}
+				if(ctx.oidc.body.x_access_filter_product){
+					query.product = ctx.oidc.body.x_access_filter_product;
+				}
+				if(bAccess === true && ctx.authGroup) {
+					const userAccess = await access.getUserAccess(ctx.authGroup, token.accountId, query);
+					if(token.format === 'jwt' && sizeof(userAccess) > config.ACCESS_OBJECT_SIZE_LIMIT) {
+						const url = `${config.PROTOCOL}://${config.SWAGGER}/api/${ctx.authGroup.id}/access/validate`;
+						let urlQuery = '?';
+						if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
+						if(query.domain) {
+							urlQuery = (urlQuery === '?') ? `${urlQuery}domain=${query.domain}` : `&${urlQuery}domain=${query.domain}`;
+						}
+						if(query.product) {
+							urlQuery = (urlQuery === '?') ? `${urlQuery}product=${query.product}` : `&${urlQuery}product=${query.product}`;
+						}
+						claims['x-access-url'] = (urlQuery === '?') ? url : `${url}${urlQuery}`;
+						claims['x-access-method'] = 'GET';
+					} else {
+						if(userAccess) {
+							if(userAccess.owner === true && (scopes.includes('access') || scopes.includes('access:group'))) {
+								claims['x-access-group'] = 'owner';
+							}
+							if(userAccess.member === true && (scopes.includes('access') || scopes.includes('access:group'))) {
+								if(!claims['x-access-group']) claims['x-access-group'] = 'member';
+								else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
+							}
+							if(userAccess.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
+								claims['x-access-organizations'] = userAccess.orgs;
+							}
+							if(userAccess.products && (scopes.includes('access') || scopes.includes('access:products'))) {
+								claims['x-access-products'] = userAccess.products;
+							}
+							if(userAccess.productRoles && (scopes.includes('access') || scopes.includes('access:roles'))) {
+								claims['x-access-roles'] = userAccess.productRoles;
+							}
+							if(userAccess.permissions && (scopes.includes('access') || scopes.includes('access:permissions'))) {
+								claims['x-access-permissions'] = userAccess.permissions;
+							}
+						}
+					}
+				}
+			} catch (e) {
+				console.error(e);
+				claims = backup;
+			}
 			return claims;
 		},
 		responseTypes: [
