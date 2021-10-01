@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { nanoid } from 'nanoid';
+import { v4 as uuid } from 'uuid';
 
 mongoose.set('useCreateIndex', true);
 
@@ -33,13 +33,18 @@ const productSchema = new mongoose.Schema({
 		type: String,
 		enum: ['global', 'app', 'service', 'module', 'domain', 'entity', 'other']
 	},
+	codedId: {
+		type: String,
+		required: true
+	},
 	_id: {
 		type: String,
-		default: nanoid
+		default: uuid
 	}
 },{ _id: false });
 
 productSchema.index({ name: 1, authGroup: 1}, { unique: true });
+productSchema.index({ codedId: 1, authGroup: 1}, { unique: true });
 
 
 productSchema.pre('save', function(callback) {

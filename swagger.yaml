@@ -40,8 +40,8 @@ tags:
     description: Create, Update, View or Delete Products
   - name: Roles
     description: Create, Update, View or Delete roles globally for all products and all organizations
-  - name: Permissions - PENDING
-    description: Create, Update, View or Delete permissions - NOT YET FUNCTIONAL
+  - name: Permissions
+    description: Create, Update, View or Delete permissions
   - name: Operations
     description: Commands for Artifact or Security Updates
   - name: UI Functions
@@ -75,6 +75,7 @@ paths:
                 properties:
                   id:
                     type: string
+                    example: V1StGXR8_Z5jdHi6B-myT
                   prettyName:
                     type: string
                   clientId:
@@ -665,7 +666,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                $ref: '#/components/schemas/updateUserAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -712,7 +713,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                $ref: '#/components/schemas/access'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -760,7 +761,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                $ref: '#/components/schemas/updateUserAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -780,18 +781,7 @@ paths:
         content:
           application/json:
             schema:
-#              $ref: '#/components/schemas/writeUserAccess'
-              type: object
-              additionalProperties: false
-              properties:
-                domains:
-                  type: array
-                  items:
-                    type: string
-                roles:
-                  type: array
-                  items:
-                    type: string
+              $ref: '#/components/schemas/writeAccess'
         description: Updated access object
         required: true
 
@@ -827,13 +817,19 @@ paths:
           required: false
           schema:
             type: string
+        - name: product
+          in: query
+          description: if ID provided, it restricts the response to this product
+          required: false
+          schema:
+            type: string
         - name: includeMiscRoles
           in: query
           description: these are roles attributed to the user that do not correlate to the domains or products provided access
           required: false
           schema:
             type: boolean
-        - name: permissions
+        - name: excludePermissions
           in: query
           description: flag to let us know to return both roles and permissions, or just roles
           required: false
@@ -892,13 +888,19 @@ paths:
           required: false
           schema:
             type: string
+        - name: product
+          in: query
+          description: if ID provided, it restricts the response to this product
+          required: false
+          schema:
+            type: string
         - name: includeMiscRoles
           in: query
           description: these are roles attributed to the user that do not correlate to the domains or products provided access
           required: false
           schema:
             type: boolean
-        - name: permissions
+        - name: excludePermissions
           in: query
           description: flag to let us know to return both roles and permissions, or just roles
           required: false
@@ -916,7 +918,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccessByToken'
+                $ref: '#/components/schemas/userAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2255,7 +2257,7 @@ paths:
     delete:
       tags:
         - Products
-      description: Delete products info
+      description: Delete products. Deleting a product will delete all associated permissions.
       operationId: deleteProduct
       parameters:
         - name: group
@@ -2278,6 +2280,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/products/{product}/reference-check/permissions:
+    get:
+      tags:
+        - Products
+      summary: Find out how many permissions reference this product
+      description: Find out how many permissions reference this product. Useful to run before a delete operation.
+      operationId: checkPermissionsForProduct
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalReferences:
+                    type: number
+                  permissionIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3340,10 +3393,10 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organization/{org}/permissions:
+  /api/{group}/products/{product}/permissions:
     get:
       tags:
-        - Permissions - PENDING
+        - Permissions
       description: get permissions
       operationId: getPermissions
       parameters:
@@ -3353,9 +3406,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3415,7 +3468,7 @@ paths:
         - openId: []
     post:
       tags:
-        - Permissions - PENDING
+        - Permissions
       summary: Create a permission. Once created, it can't be updated. You must delete and create new.
       operationId: createPermission
       parameters:
@@ -3425,9 +3478,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3461,10 +3514,10 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organization/{org}/permissions/{id}:
+  /api/{group}/products/{product}/permissions/{id}:
     get:
       tags:
-        - Permissions - PENDING
+        - Permissions
       summary: Get a permission by Id
       description: Get a permission by Id
       operationId: getPermission
@@ -3475,9 +3528,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3511,8 +3564,8 @@ paths:
         - openId: []
     delete:
       tags:
-        - Permissions - PENDING
-      description: delete permission. Should fail if the permission is currently assigned to a role.
+        - Permissions
+      description: Delete permission will automatically clear all references from roles. Use /permissions/check/role to see which
       operationId: deletePermission
       parameters:
         - name: group
@@ -3521,9 +3574,9 @@ paths:
           required: true
           schema:
             type: string
-        - name: org
+        - name: product
           in: path
-          description: Organizatino Id
+          description: Product Id
           required: true
           schema:
             type: string
@@ -3536,6 +3589,63 @@ paths:
       responses:
         '204':
           description: successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/products/{product}/permissions/{id}/reference-check/role:
+    get:
+      tags:
+        - Permissions
+      summary: Find out how many roles reference this permission
+      description: Find out how many roles reference this permission. Useful to run before a delete operation.
+      operationId: checkRolesForPermission
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: permission id guid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalReferences:
+                    type: number
+                  roleIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3639,6 +3749,7 @@ components:
           description: Additional information regarding the error
         id:
           type: string
+          format: uuid
           description: Unique ID to help find the error in a logging stack
 
     operations:
@@ -4020,6 +4131,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
           description: guid for this account
         createdAt:
           type: string
@@ -4237,6 +4349,7 @@ components:
       properties:
         id:
           type: string
+          example: V1StGXR8_Z5jdHi6B-myT
           description: nanoid for this account
         createdAt:
           type: string
@@ -4372,6 +4485,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -4567,7 +4681,6 @@ components:
                 type: string
                 description: 'Path to copy or move to'
 
-# Access Schemas
     userProfileWrite:
       type: object
       additionalProperties: false
@@ -4628,100 +4741,62 @@ components:
         modifiedBy:
           type: string
 
-    userAccessWithPermissions:
+    writeAccess:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-          description: associated domainId
-        products:
+        domains:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                format: uuid
-              roles:
-                type: array
-                items:
-                  type: string
-              permissions:
-                type: array
-                items:
-                  type: string
-                  example: 'resource:action:scope'
-
-    userAccessWithOutPermissions:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: associated domainId
-        products:
+            type: string
+            format: uuid
+        roles:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                format: uuid
-              roles:
-                type: array
-                items:
-                  type: string
+            type: string
+            format: uuid
 
-    userAccessByToken:
-      type: object
-      properties:
-        authGroup:
-          type: string
-          description: which AuthGroup
-        organization:
-          type: object
-          properties:
-            id:
-              type: string
-            domain:
-              type: object
-              oneOf:
-                - $ref: '#/components/schemas/userAccessWithPermissions'
-                - $ref: '#/components/schemas/userAccessWithOutPermissions'
-
-    userAccess:
+    access:
       type: array
       items:
         type: object
         properties:
-          authGroup:
-            type: string
-            description: which AuthGroup
           organization:
             type: object
+            allOf:
+              - $ref: '#/components/schemas/writeAccess'
             properties:
               id:
                 type: string
-              domains:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/userAccessWithPermissions'
+                format: uuid
 
-    writeUserAccess:
-      type: object
-      additionalProperties: false
+    updateUserAccess:
+      allOf:
+        - $ref: '#/components/schemas/accountObject'
       properties:
-        organization:
+        access:
+          $ref: '#/components/schemas/access'
+
+    userAccess:
+      properties:
+        sub:
+          type: string
+          description: user/account id
+          format: uuid
+        authGroup:
           type: object
           properties:
             id:
               type: string
-            domain:
-              type: object
-              allOf:
-                - $ref: '#/components/schemas/userAccessWithOutPermissions'
+            owner:
+              type: boolean
+              example: false
+              description: if true, this person owns the authgroup
+            member:
+              type: boolean
+              example: true
+              description: if true, this person belongs to this authgroup - expect this to usually be true
+        access:
+          $ref: '#/components/schemas/access'
 
     writeProduct:
       type: object
@@ -4756,6 +4831,9 @@ components:
           type: string
           format: uuid
           description: unique id of the product - globally unique
+        codedId:
+          type: string
+          description: this is a 10 character small id that is unique to the authgroup and can be used in place of id
         modifiedAt:
           type: string
           format: date-time
@@ -4775,6 +4853,9 @@ components:
         id:
           type: string
           format: uuid
+        codedId:
+          type: string
+          description: this is a small 10 char id unique to authgroup/product that can be used in place of id
         updateAt:
           type: string
           format: date-time
@@ -4789,6 +4870,9 @@ components:
           type: string
           format: uuid
           description: product associated
+        productCodedId:
+          type: string
+          description: this is the codedId of the product
         custom:
           type: boolean
           default: false
@@ -4935,6 +5019,13 @@ components:
         id:
           type: string
           format: uuid
+        codedId:
+          type: string
+          description: small nano id for easy reference. unique to authgroup and product
+        product:
+          type: string
+          description: the id of the associated product
+          format: uuid
         createdAt:
           type: string
           format: date-time
@@ -4956,10 +5047,10 @@ components:
           type: string
           description: the action allowed by this permission
           example: write
-        scope:
-          type: string
-          description: the scope attributed by this permission
-          example: self
+        ownershipRequired:
+          type: boolean
+          description: if true, this means the action is only possible on the target if the target is owned by the user
+          example: false
         description:
           type: string
           description: something to present on the screen explaining what this is for

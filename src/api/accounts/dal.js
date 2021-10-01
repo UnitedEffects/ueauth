@@ -33,10 +33,6 @@ export default {
 			data.password = await bcrypt.hash(data.password, salt);
 		}
 		const options = { new: true, overwrite: true };
-		/*
-		if(data.organizations || data.orgDomains || data.access ) {
-			options.runValidators = true;
-		}*/
 		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);
 	},
 	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false) {
@@ -47,7 +43,7 @@ export default {
 		if(verifiedRequired === true) {
 			query.verified = true;
 		}
-		return Account.findOne(query);
+		return Account.findOne(query).select({ access: 0 });
 	},
 	async updatePassword(authGroup, id, update) {
 		if(update.password) {
@@ -57,9 +53,25 @@ export default {
 		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	},
 	async checkOrganizations(authGroup, organizations) {
-		return Account.find({ authGroup, organizations }).select({ _id: 1 });
+		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
 	},
-	async checkDomains(authGroup, orgDomains) {
-		return Account.find({ authGroup, orgDomains }).select({ _id: 1 });
+	async checkDomains(authGroup, orgId, id) {
+		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': orgId, 'organization.domains': id }} }).select({ _id: 1, authGroup: 1 });
+	},
+	async checkRoles(authGroup, id) {
+		const accounts = await Account.find({ authGroup, access: { $elemMatch: { 'organization.roles': id }} }).select({ _id: 1, authGroup: 1, access : { $elemMatch: { 'organization.roles': id }}});
+		const output = [];
+		accounts.map((ac) => {
+			const temp = {
+				id: ac.id,
+				authGroup: ac.authGroup,
+				organizationsWhereApplied: []
+			};
+			ac.access.map((o) => {
+				temp.organizationsWhereApplied.push(o.organization.id);
+			});
+			output.push(temp);
+		});
+		return output;
 	}
 };

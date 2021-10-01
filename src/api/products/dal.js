@@ -1,7 +1,9 @@
 import Product from './model';
+import { nanoid } from 'nanoid';
 
 export default {
 	async writeProduct(data) {
+		data.codedId = nanoid(10);
 		const product =  new Product(data);
 		return product.save();
 	},
@@ -10,7 +12,7 @@ export default {
 		return Product.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
 	async getProduct(authGroup, id) {
-		return Product.findOne( { _id: id, authGroup });
+		return Product.findOne( { authGroup, $or: [{ _id: id }, { codedId: id }] });
 	},
 	async deleteProduct(authGroup, id) {
 		return Product.findOneAndRemove( { _id: id, authGroup });

@@ -2,6 +2,7 @@ import jsonPatch from 'jsonpatch';
 import Boom from '@hapi/boom';
 import dal from './dal';
 import org from '../orgs/orgs';
+import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 
@@ -27,6 +28,10 @@ export default {
 		const checkOrgs = await org.checkProduct(authGroupId, id);
 		if(checkOrgs) {
 			throw Boom.badRequest('You must remove this product from the following organizations before deleting', checkOrgs);
+		}
+		const checkRoles = await role.checkProduct(authGroupId, id);
+		if(checkRoles) {
+			throw Boom.badRequest('This product has associated roles which may be attributed to users. Clean them up before deleting.', checkRoles);
 		}
 		const result = await dal.deleteProduct(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.product.destroy', result);
