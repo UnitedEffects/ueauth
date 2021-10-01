@@ -5,7 +5,6 @@ import prod from '../api/products/api';
 import role from '../api/roles/api';
 import user from '../api/accounts/api';
 import perm from '../api/permissions/api';
-import access from '../api/oidc/access/api';
 import m from '../middleware';
 
 const router = express.Router();
@@ -259,5 +258,21 @@ router.delete('/:group/products/:product/permissions/:id', [
 	m.permissions,
 	m.access
 ], perm.deletePermission);
+
+// Reference Checks
+router.get('/:group/products/:product/permissions/:id/reference-check/role', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], perm.checkForRoles);
+router.get('/:group/products/:product/reference-check/permissions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access
+], prod.checkForPermissions);
 
 module.exports = router;

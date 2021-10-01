@@ -15,5 +15,11 @@ export default {
 	},
 	async deletePermission(authGroup, product, id) {
 		return Permission.findOneAndRemove( { _id: id, authGroup, product });
+	},
+	async deletePermissionsByProduct(authGroup, product) {
+		return Permission.deleteMany({ authGroup, product });
+	},
+	async checkForProductReference(authGroup, product) {
+		return Permission.find({ authGroup, product }).select({ _id: 1 });
 	}
 };

@@ -71,5 +71,16 @@ export default {
 		const result = await dal.checkProduct(authGroup, productId);
 		if(result.length === 0) return false;
 		return result;
+	},
+	async clearPermission(authGroup, product, coded) {
+		const result = await dal.clearPermissionFromRoles(authGroup, product, coded);
+		return result.nModified;
+	},
+	async checkForPermissions(authGroup, product, coded) {
+		const result = await dal.checkForPermissions(authGroup, product, coded);
+		return {
+			totalReferences: result.length,
+			roleIds: result
+		};
 	}
 };

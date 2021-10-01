@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
-//import h from '../../helper';
+import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
 const roleSchema = new mongoose.Schema({
@@ -40,21 +40,17 @@ const roleSchema = new mongoose.Schema({
 		required: true
 	},
 	productCodedId: String,
-	permissions: [String],
-	// permissions associated to this role
-	/*
 	permissions: [
 		{
 			type: String,
 			validate: {
 				validator: function (v) {
-					const ag = this.authGroup;
-					return h.validateProductReference(mongoose.model('products'), v, ag);
+					return h.validatePermissionReference(mongoose.model('permissions'), v, this.authGroup, this.product);
 				},
-				message: 'Permission does not exist'
+				message: 'Permission does not exist or is not part of this product. Also make sure you provide value as a concat of \'permission.id permission.coded\' where there is a space between the values.'
 			}
 		}
-	],*/
+	],
 	codedId: {
 		type: String,
 		required: true
@@ -73,11 +69,11 @@ roleSchema.pre('save', function(callback) {
 	callback();
 });
 
-/*roleSchema.pre('findOneAndUpdate', function(callback) {
+roleSchema.pre('findOneAndUpdate', function(callback) {
 	// deduplicate list
-	this._update.associatedProducts= [...new Set(this._update.associatedProducts)];
+	this._update.permissions = [...new Set(this._update.permissions)];
 	callback();
-});*/
+});
 
 roleSchema.virtual('id').get(function(){
 	return this._id.toString();

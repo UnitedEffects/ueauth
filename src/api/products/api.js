@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import prod from './product';
+import perms from '../permissions/permissions';
 import ueEvents from '../../events/ueEvents';
 
 const RESOURCE = 'Product';
@@ -65,14 +66,29 @@ const api = {
 			// await permissions.enforceOwn(req.permissions, req.params.id);
 			// todo create a limit where if users exist within the domain, it can only be deactivated
 			// if(req.authGroup.owner === req.params.id) throw Boom.badRequest('You can not delete the owner of the auth group');
+			const permissions = await perms.deletePermissionsByProduct(req.authGroup.id, req.params.id);
 			const result = await prod.deleteProduct(req.authGroup.id || req.authGroup._id, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-			return res.respond(say.ok(result, RESOURCE));
+			const output = {
+				permissionsDeleted: permissions.deletedCount,
+				product: result
+			};
+			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.product.error', error);
 			next(error);
 		}
 	},
+	async checkForPermissions(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.product) throw Boom.preconditionRequired('You need to specify a product');
+			const result = await perms.checkForProductReference(req.authGroup.id, req.product.id);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	}
 };
 
 export default api;

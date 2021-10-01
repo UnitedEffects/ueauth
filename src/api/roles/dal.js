@@ -61,10 +61,16 @@ export default {
 	},
 	async patchRole(authGroup, id, product, data) {
 		data.modifiedAt = Date.now();
-		const options = { new: true, overwrite: true };
+		const options = { new: true, overwrite: true, runValidators: true };
 		return Role.findOneAndUpdate({ _id: id, authGroup, product }, data, options);
 	},
 	async checkProduct(authGroup, productId) {
 		return Role.find( { authGroup, product: productId }).select( { _id: 1, name: 1, description: 1, productCodedId: 1});
+	},
+	async clearPermissionFromRoles(authGroup, product, coded) {
+		return Role.updateMany({ authGroup, product }, { $pullAll: { permissions: [coded] } } );
+	},
+	async checkForPermissions(authGroup, product, coded) {
+		return Role.find({ authGroup, product, permissions: coded }).select({ _id: 1});
 	}
 };

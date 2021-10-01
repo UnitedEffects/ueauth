@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import perm from './permissions';
+import roles from '../roles/roles';
 import ueEvents from '../../events/ueEvents';
 
 const RESOURCE = 'Permissions';
@@ -60,6 +61,18 @@ const api = {
 			next(error);
 		}
 	},
+	async checkForRoles(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			const permission = await perm.getPermission(req.authGroup.id, req.product.id, req.params.id);
+			const result = await roles.checkForPermissions(req.authGroup.id, req.product.id, `${permission.id} ${permission.coded}`);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	}
 };
 
 export default api;

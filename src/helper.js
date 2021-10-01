@@ -2,9 +2,6 @@ import { createQuery } from 'odata-v4-mongodb';
 import Boom from '@hapi/boom';
 import group from './api/authGroup/group';
 import NodeCache from 'node-cache';
-import org from './api/orgs/orgs';
-import dom from './api/domains/domain';
-import role from './api/roles/roles';
 
 const myCache = new NodeCache();
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
@@ -119,48 +116,20 @@ export default {
 		}
 		return result;
 	},
-	async validateOrganizationReference (model, id, authGroup) {
-		const result = await model.findOne({ _id: id, authGroup });
+
+	async validatePermissionReference(model, v, authGroup, product) {
+		const val = v.split(' ');
+		if(val.length !== 2) return false;
+		const result = await model.findOne({ _id: val[0], coded: val[1], authGroup, product });
 		return !!result;
 	},
 	async validateProductReference (model, id, authGroup) {
 		const result = await model.findOne({ _id: id, authGroup });
 		return !!result;
 	},
-	async validateDomainReference (model, id, authGroup, currentOrganizations) {
-		const data = id.split(':');
-		if(data.length !== 2) return false;
-		if(!currentOrganizations.includes(data[0])) return false;
-		const result = await model.findOne({ _id: data[1], authGroup, organization: data[0] });
-		return !!result;
-	},
 	async validateOrgProductReference (model, orgId, authGroup, productId) {
 		const result = await model.findOne({ _id: orgId, authGroup }).select( { associatedProducts: 1 });
 		if(!result) return false;
 		return (result.associatedProducts.includes(productId));
-	},
-	async validateAccessReferences(obj, authGroup) {
-		if(!obj.organization) return false;
-		if(!obj.organization.id) return false;
-		const organization = await org.getOrg(authGroup, obj.organization.id);
-		if(!organization) return false;
-		let domCheck = true;
-		let temp;
-		if(obj.organization.domains && obj.organization.domains.length !== 0) {
-			for(let i = 0; i<obj.organization.domains.length; i++) {
-				temp = await dom.getDomain(authGroup, obj.organization.id, obj.organization.domains[i]);
-				if(temp.id !== obj.organization.domains[i]) domCheck = false;
-			}
-		}
-		if(domCheck === false) return false;
-		let roleCheck = true;
-		if(obj.organization.roles && obj.organization.roles.length !== 0) {
-			for(let i = 0; i<obj.organization.roles.length; i++) {
-				temp = await role.getRoleByOrganizationAndId(authGroup, obj.organization.id, obj.organization.roles[i]);
-				if(temp.id !== obj.organization.roles[i]) roleCheck = false;
-			}
-		}
-		if (roleCheck === false) return false;
-		return true;
 	}
 };

@@ -829,7 +829,7 @@ paths:
           required: false
           schema:
             type: boolean
-        - name: permissions
+        - name: excludePermissions
           in: query
           description: flag to let us know to return both roles and permissions, or just roles
           required: false
@@ -900,7 +900,7 @@ paths:
           required: false
           schema:
             type: boolean
-        - name: permissions
+        - name: excludePermissions
           in: query
           description: flag to let us know to return both roles and permissions, or just roles
           required: false
@@ -2296,6 +2296,57 @@ paths:
         - bearer: []
         - openId: []
 
+  /api/{group}/products/{product}/reference-check/permissions:
+    get:
+      tags:
+        - Products
+      summary: Find out how many permissions reference this product
+      description: Find out how many permissions reference this product. Useful to run before a delete operation.
+      operationId: checkPermissionsForProduct
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalReferences:
+                    type: number
+                  permissionIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
   /api/{group}/roles:
     get:
       tags:
@@ -3538,6 +3589,63 @@ paths:
       responses:
         '204':
           description: successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/products/{product}/permissions/{id}/reference-check/role:
+    get:
+      tags:
+        - Permissions
+      summary: Find out how many roles reference this permission
+      description: Find out how many roles reference this permission. Useful to run before a delete operation.
+      operationId: checkRolesForPermission
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: permission id guid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalReferences:
+                    type: number
+                  roleIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

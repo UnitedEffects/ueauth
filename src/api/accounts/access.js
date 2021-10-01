@@ -90,6 +90,7 @@ export default {
 		let domains = [];
 		let products = [];
 		let roles = [];
+		let permissions = [];
 		let miscRoles = [];
 		for(let i=0; i<userAccess.length; i++) {
 			orgs.push(userAccess[i].organization.id);
@@ -139,6 +140,27 @@ export default {
 				const rl = await role.getRoleByOrganizationAndId(authGroup, userAccess[i].organization.id, r);
 				if(rl) {
 					if(accessItem.organization.productAccess.includes(rl.product)) {
+						if(query.excludePermissions !== 'true' && query.excludePermissions !== true) {
+							if(rl.permissions && rl.permissions.length !== 0) {
+								if(!accessItem.organization.productPermissions) accessItem.organization.productPermissions = [];
+								rl.permissions.map((val) => {
+									const p = val.split(' ');
+									if(p.length === 2) {
+										const temp = accessItem.organization.productPermissions.filter((x) => {
+											return x.id === p[0];
+										});
+										if(temp.length === 0) {
+											accessItem.organization.productPermissions.push({
+												id: p[0],
+												code: p[1],
+												product: rl.product
+											});
+											permissions.push(`${rl.productCodedId || rl.product}:::${p[1]}`);
+										}
+									}
+								});
+							}
+						}
 						accessItem.organization.productRoles.push({
 							id: rl.id,
 							name: rl.name,
@@ -153,7 +175,7 @@ export default {
 						accessItem.organization.miscRoles.push({
 							id: rl.id,
 							name: rl.name,
-							associatedProduct: rl.product
+							associatedProduct: rl.product,
 						});
 						const rolePush = (rl.organization) ?
 							`${rl.organization}::${rl.productCodedId || rl.product}::${rl.codedId}` :
@@ -168,6 +190,7 @@ export default {
 			domains = [...new Set(domains)];
 			accessItem.organization.productAccess = [...new Set(accessItem.organization.productAccess)];
 			products = [...new Set(products)];
+			permissions = [...new Set(permissions)];
 			response.access.push(accessItem);
 		}
 		if(query.minimized === 'true' || query.minimized === true) {
@@ -179,6 +202,7 @@ export default {
             if(domains.length !== 0) condensed.orgDomains = domains.join(' ');
             if(products.length !== 0) condensed.products = products.join(' ');
             if(roles.length !== 0) condensed.productRoles = roles.join(' ');
+			if(permissions.length !== 0) condensed.permissions = permissions.join(' ');
             if(miscRoles.length !== 0) condensed.miscRoles = miscRoles.join(' ');
             return condensed;
 		}
