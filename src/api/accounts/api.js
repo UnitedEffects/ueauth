@@ -8,6 +8,7 @@ import cl from '../oidc/client/clients';
 import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 import ueEvents from '../../events/ueEvents';
+import initAccess from '../../initUEAuth';
 const cryptoRandomString = require('crypto-random-string');
 
 const RESOURCE = 'Account';
@@ -53,6 +54,7 @@ const api = {
 			if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
 			client = await cl.generateClient(req.authGroup);
 			if(!client) throw Boom.expectationFailed('Auth Group Client Not Created! Rolling back.');
+			const access = await initAccess.createDefaultOrgAndDomain(req.authGroup, account);
 			let g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);
 			if(!g) throw Boom.expectationFailed('Auth Group Not Activated! Rolling back.');
 			g = JSON.parse(JSON.stringify(g));
@@ -60,7 +62,8 @@ const api = {
 			const out = {
 				account,
 				authGroup: g,
-				client
+				client,
+				access
 			};
 			try {
 				//console.info(req.authInfo);

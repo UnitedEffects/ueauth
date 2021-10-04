@@ -1,0 +1,535 @@
+[
+  {
+    "target": "group",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "group",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "group",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "group",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "group",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "group",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "userAccess",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "invites",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clients",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "notification",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "organizations",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "products",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "permissions",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "permissions",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "permissions",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "permissions",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "permissions",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-reset-user-password",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-user",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-user",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-invite",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-invite",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-client",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "operations-client",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "initialAccessToken",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  }
+]

@@ -7,6 +7,7 @@ import acct from '../accounts/account';
 import plugs from '../plugins/plugins';
 import permissions from '../../permissions';
 import ueEvents from "../../events/ueEvents";
+import initAccess from '../../initUEAuth';
 const config = require('../../config');
 
 
@@ -59,18 +60,20 @@ const api = {
 				console.info('Plugins did not initialize - this is not a blocker but a warning');
 				console.error(error);
 			}
+			const access = await initAccess.createDefaultOrgAndDomain(final, account);
 			const out = {
 				WARNING: 'NOW THAT YOU HAVE FINISHED INITIAL SETUP, REDEPLOY THIS SERVICE WITH ALLOW_ROOT_CREATION SET TO FALSE AND ONE_TIME_PERSONAL_ROOT_CREATION_KEY SET TO EMPTY STRING',
 				account,
 				authGroup: final,
 				client,
-				plugins
+				plugins,
+				access
 			};
 			return res.respond(say.created(out, RESOURCE));
 		} catch (error) {
 			if (g) {
 				try {
-					const gDone = await group.deleteOne(g.id);
+					const gDone = await group.deleteOneCleanup(g.id);
 					if(!gDone) throw new Error('group delete not complete');
 				} catch (error) {
 					console.error(error);
@@ -95,7 +98,7 @@ const api = {
 					console.info('Client Rollback: There was a problem and you may need to debug this install');
 				}
 			}
-			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
+			ueEvents.emit('root', 'ue.group.error', error);
 			next(error);
 		}
 	},
@@ -128,7 +131,6 @@ const api = {
 					console.error('Attempted and failed cleanup');
 				}
 			}
-			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
 			next(error);
 		}
 	},

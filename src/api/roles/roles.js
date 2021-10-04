@@ -82,5 +82,15 @@ export default {
 			totalReferences: result.length,
 			roleIds: result
 		};
+	},
+	async bulkWrite(authGroupId, roles) {
+		const result = await dal.bulkWrite(roles);
+		ueEvents.emit(authGroupId, 'ue.roles.create', result);
+		return result;
+	},
+	async deleteRolesOfProduct(authGroupId, product) {
+		const result = await dal.deleteRolesOfProduct(authGroupId, product);
+		ueEvents.emit(authGroupId, 'ue.roles.destroy', result);
+		return result;
 	}
 };

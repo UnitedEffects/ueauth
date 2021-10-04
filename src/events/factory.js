@@ -169,21 +169,25 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 				emit.message = msg[msg.length - 1].split(':')[0];
 			}
 			if (!clean) {
-				emit.data = (ctx.oidc) ? JSON.parse(JSON.stringify(ctx.oidc.entities)) : JSON.parse(JSON.stringify(ctx));
-				if (args.length > 0) {
-					emit.details = args;
+				if(ctx) {
+					emit.data = (ctx.oidc) ? JSON.parse(JSON.stringify(ctx.oidc.entities)) : JSON.parse(JSON.stringify(ctx));
+					if (args.length > 0) {
+						emit.details = args;
+					}
 				}
 			} else {
-				let data = {};
-				const object = (ctx.oidc) ? ctx.oidc.entities : ctx;
-				if (!ctx.oidc) {
-					data = cleanArgs([object]);
-				} else {
-					data = cleanArgs(object);
-				}
-				emit.data = JSON.parse(JSON.stringify(data));
-				if (args.length > 0) {
-					emit.details = cleanArgs(args);
+				if(ctx) {
+					let data = {};
+					const object = (ctx.oidc) ? ctx.oidc.entities : ctx;
+					if (!ctx.oidc) {
+						data = cleanArgs([object]);
+					} else {
+						data = cleanArgs(object);
+					}
+					emit.data = JSON.parse(JSON.stringify(data));
+					if (args.length > 0) {
+						emit.details = cleanArgs(args);
+					}
 				}
 			}
 			// emitter - we can hook this up to an external event system from here later

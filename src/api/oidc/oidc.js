@@ -30,6 +30,10 @@ const BASE_SCOPES = [
 	'openid',
 	'offline_access'].concat(ACCESS_SCOPES);
 
+async function introspectionAllowedPolicy(ctx, client, token) {
+	return !(client.introspectionEndpointAuthMethod === 'none' && token.clientId !== ctx.oidc.client.clientId);
+}
+
 function oidcConfig(g) {
 	const jwks = JSON.parse(JSON.stringify({
 		keys: g.config.keys
@@ -74,7 +78,10 @@ function oidcConfig(g) {
 		},
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
-			introspection: {enabled: true},
+			introspection: {
+				enabled: true,
+				allowedPolicy: introspectionAllowedPolicy
+			},
 			revocation: {enabled: true},
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},

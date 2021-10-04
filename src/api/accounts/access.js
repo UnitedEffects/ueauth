@@ -51,7 +51,7 @@ export default {
 			throw Boom.badRequest('The following roles or domains do not exist in the organization', { domains: badDomains, roles: badRoles });
 		}
 		let orgRecord;
-		let recordIndex;
+		let recordIndex = 0;
 		userAccess.map((ac, index) => {
 			if(ac.organization && ac.organization.id === organization) {
 				orgRecord = ac;
@@ -68,8 +68,9 @@ export default {
 		};
 		userAccess[recordIndex] = orgRecord;
 		user.access = userAccess;
+		const result = await user.save();
 		ueEvents.emit(authGroup, 'ue.access.defined', { sub: id, access: orgRecord });
-		return user.save();
+		return result;
 	},
 	async getUserAccess(authGroup, id, query) {
 		//const user = await dal.getAccount(authGroup, id);

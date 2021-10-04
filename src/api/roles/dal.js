@@ -1,6 +1,5 @@
 import Role from './model';
 import { nanoid } from 'nanoid';
-import Organization from "../orgs/model";
 
 export default {
 	async writeRole(data) {
@@ -72,5 +71,11 @@ export default {
 	},
 	async checkForPermissions(authGroup, product, coded) {
 		return Role.find({ authGroup, product, permissions: coded }).select({ _id: 1});
+	},
+	async bulkWrite(roles) {
+		return Role.insertMany(roles);
+	},
+	async deleteRolesOfProduct(authGroup, product) {
+		return Role.deleteMany({ authGroup, product });
 	}
 };

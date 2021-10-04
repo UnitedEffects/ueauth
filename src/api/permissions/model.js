@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
-//import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
 const permissionSchema = new mongoose.Schema({
@@ -36,6 +35,11 @@ const permissionSchema = new mongoose.Schema({
 	coded: {
 		type: String
 	},
+	// indicates if this is a protected resource created as part of initialization
+	core: {
+		type: Boolean,
+		default: false
+	},
 	_id: {
 		type: String,
 		default: uuid
@@ -52,6 +56,17 @@ permissionSchema.pre('save', function(callback) {
 	callback();
 });
 
+permissionSchema.pre('insertMany', function(callback, docs) {
+	if(Array.isArray(docs)) {
+		docs.map((permission) => {
+			permission.coded = (permission.ownershipRequired === true) ?
+				`${permission.target}::${permission.action}:own` :
+				`${permission.target}::${permission.action}`;
+		});
+	}
+	callback();
+});
+
 permissionSchema.virtual('id').get(function(){
 	return this._id.toString();
 });
@@ -64,6 +79,7 @@ permissionSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
+	delete ret.core;
 };
 
 // Export the Mongoose model

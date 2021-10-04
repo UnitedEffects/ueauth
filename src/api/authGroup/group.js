@@ -88,6 +88,12 @@ const agp = {
 		return result;
 	},
 
+	async deleteOneCleanup(id) {
+		const result = await dal.deleteOne(id, true);
+		ueEvents.emit(id, 'ue.group.destroy', result);
+		return result;
+	},
+
 	async getOneByEither(q, onlyIncludeActive=true) {
 		return dal.getOneByEither(q, onlyIncludeActive);
 	},

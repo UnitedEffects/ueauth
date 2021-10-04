@@ -38,6 +38,7 @@ const orgSchema = new mongoose.Schema({
 		default: 'customer',
 		enum: ['customer', 'external', 'internal', 'other']
 	},
+	contactEmail: String,
 	contactName: String,
 	contactAddress: String,
 	contactPhone: String,
@@ -56,6 +57,11 @@ const orgSchema = new mongoose.Schema({
 			}
 		}
 	],
+	// indicates if this is a protected resource created as part of initialization
+	core: {
+		type: Boolean,
+		default: false
+	},
 	_id: {
 		type: String,
 		default: uuid
@@ -87,6 +93,7 @@ orgSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
+	delete ret.core;
 };
 
 // Export the Mongoose model

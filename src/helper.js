@@ -98,11 +98,11 @@ export default {
 		];
 		return protectedNamespaces.includes(x.toLowerCase());
 	},
-	async cacheAG(reset, prefix, id) {
+	async cacheAG(reset, prefix, id, mustBeActive = true) {
 		let result;
 		const cache = (reset) ? undefined : await myCache.get(`${prefix}:${id}`);
 		if(!cache) {
-			result = await group.getOneByEither(id);
+			result = await group.getOneByEither(id, mustBeActive);
 		} else {
 			result = JSON.parse(cache);
 		}
