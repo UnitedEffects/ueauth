@@ -244,7 +244,7 @@ const mid = {
 		try {
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
 			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
-			const result = await helper.cacheAG(req.query.resetCache, 'AG.ALT', req.params.group);
+			const result = await helper.cacheAG(req.query.resetCache, 'AG.ALT', req.params.group, false);
 			req.authGroup = result;
 			req.params.group = result._id;
 			return next();

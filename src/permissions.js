@@ -1,6 +1,13 @@
 import Boom from '@hapi/boom';
 const config = require('./config');
-
+/*
+we will want to hardcode member permissions as they exist outside of an organization
+{
+    role: 'Member',
+    permissions: ['accounts::update:own', 'accounts::read:own', 'accounts::delete:own', 'invites::read:own', 'operations-reset-user-password::create', 'operations-user::create:own', 'operations-invite::create:own']
+},
+*/
+// Root super user has group create and plugins
 export default {
 	async permissionEnforce(req, res, next) {
 		const ERROR_MESSAGE = 'You do not have the right permissions';
@@ -216,7 +223,7 @@ const Client = [
 		target: 'operations:client',
 		actions: 'create:own'
 	}
-]
+];
 
 const Owner = [
 	{

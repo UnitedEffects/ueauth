@@ -21,5 +21,8 @@ export default {
 	},
 	async checkForProductReference(authGroup, product) {
 		return Permission.find({ authGroup, product }).select({ _id: 1 });
+	},
+	async bulkWrite(permissions) {
+		return Permission.insertMany(permissions);
 	}
 };

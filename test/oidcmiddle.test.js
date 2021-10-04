@@ -24,6 +24,7 @@ describe('OIDC Pre/Post Middleware', () => {
         Model.Query.prototype.save.mockClear();
         Model.Query.prototype.findOne.mockClear();
         Model.Query.prototype.findOneAndUpdate.mockClear();
+        NodeCache.prototype.get.mockClear();
     });
 
 	test('validate authgroup for OP koa routes - authgroup defined in ctx', async () => {

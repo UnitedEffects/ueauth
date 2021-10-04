@@ -50,6 +50,11 @@ const domainSchema = new mongoose.Schema({
 			}
 		}
 	],
+	// indicates if this is a protected resource created as part of initialization
+	core: {
+		type: Boolean,
+		default: false
+	},
 	externalId: String,
 	_id: {
 		type: String,
@@ -83,6 +88,7 @@ domainSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
+	delete ret.core;
 };
 
 // Export the Mongoose model

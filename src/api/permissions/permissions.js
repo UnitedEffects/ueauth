@@ -43,5 +43,11 @@ export default {
 			totalReferences: result.length,
 			permissionIds: result
 		};
+	},
+
+	async bulkWrite(authGroupId, permissions) {
+		const result = await dal.bulkWrite(permissions);
+		ueEvents.emit(authGroupId, 'ue.permission.create', result);
+		return result;
 	}
 };

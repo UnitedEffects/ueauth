@@ -35,8 +35,8 @@ export default {
 	async checkPrettyName(prettyName) {
 		return Group.find({ prettyName }).countDocuments();
 	},
-	async deleteOne(id) {
-		return Group.findOneAndRemove({ _id: id, active: false });
+	async deleteOne(id, active = false) {
+		return Group.findOneAndRemove({ _id: id, active });
 	},
 	async switchGroupOwner(id, owner) {
 		return Group.findOneAndUpdate({ _id: id }, { owner }, { new: true });
