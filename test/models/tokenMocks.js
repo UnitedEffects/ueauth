@@ -3,6 +3,8 @@ import { nanoid } from 'nanoid';
 const cryptoRandomString = require('crypto-random-string');
 const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
 
+const config = require('../../src/config');
+
 const toks = {
 	opaque_access_token: cryptoRandomString({length: 86, type: 'url-safe'}),
 	decoded_jwt(access = true, expired = false, ag = undefined) {
@@ -22,8 +24,8 @@ const toks = {
 			exp,
 			scope: 'core:read core:update core:write core:delete',
 			client_id,
-			iss: `http://localhost:3000/${group}`,
-			aud: `http://localhost:3000/${pretty}`
+			iss: `http://${config.SWAGGER}/${group}`,
+			aud: `http://${config.SWAGGER}/${pretty}`
 		};
 	},
 	iatPreMeta: {

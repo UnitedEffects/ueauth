@@ -130,9 +130,8 @@ describe('Auth Functions', () => {
 		}
 	});
 
-	/**
-     * Not sure if we should accept requests without an audience, but for now we do and this test validates the behavior
-     */
+
+     // Not sure if we should accept requests without an audience, but for now we do and this test validates the behavior
 	it('run decoded jwt check - aud is missing - no issues', async () => {
 		try {
 			// mock authgroup object
