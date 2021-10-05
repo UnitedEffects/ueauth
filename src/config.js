@@ -65,6 +65,7 @@ const config = {
 	DEFAULT_UI_SKIN_GRADIENT_HIGH: process.env.DEFAULT_UI_SKIN_GRADIENT_HIGH || envVars.DEFAULT_UI_SKIN_GRADIENT_HIGH || "#1D2035",
 	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
 	ACCESS_OBJECT_SIZE_LIMIT: process.env.ACCESS_OBJECT_SIZE_LIMIT || parseInt(envVars.ACCESS_OBJECT_SIZE_LIMIT) || 4000,
+	MEMBER_PERMISSIONS: ['member:::accounts::update:own', 'member:::accounts::read:own', 'member:::accounts::delete:own', 'member:::invites::read:own', 'member:::userAccess::read:own','member:::operations-reset-user-password::create', 'member:::operations-user::create:own', 'member:::operations-invite::create:own'],
 	EVENT_EMITTER: {
 		general: true,
 		accessToken: true,

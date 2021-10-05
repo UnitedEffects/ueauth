@@ -4,7 +4,6 @@ import group from '../api/authGroup/api';
 import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
-import access from '../api/oidc/access/api';
 import m from '../middleware';
 
 /**
@@ -16,6 +15,18 @@ import m from '../middleware';
 
 const router = express.Router();
 
+/**
+ * THIS IS FOR TESTING - DELETE SOON *****************************
+ */
+router.get('/testperms', [
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')],
+(req, res) => {
+	res.json({ permissions: req.permissions });
+});
+// ***************************************************************
+
 // Initialize - ONLY FOR FIRST START - NOT INCLUDED IN SWAGGER
 router.post('/init', group.initialize);
 
@@ -26,8 +37,6 @@ router.get('/health', m.health);
 // Auth Group Functional
 router.get('/groupcheck/:prettyName', [m.isWhitelisted], group.check);
 router.get('/:group/group', [m.isWhitelisted], group.getPublicGroupInfo);
-//deprecated because we can use pkce instead
-//router.post('/token', [m.schemaCheck, m.isWhitelisted], access.getUIAccessTokens);
 
 // Auth Groups
 router.post('/group', [
@@ -41,18 +50,18 @@ router.post('/group', [
 router.get('/groups', [
 	m.isAuthenticated,
 	m.permissions,
-	m.access], group.get);
+	m.access('group')], group.get);
 router.get('/group/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access], group.getOne);
+	m.access('group')], group.getOne);
 router.patch('/group/:id', [
 	m.schemaCheck,
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access], group.patch);
+	m.access('group')], group.patch);
 
 // Plugins
 router.post('/plugins/global/notifications', [
@@ -60,17 +69,17 @@ router.post('/plugins/global/notifications', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access], plugins.toggleGlobalNotifications);
+	m.access('plugins')], plugins.toggleGlobalNotifications);
 router.get('/plugins/global', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access], plugins.getLatestPluginOptions);
+	m.access('plugins')], plugins.getLatestPluginOptions);
 router.get('/plugins/global/audit', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access], plugins.auditPluginOptions);
+	m.access('plugins')], plugins.auditPluginOptions);
 
 // Notifications
 router.post('/:group/notification', [
@@ -80,7 +89,7 @@ router.post('/:group/notification', [
 	m.getGlobalPluginSettings,
 	m.validateNotificationRequest,
 	m.permissions,
-	m.access,
+	m.access('notification'),
 ], plugins.writeNotification);
 router.get('/:group/notifications', [
 	m.validateAuthGroup,
@@ -88,7 +97,7 @@ router.get('/:group/notifications', [
 	m.getGlobalPluginSettings,
 	m.validateNotificationRequest,
 	m.permissions,
-	m.access,
+	m.access('notification'),
 ], plugins.getNotifications);
 router.get('/:group/notification/:id', [
 	m.validateAuthGroup,
@@ -96,7 +105,7 @@ router.get('/:group/notification/:id', [
 	m.getGlobalPluginSettings,
 	m.validateNotificationRequest,
 	m.permissions,
-	m.access
+	m.access('notification')
 ], plugins.getNotification);
 router.delete('/:group/notification/:id', [
 	m.validateAuthGroup,
@@ -104,25 +113,23 @@ router.delete('/:group/notification/:id', [
 	m.getGlobalPluginSettings,
 	m.validateNotificationRequest,
 	m.permissions,
-	m.access
+	m.access('notification')
 ], plugins.deleteNotification);
-
 router.put('/:group/notification/:id/process', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.getGlobalPluginSettings,
 	m.validateNotificationRequest,
 	m.permissions,
-	m.access
+	m.access('notification')
 ], plugins.processNotification);
-
 router.post('/:group/notification/process', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.getGlobalPluginSettings,
 	m.validateNotificationRequest,
 	m.permissions,
-	m.access
+	m.access('notification')
 ], plugins.bulkNotificationProcess);
 
 // Accounts
@@ -134,39 +141,43 @@ router.post('/:group/account', [
 	m.captureAuthGroupInBody,
 	m.getGlobalPluginSettings,
 	m.permissions,
-	m.access
+	m.access('accounts')
 ], account.writeAccount);
 router.get('/:group/accounts', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access,
+	m.access('accounts'),
 ], account.getAccounts);
 router.get('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access
+	m.access('accounts')
 ], account.getAccount);
 router.patch('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticatedOrIAT,
 	m.schemaCheck,
 	m.permissions,
-	m.access
+	m.access('accounts')
 ], account.patchAccount);
 router.delete('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access
+	m.access('accounts')
 ], account.deleteAccount);
 
 // Clients
-router.get('/:group/clients', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.get);
-router.get('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.getOne);
-router.patch('/:group/client/:id', [m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access], client.patchOne);
-router.delete('/:group/client/:id', [m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access], client.deleteOne);
+router.get('/:group/clients', [
+	m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access('clients')], client.get);
+router.get('/:group/client/:id', [
+	m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access('clients')], client.getOne);
+router.patch('/:group/client/:id', [
+	m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access('clients')], client.patchOne);
+router.delete('/:group/client/:id', [
+	m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access('clients')], client.deleteOne);
 
 // Operations
 router.post('/:group/operations/client/:id', [
@@ -174,14 +185,14 @@ router.post('/:group/operations/client/:id', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access
+	m.access('operations', 'client')
 ], client.clientOperations);
 router.post('/:group/operations/user/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access,
+	m.access('operations', 'user'),
 	m.getGlobalPluginSettings,
 ], account.userOperations);
 router.post('/:group/operations', [
@@ -189,7 +200,7 @@ router.post('/:group/operations', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access
+	m.access('operations')
 ], group.operations);
 router.post('/:group/operations/reset-user-password', [
 	m.schemaCheck,
@@ -203,7 +214,7 @@ router.post('/:group/operations/invite/:id', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access,
+	m.access('operations', 'invite'),
 	m.getGlobalPluginSettings
 ], invite.inviteOperations);
 
@@ -213,26 +224,26 @@ router.post('/:group/invite',[
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access,
+	m.access('invites'),
 	m.getGlobalPluginSettings
 ], invite.createInvite);
 router.get('/:group/invites', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access
+	m.access('invites')
 ], invite.getInvites);
 router.get('/:group/invite/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access
+	m.access('invites')
 ], invite.getInvite);
 router.delete('/:group/invite/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access
+	m.access('invites')
 ], invite.deleteInvite);
 
 module.exports = router;

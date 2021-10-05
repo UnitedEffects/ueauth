@@ -4,7 +4,6 @@ import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import authorizer from './auth/auth';
 import helper from './helper';
-import group from './api/authGroup/group';
 import orgs from './api/orgs/orgs';
 import product from './api/products/product';
 import account from './api/accounts/account';
@@ -12,9 +11,8 @@ import enforce from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from './api/plugins/plugins';
-import NodeCache from 'node-cache';
+import access from './api/accounts/access';
 
-const myCache = new NodeCache();
 const config = require('./config');
 const p = require('../package.json');
 const date = new Date();    
@@ -158,27 +156,84 @@ const mid = {
 			next(error);
 		}
 	},
-
-	// send to helper
-	async cacheAG(reset, prefix, id) {
-		let result;
-		const cache = (reset) ? undefined : await myCache.get(`${prefix}:${id}`);
-		if(!cache) {
-			result = await group.getOneByEither(id);
-		} else {
-			result = JSON.parse(cache);
+	async permissions(req, res, next) {
+		try {
+			if(!req.permissions) req.permissions = {};
+			req.permissions = {
+				enforceOwn: false
+			};
+			if(!req.user) return next();
+			if(!req.authGroup) return next();
+			if(req.user.initialAccessToken) return next(); //todo verify this flow
+			req.permissions.sub = req.user.sub;
+			req.permissions.sub_group = req.user.subject_group.id;
+			req.permissions.req_group = req.authGroup.id;
+			if(req.user.decoded) {
+				if(req.user.decoded.scope) req.permissions.scopes = req.user.decoded.scope.split(' ');
+				let accessObject = JSON.parse(JSON.stringify(req.user.decoded));
+				if(req.user.decoded['x-access-url']) {
+					accessObject = {};
+					const userAccess = await access.getUserAccess(req.user.subject_group.id, req.user.sub, { minimized: true });
+					if(userAccess) {
+						if(userAccess.owner === true) accessObject['x-access-group'] = 'owner';
+						if(userAccess.member === true) {
+							if(!accessObject['x-access-group']) accessObject['x-access-group'] = 'member';
+							else accessObject['x-access-group'] = (`${accessObject['x-access-group']} member`).trim();
+						}
+						// not adding the rest for now since we do not need them
+						if(userAccess.productRoles) accessObject['x-access-roles'] = userAccess.productRoles;
+						if(userAccess.permissions) accessObject['x-access-permissions'] = userAccess.permissions;
+					}
+				}
+				if(accessObject['x-access-group']) req.permissions.groupAccess = accessObject['x-access-group'].split(' ');
+				// not adding the rest for now since we do not need them
+				if(accessObject['x-access-roles']) req.permissions.roles = accessObject['x-access-roles'].split(' ');
+				if(accessObject['x-access-permissions']) req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
+			}
+			// Root super user
+			if(req.user.subject_group.prettyName === 'root') {
+				if(req.user.group === req.permissions.sub_group){
+					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
+					req.permissions.groupAccess.push('super');
+				}
+			}
+			// todo, remove this once client_access is implemented
+			if(req.user.client_credential === true) {
+				if(!req.permissions.roles) req.permissions.roles = [];
+				req.permissions.roles.push('client');
+			}
+			// set core information for enforcement - for this service, we dont really care about what the token sends via org/domain/product
+			// we look up the core product and ensure all the permissions match the id associated.
+			const coreProduct = await helper.cacheCoreProduct(req.query.resetCache, req.user.subject_group);
+			req.permissions.core = {
+				group: req.permissions.sub_group,
+				product: coreProduct.id || coreProduct._id,
+				productCodedId: coreProduct.codedId
+			};
+			if(req.permissions.permissions) {
+				req.permissions.permissions = req.permissions.permissions.filter((p) => {
+					return (p.includes(`${req.permissions.core.productCodedId}:::`) || p.includes(`${req.permissions.core.product}:::`));
+				});
+			}
+			if(req.permissions.roles) {
+				req.permissions.roles = req.permissions.roles.filter((r) => {
+					return (r.includes(`${req.permissions.core.productCodedId}::`) || r.includes(`${req.permissions.core.product}::`));
+				});
+			}
+			if(req.permissions.groupAccess.includes('member')) {
+				if(!req.permissions.permissions) req.permissions.permissions = [];
+				config.MEMBER_PERMISSIONS.map((p) => {
+					req.permissions.permissions.push(p.replace('member:::', `${req.permissions.core.productCodedId}:::`));
+				});
+				req.permissions.permissions = [...new Set(req.permissions.permissions)];
+			}
+			return next();
+		} catch (error) {
+			next(error);
 		}
-		if (!result) throw Boom.notFound('auth group not found');
-		if (!cache) {
-			const holdThis = JSON.parse(JSON.stringify(result));
-			holdThis._id = result._id;
-			holdThis.owner = result.owner;
-			holdThis.active = result.active;
-			await myCache.set(`${prefix}:${id}`, JSON.stringify(holdThis), 3600);
-		}
-		return result;
 	},
-	async permissions( req, res, next) {
+	//todo delete
+	async oldPermissions( req, res, next) {
 		try {
 			if(!req.user) return next();
 			if(!req.authGroup) return next();
@@ -212,7 +267,9 @@ const mid = {
 			next(error);
 		}
 	},
-	access: enforce.permissionEnforce,
+	//todo delete
+	oldAccess: enforce.permissionEnforce,
+	access: enforce.enforce,
 	async openGroupRegAuth(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
@@ -232,7 +289,7 @@ const mid = {
 	async openGroupRegAccess(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			if(req.permissions && req.permissions.roles && req.permissions.roles.length !== 0 && req.permissions.roles.includes('super')) {
+			if(req.permissions && req.permissions.groupAccess && req.permissions.groupAccess.length && req.permissions.groupAccess.includes('super')) {
 				return next();
 			}
 			throw Boom.badRequest('Public Group Registration is Disabled - Contact Admin to be Added');

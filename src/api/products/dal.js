@@ -20,5 +20,8 @@ export default {
 	async patchProduct(authGroup, id, data) {
 		data.modifiedAt = Date.now();
 		return Product.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true });
+	},
+	async getCoreProduct(query) {
+		return Product.findOne(query);
 	}
 };

@@ -1,15 +1,67 @@
 import Boom from '@hapi/boom';
 const config = require('./config');
-/*
-we will want to hardcode member permissions as they exist outside of an organization
-{
-    role: 'Member',
-    permissions: ['accounts::update:own', 'accounts::read:own', 'accounts::delete:own', 'invites::read:own', 'operations-reset-user-password::create', 'operations-user::create:own', 'operations-invite::create:own']
-},
-*/
-// Root super user has group create and plugins
+
 export default {
-	async permissionEnforce(req, res, next) {
+	enforce(target, ...args) {
+		return function (req, res, next) {
+			const ERROR_MESSAGE = 'You do not have the right permissions';
+			try {
+				// ensure middleware provides a target
+				if (!target) throw Boom.internal('Permissions enforcement middleware requires a target that maps to known permissions');
+				// if there is no user, assume no access
+				if (!req.user) throw Boom.unauthorized();
+				// todo validate the initaccesstoken flow
+				if (req.user.initialAccessToken) return next();
+				// ensure there are permissions... there should at least be member info
+				if (!req.permissions) throw Boom.unauthorized();
+				// ensure a core product exists
+				if (!req.permissions.core || !req.permissions.core.product) throw Boom.forbidden(ERROR_MESSAGE);
+				// ensure group access
+				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
+				// ensure group member
+				if (!req.permissions.groupAccess.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
+				// if root user, they have priority
+				if (req.permissions.groupAccess.includes('super')) {
+					//if (config.FULL_SUPER_CONTROL === true) return next();
+					//if (superAccess(req)) return next();
+					//throw Boom.unauthorized('Super Admin is not fully enabled');
+				}
+				let bFound = false;
+				let requestTarget;
+				let targets = [target];
+				if(args.length) {
+					targets = targets.concat(args);
+				}
+				const requestAction = translateMethod(req.method);
+				if(!requestAction) throw Boom.methodNotAllowed(req.method);
+				targets.map((t) => {
+					if(bFound === false) {
+						requestTarget = (!requestTarget) ? t : `${requestTarget}-${t}`;
+						let requestPermissions = [];
+						// we assume that if a codedId exists, that will be the likely qualifier
+						let thisRequest = `${req.permissions.core.productCodedId || req.permissions.core.product}:::${requestTarget}::${requestAction}`;
+						requestPermissions = req.permissions.permissions.filter((p) => {
+							return p.includes(thisRequest);
+						});
+						if(requestPermissions.length !== 0) {
+							bFound = true;
+							if(requestPermissions.length === 1) {
+								if(requestPermissions[0].includes(':own')) {
+									req.permissions.enforceOwn = true;
+								}
+							}
+						}
+					}
+				});
+
+				if(bFound === false) throw Boom.forbidden(ERROR_MESSAGE);
+				return next();
+			} catch (error) {
+				next(error);
+			}
+		};
+	},
+	async oldPermissionEnforce(req, res, next) {
 		const ERROR_MESSAGE = 'You do not have the right permissions';
 		try {
 			// If there isn't a user, there isn't anything to enforce...
@@ -79,9 +131,8 @@ export default {
 	async enforceOwn(p, resourceOwner) {
 
 		if(p.enforceOwn === true) {
-			if(!p.agent) throw Boom.forbidden();
-			if(!p.agent.sub) throw Boom.forbidden();
-			if(p.agent.sub !== resourceOwner) {
+			if(!p.sub) throw Boom.forbidden();
+			if(p.sub !== resourceOwner) {
 				console.error('unauthorized resource request');
 				throw Boom.notFound(resourceOwner);
 			}

@@ -2,6 +2,7 @@ import { createQuery } from 'odata-v4-mongodb';
 import Boom from '@hapi/boom';
 import group from './api/authGroup/group';
 import NodeCache from 'node-cache';
+import product from "./api/products/product";
 
 const myCache = new NodeCache();
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
@@ -97,6 +98,23 @@ export default {
 			'group'
 		];
 		return protectedNamespaces.includes(x.toLowerCase());
+	},
+	async cacheCoreProduct(reset, authGroup) {
+		let result;
+		const cache = (reset) ? undefined : await myCache.get(`${authGroup.id}:CoreProduct`);
+		if(!cache) {
+			result = await product.getCoreProduct(authGroup);
+		} else {
+			result = JSON.parse(cache);
+		}
+		if(!result) throw Boom.notFound('Core product for this AuthGroup was not identified. Contact the admin.');
+		if (!cache) {
+			const holdThis = JSON.parse(JSON.stringify(result));
+			holdThis._id = result._id;
+			holdThis.core = result.core;
+			await myCache.set(`${authGroup.id}:CoreProduct`, JSON.stringify(holdThis), 86400);
+		}
+		return result;
 	},
 	async cacheAG(reset, prefix, id, mustBeActive = true) {
 		let result;

@@ -243,14 +243,6 @@ async (req, token, next) => {
 				if(decoded) {
 					try {
 						const result = await runDecodedChecks(token, issuer, decoded, subAG);
-						if(decoded.scope) {
-							if(req.permissions) req.permissions.scopes = decoded.scope;
-							else {
-								req.permissions = {
-									scopes: decoded.scope
-								}
-							}
-						}
 						return next(null, result, { token });
 					} catch (error) {
 						console.error(error);
@@ -276,7 +268,7 @@ async (req, token, next) => {
 					// now we know its a root account so we reset subAG
 					issuer = [];
 					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`);
-					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`)
+					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`);
 				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG);
 				if(!req.authGroup) req.authGroup = subAG;

@@ -6,6 +6,8 @@ import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 
+const config = require('../../config');
+
 export default {
 	async writeProduct(data) {
 		const output = await dal.writeProduct(data);
@@ -45,5 +47,22 @@ export default {
 		const result = await dal.patchProduct(authGroup.id || authGroup._id, id, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.product.edit', result);
 		return result;
+	},
+	/**
+	 * 				name: `${authGroup.name} - ${config.PLATFORM_NAME}`,
+	 description: `Internal product reference for group '${authGroup.name}'. Add users to this product to access platform features. Do not delete as system access will be compromised`,
+	 authGroup: authGroup.id,
+	 type: 'global',
+	 createdBy: creator.id,
+	 core: true
+	 */
+	async getCoreProduct(authGroup) {
+		const query = {
+			name: `${authGroup.name} - ${config.PLATFORM_NAME}`,
+			authGroup: authGroup.id,
+			type: 'global',
+			core: true
+		};
+		return dal.getCoreProduct(query);
 	}
 };

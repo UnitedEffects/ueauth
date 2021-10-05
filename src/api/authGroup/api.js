@@ -136,6 +136,7 @@ const api = {
 	},
 	async get(req, res, next) {
 		try {
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const result = await group.get(req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
