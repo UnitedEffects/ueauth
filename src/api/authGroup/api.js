@@ -5,8 +5,8 @@ import helper from '../../helper';
 import cl from '../oidc/client/clients';
 import acct from '../accounts/account';
 import plugs from '../plugins/plugins';
-import permissions from '../../permissions';
-import ueEvents from "../../events/ueEvents";
+//import permissions from '../../permissions';
+import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
 const config = require('../../config');
 
@@ -136,6 +136,7 @@ const api = {
 	},
 	async get(req, res, next) {
 		try {
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const result = await group.get(req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -144,10 +145,10 @@ const api = {
 	},
 	async getOne(req, res, next) {
 		try {
+			console.info(req.permissions);
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			const result = await group.getOne(req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
-			await permissions.enforceOwn(req.permissions, result.owner);
 			const output = JSON.parse(JSON.stringify(result));
 			if(output.config) delete output.config.keys;
 			return res.respond(say.ok(output, RESOURCE));
@@ -159,7 +160,6 @@ const api = {
 		try {
 			const grp = await group.getOne(req.params.id);
 			if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
-			await permissions.enforceOwn(req.permissions, grp.owner);
 			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM');
 			const output = JSON.parse(JSON.stringify(result));
 			if(output.config) delete output.config.keys;

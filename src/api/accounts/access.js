@@ -73,12 +73,11 @@ export default {
 		return result;
 	},
 	async getUserAccess(authGroup, id, query) {
-		//const user = await dal.getAccount(authGroup, id);
 		const user = await dal.getAccountByAccess(authGroup, id, query.org);
 		if(!user) throw Boom.notFound(`user not found: ${id}`);
 		const userAccess = user.access || [];
 		const response = {
-		    sub: id,
+			sub: id,
 			authGroup: {
 				id: authGroup.id,
 				owner: (authGroup.owner === id),
@@ -106,8 +105,8 @@ export default {
 			await Promise.all(userAccess[i].organization.domains.map(async (d) => {
 				const domain = await dom.getDomain(authGroup, userAccess[i].organization.id, d);
 				if(domain) {
-				    if(query.domain) {
-				    	if (domain.id === query.domain) {
+					if(query.domain) {
+						if (domain.id === query.domain) {
 							accessItem.organization.domainAccess.push(domain.id);
 							domains.push(`${userAccess[i].organization.id}::${domain.id}`);
 							if (query.product) {
@@ -121,8 +120,8 @@ export default {
 								products = products.concat(domain.associatedOrgProducts);
 							}
 						}
-                    } else {
-                        accessItem.organization.domainAccess.push(domain.id);
+					} else {
+						accessItem.organization.domainAccess.push(domain.id);
 						domains.push(`${userAccess[i].organization.id}::${domain.id}`);
 						if(query.product) {
 							if(domain.associatedOrgProducts.includes(query.product)) {
@@ -133,7 +132,7 @@ export default {
 							accessItem.organization.productAccess = accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
 							products = products.concat(domain.associatedOrgProducts);
 						}
-                    }
+					}
 				}
 				return domain;
 			}));
@@ -195,17 +194,17 @@ export default {
 			response.access.push(accessItem);
 		}
 		if(query.minimized === 'true' || query.minimized === true) {
-            condensed.sub = id;
-            condensed.authGroup = response.authGroup.id;
-            condensed.owner = response.authGroup.owner;
-            condensed.member = response.authGroup.member;
-            if(orgs.length !== 0) condensed.orgs = orgs.join(' ');
-            if(domains.length !== 0) condensed.orgDomains = domains.join(' ');
-            if(products.length !== 0) condensed.products = products.join(' ');
-            if(roles.length !== 0) condensed.productRoles = roles.join(' ');
+			condensed.sub = id;
+			condensed.authGroup = response.authGroup.id;
+			condensed.owner = response.authGroup.owner;
+			condensed.member = response.authGroup.member;
+			if(orgs.length !== 0) condensed.orgs = orgs.join(' ');
+			if(domains.length !== 0) condensed.orgDomains = domains.join(' ');
+			if(products.length !== 0) condensed.products = products.join(' ');
+			if(roles.length !== 0) condensed.productRoles = roles.join(' ');
 			if(permissions.length !== 0) condensed.permissions = permissions.join(' ');
-            if(miscRoles.length !== 0) condensed.miscRoles = miscRoles.join(' ');
-            return condensed;
+			if(miscRoles.length !== 0) condensed.miscRoles = miscRoles.join(' ');
+			return condensed;
 		}
 		return response;
 	},
@@ -242,6 +241,5 @@ export default {
 		const result = await dal.checkRoles(ag, id);
 		if(result.length === 0) return false;
 		return result;
-	}
-
+	},
 };

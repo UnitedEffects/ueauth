@@ -4,17 +4,14 @@ import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import authorizer from './auth/auth';
 import helper from './helper';
-import group from './api/authGroup/group';
 import orgs from './api/orgs/orgs';
 import product from './api/products/product';
 import account from './api/accounts/account';
-import enforce from './permissions';
+import access from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from './api/plugins/plugins';
-import NodeCache from 'node-cache';
 
-const myCache = new NodeCache();
 const config = require('./config');
 const p = require('../package.json');
 const date = new Date();    
@@ -158,65 +155,12 @@ const mid = {
 			next(error);
 		}
 	},
-
-	// send to helper
-	async cacheAG(reset, prefix, id) {
-		let result;
-		const cache = (reset) ? undefined : await myCache.get(`${prefix}:${id}`);
-		if(!cache) {
-			result = await group.getOneByEither(id);
-		} else {
-			result = JSON.parse(cache);
-		}
-		if (!result) throw Boom.notFound('auth group not found');
-		if (!cache) {
-			const holdThis = JSON.parse(JSON.stringify(result));
-			holdThis._id = result._id;
-			holdThis.owner = result.owner;
-			holdThis.active = result.active;
-			await myCache.set(`${prefix}:${id}`, JSON.stringify(holdThis), 3600);
-		}
-		return result;
-	},
-	async permissions( req, res, next) {
-		try {
-			if(!req.user) return next();
-			if(!req.authGroup) return next();
-			if(req.user.initialAccessToken) return next();
-			req.permissions = {
-				agent: req.user,
-				sub_group: req.user.subject_group.id,
-				req_group: req.authGroup.id,
-				enforceOwn: false,
-				roles: []
-			};
-			if (req.user.group === req.authGroup.id) {
-				req.permissions.roles.push('member');
-			}
-			if(req.user.subject_group.prettyName === 'root') {
-				if(req.user.group === req.permissions.sub_group){
-					//req.permissions.roles.super = true;
-					req.permissions.roles.push('super');
-				}
-			}
-			if(req.user.sub && req.authGroup.owner === req.user.sub) {
-				//req.permissions.roles.owner = true;
-				req.permissions.roles.push('owner');
-			}
-			if(req.user.client_credential === true) {
-				req.permissions.roles.push('client');
-			}
-			// Plugin to capture permission claim or query external service can go here
-			return next();
-		} catch (error) {
-			next(error);
-		}
-	},
-	access: enforce.permissionEnforce,
+	permissions: access.permissions,
+	access: access.enforce,
 	async openGroupRegAuth(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			return this.isAuthenticated(req, res, next);
+			return mid.isAuthenticated(req, res, next);
 		} catch (error) {
 			next(error);
 		}
@@ -224,7 +168,7 @@ const mid = {
 	async openGroupRegPermissions(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			return this.permissions(req, res, next);
+			return mid.permissions(req, res, next);
 		} catch (error) {
 			next(error);
 		}
@@ -232,10 +176,7 @@ const mid = {
 	async openGroupRegAccess(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			if(req.permissions && req.permissions.roles && req.permissions.roles.length !== 0 && req.permissions.roles.includes('super')) {
-				return next();
-			}
-			throw Boom.badRequest('Public Group Registration is Disabled - Contact Admin to be Added');
+			return mid.access('group')(req, res, next);
 		} catch (error) {
 			next(error);
 		}
@@ -294,6 +235,7 @@ const mid = {
 	isAuthorizedToCreateAccount(req, res, next) {
 		if(req.groupActivationEvent === true) return authorizer.isIatAuthenticatedForGroupActivation(req, res, next);
 		if(req.authGroup.locked === true) return authorizer.isAuthenticated(req, res, next);
+		req.accountCreationRequest = true;
 		return next();
 	},
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,

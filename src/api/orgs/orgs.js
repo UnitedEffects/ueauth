@@ -28,14 +28,12 @@ export default {
 		if(checkAccounts) {
 			throw Boom.badRequest('You have users associated to this organization. You must remove them before deleting it.', checkAccounts);
 		}
-
 		const result = await dal.deleteOrg(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.organization.destroy', result);
 		return result;
 	},
 
-	async patchOrg(authGroup, id, update, modifiedBy) {
-		const org = await dal.getOrg(authGroup.id || authGroup._id, id);
+	async patchOrg(authGroup, org, id, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(org.toObject(), update);
 		const originalProducts = [...new Set(org.associatedProducts)];
 		const updatedProducts = [...new Set(patched.associatedProducts)];

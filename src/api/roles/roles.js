@@ -59,8 +59,7 @@ export default {
 		return result;
 	},
 
-	async patchRole(authGroup, id, product, update, modifiedBy) {
-		const role = await dal.getRole(authGroup.id || authGroup._id, product, id);
+	async patchRole(authGroup, role, id, product, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(role.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		const result = await dal.patchRole(authGroup.id || authGroup._id, id, product, patched);

@@ -22,6 +22,7 @@ const ACCESS_SCOPES = [
 	'access',
 	'access:group',
 	'access:organizations',
+	'access:domains',
 	'access:products',
 	'access:roles',
 	'access:permissions'
@@ -325,6 +326,9 @@ function oidcConfig(g) {
 							}
 							if(userAccess.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
 								claims['x-access-organizations'] = userAccess.orgs;
+							}
+							if(userAccess.orgDomains && (scopes.includes('access') || scopes.includes('access:domains'))) {
+								claims['x-access-domains'] = userAccess.orgDomains;
 							}
 							if(userAccess.products && (scopes.includes('access') || scopes.includes('access:products'))) {
 								claims['x-access-products'] = userAccess.products;

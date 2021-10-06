@@ -99,6 +99,7 @@ const api = {
 	},
 	async getAccounts(req, res, next) {
 		try {
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			const result = await acct.getAccounts(req.params.group, req.query);
 			return res.respond(say.ok(result, RESOURCE));
@@ -246,7 +247,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
-			// todo access to this?
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await access.defineAccess(req.authGroup.id, req.organization.id, req.params.id, req.body);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
@@ -260,7 +261,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to get access from');
-			// todo access to this?
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await access.getDefinedAccess(req.authGroup.id, req.organization.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
@@ -274,7 +275,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to remove');
-			// todo access to this?
+			if(req.user.sub !== req.params.id) await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await access.removeOrgFromAccess(req.authGroup.id, req.organization.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
@@ -290,7 +291,7 @@ const api = {
 				if(!req.user || !req.user.sub ) throw Boom.preconditionRequired('Must provide id or valid user token');
 				req.params.id = req.user.sub;
 			}
-			// todo access to this?
+			await permissions.enforceOwn(req.permissions, req.params.id);
 			const result = await access.getUserAccess(req.authGroup, req.params.id, req.query);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
