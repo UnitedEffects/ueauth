@@ -28,7 +28,6 @@ export default {
 		if(checkAccounts) {
 			throw Boom.badRequest('You have users associated to this organization. You must remove them before deleting it.', checkAccounts);
 		}
-
 		const result = await dal.deleteOrg(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.organization.destroy', result);
 		return result;

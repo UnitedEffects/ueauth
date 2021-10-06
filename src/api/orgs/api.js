@@ -1,6 +1,8 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import org from './orgs';
+import access from '../accounts/access';
+import permissions from '../../permissions';
 import ueEvents from '../../events/ueEvents';
 
 const RESOURCE = 'Organization';
@@ -8,7 +10,8 @@ const RESOURCE = 'Organization';
 const api = {
 	async writeOrg(req, res, next) {
 		try {
-			if (req.authGroup.active === false) return next(Boom.forbidden('You can not add orgs to an inactive group'));
+			if(req.authGroup.active === false) throw Boom.forbidden('You can not add orgs to an inactive group');
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			if (req.user && req.user.sub) {
 				req.body.createdBy = req.user.sub;
 				req.body.modifiedBy = req.user.sub;
@@ -22,6 +25,7 @@ const api = {
 	},
 	async getOrgs(req, res, next) {
 		try {
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			const result = await org.getOrgs(req.params.group, req.query);
 			return res.respond(say.ok(result, RESOURCE));
@@ -33,8 +37,7 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			//todo access to orgs?
-			//await permissions.enforceOwn(req.permissions, id);
+			await permissions.enforceOwnOrg(req.permissions, req.params.id);
 			const result = await org.getOrg(req.params.group, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
@@ -46,8 +49,7 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			// todo access?
-			// await permissions.enforceOwn(req.permissions, req.params.id);
+			await permissions.enforceOwnOrg(req.permissions, req.params.id);
 			const result = await org.patchOrg(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -59,10 +61,7 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
-			// todo access
-			// await permissions.enforceOwn(req.permissions, req.params.id);
-			// todo create a limit where if users exist within the org, it can only be deactivated
-			// if(req.authGroup.owner === req.params.id) throw Boom.badRequest('You can not delete the owner of the auth group');
+			await permissions.enforceOwnOrg(req.permissions, req.params.id);
 			const result = await org.deleteOrg(req.params.group, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));

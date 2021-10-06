@@ -1,4 +1,6 @@
 import Boom from '@hapi/boom';
+import access from "./api/accounts/access";
+import helper from "./helper";
 const config = require('./config');
 
 export default {
@@ -9,7 +11,10 @@ export default {
 				// ensure middleware provides a target
 				if (!target) throw Boom.internal('Permissions enforcement middleware requires a target that maps to known permissions');
 				// if there is no user, assume no access
-				if (!req.user) throw Boom.unauthorized();
+				if (!req.user) {
+					if(req.accountCreationRequest === true && req.authGroup.locked === false) return next();
+					throw Boom.unauthorized();
+				}
 				// todo validate the initaccesstoken flow
 				if (req.user.initialAccessToken) return next();
 				// ensure there are permissions... there should at least be member info
@@ -18,14 +23,14 @@ export default {
 				if (!req.permissions.core || !req.permissions.core.product) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group access
 				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
-				// ensure group member
-				if (!req.permissions.groupAccess.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
 				// if root user, they have priority
 				if (req.permissions.groupAccess.includes('super')) {
 					//if (config.FULL_SUPER_CONTROL === true) return next();
 					//if (superAccess(req)) return next();
 					//throw Boom.unauthorized('Super Admin is not fully enabled');
 				}
+				// ensure group member
+				if (!req.permissions.groupAccess.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
 				let bFound = false;
 				let requestTarget;
 				let targets = [target];
@@ -61,75 +66,99 @@ export default {
 			}
 		};
 	},
-	async oldPermissionEnforce(req, res, next) {
-		const ERROR_MESSAGE = 'You do not have the right permissions';
+	async permissions(req, res, next) {
 		try {
-			// If there isn't a user, there isn't anything to enforce...
+			if(!req.permissions) req.permissions = {};
+			req.permissions = {
+				enforceOwn: false
+			};
 			if(!req.user) return next();
-			// If this is an IAT token, there isn't anything to enforce at this level...
-			if(req.user.initialAccessToken) return next();
-
-			// super admin has full access if "FULL_SUPER_CONTROL" is set to true, otherwise update and delete are disabled
-			if(req.permissions && req.permissions.roles && req.permissions.roles.length !== 0 && req.permissions.roles.includes('super')) {
-				if(config.FULL_SUPER_CONTROL === true) return next();
-				if(superAccess(req)) return next();
-				throw Boom.unauthorized('Super Admin is not fully enabled');
-			}
-			// if we are here, we aren't a super admin, and only they can do cross group queries
-			if(req.permissions.sub_group !== req.permissions.req_group) {
-				throw Boom.forbidden(ERROR_MESSAGE);
-			}
-
-			// auth group owner has full access to their group
-			if (req.permissions && req.permissions.roles && req.permissions.roles.length !== 0) {
-				const roles = req.permissions.roles;
-				let actions = [];
-				await roles.map((role) => {
-					if (actions.length === 0) {
-						actions = returnActions(req.method, req.path, role);
-					}
-					else {
-						actions = actions.concat(returnActions(req.method, req.path, role));
-					}
-				});
-				const actionsExist = (actions.length !== 0);
-				if(!actionsExist) throw Boom.forbidden(ERROR_MESSAGE);
-				const methodAction = translateMethod(req.method);
-				if(!methodAction) throw Boom.methodNotAllowed(req.method);
-				let final = actions.filter((a) => {
-					return a.includes(methodAction) === true;
-				});
-				if(final.length === 0) throw Boom.forbidden(ERROR_MESSAGE);
-				if(final.length > 1) {
-					// de-dup
-					final = final.reduce((unique, item) => unique.includes(item) ? unique : [...unique, item], []);
-					// prioritize "all"
-					const x = [];
-					await final.forEach((f) => {
-						x.push(f.split(':')[0]);
-					});
-					const y = x.reduce((unique, item) => unique.includes(item) ? unique : [...unique, item], []);
-					await y.forEach((z) => {
-						if((final.includes(`${z}:all`) || final.includes(z)) && final.includes(`${z}:own`)){
-							final = final.filter((f) => {
-								return !f.includes(`${z}:own`);
-							});
+			if(!req.authGroup) return next();
+			if(req.user.initialAccessToken) return next(); //todo verify this flow
+			req.permissions.sub = req.user.sub;
+			req.permissions.sub_group = req.user.subject_group.id;
+			req.permissions.req_group = req.authGroup.id;
+			if(req.user.decoded) {
+				if(req.user.decoded.scope) req.permissions.scopes = req.user.decoded.scope.split(' ');
+				let accessObject = JSON.parse(JSON.stringify(req.user.decoded));
+				if(req.user.decoded['x-access-url']) {
+					accessObject = {};
+					const userAccess = await access.getUserAccess(req.user.subject_group.id, req.user.sub, { minimized: true });
+					if(userAccess) {
+						if(userAccess.owner === true) accessObject['x-access-group'] = 'owner';
+						if(userAccess.member === true) {
+							if(!accessObject['x-access-group']) accessObject['x-access-group'] = 'member';
+							else accessObject['x-access-group'] = (`${accessObject['x-access-group']} member`).trim();
 						}
-					});
+						if(userAccess.orgs) accessObject['x-access-organizations'] = userAccess.orgs;
+						if(userAccess.orgDomains) accessObject['x-access-domains'] = userAccess.orgDomains;
+						if(userAccess.products) accessObject['x-access-products'] = userAccess.products;
+						if(userAccess.productRoles) accessObject['x-access-roles'] = userAccess.productRoles;
+						if(userAccess.permissions) accessObject['x-access-permissions'] = userAccess.permissions;
+					}
 				}
-				// This may need revising when full permissions are implemented via IAM
-				if (final[0].includes(':own')){
-					req.permissions.enforceOwn = true;
+				if(accessObject['x-access-group']) {
+					if (req.permissions.sub_group === req.permissions.req_group) {
+						req.permissions.groupAccess = accessObject['x-access-group'].split(' ');
+					}
 				}
-				return next();
+				if(accessObject['x-access-organizations']) req.permissions.organizations = accessObject['x-access-organizations'].split(' ');
+				if(accessObject['x-access-domains']) req.permissions.domains = accessObject['x-access-domains'].split(' ');
+				if(accessObject['x-access-products']) req.permissions.products = accessObject['x-access-products'].split(' ');
+				if(accessObject['x-access-roles']) req.permissions.roles = accessObject['x-access-roles'].split(' ');
+				if(accessObject['x-access-permissions']) req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 			}
-			throw Boom.forbidden(ERROR_MESSAGE);
+			// Root super user
+			if(req.user.subject_group.prettyName === 'root') {
+				if(req.user.group === req.permissions.sub_group){
+					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
+					req.permissions.groupAccess.push('super');
+				}
+			}
+			// todo, remove this once client_access is implemented
+			if(req.user.client_credential === true) {
+				if(!req.permissions.roles) req.permissions.roles = [];
+				req.permissions.roles.push('client');
+			}
+
+			// we look up the core product and ensure all the permissions match the id associated.
+			const coreProduct = await helper.cacheCoreProduct(req.query.resetCache, req.authGroup);
+			req.permissions.core = {
+				group: req.permissions.req_group,
+				product: coreProduct.id || coreProduct._id,
+				productCodedId: coreProduct.codedId
+			};
+			// filtering out any product references that are not the core from the user's permissions
+			if(req.permissions.products) {
+				req.permissions.products = req.permissions.products.filter((p) => {
+					return (p === req.permissions.core.product);
+				});
+			}
+			// filtering out any permissions that are not from the core product from the user's permissions
+			if(req.permissions.permissions) {
+				req.permissions.permissions = req.permissions.permissions.filter((p) => {
+					return (p.includes(`${req.permissions.core.productCodedId}:::`) || p.includes(`${req.permissions.core.product}:::`));
+				});
+			}
+			// filtering out any roles that are not from the core product from the user's permissions
+			if(req.permissions.roles) {
+				req.permissions.roles = req.permissions.roles.filter((r) => {
+					return (r.includes(`${req.permissions.core.productCodedId}::`) || r.includes(`${req.permissions.core.product}::`));
+				});
+			}
+			if(req.permissions.groupAccess.includes('member')) {
+				if(!req.permissions.permissions) req.permissions.permissions = [];
+				config.MEMBER_PERMISSIONS.map((p) => {
+					req.permissions.permissions.push(p.replace('member:::', `${req.permissions.core.productCodedId}:::`));
+				});
+				req.permissions.permissions = [...new Set(req.permissions.permissions)];
+			}
+			return next();
 		} catch (error) {
 			next(error);
 		}
 	},
 	async enforceOwn(p, resourceOwner) {
-
 		if(p.enforceOwn === true) {
 			if(!p.sub) throw Boom.forbidden();
 			if(p.sub !== resourceOwner) {
@@ -137,14 +166,32 @@ export default {
 				throw Boom.notFound(resourceOwner);
 			}
 		}
-
+	},
+	async enforceOwnOrg(p, org) {
+		if(p.enforceOwn === true) {
+			if(!p.organizations) throw Boom.forbidden('You should request the access or access::organization scope');
+			if(!p.organizations.length) throw Boom.forbidden();
+			if(!p.organizations.includes(org)) throw Boom.forbidden();
+		}
+	},
+	async enforceOwnDomain(p, org, domain) {
+		if(p.enforceOwn === true) {
+			if(!p.domains) throw Boom.forbidden('You should request the access or access::domain scope');
+			if(!p.domains.length) throw Boom.forbidden();
+			if(!p.domains.includes(`${org}::${domain}`)) throw Boom.forbidden();
+		}
+	},
+	async enforceOwnProduct(p, product) {
+		if(p.enforceOwn === true) {
+			if(!p.products) throw Boom.forbidden('You should request the access or access::products scope');
+			if(!p.products.length) throw Boom.forbidden();
+			if(!p.products.includes(product)) throw Boom.forbidden();
+		}
+	},
+	async enforceRoot(p) {
+		if(!p.groupAccess.includes('super')) throw Boom.forbidden();
 	}
 };
-
-function superAccess (req) {
-	if(!req.path.includes('plugins')) return !(req.method !== 'get' && req.method !== 'post');
-	else return true;
-}
 
 function translateMethod(method) {
 	switch (method.toLowerCase()) {
@@ -161,77 +208,6 @@ function translateMethod(method) {
 	default:
 		return false;
 	}
-}
-
-function returnActions(method, path, role) {
-	const modPath = `-${path}-`;
-	let permissions;
-	switch (role) {
-	case 'owner':
-		permissions = Owner;
-		break;
-	case 'member':
-		permissions = Member;
-		break;
-	case 'developer':
-		permissions = Developer;
-		break;
-	case 'client':
-		permissions = Client;
-		break;
-	default:
-		permissions = null;
-	}
-	if(!permissions) return [];
-	//narrow it down
-	let targets = Targets.filter((t) => {
-		t = t.split(':').join('/');
-		return modPath.includes(`${t}-`) || modPath.includes(`${t}/`);
-	});
-	const possiblePerms = permissions.filter((p) => {
-		return targets.includes(p.target);
-	});
-	if(possiblePerms.length === 1) {
-		return possiblePerms[0].actions.split(' ');
-	}
-	targets = [];
-	for(let x=0; x<possiblePerms.length; x++) {
-		targets.push(possiblePerms[x].target);
-	}
-	//look for compound paths and pick a target
-	const compoundTargets = targets.filter((t) => {
-		return t.includes(':');
-	});
-	targets = targets.filter(x => !compoundTargets.includes(x));
-	//check compound first
-	let target = [];
-	if(compoundTargets.length !== 0) {
-		for(let x=0; x<compoundTargets.length; x++) {
-			if(target.length === 0) {
-				if(modPath.includes(compoundTargets[x].split(':').join('/'))) {
-					target.push(compoundTargets[x]);
-				}
-			}
-		}
-	}
-	if(target.length === 0) {
-		//try non compound targets
-		const paths = modPath.split('/');
-		for(let x=0; x<paths.length; x++) {
-			if(target.length === 0) {
-				if(targets.includes(paths[x])) {
-					target.push(paths[x]);
-				}
-			}
-		}
-	}
-	if(targets.length === 0) return [];
-	const t = target[0];
-	const p = permissions.find((a) => {
-		return a.target === t;
-	});
-	if(!p || !p.actions) return [];
-	return p.actions.split(' ');
 }
 
 /**
@@ -273,142 +249,5 @@ const Client = [
 	{
 		target: 'operations:client',
 		actions: 'create:own'
-	}
-];
-
-const Owner = [
-	{
-		target: 'group',
-		actions: 'update:own read:own delete:own'
-	},
-	{
-		target: 'accounts',
-		actions: 'read:all'
-	},
-	{
-		target: 'account',
-		actions: 'create update:all read:all delete:all'
-	},
-	{
-		target: 'invite',
-		actions: 'create read:all delete:all'
-	},
-	{
-		target: 'invites',
-		actions: 'read:all'
-	},
-	{
-		target: 'accept',
-		actions: 'create'
-	},
-	{
-		target: 'client',
-		actions: 'read:all update:all delete:all'
-	},
-	{
-		target: 'clients',
-		actions: 'read:all'
-	},
-	{
-		target: 'operations',
-		actions: 'create'
-	},
-	{
-		target: 'token:initial-access',
-		actions: 'create'
-	},
-	{
-		target: 'notifications',
-		actions: 'create read:all delete:all update:all'
-	},
-	{
-		target: 'notification',
-		actions: 'create read:all delete:all update:all'
-	},
-	{
-		target: 'organizations',
-		actions: 'create read:all delete:all update:all'
-	},
-	{
-		target: 'products',
-		actions: 'create read:all delete:all update:all'
-	},
-	{
-		target: 'organizations:domains',
-		actions: 'create read:all delete:all update:all'
-	},
-	{
-		target: 'products:roles',
-		actions: 'create read:all delete:all update:all'
-	},
-	{
-		target: 'roles',
-		actions: 'create read:all delete:all update:all'
-	}
-];
-
-const Member = [
-	{
-		target: 'account',
-		actions: 'update:own read:own delete:own'
-	},
-	{
-		target: 'invite',
-		actions: 'read:own'
-	},
-	{
-		target: 'invites',
-		actions: 'read:own'
-	},
-	{
-		target: 'accept',
-		actions: 'create'
-	},
-	{
-		target: 'operations:reset-user-password',
-		actions: 'create'
-	},
-	{
-		target: 'operations:user',
-		actions: 'create:own'
-	},
-	{
-		target: 'operations:invite',
-		actions: 'create:own'
-	}
-];
-
-const Developer = [
-	{
-		target: 'group',
-		actions: 'read:own'
-	},
-	{
-		target: 'account',
-		actions: 'create update:own read:all delete:own'
-	},
-	{
-		target: 'invite',
-		actions: 'read:all'
-	},
-	{
-		target: 'accept',
-		actions: 'create'
-	},
-	{
-		target: 'client',
-		actions: 'read:all update:all'
-	},
-	{
-		target: 'clients',
-		actions: 'read:all'
-	},
-	{
-		target: 'operation:client',
-		actions: 'create'
-	},
-	{
-		target: 'token:initial-access',
-		actions: 'create'
 	}
 ];

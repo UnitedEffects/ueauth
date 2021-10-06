@@ -60,6 +60,11 @@ async function introspect(token, authGroup) {
 	if (accessToken.aud) result.aud = accessToken.aud;
 	if (accessToken.extra) {
 		result = { ...result, ...accessToken.extra};
+		if (accessToken.extra.group) {
+			const iss = result.iss.split('/');
+			iss[iss.length-1] = accessToken.extra.group;
+			result.iss = iss.join('/');
+		}
 	}
 	return result;
 }
@@ -71,6 +76,8 @@ async function runDecodedChecks(token, issuer, decoded, authGroup) {
 	}
 	if(!issuer.includes(decoded.iss)) {
 		// check iss
+		console.info(issuer);
+		console.info(decoded.iss);
 		throw Boom.unauthorized('Token issuer not recognized');
 	}
 	if(!decoded.group) {
@@ -276,7 +283,7 @@ async (req, token, next) => {
 				if(subAG.id !== inspect.group) {
 					//check to see if this is a root account
 					subAG = await group.getOneByEither(inspect.group);
-					if(subAG.prettyName !== 'root') return next(null, false) //we already know this is invalid
+					if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
 					// now we know its a root account so we reset subAG
 					issuer = issuerArray(oidc(subAG), subAG);
 				}

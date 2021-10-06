@@ -7,11 +7,10 @@ import helper from './helper';
 import orgs from './api/orgs/orgs';
 import product from './api/products/product';
 import account from './api/accounts/account';
-import enforce from './permissions';
+import access from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from './api/plugins/plugins';
-import access from './api/accounts/access';
 
 const config = require('./config');
 const p = require('../package.json');
@@ -156,124 +155,12 @@ const mid = {
 			next(error);
 		}
 	},
-	async permissions(req, res, next) {
-		try {
-			if(!req.permissions) req.permissions = {};
-			req.permissions = {
-				enforceOwn: false
-			};
-			if(!req.user) return next();
-			if(!req.authGroup) return next();
-			if(req.user.initialAccessToken) return next(); //todo verify this flow
-			req.permissions.sub = req.user.sub;
-			req.permissions.sub_group = req.user.subject_group.id;
-			req.permissions.req_group = req.authGroup.id;
-			if(req.user.decoded) {
-				if(req.user.decoded.scope) req.permissions.scopes = req.user.decoded.scope.split(' ');
-				let accessObject = JSON.parse(JSON.stringify(req.user.decoded));
-				if(req.user.decoded['x-access-url']) {
-					accessObject = {};
-					const userAccess = await access.getUserAccess(req.user.subject_group.id, req.user.sub, { minimized: true });
-					if(userAccess) {
-						if(userAccess.owner === true) accessObject['x-access-group'] = 'owner';
-						if(userAccess.member === true) {
-							if(!accessObject['x-access-group']) accessObject['x-access-group'] = 'member';
-							else accessObject['x-access-group'] = (`${accessObject['x-access-group']} member`).trim();
-						}
-						// not adding the rest for now since we do not need them
-						if(userAccess.productRoles) accessObject['x-access-roles'] = userAccess.productRoles;
-						if(userAccess.permissions) accessObject['x-access-permissions'] = userAccess.permissions;
-					}
-				}
-				if(accessObject['x-access-group']) req.permissions.groupAccess = accessObject['x-access-group'].split(' ');
-				// not adding the rest for now since we do not need them
-				if(accessObject['x-access-roles']) req.permissions.roles = accessObject['x-access-roles'].split(' ');
-				if(accessObject['x-access-permissions']) req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
-			}
-			// Root super user
-			if(req.user.subject_group.prettyName === 'root') {
-				if(req.user.group === req.permissions.sub_group){
-					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
-					req.permissions.groupAccess.push('super');
-				}
-			}
-			// todo, remove this once client_access is implemented
-			if(req.user.client_credential === true) {
-				if(!req.permissions.roles) req.permissions.roles = [];
-				req.permissions.roles.push('client');
-			}
-			// set core information for enforcement - for this service, we dont really care about what the token sends via org/domain/product
-			// we look up the core product and ensure all the permissions match the id associated.
-			const coreProduct = await helper.cacheCoreProduct(req.query.resetCache, req.user.subject_group);
-			req.permissions.core = {
-				group: req.permissions.sub_group,
-				product: coreProduct.id || coreProduct._id,
-				productCodedId: coreProduct.codedId
-			};
-			if(req.permissions.permissions) {
-				req.permissions.permissions = req.permissions.permissions.filter((p) => {
-					return (p.includes(`${req.permissions.core.productCodedId}:::`) || p.includes(`${req.permissions.core.product}:::`));
-				});
-			}
-			if(req.permissions.roles) {
-				req.permissions.roles = req.permissions.roles.filter((r) => {
-					return (r.includes(`${req.permissions.core.productCodedId}::`) || r.includes(`${req.permissions.core.product}::`));
-				});
-			}
-			if(req.permissions.groupAccess.includes('member')) {
-				if(!req.permissions.permissions) req.permissions.permissions = [];
-				config.MEMBER_PERMISSIONS.map((p) => {
-					req.permissions.permissions.push(p.replace('member:::', `${req.permissions.core.productCodedId}:::`));
-				});
-				req.permissions.permissions = [...new Set(req.permissions.permissions)];
-			}
-			return next();
-		} catch (error) {
-			next(error);
-		}
-	},
-	//todo delete
-	async oldPermissions( req, res, next) {
-		try {
-			if(!req.user) return next();
-			if(!req.authGroup) return next();
-			if(req.user.initialAccessToken) return next();
-			req.permissions = {
-				agent: req.user,
-				sub_group: req.user.subject_group.id,
-				req_group: req.authGroup.id,
-				enforceOwn: false,
-				roles: []
-			};
-			if (req.user.group === req.authGroup.id) {
-				req.permissions.roles.push('member');
-			}
-			if(req.user.subject_group.prettyName === 'root') {
-				if(req.user.group === req.permissions.sub_group){
-					//req.permissions.roles.super = true;
-					req.permissions.roles.push('super');
-				}
-			}
-			if(req.user.sub && req.authGroup.owner === req.user.sub) {
-				//req.permissions.roles.owner = true;
-				req.permissions.roles.push('owner');
-			}
-			if(req.user.client_credential === true) {
-				req.permissions.roles.push('client');
-			}
-			// Plugin to capture permission claim or query external service can go here
-			return next();
-		} catch (error) {
-			next(error);
-		}
-	},
-	//todo delete
-	oldAccess: enforce.permissionEnforce,
-	access: enforce.enforce,
+	permissions: access.permissions,
+	access: access.enforce,
 	async openGroupRegAuth(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			return this.isAuthenticated(req, res, next);
+			return mid.isAuthenticated(req, res, next);
 		} catch (error) {
 			next(error);
 		}
@@ -281,7 +168,7 @@ const mid = {
 	async openGroupRegPermissions(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			return this.permissions(req, res, next);
+			return mid.permissions(req, res, next);
 		} catch (error) {
 			next(error);
 		}
@@ -289,10 +176,7 @@ const mid = {
 	async openGroupRegAccess(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
-			if(req.permissions && req.permissions.groupAccess && req.permissions.groupAccess.length && req.permissions.groupAccess.includes('super')) {
-				return next();
-			}
-			throw Boom.badRequest('Public Group Registration is Disabled - Contact Admin to be Added');
+			return mid.access('group')(req, res, next);
 		} catch (error) {
 			next(error);
 		}
@@ -351,6 +235,7 @@ const mid = {
 	isAuthorizedToCreateAccount(req, res, next) {
 		if(req.groupActivationEvent === true) return authorizer.isIatAuthenticatedForGroupActivation(req, res, next);
 		if(req.authGroup.locked === true) return authorizer.isAuthenticated(req, res, next);
+		req.accountCreationRequest = true;
 		return next();
 	},
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,

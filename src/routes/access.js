@@ -16,14 +16,14 @@ router.put('/:group/access/organization/:org/account/:id', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access('userAccess')
+	m.access('organization')
 ], user.defineAccess);
 router.get('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('userAccess')
+	m.access('organization')
 ], user.getDefinedAccess);
 router.delete('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
@@ -217,7 +217,7 @@ router.get('/:group/organizations/:org/products/:product/roles', [
 	m.permissions,
 	m.access('roles')
 ], role.getOrganizationRoles);
-router.post('/:group/organizations/:org/products/:product/roles', [
+router.put('/:group/organizations/:org/products/:product/roles', [
 	m.validateAuthGroup,
 	m.validateProduct,
 	m.validateOrganization,

@@ -48,14 +48,6 @@ export default {
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.product.edit', result);
 		return result;
 	},
-	/**
-	 * 				name: `${authGroup.name} - ${config.PLATFORM_NAME}`,
-	 description: `Internal product reference for group '${authGroup.name}'. Add users to this product to access platform features. Do not delete as system access will be compromised`,
-	 authGroup: authGroup.id,
-	 type: 'global',
-	 createdBy: creator.id,
-	 core: true
-	 */
 	async getCoreProduct(authGroup) {
 		const query = {
 			name: `${authGroup.name} - ${config.PLATFORM_NAME}`,
