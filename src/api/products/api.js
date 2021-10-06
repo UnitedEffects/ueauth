@@ -52,7 +52,9 @@ const api = {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			await permissions.enforceOwnProduct(req.permissions, req.params.id);
-			const result = await prod.patchProduct(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
+			const product = await prod.getProduct(req.authGroup.id || req.authGroup._id, req.params.id);
+			if(product.core === true) await permissions.enforceRoot(req.permissions);
+			const result = await prod.patchProduct(req.authGroup, product, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.product.error', error);
@@ -64,6 +66,8 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			await permissions.enforceOwnProduct(req.permissions, req.params.id);
+			const product = await prod.getProduct(req.authGroup.id || req.authGroup._id, req.params.id);
+			if(product.core === true) await permissions.enforceRoot(req.permissions);
 			const permissions = await perms.deletePermissionsByProduct(req.authGroup.id, req.params.id);
 			const result = await prod.deleteProduct(req.authGroup.id || req.authGroup._id, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));

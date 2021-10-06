@@ -3,8 +3,7 @@ import dal from './dal';
 import access from '../accounts/access';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
-import Boom from "@hapi/boom";
-import account from "../accounts/account";
+import Boom from '@hapi/boom';
 
 export default {
 	async writeDomain(data) {
@@ -32,8 +31,7 @@ export default {
 		return result;
 	},
 
-	async patchDomain(authGroup, orgId, id, update, modifiedBy) {
-		const dom = await dal.getDomain(authGroup.id || authGroup._id, orgId, id);
+	async patchDomain(authGroup, dom, orgId, id, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(dom.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		const result = await dal.patchDomain(authGroup.id || authGroup._id, orgId, id, patched);

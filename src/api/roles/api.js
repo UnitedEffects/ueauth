@@ -111,7 +111,9 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
-			const result = await role.patchRole(req.authGroup, req.params.id, req.product.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
+			const thisRole = await role.getRole(req.authGroup.id, req.product.id, req.params.id);
+			if(thisRole.core === true) await permissions.enforceRoot(req.permissions);
+			const result = await role.patchRole(req.authGroup, thisRole, req.params.id, req.product.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.role.error', error);
@@ -124,6 +126,8 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
+			const thisRole = await role.getRole(req.authGroup.id, req.product.id, req.params.id);
+			if(thisRole.core === true) await permissions.enforceRoot(req.permissions);
 			const result = await role.deleteRole(req.authGroup.id, req.product.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));

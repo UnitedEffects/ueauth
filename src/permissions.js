@@ -1,6 +1,6 @@
 import Boom from '@hapi/boom';
-import access from "./api/accounts/access";
-import helper from "./helper";
+import access from './api/accounts/access';
+import helper from './helper';
 const config = require('./config');
 
 export default {
@@ -15,7 +15,6 @@ export default {
 					if(req.accountCreationRequest === true && req.authGroup.locked === false) return next();
 					throw Boom.unauthorized();
 				}
-				// todo validate the initaccesstoken flow
 				if (req.user.initialAccessToken) return next();
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
@@ -25,9 +24,9 @@ export default {
 				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
 				// if root user, they have priority
 				if (req.permissions.groupAccess.includes('super')) {
-					//if (config.FULL_SUPER_CONTROL === true) return next();
-					//if (superAccess(req)) return next();
-					//throw Boom.unauthorized('Super Admin is not fully enabled');
+					if (config.FULL_SUPER_CONTROL === true) return next();
+					if (superAccess(req)) return next();
+					throw Boom.unauthorized('Super Admin is not fully enabled');
 				}
 				// ensure group member
 				if (!req.permissions.groupAccess.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
@@ -74,7 +73,7 @@ export default {
 			};
 			if(!req.user) return next();
 			if(!req.authGroup) return next();
-			if(req.user.initialAccessToken) return next(); //todo verify this flow
+			if(req.user.initialAccessToken) return next();
 			req.permissions.sub = req.user.sub;
 			req.permissions.sub_group = req.user.subject_group.id;
 			req.permissions.req_group = req.authGroup.id;
@@ -192,6 +191,11 @@ export default {
 		if(!p.groupAccess.includes('super')) throw Boom.forbidden();
 	}
 };
+
+function superAccess (req) {
+	if(!req.path.includes('plugins')) return !(req.method !== 'get' && req.method !== 'post');
+	else return true;
+}
 
 function translateMethod(method) {
 	switch (method.toLowerCase()) {

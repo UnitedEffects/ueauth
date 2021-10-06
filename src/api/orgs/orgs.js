@@ -33,8 +33,7 @@ export default {
 		return result;
 	},
 
-	async patchOrg(authGroup, id, update, modifiedBy) {
-		const org = await dal.getOrg(authGroup.id || authGroup._id, id);
+	async patchOrg(authGroup, org, id, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(org.toObject(), update);
 		const originalProducts = [...new Set(org.associatedProducts)];
 		const updatedProducts = [...new Set(patched.associatedProducts)];

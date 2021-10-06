@@ -56,6 +56,8 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			await permissions.enforceOwnProduct(req.permissions, req.product.id);
+			const permission = await perm.getPermission(req.authGroup.id, req.product.id, req.params.id);
+			if(permission.core === true) await permissions.enforceRoot(req.permissions);
 			const result = await perm.deletePermission(req.authGroup.id, req.product.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));

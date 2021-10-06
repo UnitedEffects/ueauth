@@ -40,9 +40,8 @@ export default {
 		return result;
 	},
 
-	async patchProduct(authGroup, id, update, modifiedBy) {
-		const dom = await dal.getProduct(authGroup.id || authGroup._id, id);
-		const patched = jsonPatch.apply_patch(dom.toObject(), update);
+	async patchProduct(authGroup, product, id, update, modifiedBy) {
+		const patched = jsonPatch.apply_patch(product.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		const result = await dal.patchProduct(authGroup.id || authGroup._id, id, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.product.edit', result);
