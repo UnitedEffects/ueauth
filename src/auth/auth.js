@@ -39,25 +39,29 @@ async function introspect(token, authGroup) {
      * introspect endpoint.
      * @type {AccessToken}
      */
-	let accessToken = await oidc(authGroup).AccessToken.find(token);
+	const provider = oidc(authGroup);
+	let accessToken = await provider.AccessToken.find(token);
 	if(!accessToken) {
 		// try client-credentials
-		accessToken = await oidc(authGroup).ClientCredentials.find(token);
+		accessToken = await provider.ClientCredentials.find(token);
 	}
 	if(!accessToken) return null;
-	return {
+	let result = {
 		active: (accessToken.iat < accessToken.exp),
+		iss: provider.issuer,
 		sub: accessToken.accountId,
-		group: (accessToken.extra && accessToken.extra.group) ? accessToken.extra.group : undefined,
 		client_id: accessToken.clientId,
 		exp: accessToken.exp,
 		iat: accessToken.iat,
-		iss: (accessToken.extra && accessToken.extra.group) ? `${config.PROTOCOL}://${config.SWAGGER}/${accessToken.extra.group}` : undefined,
 		jti: accessToken.jti,
 		scope: accessToken.scope,
-		aud: accessToken.aud,
 		token_type: 'Bearer'
 	};
+	if (accessToken.aud) result.aud = accessToken.aud;
+	if (accessToken.extra) {
+		result = { ...result, ...accessToken.extra};
+	}
+	return result;
 }
 
 async function runDecodedChecks(token, issuer, decoded, authGroup) {
@@ -201,6 +205,14 @@ async (req, token, next) => {
 }
 ));
 
+function issuerArray(provider, g) {
+	const issuer = provider.issuer.split('/');
+	const id = issuer[issuer.length-1];
+	if(g._id !== id) throw new Error('OP issuer validation error');
+	issuer[issuer.length-1] = g.prettyName;
+	return [provider.issuer, issuer.join('/')];
+}
+
 passport.use('oidc', new BearerStrategy({
 	passReqToCallback: true
 },
@@ -213,7 +225,7 @@ async (req, token, next) => {
 		if(!subAG) {
 			issuer = null;
 		} else {
-			issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
+			issuer = issuerArray(oidc(subAG), subAG);
 		}
 		if(helper.isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
@@ -228,7 +240,7 @@ async (req, token, next) => {
 				if(!subAG) return next(null, false);
 				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
 				if(!req.authGroup) req.authGroup = subAG;
-				issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
+				issuer = issuerArray(oidc(subAG), subAG);
 			}
 			const pub = { keys: subAG.config.keys };
 			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
@@ -255,7 +267,7 @@ async (req, token, next) => {
 		if(issuer === null) {
 			//assume this is a root request
 			subAG = await group.getOneByEither('root');
-			issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`];
+			issuer = issuerArray(oidc(subAG), subAG);
 		}
 		const inspect = await introspect(token, subAG);
 		if(inspect) {
@@ -266,9 +278,7 @@ async (req, token, next) => {
 					subAG = await group.getOneByEither(inspect.group);
 					if(subAG.prettyName !== 'root') return next(null, false) //we already know this is invalid
 					// now we know its a root account so we reset subAG
-					issuer = [];
-					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.prettyName}`);
-					issuer.push(`${config.PROTOCOL}://${config.SWAGGER}/${subAG.id}`);
+					issuer = issuerArray(oidc(subAG), subAG);
 				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG);
 				if(!req.authGroup) req.authGroup = subAG;

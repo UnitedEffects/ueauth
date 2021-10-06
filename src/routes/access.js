@@ -9,10 +9,6 @@ import m from '../middleware';
 
 const router = express.Router();
 
-async function PENDING(req, res, next) {
-	res.json({ data: 'this API is not yet implemented but will be soon', requestDetails: {group: req.params.group, organization: req.params.org, domain: req.params.domain, id: req.params.id } })
-}
-
 // User Access
 router.put('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
@@ -194,6 +190,7 @@ router.delete('/:group/products/:product/roles/:id', [
 	m.permissions,
 	m.access('roles')
 ], role.deleteRole);
+
 // Roles Across Products
 router.get('/:group/roles', [
 	m.validateAuthGroup,
@@ -201,6 +198,7 @@ router.get('/:group/roles', [
 	m.permissions,
 	m.access('roles')
 ], role.getAllRoles);
+
 // Roles Across Products By Org
 router.get('/:group/organization/:org/roles', [
 	m.validateAuthGroup,
@@ -209,6 +207,7 @@ router.get('/:group/organization/:org/roles', [
 	m.permissions,
 	m.access('roles')
 ], role.getAllRolesAcrossProductsByOrg);
+
 // custom roles
 router.get('/:group/organizations/:org/products/:product/roles', [
 	m.validateAuthGroup,

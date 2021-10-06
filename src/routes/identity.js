@@ -6,26 +6,7 @@ import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
 import m from '../middleware';
 
-/**
- * Role short hand for access middleware
- * o - owner
- * m - member
- * c - client
- */
-
 const router = express.Router();
-
-/**
- * THIS IS FOR TESTING - DELETE SOON *****************************
- */
-router.get('/testperms', [
-	m.isAuthenticated,
-	m.permissions,
-	m.access('accounts')],
-(req, res) => {
-	res.json({ permissions: req.permissions });
-});
-// ***************************************************************
 
 // Initialize - ONLY FOR FIRST START - NOT INCLUDED IN SWAGGER
 router.post('/init', group.initialize);
@@ -46,7 +27,6 @@ router.post('/group', [
 	m.openGroupRegAccess,
 	m.getGlobalPluginSettings
 ], group.write);
-
 router.get('/groups', [
 	m.isAuthenticated,
 	m.permissions,
