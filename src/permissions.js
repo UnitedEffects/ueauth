@@ -69,6 +69,7 @@ export default {
 		try {
 			if(!req.permissions) req.permissions = {};
 			req.permissions = {
+				groupAccess: [],
 				enforceOwn: false
 			};
 			if(!req.user) return next();
@@ -108,7 +109,7 @@ export default {
 				if(accessObject['x-access-permissions']) req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 			}
 			// Root super user
-			if(req.user.subject_group.prettyName === 'root') {
+			if(req.user.subject_group && req.user.subject_group.prettyName === 'root') {
 				if(req.user.group === req.permissions.sub_group){
 					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
 					req.permissions.groupAccess.push('super');
@@ -145,7 +146,7 @@ export default {
 					return (r.includes(`${req.permissions.core.productCodedId}::`) || r.includes(`${req.permissions.core.product}::`));
 				});
 			}
-			if(req.permissions.groupAccess.includes('member')) {
+			if(req.permissions.groupAccess && req.permissions.groupAccess.includes('member')) {
 				if(!req.permissions.permissions) req.permissions.permissions = [];
 				config.MEMBER_PERMISSIONS.map((p) => {
 					req.permissions.permissions.push(p.replace('member:::', `${req.permissions.core.productCodedId}:::`));

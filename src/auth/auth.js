@@ -295,6 +295,7 @@ async (req, token, next) => {
 				return next(null, false);
 			}
 		}
+		console.error('Token expired');
 		return next(null, false);
 	} catch (error) {
 		console.error(error);
