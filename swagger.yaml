@@ -14,7 +14,7 @@ info:
   registration: '/{group}/reg',<br>
   revocation: '/{group}/token/revocation',<br>
   token: '/{group}/token',<br>
-  userinfo: '/{group}/me'</code><br><br><h2>Getting Started</h2><br><i>If you are the service owner and deploying it for the first time, see the github README for initial setup instructions.</i><br><br>You'll need an Auth Group to utilize the service.<ul><li>POST a new Auth Group making sure to save the Initial Access Token provided upon creation.</li><li>Once you have it, POST a new user account to the same auth group, making sure to use the same email address and the initial access token as a bearer token.</li><li>This will activate your auth group, create the account, and provide you with a client_id and secret to use for all interactions with this API.</li><li>You now have a working OIDC provider. Access the wellknown using your group ID or group 'pretty name': https://qa.ueauth.io/{group}/.well-known/openid-configuration</li></ul><br><br><h3 style='color:red'>WARNING: THIS IS A DEMO AND TEST ENVIRONMENT. ALL DATA IS EPHEMERAL AND SUBJECT TO DELETION. PENDING FUNCTIONALITY IS WIP AND MAY NOT REFLECT FINAL FORM.</h3>"
+  userinfo: '/{group}/me'</code><br><br><h2>Getting Started</h2><br><i>If you are the service owner and deploying it for the first time, see the github README for initial setup instructions.</i><br><br>You'll need an Auth Group to utilize the service.<ul><li>POST a new Auth Group making sure to save the Initial Access Token provided upon creation.</li><li>Once you have it, POST a new user account to the same auth group, making sure to use the same email address and the initial access token as a bearer token.</li><li>This will activate your auth group, create the account, and provide you with a client_id and secret to use for all interactions with this API.</li><li>You now have a working OIDC provider. Access the wellknown using your group ID or group 'pretty name': https://qa.ueauth.io/{group}/.well-known/openid-configuration</li></ul>"
   x-logo:
     url: https://ue-platform-content.s3.amazonaws.com/0f8aeec8-8e9b-4629-b06c-6672b4a2e9ad
 tags:
@@ -44,7 +44,7 @@ tags:
     description: Create, Update, View or Delete permissions
   - name: Operations
     description: Commands for Artifact or Security Updates
-  - name: UI Functions
+  - name: General Functional
     description: APIs specifically for the United Effects UI implementation
   - name: OIDC
     description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
@@ -55,7 +55,7 @@ paths:
   /api/{group}/group:
     get:
       tags:
-        - UI Functions
+        - General Functional
       summary: Return a clientID for Core UI from authGroup
       description: Return a clientID for Core UI from authGroup. secured by UI host whitelist
       parameters:

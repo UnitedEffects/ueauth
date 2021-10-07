@@ -42,6 +42,7 @@ const productSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
+	meta: Object,
 	_id: {
 		type: String,
 		default: uuid
