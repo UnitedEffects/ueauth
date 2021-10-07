@@ -91,6 +91,98 @@ paths:
       security:
         - bearer: [ ]
         - openId: [ ]
+  /api/{group}/checkforupdates:
+    get:
+      tags:
+        - General Functional
+      summary: Returns true if you should trigger a core update /api/group/updatecore
+      description: Returns true if you should trigger a core update /api/group/updatecore
+      parameters:
+        - name: group
+          in: path
+          description: id or prettyName of the authgroup
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: V1StGXR8_Z5jdHi6B-myT
+                  prettyName:
+                    type: string
+                  coreProductId:
+                    type: string
+                    format: uuid
+                  coreAccessDataVersion:
+                    type: string
+                  availableVersion:
+                    type: string
+                  updateRequired:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+  /api/{group}/updatecore:
+    put:
+      tags:
+        - General Functional
+      summary: Update the permissions and roles of UEAuth to the latest available
+      description: Update the permissions and roles of UEAuth to the latest available
+      parameters:
+        - name: group
+          in: path
+          description: id or prettyName of the authgroup
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: V1StGXR8_Z5jdHi6B-myT
+                  prettyName:
+                    type: string
+                  coreProductId:
+                    type: string
+                    format: uuid
+                  coreAccessDataVersion:
+                    type: string
+                  availableVersion:
+                    type: string
+                  updateRequired:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
   /api/groupcheck/{prettyName}:
     get:
       tags:
@@ -2357,6 +2449,7 @@ paths:
     get:
       tags:
         - Roles
+      summary: Scoped to authgroup and available across organizations and products
       description: get all roles across products in your authgroup
       operationId: getAllRolesAcrossProducts
       parameters:
@@ -2426,6 +2519,7 @@ paths:
     get:
       tags:
         - Roles
+      summary: Scoped to this specific organization - returns global roles + org specific across all organization products
       description: get all roles across products in your organization
       operationId: getAllRolesAcrossProductsByOrg
       parameters:
@@ -2496,11 +2590,11 @@ paths:
       security:
         - bearer: []
         - openId: []
-
   /api/{group}/organizations/{org}/products/{product}/roles:
     get:
       tags:
         - Roles
+      summary: Scoped to this specific organization - returns global roles and roles specific to the provided org for a given product
       description: get roles info for a product
       operationId: getProductRolesByOrg
       parameters:
@@ -2581,7 +2675,8 @@ paths:
     put:
       tags:
         - Roles
-      description: Define new roles. If domain/organization context are provided, this is a custom role and mapped. Otherwise it is assumed to be globally applicable (i.e. a default role) and only authGroupAdmins can do that.
+      summary: Scoped to this specific organization for a given product
+      description: Define new roles specific to this organization. Should not be used for global roles.
       operationId: createRoleByOrg
       parameters:
         - name: group
@@ -2634,11 +2729,190 @@ paths:
         - bearer: []
         - openId: []
 
+  /api/{group}/organizations/{org}/products/{product}/roles/{id}:
+    delete:
+      tags:
+        - Roles
+      summary: Scoped to this specific organization - delete a role specific to this organization
+      description: remove a custom role specific to this organizatino and product
+      operationId: deleteProductRoleByOrg
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization Id
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: >-
+            Unique user identifier
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: Unique role identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    get:
+      tags:
+        - Roles
+      summary: Scoped to this specific organization - returns a role, either globally available or specific to this organization
+      description: get roles info for a product
+      operationId: getProductRoleByOrg
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization Id
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: >-
+            Unique user identifier
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: Unique role identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    patch:
+      tags:
+        - Roles
+      summary: Scoped to this specific organization - updates a role specific to this organization
+      description: Update a role specific to the organization. This should not be used for global roles.
+      operationId: updateRoleByOrg
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization Id
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Unique product identifier
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: Unique role identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/jsonPatch'
+        description: Create a new role
+        required: true
+      security:
+        - bearer: []
+        - openId: []
+
   /api/{group}/products/{product}/roles:
     get:
       tags:
         - Roles
-      description: get roles info for a product
+      summary: Scoped to authgroup and available across organizations
+      description: get roles info for a product. Use oData filters to see just global or specific to an organization.
       operationId: getProductRoles
       parameters:
         - name: group
@@ -2712,7 +2986,8 @@ paths:
     post:
       tags:
         - Roles
-      description: Create new roles. If domain/organization context are provided, this is a custom role and mapped. Otherwise it is assumed to be globally applicable (i.e. a default role) and only authGroupAdmins can do that.
+      summary: Scoped to authgroup and available across organizations
+      description: Create new globally available roles. All organizations will see this role in their list of product roles.
       operationId: createRole
       parameters:
         - name: group
@@ -2762,7 +3037,8 @@ paths:
     get:
       tags:
         - Roles
-      description: get roles info
+      summary: Scoped to authgroup and available across organizations
+      description: return info of any role regardless of scope (i.e. global or organization)
       operationId: getRole
       parameters:
         - name: group
@@ -2809,7 +3085,8 @@ paths:
     patch:
       tags:
         - Roles
-      description: Update roles info
+      summary: Scoped to authgroup and available across organizations
+      description: Update any role regardless of scope (global or organization)
       operationId: updateRole
       parameters:
         - name: group
@@ -2863,7 +3140,8 @@ paths:
     delete:
       tags:
         - Roles
-      description: Delete roles
+      summary: Scoped to authgroup and available across organizations
+      description: Delete any role
       operationId: deleteRole
       parameters:
         - name: group

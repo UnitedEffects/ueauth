@@ -4,6 +4,10 @@
     "permissions": ["group::update:own", "group::read:own", "accounts::create", "accounts::update", "accounts::read", "accounts::delete", "invites::create", "invites::read", "invites::update", "invites::delete", "clients::create", "clients::read", "clients::update", "clients::delete", "operations::create", "initialAccessToken::create", "notification::create", "notification::read", "notification::update", "notification::delete", "organizations::create", "organizations::delete", "organizations::update", "organizations::read", "products::create", "products::delete", "products::read", "products::update", "domains::create", "domains::delete", "domains::update", "domains::read", "roles::create", "roles::read", "roles::update", "roles::delete", "permissions::create", "permissions::delete", "permissions::read", "userAccess::create", "userAccess::update", "userAccess::read", "userAccess::delete" ]
   },
   {
+    "role": "OrganizationAdmin",
+    "permissions": ["accounts::create:own", "accounts::update:own", "accounts-organization::read", "accounts::delete:own", "invites::create", "invites::read", "invites::update", "invites::delete", "notification::create", "notification::read:own", "notification::update:own", "notification::delete:own", "organizations::update:own", "organizations::read:own", "products::read:own", "domains::create:own", "domains::delete:own", "domains::update:own", "domains::read:own", "roles::create:own", "roles::read:own", "roles::update:own", "roles::delete:own", "permissions::read:own", "userAccess::update:own", "userAccess::read:own", "userAccess::delete:own" ]
+  },
+  {
     "role": "Client",
     "description": "Used to provide access to client_credential M2M communication. System Generated. Do not delete.",
     "permissions": ["group::read:own", "accounts::read", "invites::read", "clients::read", "clients::update:own", "notification::create", "notification::read", "notification::update", "operations-reset-user-password::create", "operations-client::create:own" ]

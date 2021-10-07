@@ -46,6 +46,13 @@
   },
   {
     "target": "accounts",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "accounts",
     "action": "update",
     "core": true,
     "description": "UE Core permission"
@@ -55,6 +62,12 @@
     "action": "read",
     "core": true,
     "description": "UE Core permission"
+  },
+  {
+    "target": "accounts-organization",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission. Allows organization admins to browse accounts to add and limits details search results."
   },
   {
     "target": "accounts",
@@ -311,6 +324,13 @@
   {
     "target": "domains",
     "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains",
+    "action": "create",
+    "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -401,6 +421,13 @@
   {
     "target": "roles",
     "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "roles",
+    "action": "create",
+    "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission"
   },

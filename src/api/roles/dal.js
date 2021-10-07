@@ -44,6 +44,12 @@ export default {
 			{ productCodedId: product }
 		]}], authGroup });
 	},
+	async getRoleByOrgProdId(authGroup, product, organization, id) {
+		return Role.findOne({ _id: id, authGroup, product, organization });
+	},
+	async deleteRoleByOrgProdId(authGroup, product, organization, id) {
+		return Role.findOneAndRemove({ _id: id, authGroup, product, organization });
+	},
 	async getRoleByOrganizationAndId(authGroup, organization, id) {
 		const query = {
 			_id: id,
@@ -63,6 +69,11 @@ export default {
 		const options = { new: true, overwrite: true, runValidators: true };
 		return Role.findOneAndUpdate({ _id: id, authGroup, product }, data, options);
 	},
+	async patchOrganizationRole(authGroup, id, organization, product, data) {
+		data.modifiedAt = Date.now();
+		const options = { new: true, overwrite: true, runValidators: true };
+		return Role.findOneAndUpdate({ _id: id, authGroup, organization, product }, data, options);
+	},
 	async checkProduct(authGroup, productId) {
 		return Role.find( { authGroup, product: productId }).select( { _id: 1, name: 1, description: 1, productCodedId: 1});
 	},
@@ -77,5 +88,8 @@ export default {
 	},
 	async deleteRolesOfProduct(authGroup, product) {
 		return Role.deleteMany({ authGroup, product });
+	},
+	async updateCoreRole(query, update) {
+		return Role.findOneAndUpdate(query, update, { new: true });
 	}
 };

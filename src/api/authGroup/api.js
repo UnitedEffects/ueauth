@@ -145,7 +145,6 @@ const api = {
 	},
 	async getOne(req, res, next) {
 		try {
-			console.info(req.permissions);
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			const result = await group.getOne(req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);

@@ -8,6 +8,7 @@ import access from './api/accounts/access';
 const config = require('./config');
 const permArray = require('../init/permissions.json');
 const coreRoles = require('../init/roles.json');
+const coreVersion = require('../init/currentCore.json');
 
 export default {
 	async createDefaultOrgAndDomain(authGroup, creator) {
@@ -25,6 +26,7 @@ export default {
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
+				meta: coreVersion,
 				core: true
 			};
 			initProduct = await product.writeProduct(defaultProduct);

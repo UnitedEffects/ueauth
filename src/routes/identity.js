@@ -127,13 +127,13 @@ router.get('/:group/accounts', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('accounts'),
+	m.access('accounts', 'organization'),
 ], account.getAccounts);
 router.get('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('accounts')
+	m.access('accounts', 'organization')
 ], account.getAccount);
 router.patch('/:group/account/:id', [
 	m.validateAuthGroup,

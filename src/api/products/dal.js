@@ -23,5 +23,8 @@ export default {
 	},
 	async getCoreProduct(query) {
 		return Product.findOne(query);
+	},
+	async updateCoreMetaData(authGroup, id, meta) {
+		return Product.findOneAndUpdate({ _id: id, authGroup }, { meta } , { new: true });
 	}
 };

@@ -9,6 +9,20 @@ import m from '../middleware';
 
 const router = express.Router();
 
+// Access Functional
+router.get('/:group/checkforupdates', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('group')
+], prod.getCoreProductMetaData);
+router.put('/:group/updatecore', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('group')
+], prod.updateCoreProduct);
+
 // User Access
 router.put('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
@@ -197,7 +211,7 @@ router.get('/:group/roles', [
 	m.access('roles')
 ], role.getAllRoles);
 
-// Roles Across Products By Org
+// Roles By Org (custom)
 router.get('/:group/organization/:org/roles', [
 	m.validateAuthGroup,
 	m.validateOrganization,
@@ -205,8 +219,6 @@ router.get('/:group/organization/:org/roles', [
 	m.permissions,
 	m.access('roles')
 ], role.getAllRolesAcrossProductsByOrg);
-
-// custom roles
 router.get('/:group/organizations/:org/products/:product/roles', [
 	m.validateAuthGroup,
 	m.validateProduct,
@@ -224,6 +236,31 @@ router.put('/:group/organizations/:org/products/:product/roles', [
 	m.permissions,
 	m.access('roles')
 ], role.writeCustom);
+router.get('/:group/organizations/:org/products/:product/roles/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('roles')
+], role.getOrganizationRole);
+router.delete('/:group/organizations/:org/products/:product/roles/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('roles')
+], role.deleteOrganizationRole);
+router.patch('/:group/organizations/:org/products/:product/roles/:id', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('roles')
+], role.patchOrganizationRole);
 
 // Permissions
 router.get('/:group/products/:product/permissions', [

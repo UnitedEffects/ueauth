@@ -55,5 +55,10 @@ export default {
 			core: true
 		};
 		return dal.getCoreProduct(query);
+	},
+	async updateCoreMetaData(authGroup, id, meta) {
+		const result = dal.updateCoreMetaData(authGroup, id, meta);
+		ueEvents.emit(authGroup, 'ue.product.edit', result);
+		return result;
 	}
 };

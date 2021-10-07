@@ -21,6 +21,18 @@ export default {
 		return output;
 	},
 
+	/***
+	 * Internal use only
+	 * @param data
+	 * @returns {Promise<*>}
+	 */
+	async writeRoleFull(data) {
+		data.custom = false;
+		const output = await dal.writeRole(data);
+		ueEvents.emit(data.authGroup, 'ue.role.create', output);
+		return output;
+	},
+
 	async getAllRoles(authGroupId, q) {
 		const query = await helper.parseOdataQuery(q);
 		return dal.getAllRoles(authGroupId, query);
@@ -45,6 +57,20 @@ export default {
 		return dal.getRole(authGroupId, product, id);
 	},
 
+	async getRoleByOrgProdId(authGroupId, product, organization, id) {
+		return dal.getRoleByOrgProdId(authGroupId, product, organization, id);
+	},
+
+	async deleteRoleByOrgProdId(authGroupId, product, organization, id) {
+		const checkAccounts = await access.checkRoles(authGroupId, id);
+		if(checkAccounts) {
+			throw Boom.badRequest('There are users associated to this role. You must remove them before deleting it.', checkAccounts);
+		}
+		const result = await dal.deleteRoleByOrgProdId(authGroupId, product, organization, id);
+		ueEvents.emit(authGroupId, 'ue.role.destroy', result);
+		return result;
+	},
+
 	async getRoleByOrganizationAndId(authGroupId, organization, id) {
 		return dal.getRoleByOrganizationAndId(authGroupId, organization, id);
 	},
@@ -63,6 +89,13 @@ export default {
 		const patched = jsonPatch.apply_patch(role.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		const result = await dal.patchRole(authGroup.id || authGroup._id, id, product, patched);
+		ueEvents.emit(authGroup.id || authGroup._id, 'ue.role.edit', result);
+		return result;
+	},
+	async patchOrganizationRole(authGroup, role, id, organization, product, update, modifiedBy) {
+		const patched = jsonPatch.apply_patch(role.toObject(), update);
+		patched.modifiedBy = modifiedBy;
+		const result = await dal.patchOrganizationRole(authGroup.id || authGroup._id, id, organization, product, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.role.edit', result);
 		return result;
 	},
@@ -90,6 +123,18 @@ export default {
 	async deleteRolesOfProduct(authGroupId, product) {
 		const result = await dal.deleteRolesOfProduct(authGroupId, product);
 		ueEvents.emit(authGroupId, 'ue.roles.destroy', result);
+		return result;
+	},
+	/**
+	 * FOR INTERNAL USE ONLY
+	 * @param agId
+	 * @param query
+	 * @param update
+	 * @returns {Promise<*>}
+	 */
+	async updateCoreRole(agId, query, update) {
+		const result = await dal.updateCoreRole(query, update);
+		ueEvents.emit(agId, 'ue.roles.edit', result);
 		return result;
 	}
 };
