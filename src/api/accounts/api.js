@@ -290,8 +290,7 @@ const api = {
 			if(!req.params.id) {
 				if(!req.user || !req.user.sub ) throw Boom.preconditionRequired('Must provide id or valid user token');
 				req.params.id = req.user.sub;
-			}
-			await permissions.enforceOwn(req.permissions, req.params.id);
+			} else await permissions.enforceOwn(req.permissions, req.params.id);
 			const result = await access.getUserAccess(req.authGroup, req.params.id, req.query);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
