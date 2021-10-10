@@ -62,6 +62,11 @@ const orgSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
+	emailDomains: Array,
+	restrictEmailDomains: {
+		type: Boolean,
+		default: false
+	},
 	_id: {
 		type: String,
 		default: uuid

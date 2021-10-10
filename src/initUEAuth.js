@@ -5,8 +5,8 @@ import domain from './api/domains/domain';
 import perm from './api/permissions/permissions';
 import roles from './api/roles/roles';
 import access from './api/accounts/access';
-const config = require('./config');
-const permArray = require('../init/permissions.json');
+const permArray = require('../init/groupAdminPermissions.json');
+const permOrgArray = require('../init/orgProductPermissions.json');
 const coreRoles = require('../init/roles.json');
 const coreVersion = require('../init/currentCore.json');
 
@@ -14,30 +14,54 @@ export default {
 	async createDefaultOrgAndDomain(authGroup, creator) {
 		let initOrg;
 		let initDomain;
-		let initProduct;
-		let initRoles;
+		let initProductAdmin;
+		let initProductOrg;
+		let initRolesAdmin;
+		let initRolesOrg;
 		let initUserAccess;
-		let permissions;
+		let permissionsAdmin;
+		let permissionsOrg;
 		let bulkPermWrite = [];
+		let bulkPermOrgWrite = [];
 		try {
-			const defaultProduct = {
-				name: `${authGroup.name} - ${config.PLATFORM_NAME}`,
-				description: `Internal product reference for group '${authGroup.name}'. Add users to this product to access platform features. Do not delete as system access will be compromised`,
+			const meta = JSON.parse(JSON.stringify(coreVersion));
+			delete meta.force;
+			const defaultProduct1 = {
+				name: `${authGroup.name} - AuthGroup Admin Portal`,
+				description: `AuthGroup management product reference for group '${authGroup.name}'. Add users to this product to manage authgroup configuraiton and features. Do not delete as system access will be compromised`,
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
-				meta: coreVersion,
+				meta,
 				core: true
 			};
-			initProduct = await product.writeProduct(defaultProduct);
-			if(!initProduct) throw new Error('Could not initialize platform product');
+			const defaultProduct2 = {
+				name: `${authGroup.name} - Organization Admin Portal`,
+				description: `Organization management product reference for group '${authGroup.name}'. New organizations have this product automatically associated so they can manage their users and domains. Do not delete as system access will be compromised.`,
+				authGroup: authGroup.id,
+				type: 'global',
+				createdBy: creator.id,
+				meta,
+				core: true
+			};
+			initProductAdmin = await product.writeProduct(defaultProduct1);
+			if(!initProductAdmin) throw new Error('Could not initialize platform product for AuthGroup admins');
+			initProductOrg = await product.writeProduct(defaultProduct2);
+			if(!initProductOrg) throw new Error('Could not initialize platform product for organization admins');
 			permArray.map((p) => {
-				p.description = `${config.PLATFORM_NAME} permission. System Created. DO NOT DELETE`;
-				p.product = initProduct.id;
+				p.description = `${authGroup.name} - AuthGroup Admin Portal Permission. System Created. DO NOT DELETE`;
+				p.product = initProductAdmin.id;
 				p.authGroup = authGroup.id;
 				bulkPermWrite.push(p);
 			});
-			permissions = await perm.bulkWrite(authGroup.id, bulkPermWrite);
+			permOrgArray.map((p) => {
+				p.description = `${authGroup.name} - Organization Admin Portal Permission. System Created. DO NOT DELETE`;
+				p.product = initProductOrg.id;
+				p.authGroup = authGroup.id;
+				bulkPermOrgWrite.push(p);
+			});
+			permissionsAdmin = await perm.bulkWrite(authGroup.id, bulkPermWrite);
+			permissionsOrg = await perm.bulkWrite(authGroup.id, bulkPermOrgWrite);
 			const defaultOrg = {
 				name: `${authGroup.name} - Organization`,
 				description: `Primary organization of authGroup '${authGroup.name}'. Do not delete as system access will be compromised.`,
@@ -45,7 +69,7 @@ export default {
 				createdBy: creator.id,
 				authGroup: authGroup.id,
 				contactEmail: creator.email,
-				associatedProducts: [initProduct.id],
+				associatedProducts: [initProductAdmin.id],
 				core: true
 			};
 			initOrg = await orgs.writeOrg(authGroup.id, defaultOrg);
@@ -56,34 +80,58 @@ export default {
 				authGroup: authGroup.id,
 				organization: initOrg.id,
 				createdBy: creator.id,
-				associatedOrgProducts: [initProduct.id],
+				associatedOrgProducts: [initProductAdmin.id],
 				core: true
 			};
 			initDomain = await domain.writeDomain(defaultDom);
 			if(!initDomain) throw new Error('Could not initialize primary domain');
-			const defaultRoles = [];
-			coreRoles.map((rl) => {
+			const defaultRolesAdmin = [];
+			const defaultRolesOrg = [];
+			const AGAdminRoles = coreRoles.groupAdminPortal;
+			const OrgAdminRoles = coreRoles.orgAdminPortal;
+			AGAdminRoles.map((rl) => {
 				const temp = {};
 				temp.name = rl.role;
 				temp.createdBy = creator.id;
 				temp.authGroup = authGroup.id;
-				temp.description = (!rl.description) ? `${config.PLATFORM_NAME} Role. System Generated. Do Not Delete` : rl.description;
-				temp.product = initProduct.id;
-				temp.productCodedId = initProduct.codedId;
+				temp.description = (!rl.description) ? `${authGroup.name} Group Admin Portal Role. System Generated. Do Not Delete` : rl.description;
+				temp.product = initProductAdmin.id;
+				temp.productCodedId = initProductAdmin.codedId;
 				temp.core = true;
 				temp.permissions = [];
 				temp.codedId = nanoid(10);
 				rl.permissions.map((p) => {
-					const found = permissions.filter((list) => {
+					const found = permissionsAdmin.filter((list) => {
 						return list.coded === p;
 					});
 					temp.permissions.push(`${found[0].id} ${found[0].coded}`);
 				});
 				temp.permissions = [...new Set(temp.permissions)];
-				defaultRoles.push(temp);
+				defaultRolesAdmin.push(temp);
 			});
-			initRoles = await roles.bulkWrite(authGroup.id, defaultRoles);
-			const adminRole = initRoles.filter((r) => {
+			OrgAdminRoles.map((rl) => {
+				const temp = {};
+				temp.name = rl.role;
+				temp.createdBy = creator.id;
+				temp.authGroup = authGroup.id;
+				temp.description = (!rl.description) ? `${authGroup.name} Organization Admin Portal Role. System Generated. Do Not Delete` : rl.description;
+				temp.product = initProductOrg.id;
+				temp.productCodedId = initProductOrg.codedId;
+				temp.core = true;
+				temp.permissions = [];
+				temp.codedId = nanoid(10);
+				rl.permissions.map((p) => {
+					const found = permissionsOrg.filter((list) => {
+						return list.coded === p;
+					});
+					temp.permissions.push(`${found[0].id} ${found[0].coded}`);
+				});
+				temp.permissions = [...new Set(temp.permissions)];
+				defaultRolesOrg.push(temp);
+			});
+			initRolesAdmin = await roles.bulkWrite(authGroup.id, defaultRolesAdmin);
+			initRolesOrg = await roles.bulkWrite(authGroup.id, defaultRolesOrg);
+			const adminRole = initRolesAdmin.filter((r) => {
 				return r.name === 'Admin';
 			});
 			const accessBody = {
@@ -92,10 +140,10 @@ export default {
 			};
 			initUserAccess = await access.defineAccess(authGroup.id, initOrg.id, creator.id, accessBody);
 			return {
-				product: initProduct,
+				products: [ initProductAdmin, initProductOrg ],
 				organization: initOrg,
 				domain: initDomain,
-				roles: initRoles,
+				roles: [ { groupAdmin: initRolesAdmin, orgAdmin: initRolesOrg }],
 				userAccess: initUserAccess
 			};
 		} catch (error) {
@@ -113,14 +161,23 @@ export default {
 				console.info('delete org');
 				await orgs.deleteOrg(authGroup.id, initOrg.id);
 			}
-			if(initRoles) {
-				console.info('delete roles');
-				await roles.deleteRolesOfProduct(authGroup.id, initProduct.id);
+			if(initRolesAdmin) {
+				console.info('delete roles - group');
+				await roles.deleteRolesOfProduct(authGroup.id, initProductAdmin.id);
 			}
-			if(initProduct) {
+			if(initRolesAdmin) {
+				console.info('delete roles - org');
+				await roles.deleteRolesOfProduct(authGroup.id, initProductOrg.id);
+			}
+			if(initProductAdmin) {
 				console.info('delete product and permissions');
-				await product.deleteProduct(authGroup.id, initProduct.id);
-				await perm.deletePermissionsByProduct(authGroup.id, initProduct.id);
+				await product.deleteProduct(authGroup.id, initProductAdmin.id);
+				await perm.deletePermissionsByProduct(authGroup.id, initProductAdmin.id);
+			}
+			if(initProductOrg) {
+				console.info('delete product and permissions');
+				await product.deleteProduct(authGroup.id, initProductOrg.id);
+				await perm.deletePermissionsByProduct(authGroup.id, initProductOrg.id);
 			}
 			throw new Error('Could not initialize authGroup access objects. Rolled back.');
 		}

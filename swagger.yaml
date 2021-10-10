@@ -1035,6 +1035,7 @@ paths:
       summary: Invites are used to notify and allow a user to accept ownership of a resource or access to a resource. (ACCESS NOT YET IMPLEMENTED).
       description: Create an invitiation for group transfer or account access. Invites for a given user can be queried by that user. In UE Auth they are available as part of the Invite Dashboard
       operationId: createInvite
+      deprecated: true
       parameters:
         - name: group
           in: path
@@ -1076,6 +1077,7 @@ paths:
       summary: Retrieve all invites (CRUD operation)
       description: 'Uses oData filtering to retrieve Invites. Admins and Owners only.'
       operationId: getInvites
+      deprecated: true
       parameters:
         - name: group
           in: path
@@ -1140,6 +1142,7 @@ paths:
       summary: Find an Invite with ID
       description: Identify a single Invite. Must be intended recipient or owner of auth group
       operationId: getInvite
+      deprecated: true
       parameters:
         - name: group
           in: path
@@ -1179,6 +1182,7 @@ paths:
       summary: Hard delete an Invite - only authGroup owner
       description: Hard delete an Invite - only authGroup owner
       operationId: deleteInvite
+      deprecated: true
       parameters:
         - name: group
           in: path
@@ -4622,6 +4626,10 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
+        customDomain:
+          type: string
+          description: custom domain information
+          format: url
         ui:
           type: object
           properties:

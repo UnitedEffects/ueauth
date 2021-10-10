@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import keys from './generate-keys';
-import ms from "ms";
+import ms from 'ms';
 
 const config = require('../../config');
 
@@ -72,6 +72,10 @@ const authGroup = new mongoose.Schema({
 		pkceRequired: {
 			type: Boolean,
 			default: false
+		},
+		customDomain: {
+			type: String,
+			unique: true
 		},
 		ui: {
 			// fullCustom is for a future update that allows the AG to implement a fully custom UI of their choosing

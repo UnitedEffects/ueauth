@@ -11,16 +11,10 @@ const router = express.Router();
 
 // Access Functional
 router.get('/:group/checkforupdates', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.permissions,
-	m.access('group')
+	m.validateAuthGroup
 ], prod.getCoreProductMetaData);
 router.put('/:group/updatecore', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.permissions,
-	m.access('group')
+	m.validateAuthGroup
 ], prod.updateCoreProduct);
 
 // User Access
@@ -30,14 +24,14 @@ router.put('/:group/access/organization/:org/account/:id', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access('organization')
+	m.access('organizations')
 ], user.defineAccess);
 router.get('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('organization')
+	m.access('organizations')
 ], user.getDefinedAccess);
 router.delete('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,

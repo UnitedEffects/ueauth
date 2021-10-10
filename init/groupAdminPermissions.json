@@ -554,6 +554,13 @@
     "description": "UE Core permission"
   },
   {
+    "target": "operations-user-organization",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
     "target": "initialAccessToken",
     "action": "create",
     "core": true,
