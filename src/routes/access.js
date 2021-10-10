@@ -11,10 +11,16 @@ const router = express.Router();
 
 // Access Functional
 router.get('/:group/checkforupdates', [
-	m.validateAuthGroup
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('group')
 ], prod.getCoreProductMetaData);
 router.put('/:group/updatecore', [
-	m.validateAuthGroup
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('group')
 ], prod.updateCoreProduct);
 
 // User Access
