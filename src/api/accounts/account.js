@@ -28,6 +28,17 @@ export default {
 	},
 
 	// @notTested
+	async getAccountByOrg(authGroupId, organization, id) {
+		return dal.getAccountByOrg(authGroupId, organization, id);
+	},
+
+	// @notTested
+	async getAccountsByOrg(authGroupId, organization, q) {
+		const query = await helper.parseOdataQuery(q);
+		return dal.getAccountsByOrg(authGroupId, organization, query);
+	},
+
+	// @notTested
 	async deleteAccount(authGroupId, id) {
 		const result = await dal.deleteAccount(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.account.destroy', result);
@@ -73,6 +84,12 @@ export default {
 	async getAccountByEmailOrUsername(authGroupId, em) {
 		const email = String(em).toLowerCase();
 		return dal.getAccountByEmailOrUsername(authGroupId, email);
+	},
+
+	// @notTested
+	async getAccountAccessByEmailOrUsername(authGroupId, em) {
+		const email = String(em).toLowerCase();
+		return dal.getAccountByEmailOrUsername(authGroupId, email, false, false);
 	},
 
 	// @notTested
@@ -181,4 +198,7 @@ export default {
 		}
 		return data;
 	},
+	async searchAccounts(authGroup, q) {
+		return dal.searchAccounts(authGroup, q);
+	}
 };

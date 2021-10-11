@@ -9,6 +9,14 @@
   {
     "target": "accounts-organization",
     "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission. Allows organization admins to browse accounts to add and limits details search results."
+  },
+  {
+    "target": "accounts-organization",
+    "action": "update",
+    "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission. Allows organization admins to browse accounts to add and limits details search results."
   },

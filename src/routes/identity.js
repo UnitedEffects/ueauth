@@ -127,13 +127,19 @@ router.get('/:group/accounts', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('accounts', 'organization'),
+	m.access('accounts'),
 ], account.getAccounts);
+router.get('/:group/accounts/search', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts', 'organization'),
+], account.searchAccounts);
 router.get('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('accounts', 'organization')
+	m.access('accounts')
 ], account.getAccount);
 router.patch('/:group/account/:id', [
 	m.validateAuthGroup,
@@ -148,6 +154,30 @@ router.delete('/:group/account/:id', [
 	m.permissions,
 	m.access('accounts')
 ], account.deleteAccount);
+
+// Organization Accounts
+router.put('/:group/organization/:org/account',[
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.permissions,
+	m.access('accounts', 'organization')
+], account.createOrAssociateAccount);
+router.get('/:group/organization/:org/accounts', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts', 'organization')
+], account.getAccountsByOrg);
+router.get('/:group/organization/:org/account/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts', 'organization')
+], account.getAccountByOrg);
 
 // Clients
 router.get('/:group/clients', [
@@ -198,7 +228,7 @@ router.post('/:group/operations/invite/:id', [
 	m.getGlobalPluginSettings
 ], invite.inviteOperations);
 
-// Invite Dashboard APIs
+// Invite Dashboard APIs - DEPRECATED
 router.post('/:group/invite',[
 	m.validateAuthGroup,
 	m.isAuthenticated,

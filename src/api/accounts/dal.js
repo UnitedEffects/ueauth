@@ -10,8 +10,21 @@ export default {
 		query.query.authGroup = g;
 		return Account.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
+	async getAccountsByOrg(g, o, query) {
+		query.query.authGroup = g;
+		query.query.access = { $elemMatch: { 'organization.id': o } };
+		return Account.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
 	async getAccount(authGroup, id) {
 		return Account.findOne( { _id: id, authGroup });
+	},
+	async getAccountByOrg(authGroup, org, id) {
+		const query = {
+			_id: id,
+			authGroup,
+			access: { $elemMatch: { 'organization.id': org } }
+		};
+		return Account.findOne(query);
 	},
 	async getAccountByAccess(authGroup, id, org) {
 		const selectOptions = {
@@ -35,7 +48,7 @@ export default {
 		const options = { new: true, overwrite: true };
 		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);
 	},
-	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false) {
+	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false, hideAccess = true) {
 		const query = { authGroup, blocked: false, active: true, $or: [
 			{ email },
 			{ username: email }
@@ -43,7 +56,8 @@ export default {
 		if(verifiedRequired === true) {
 			query.verified = true;
 		}
-		return Account.findOne(query).select({ access: 0 });
+		const select = (hideAccess) ? { access: 0 } : {};
+		return Account.findOne(query).select(select);
 	},
 	async updatePassword(authGroup, id, update) {
 		if(update.password) {
@@ -73,5 +87,11 @@ export default {
 			output.push(temp);
 		});
 		return output;
+	},
+	async searchAccounts(authGroup, q) {
+		return Account.find({
+			authGroup,
+			$text : { $search : q }
+		}).select({ _id: 1, email: 1});
 	}
 };

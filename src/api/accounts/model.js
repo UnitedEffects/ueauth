@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
-import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
 
@@ -67,6 +66,7 @@ const accountSchema = new mongoose.Schema({
 
 accountSchema.index({ email: 1, authGroup: 1}, { unique: true });
 accountSchema.index({ username: 1, authGroup: 1}, { unique: true });
+accountSchema.index( { email: 'text', username: 'text' });
 
 accountSchema.pre('save', function(callback) {
 	const account = this;

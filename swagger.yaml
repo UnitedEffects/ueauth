@@ -24,6 +24,8 @@ tags:
     description: Plugin configurations for the service
   - name: Users
     description: User Accounts
+  - name: Organization Users
+    description: Managing user accounts and access associated to an organization
   - name: User Access
     description: roles and permissions by account
   - name: Invite Dashboard
@@ -535,6 +537,75 @@ paths:
               $ref: '#/components/schemas/writeAccount'
         description: Account data to be written
         required: true
+  /api/{group}/accounts/search:
+    get:
+      tags:
+        - Users
+      summary: Search Accounts in the authGroup
+      description: Allows you to search accounts in the authgroup using a text search
+      operationId: searchAccounts
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: q
+          in: query
+          description: keyword search
+          required: true
+          schema:
+            type: string
+        - name: restrictEmail
+          in: query
+          description: restrict the search to specific email domains. comma dilimited
+          example: example.com,google.com,test.com
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exact:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        email:
+                          type: string
+                          format: email
+                  like:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        email:
+                          type: string
+                          format: email
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
   /api/{group}/accounts:
     get:
       tags:
@@ -725,11 +796,177 @@ paths:
         description: JSON Patch specific to your account object
         required: true
 
-  # User Access APIs
+  # User Account API restricted to Organizations
+  /api/{group}/organization/{org}/account:
+    put:
+      tags:
+        - Organization Users
+      summary: Register a new or existing user as part of an organization
+      description: Register a new or existing user as part of an organization
+      operationId: writeAccountToOrg
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/getAccount'
+                  - $ref: '#/components/schemas/firstAccountWrite'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeAccountByOrg'
+        description: Account data to be written
+        required: true
+  /api/{group}/organization/{org}/accounts:
+    get:
+      tags:
+        - Organization Users
+      summary: Retrieve all users associated to an organization
+      description: 'Uses oData filtering to retrieve Accounts'
+      operationId: getAccounts
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccounts'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  '/api/{group}/organization/{org}/account/{id}':
+    get:
+      tags:
+        - Organization Users
+      summary: Find a User with ID
+      description: Identify a single user associated to an organization.
+      operationId: getAccountByOrg
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of account type to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
   /api/{group}/access/organization/{org}/account/{id}:
     delete:
       tags:
-        - User Access
+        - Organization Users
       summary: Remove an organization from user's access
       description: Remove an organization from user's access
       operationId: remove Org from access
@@ -776,7 +1013,7 @@ paths:
         - openId: []
     get:
       tags:
-        - User Access
+        - Organization Users
       summary: Get defined user access in order to make edits with PUT
       description: Get defined user access
       operationId: getDefinedUserAccess
@@ -821,10 +1058,9 @@ paths:
       security:
         - bearer: []
         - openId: []
-
     put:
       tags:
-        - User Access
+        - Organization Users
       summary: Apply org, domain, or roles to a user
       description: Define a user's access
       operationId: defineUserAccess
@@ -877,6 +1113,7 @@ paths:
         description: Updated access object
         required: true
 
+# User Access
   /api/{group}/access/account/{id}:
     get:
       tags:
@@ -4480,6 +4717,18 @@ components:
         metadata:
           type: object
           description: additional context provided by the implementer
+
+    writeAccountByOrg:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
 
     writeAccount:
       type: object

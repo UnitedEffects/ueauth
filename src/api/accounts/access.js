@@ -222,7 +222,7 @@ export default {
 			}
 		});
 		if (!orgRecord) throw Boom.notFound(`No access record for organization ${organization} on user ${id}`);
-		if (!orgIndex && orgRecord) throw Boom.notFound(`Unexpected error finding organization ${organization} on user ${id}`);
+		if (orgIndex === undefined && orgRecord) throw Boom.notFound(`Unexpected error finding organization ${organization} on user ${id}`);
 		userAccess.splice(orgIndex, 1);
 		user.access = userAccess;
 		return user.save();

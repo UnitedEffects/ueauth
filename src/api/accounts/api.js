@@ -45,6 +45,67 @@ const api = {
 			next(error);
 		}
 	},
+
+	async createOrAssociateAccount(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if (req.authGroup.active === false) throw Boom.forbidden('You can not add members to an inactive group');
+			if (!req.body.email) throw Boom.preconditionRequired('username is required');
+			const user = await acct.getAccountAccessByEmailOrUsername(req.authGroup.id, req.body.email);
+			let result;
+			let newUser;
+			let password = cryptoRandomString({length: 32, type: 'url-safe'});
+			if(user) {
+				const checkForOrg = user.access.filter((ac) => {
+					return (ac.organization.id === req.organization.id);
+				});
+				if(!checkForOrg.length) {
+					result = await access.defineAccess(req.authGroup.id, req.organization.id, user._id, {});
+				} else result = user;
+			} else {
+				try {
+					newUser = await acct.writeAccount({
+						username: (req.body.username) ? req.body.username : req.body.email,
+						email: req.body.email,
+						authGroup: req.authGroup.id,
+						password
+					});
+					if(!newUser) throw new Error('Could not create user');
+					result = await access.defineAccess(req.authGroup.id, req.organization.id, newUser._id, {});
+				} catch (e) {
+					if(newUser && newUser._id) await acct.deleteAccount(req.authGroup.id, newUser._id);
+					throw e;
+				}
+			}
+			if(newUser) {
+				try {
+					if (req.globalSettings && req.globalSettings.notifications.enabled === true &&
+						req.authGroup.pluginOptions.notification.enabled === true &&
+						req.authGroup.config.autoVerify === true) {
+						await acct.resetOrVerify(req.authGroup, req.globalSettings, newUser,[], (req.user) ? req.user.sub : undefined, false);
+					} else {
+						result = {
+							...JSON.parse(JSON.stringify(result)),
+							WARNING: 'User was created but notifications are disabled. We are returning the generated password for you to provide but this is an inherently less secure approach. We strongly recommend you enable notifications.',
+							generatedPassword: password
+						};
+					}
+				} catch (er) {
+					console.error(er);
+					throw Boom.failedDependency('You have automatic email verification enabled but something went wrong. The user should trigger a forgot password to verify the account.', {account: result, error: er.stack || er.message});
+				}
+			}
+			result = {
+				...JSON.parse(JSON.stringify(result)),
+				access: [ { organization: { id: req.organization.id }}]
+			};
+			return res.respond(say.created(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
 	async activateGroupWithAccount(req, res, next) {
 		let account;
 		let client;
@@ -114,6 +175,31 @@ const api = {
 			const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
 			await permissions.enforceOwn(req.permissions, id);
 			const result = await acct.getAccount(req.params.group, id);
+			if (!result) throw Boom.notFound(`id requested was ${id}`);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getAccountsByOrg(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			const result = await acct.getAccountsByOrg(req.authGroup.id, req.organization.id, req.query);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getAccountByOrg(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			const id = req.params.id;
+			if(req.user.sub !== req.params.id) await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			const result = await acct.getAccountByOrg(req.params.group, req.organization.id, id);
 			if (!result) throw Boom.notFound(`id requested was ${id}`);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -261,7 +347,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to get access from');
-			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(req.user.sub !== req.params.id) await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await access.getDefinedAccess(req.authGroup.id, req.organization.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
@@ -296,6 +382,53 @@ const api = {
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);
+			next(error);
+		}
+	},
+	async searchAccounts(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			if(!req.query.q) throw Boom.badRequest('no search provided');
+			let domains = [];
+			if(req.query.restrictEmail) {
+				domains = req.query.restrictEmail.replace(' ', '').split(',');
+			}
+			const search = req.query.q;
+			let like = await acct.searchAccounts(req.authGroup.id, search);
+			let exact = await acct.getAccountByEmailOrUsername(req.authGroup.id, search);
+			if (exact) {
+				exact = {
+					id: exact._id,
+					email: exact.email
+				};
+			}
+			if(domains.length !== 0) {
+				if(exact && exact.email) {
+					let valid = false;
+					domains.map((d) => {
+						if(exact.email.includes(d)) {
+							valid = true;
+						}
+					});
+					if (valid === false) exact = {};
+				}
+				if(like.length !== 0) {
+					let filteredLike = [];
+					domains.map((d) => {
+						like.map((ac) => {
+							if(ac.email.includes(d)) {
+								filteredLike.push({
+									id: ac._id,
+									email: ac.email
+								});
+							}
+						});
+					});
+					like = filteredLike;
+				}
+			}
+			return res.respond(say.ok({ exact, like }, RESOURCE));
+		} catch (error) {
 			next(error);
 		}
 	}
