@@ -174,7 +174,7 @@ function oidcConfig(g) {
 			}
 		},
 		extraClientMetadata: {
-			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url', 'client_optional_skip_logout_prompt'],
+			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url', 'client_optional_skip_logout_prompt', 'associated_product'],
 			validator(key, value, metadata) {
 				if (key === 'auth_group') {
 					try {
@@ -210,6 +210,15 @@ function oidcConfig(g) {
 					try {
 						if (value === undefined || value === null) value = false;
 						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'associated_product') {
+					try {
+						if (typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string value`);
+						// todo add a validator for the productId if provided
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						throw new InvalidClientMetadata(error.message);

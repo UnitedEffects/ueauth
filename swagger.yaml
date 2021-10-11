@@ -42,6 +42,8 @@ tags:
     description: Create, Update, View or Delete Products
   - name: Roles
     description: Create, Update, View or Delete roles globally for all products and all organizations
+  - name: Organization Roles
+    description: Create, Update, View or Delete roles specific to a single organization
   - name: Permissions
     description: Create, Update, View or Delete permissions
   - name: Operations
@@ -1769,6 +1771,62 @@ paths:
         description: Account data to be written
         required: true
 
+  /api/{group}/operations/organization/{org}/user/{id}:
+    post:
+      tags:
+        - Operations
+      summary: Execute operations against a user within an organization
+      description: Execute operations against a user within an organization. Currently supports - verify_account, reset_password
+      operationId: userOperationsByOrg
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization id
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the user/account id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful update operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAccount'
+        '204':
+          description: successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userOperations'
+        description: Account data to be written
+        required: true
+
   /api/{group}/operations/user/{id}:
     post:
       tags:
@@ -2759,7 +2817,7 @@ paths:
   /api/{group}/organization/{org}/roles:
     get:
       tags:
-        - Roles
+        - Organization Roles
       summary: Scoped to this specific organization - returns global roles + org specific across all organization products
       description: get all roles across products in your organization
       operationId: getAllRolesAcrossProductsByOrg
@@ -2834,7 +2892,7 @@ paths:
   /api/{group}/organizations/{org}/products/{product}/roles:
     get:
       tags:
-        - Roles
+        - Organization Roles
       summary: Scoped to this specific organization - returns global roles and roles specific to the provided org for a given product
       description: get roles info for a product
       operationId: getProductRolesByOrg
@@ -2915,7 +2973,7 @@ paths:
         - openId: []
     put:
       tags:
-        - Roles
+        - Organization Roles
       summary: Scoped to this specific organization for a given product
       description: Define new roles specific to this organization. Should not be used for global roles.
       operationId: createRoleByOrg
@@ -2973,7 +3031,7 @@ paths:
   /api/{group}/organizations/{org}/products/{product}/roles/{id}:
     delete:
       tags:
-        - Roles
+        - Organization Roles
       summary: Scoped to this specific organization - delete a role specific to this organization
       description: remove a custom role specific to this organizatino and product
       operationId: deleteProductRoleByOrg
@@ -3030,7 +3088,7 @@ paths:
         - openId: []
     get:
       tags:
-        - Roles
+        - Organization Roles
       summary: Scoped to this specific organization - returns a role, either globally available or specific to this organization
       description: get roles info for a product
       operationId: getProductRoleByOrg
@@ -3087,7 +3145,7 @@ paths:
         - openId: []
     patch:
       tags:
-        - Roles
+        - Organization Roles
       summary: Scoped to this specific organization - updates a role specific to this organization
       description: Update a role specific to the organization. This should not be used for global roles.
       operationId: updateRoleByOrg
@@ -5365,6 +5423,12 @@ components:
         description:
           type: string
           description: explain what the product does
+        associatedClients:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: array of OIDC client Ids that may be associated to this business definition of a product
         type:
           type: string
           description: optional categorization of the product

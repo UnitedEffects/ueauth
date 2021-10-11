@@ -205,6 +205,15 @@ router.post('/:group/operations/user/:id', [
 	m.access('operations', 'user'),
 	m.getGlobalPluginSettings,
 ], account.userOperations);
+router.post('/:group/operations/organization/:org/user/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('operations', 'user', 'organization'),
+	m.getGlobalPluginSettings,
+], account.userOperationsByOrg);
 router.post('/:group/operations', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

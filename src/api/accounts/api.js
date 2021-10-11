@@ -280,53 +280,35 @@ const api = {
 			return next(error);
 		}
 	},
+	async userOperationsByOrg(req, res, next) {
+		try {
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if(!req.organization) throw Boom.preconditionRequired('Must specify organizatin');
+			if (!req.body.operation) return res.respond(say.noContent('User Operation'));
+			const user = await acct.getAccountByOrg(req.authGroup.id, req.organization.id, req.params.id);
+			if(req.params.id !== req.user.sub) await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			const password = cryptoRandomString({length: 32, type: 'url-safe'});
+			if(req.body.operation === 'generate_password') throw Boom.badRequest('operation not supported at the org level');
+			const result = await userOperation(req, user, password);
+			return res.respond(result);
+		} catch (error) {
+			if(error.isAxiosError) {
+				return next(Boom.failedDependency('There is an error with the global notifications service plugin - contact the admin'));
+			}
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+
+	},
 	async userOperations(req, res, next) {
 		try {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if (!req.body.operation) return res.respond(say.noContent('User Operation'));
-			let result;
-			switch (req.body.operation) {
-			case 'verify_account':
-				try {
-					if (req.globalSettings.notifications.enabled === true &&
-                            req.authGroup.pluginOptions.notification.enabled === true) {
-						const user = await acct.getAccount(req.authGroup.id, req.params.id);
-						await permissions.enforceOwn(req.permissions, user.id);
-						result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, false);
-						return res.respond(say.noContent(RESOURCE));
-					}
-					throw Boom.badRequest('Notifications are not enabled and are required for this operation');
-				} catch (error) {
-					if(result) {
-						await n.deleteNotification(req.authGroup, result.id);
-					}
-					throw error;
-				}
-			case 'password_reset':
-				try {
-					if (req.globalSettings.notifications.enabled === true &&
-                            req.authGroup.pluginOptions.notification.enabled === true) {
-						const user = await acct.getAccount(req.authGroup.id, req.params.id);
-						await permissions.enforceOwn(req.permissions, user.id);
-						result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, true);
-						return res.respond(say.noContent(RESOURCE));
-					}
-					throw Boom.badRequest('Notifications are not enabled and are required for this operation');
-				} catch (error) {
-					if(result) {
-						await n.deleteNotification(req.authGroup, result.id);
-					}
-					throw error;
-				}
-			case 'generate_password':
-				const password = cryptoRandomString({length: 32, type: 'url-safe'});
-				const user = await acct.getAccount(req.authGroup.id, req.params.id);
-				await permissions.enforceOwn(req.permissions, user.id);
-				result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined);
-				return res.respond(say.ok(result, RESOURCE));
-			default:
-				throw Boom.badRequest('Unknown operation');
-			}
+			const user = await acct.getAccount(req.authGroup.id, req.params.id);
+			await permissions.enforceOwn(req.permissions, user.id);
+			const password = cryptoRandomString({length: 32, type: 'url-safe'});
+			const result = await userOperation(req, user, password);
+			return res.respond(result);
 		} catch (error) {
 			if(error.isAxiosError) {
 				return next(Boom.failedDependency('There is an error with the global notifications service plugin - contact the admin'));
@@ -441,5 +423,44 @@ const api = {
 		}
 	}
 };
+
+async function userOperation(req, user, password) {
+	let result;
+	switch (req.body.operation) {
+	case 'verify_account':
+		try {
+			if (req.globalSettings.notifications.enabled === true &&
+					req.authGroup.pluginOptions.notification.enabled === true) {
+				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, false);
+				return say.noContent(RESOURCE);
+			}
+			throw Boom.badRequest('Notifications are not enabled and are required for this operation');
+		} catch (error) {
+			if(result) {
+				await n.deleteNotification(req.authGroup, result.id);
+			}
+			throw error;
+		}
+	case 'password_reset':
+		try {
+			if (req.globalSettings.notifications.enabled === true &&
+					req.authGroup.pluginOptions.notification.enabled === true) {
+				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, true);
+				return say.noContent(RESOURCE);
+			}
+			throw Boom.badRequest('Notifications are not enabled and are required for this operation');
+		} catch (error) {
+			if(result) {
+				await n.deleteNotification(req.authGroup, result.id);
+			}
+			throw error;
+		}
+	case 'generate_password':
+		result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined);
+		return say.ok(result, RESOURCE);
+	default:
+		throw Boom.badRequest('Unknown operation');
+	}
+}
 
 export default api;
