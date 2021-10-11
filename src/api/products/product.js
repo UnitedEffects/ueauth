@@ -47,6 +47,7 @@ export default {
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.product.edit', result);
 		return result;
 	},
+	/*
 	async getCoreProduct(authGroup, name) {
 		if(!name) name = `${authGroup.name} - AuthGroup Admin Portal`;
 		const query = {
@@ -56,17 +57,18 @@ export default {
 			core: true
 		};
 		return dal.getCoreProduct(query);
-	},
-	async getCoreProducts(authGroup) {
+	},*/
+	async getCoreProducts(authGroup, name) {
 		const query = {
 			$or: [
-				{ name: `${authGroup.name} - AuthGroup Admin Portal`},
-				{ name: `${authGroup.name} - Organization Admin Portal`}
+				{ 'meta.core': 'groupAdmin'},
+				{ 'meta.core': 'orgAdmin'}
 			],
 			authGroup: authGroup.id,
 			type: 'global',
 			core: true
 		};
+		if(name) query.name = name;
 		return dal.getCoreProducts(query);
 	},
 	async updateCoreMetaData(authGroup, id, meta) {

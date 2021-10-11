@@ -3,6 +3,15 @@ import { v4 as uuid } from 'uuid';
 
 mongoose.set('useCreateIndex', true);
 
+const metaSchema = new mongoose.Schema({
+	// this allows us to create unique internal identifiers when required for setup.
+	core: {
+		type: String,
+		unique: true,
+		default: uuid
+	},
+}, { _id: false, strict: false });
+
 const productSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
@@ -42,7 +51,7 @@ const productSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
-	meta: Object,
+	meta: metaSchema,
 	_id: {
 		type: String,
 		default: uuid
@@ -71,6 +80,7 @@ productSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret._id;
 	delete ret.__v;
 	delete ret.core;
+	if(ret.meta && ret.meta.core) delete ret.meta.core;
 };
 
 // Export the Mongoose model

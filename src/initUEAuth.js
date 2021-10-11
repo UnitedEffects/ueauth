@@ -26,22 +26,25 @@ export default {
 		try {
 			const meta = JSON.parse(JSON.stringify(coreVersion));
 			delete meta.force;
+			const agMeta = { ...meta, core: 'groupAdmin'};
+			const ogMeta = { ...meta, core: 'orgAdmin' };
 			const defaultProduct1 = {
 				name: `${authGroup.name} - AuthGroup Admin Portal`,
 				description: `AuthGroup management product reference for group '${authGroup.name}'. Add users to this product to manage authgroup configuraiton and features. Do not delete as system access will be compromised`,
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
-				meta,
+				meta: agMeta,
 				core: true
 			};
+			meta.core = 'orgAdmin';
 			const defaultProduct2 = {
 				name: `${authGroup.name} - Organization Admin Portal`,
 				description: `Organization management product reference for group '${authGroup.name}'. New organizations have this product automatically associated so they can manage their users and domains. Do not delete as system access will be compromised.`,
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
-				meta,
+				meta: ogMeta,
 				core: true
 			};
 			initProductAdmin = await product.writeProduct(defaultProduct1);

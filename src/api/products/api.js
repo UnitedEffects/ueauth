@@ -27,12 +27,17 @@ const api = {
 				updateRequired: false
 			};
 			result.map((r) => {
-				if(!r.meta || !r.meta.permissionsVersion || !r.meta.rolesVersion) {
+				const prodCheck = JSON.parse(JSON.stringify(r));
+				if(!prodCheck.meta && !prodCheck.meta.permissionsVersion && !prodCheck.meta.rolesVersion) {
 					output.updateRequired = true;
 					output.force = true;
 				} else {
-					if(r.meta.permissionsVersion !== coreProductInfo.permissionsVersion) output.updateRequired = true;
-					if(r.meta.rolesVersion !== coreProductInfo.rolesVersion) output.updateRequired = true;
+					if(prodCheck.meta.permissionsVersion !== coreProductInfo.permissionsVersion) {
+						output.updateRequired = true;
+					}
+					if(prodCheck.meta.rolesVersion !== coreProductInfo.rolesVersion) {
+						output.updateRequired = true;
+					}
 				}
 			});
 			if(output.updateRequired === true && coreProductInfo.force === true) {
@@ -46,8 +51,6 @@ const api = {
 	async updateCoreProduct(req, res, next) {
 		try {
 			if (!req.authGroup) throw Boom.badRequest('AuthGroup not defined');
-			const newMeta = JSON.parse(JSON.stringify(coreProductInfo));
-			delete newMeta.force;
 			const results = await prod.getCoreProducts(req.authGroup);
 			if(!results.length) throw Boom.badRequest('No Core Product Detected. Contact the Admin');
 			let output = {};
@@ -55,7 +58,7 @@ const api = {
 				let EXISTING = JSON.parse(JSON.stringify(await perms.getPermissions(req.authGroup.id, result.id, {})));
 				const bulkWritePermissions = [];
 				const bulkDeletePermissions = [];
-				const corePermissions = (result.name === `${req.authGroup.name} - AuthGroup Admin Portal`)
+				const corePermissions = (result.meta && result.meta.core && result.meta.core === 'groupAdmin')
 					? coreAdminPermissions : coreOrgPermissions;
 				corePermissions.map((p) => {
 					const updatedCode = (p.ownershipRequired===true) ? `${p.target}::${p.action}:own` : `${p.target}::${p.action}`;
@@ -86,7 +89,7 @@ const api = {
 					removed: bulkDeletePermissions,
 					roles: []
 				};
-				const prodRoles = (result.name === `${req.authGroup.name} - AuthGroup Admin Portal`)
+				const prodRoles = (result.meta && result.meta.core && result.meta.core === 'groupAdmin')
 					? coreRoles.groupAdminPortal : coreRoles.orgAdminPortal;
 				const roleTask = prodRoles.map(async (rl) => {
 					const query = {};
@@ -118,6 +121,9 @@ const api = {
 					return updatedRole;
 				});
 				await Promise.all(roleTask);
+				const newMeta = JSON.parse(JSON.stringify(coreProductInfo));
+				delete newMeta.force;
+				newMeta.core = result.meta.core;
 				await prod.updateCoreMetaData(req.authGroup.id, result.id, newMeta);
 				const permTask = bulkDeletePermissions.map(async (p) => {
 					return perms.deletePermission(req.authGroup.id, result.id, p);
