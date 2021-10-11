@@ -52,6 +52,13 @@ const api = {
 			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
 			if (req.authGroup.active === false) throw Boom.forbidden('You can not add members to an inactive group');
 			if (!req.body.email) throw Boom.preconditionRequired('username is required');
+			let allowed = false;
+			if (req.organization.emailDomains.length !== 0) {
+				req.organization.emailDomains.map((d) => {
+					if(req.body.email.includes(d)) allowed = true;
+				});
+			} else allowed = true;
+			if(allowed === false) throw Boom.badRequest('This organization has restricted email domains', req.organization.emailDomains);
 			const user = await acct.getAccountAccessByEmailOrUsername(req.authGroup.id, req.body.email);
 			let result;
 			let newUser;
@@ -334,7 +341,7 @@ const api = {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			const result = await access.defineAccess(req.authGroup.id, req.organization.id, req.params.id, req.body);
+			const result = await access.defineAccess(req.authGroup.id, req.organization.id, req.params.id, req.body, req.organization.emailDomains);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
@@ -399,7 +406,8 @@ const api = {
 			if (exact) {
 				exact = {
 					id: exact._id,
-					email: exact.email
+					email: exact.email,
+					username: exact.username
 				};
 			}
 			if(domains.length !== 0) {

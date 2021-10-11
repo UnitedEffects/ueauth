@@ -5517,6 +5517,12 @@ components:
           type: string
         contactPhone:
           type: string
+        emailDomains:
+          type: array
+          items:
+            type: string
+            description: email domains that are allowed
+            example: example.com
         meta:
           type: string
           description: additional custom structured information

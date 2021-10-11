@@ -92,6 +92,6 @@ export default {
 		return Account.find({
 			authGroup,
 			$text : { $search : q }
-		}).select({ _id: 1, email: 1});
+		}).select({ _id: 1, email: 1, username: 1});
 	}
 };

@@ -26,12 +26,20 @@ export default {
 			roles: orgRecord.organization.roles
 		};
 	},
-	async defineAccess(authGroup, organization, id, access) {
+	async defineAccess(authGroup, organization, id, access, emailDomains = []) {
 		// pull user record
 		const user = await dal.getAccount(authGroup, id);
 		if(!user) throw Boom.notFound(`user not found: ${id}`);
-		const userAccess = user.access || [];
+		// make sure organization allows this email address domain
+		let allowed = false;
+		if (emailDomains.length !== 0) {
+			emailDomains.map((d) => {
+				if(user(d)) allowed = true;
+			});
+		} else allowed = true;
+		if(allowed === false) throw Boom.badRequest('This organization has restricted email domains', emailDomains);
 		// check domains and roles
+		const userAccess = user.access || [];
 		if(!access.domains || !Array.isArray(access.domains)) access.domains = [];
 		if(!access.roles || !Array.isArray(access.roles)) access.roles = [];
 		let badDomains = [];
@@ -50,23 +58,23 @@ export default {
 		if(badDomains.length !== 0 || badRoles.length !== 0) {
 			throw Boom.badRequest('The following roles or domains do not exist in the organization', { domains: badDomains, roles: badRoles });
 		}
-		let orgRecord;
-		let recordIndex = 0;
+		let recordIndex;
 		userAccess.map((ac, index) => {
 			if(ac.organization && ac.organization.id === organization) {
-				orgRecord = ac;
 				recordIndex = index;
 			}
 		});
 		// Because this is a put, we will overwrite the entry
-		orgRecord = {
+		const orgRecord = {
 			organization: {
 				id: organization,
 				domains: access.domains,
 				roles: access.roles
 			}
 		};
-		userAccess[recordIndex] = orgRecord;
+		if (recordIndex === undefined) {
+			userAccess.push(orgRecord);
+		} else userAccess[recordIndex] = orgRecord;
 		user.access = userAccess;
 		const result = await user.save();
 		ueEvents.emit(authGroup, 'ue.access.defined', { sub: id, access: orgRecord });
