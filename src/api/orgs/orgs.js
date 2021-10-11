@@ -2,6 +2,7 @@ import jsonPatch from 'jsonpatch';
 import Boom from '@hapi/boom';
 import dal from './dal';
 import dom from '../domains/domain';
+import prod from '../products/product';
 import access from '../accounts/access';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
@@ -9,6 +10,9 @@ import ueEvents from '../../events/ueEvents';
 export default {
 	async writeOrg(agId, data) {
 		data.authGroup = agId;
+		const product = await prod.getCoreProduct(agId, 'orgAdmin');
+		if(!data.associatedProducts) data.associatedProducts = [];
+		data.associatedProducts.push(product._id);
 		const output = await dal.writeOrg(data);
 		ueEvents.emit(data.authGroup, 'ue.organization.create', output);
 		return output;

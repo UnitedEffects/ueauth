@@ -19,7 +19,7 @@ export default {
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
 				// ensure a core product exists
-				if (!req.permissions.core || !req.permissions.core.product) throw Boom.forbidden(ERROR_MESSAGE);
+				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group access
 				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
 				// if root user, they have priority
