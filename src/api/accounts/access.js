@@ -70,7 +70,7 @@ const factory = {
 				id: organization,
 				domains: access.domains,
 				roles: access.roles,
-				terms: (ogRecord.terms) ? ogRecord.terms : { required: false }
+				terms: (ogRecord && ogRecord.terms) ? ogRecord.terms : { required: false }
 			}
 		};
 		// setting terms of access that must be accepted

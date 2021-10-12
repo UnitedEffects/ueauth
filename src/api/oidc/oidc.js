@@ -215,15 +215,6 @@ function oidcConfig(g) {
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
-				if (key === 'associated_product') {
-					try {
-						if (typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string value`);
-						// todo add a validator for the productId if provided
-					} catch (error) {
-						if (error.name === 'InvalidClientMetadata') throw error;
-						throw new InvalidClientMetadata(error.message);
-					}
-				}
 			}
 		},
 		formats: {

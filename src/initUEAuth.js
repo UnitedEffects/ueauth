@@ -35,6 +35,7 @@ export default {
 				type: 'global',
 				createdBy: creator.id,
 				meta: agMeta,
+				associatedClients: [authGroup.associatedClient],
 				core: true
 			};
 			meta.core = 'orgAdmin';
@@ -45,6 +46,7 @@ export default {
 				type: 'global',
 				createdBy: creator.id,
 				meta: ogMeta,
+				associatedClients: [authGroup.associatedClient],
 				core: true
 			};
 			initProductAdmin = await product.writeProduct(defaultProduct1);
