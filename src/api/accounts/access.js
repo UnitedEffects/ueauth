@@ -4,6 +4,8 @@ import ueEvents from '../../events/ueEvents';
 import dom from '../domains/domain';
 import role from '../roles/roles';
 
+const config = require('../../config');
+
 const factory = {
 	async getDefinedAccess(authGroup, organization, id) {
 		const user = await dal.getAccount(authGroup, id);
@@ -104,7 +106,8 @@ const factory = {
 			authGroup: {
 				id: authGroup.id,
 				owner: (authGroup.owner === id),
-				member: (user.authGroup === authGroup.id)
+				member: (user.authGroup === authGroup.id),
+				memberPermissions: []
 			},
 			access: []
 		};
@@ -217,13 +220,23 @@ const factory = {
 				));
 				// deduplicating the string arrays
 				accessItem.organization.domainAccess = [...new Set(accessItem.organization.domainAccess)];
-				domains = [...new Set(domains)];
 				accessItem.organization.productAccess = [...new Set(accessItem.organization.productAccess)];
-				products = [...new Set(products)];
-				permissions = [...new Set(permissions)];
 				response.access.push(accessItem);
 			}
 		}
+		// member...
+		if(user.authGroup === authGroup.id) {
+			config.MEMBER_PERMISSIONS.map((p) => {
+				response.authGroup.memberPermissions.push(`${authGroup.id}-${p}`);
+				permissions.push(`${authGroup.id}-${p}`);
+			});
+		}
+
+		// dedup
+		domains = [...new Set(domains)];
+		products = [...new Set(products)];
+		permissions = [...new Set(permissions)];
+
 		if(query.minimized === 'true' || query.minimized === true) {
 			condensed.sub = id;
 			condensed.authGroup = response.authGroup.id;

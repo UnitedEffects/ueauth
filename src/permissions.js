@@ -170,6 +170,13 @@ export default {
 					roleFilter.concat(temp);
 				}
 			});
+			// ensure member permissions are preserved
+			if(req.permissions.permissions) {
+				const temp = req.permissions.permissions.filter((p) => {
+					return (p.includes(`${req.authGroup.id}-member:::`));
+				});
+				permFilter.concat(temp);
+			}
 			// filtering out any permissions that are not part of the core products
 			if(req.permissions.permissions) {
 				req.permissions.permissions = permFilter;
@@ -179,12 +186,6 @@ export default {
 				req.permissions.roles = roleFilter;
 			}
 
-			if(req.permissions.groupAccess && req.permissions.groupAccess.includes('member')) {
-				if(!req.permissions.permissions) req.permissions.permissions = [];
-				config.MEMBER_PERMISSIONS.map((p) => {
-					req.permissions.permissions.push(p.replace('member:::', `${req.permissions.core.productCodedId}:::`));
-				});
-			}
 			req.permissions.permissions = [...new Set(req.permissions.permissions)];
 			return next();
 		} catch (error) {
