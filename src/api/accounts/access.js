@@ -35,7 +35,7 @@ const factory = {
 		let allowed = false;
 		if (org && org.emailDomains && org.emailDomains.length !== 0) {
 			org.emailDomains.map((d) => {
-				if(user(d)) allowed = true;
+				if(user.email.includes(d)) allowed = true;
 			});
 		} else allowed = true;
 		if(allowed === false) throw Boom.badRequest('This organization has restricted email domains', org.emailDomains);
@@ -78,7 +78,7 @@ const factory = {
 		};
 		// setting terms of access that must be accepted
 		if(org.access && org.access.required === true) {
-			if(!ogRecord.terms || (ogRecord.terms && org.access.required && !ogRecord.terms.accepted) ||
+			if(!ogRecord || !ogRecord.terms || (ogRecord.terms && org.access.required && !ogRecord.terms.accepted) ||
 				(ogRecord.terms && org.access.required && ogRecord.terms.accepted &&
 					ogRecord.terms.termsVersion !== org.access.termsVersion)) {
 				orgRecord.organization.terms = {

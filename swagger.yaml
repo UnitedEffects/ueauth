@@ -5698,6 +5698,9 @@ components:
             terms:
               type: string
               description: the terms of access which must be accepted. this should be either a text block or a url
+            termsVersion:
+              type: string
+              description: optional method to version your terms. recommended if you want to update them later
         meta:
           type: string
           description: additional custom structured information
