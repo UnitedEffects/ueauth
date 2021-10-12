@@ -19,7 +19,7 @@ export default {
 	},
 	async patchProduct(authGroup, id, data) {
 		data.modifiedAt = Date.now();
-		return Product.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true });
+		return Product.findOneAndUpdate({ _id: id, authGroup }, data, { new: true, overwrite: true, runValidators: true });
 	},
 	async getCoreProduct(query) {
 		return Product.findOne(query);

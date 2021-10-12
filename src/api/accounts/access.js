@@ -3,6 +3,8 @@ import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
 import dom from '../domains/domain';
 import role from '../roles/roles';
+import oidc from '../oidc/oidc';
+import n from "../plugins/notifications/notifications";
 
 const config = require('../../config');
 
@@ -23,19 +25,20 @@ const factory = {
 			roles: orgRecord.organization.roles
 		};
 	},
-	async defineAccess(authGroup, org, id, access, emailDomains = []) {
+	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN') {
 		// pull user record
+		const authGroup = ag.id;
 		const user = await dal.getAccount(authGroup, id);
 		const organization = org.id;
 		if(!user) throw Boom.notFound(`user not found: ${id}`);
 		// make sure organization allows this email address domain
 		let allowed = false;
-		if (emailDomains.length !== 0) {
-			emailDomains.map((d) => {
+		if (org && org.emailDomains && org.emailDomains.length !== 0) {
+			org.emailDomains.map((d) => {
 				if(user(d)) allowed = true;
 			});
 		} else allowed = true;
-		if(allowed === false) throw Boom.badRequest('This organization has restricted email domains', emailDomains);
+		if(allowed === false) throw Boom.badRequest('This organization has restricted email domains', org.emailDomains);
 		// check domains and roles
 		const userAccess = user.access || [];
 		if(!access.domains || !Array.isArray(access.domains)) access.domains = [];
@@ -93,7 +96,19 @@ const factory = {
 			userAccess.push(orgRecord);
 		} else userAccess[recordIndex] = orgRecord;
 		user.access = userAccess;
+		user.modifiedBy = modifiedBy;
+		user.modifiedAt = Date.now();
 		const result = await user.save();
+		if (globalSettings && globalSettings.notifications.enabled === true &&
+			ag.pluginOptions.notification.enabled === true) {
+			try {
+				// we will attempt a notification
+				const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy);
+				await n.notify(globalSettings, notificationObject, ag);
+			} catch (error) {
+				ueEvents.emit(authGroup, 'ue.plugin.notification.error', { error });
+			}
+		}
 		ueEvents.emit(authGroup, 'ue.access.defined', { sub: id, access: orgRecord });
 		return result;
 	},
@@ -321,5 +336,26 @@ const factory = {
 		}
 	}
 };
+
+function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined) {
+	const data = {
+		iss: oidc(authGroup).issuer,
+		createdBy: activeUser,
+		type: 'general',
+		formats,
+		recipientUserId: user.id,
+		recipientEmail: user.email,
+		recipientSms: user.txt,
+		screenUrl: `${config.UI_URL}`,
+		subject: `Access Provided to ${organization} on ${authGroup.name}`,
+		message: `You have been provided access to an organization called ${organization} within the ${authGroup.name} authentication network. This access allows you to access products or applications licensed and administrated by ${organization}. Please note that your access may require a 'terms of access' consent. If so, you can access your ${authGroup.name} authentication network profile by clicking the button and logging into the system. There you will be able to manage all of the organizations to which you've been provided access. If there is a terms of access notification for this organization you can accept or decline from there. Should you decline, the access will be revoked.`
+	};
+	if(formats.length === 0) {
+		data.formats = [];
+		if(user.email) data.formats.push('email');
+		if(user.txt) data.formats.push('sms');
+	}
+	return data;
+}
 
 export default factory;

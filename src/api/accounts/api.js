@@ -68,7 +68,7 @@ const api = {
 					return (ac.organization.id === req.organization.id);
 				});
 				if(!checkForOrg.length) {
-					result = await access.defineAccess(req.authGroup.id, req.organization, user._id, {});
+					result = await access.defineAccess(req.authGroup, req.organization, user._id, {}, req.globalSettings, req.user.sub);
 				} else result = user;
 			} else {
 				try {
@@ -79,7 +79,7 @@ const api = {
 						password
 					});
 					if(!newUser) throw new Error('Could not create user');
-					result = await access.defineAccess(req.authGroup.id, req.organization, newUser._id, {});
+					result = await access.defineAccess(req.authGroup, req.organization, newUser._id, {}, req.globalSettings, req.user.sub);
 				} catch (e) {
 					if(newUser && newUser._id) await acct.deleteAccount(req.authGroup.id, newUser._id);
 					throw e;
@@ -323,7 +323,7 @@ const api = {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			const result = await access.defineAccess(req.authGroup.id, req.organization, req.params.id, req.body, req.organization.emailDomains);
+			const result = await access.defineAccess(req.authGroup, req.organization, req.params.id, req.body, req.globalSettings, req.user.sub);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
