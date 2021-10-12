@@ -47,14 +47,27 @@ export default {
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.product.edit', result);
 		return result;
 	},
-	async getCoreProduct(authGroup) {
+	async getCoreProduct(authGroup, coreType) {
 		const query = {
-			name: `${authGroup.name} - ${config.PLATFORM_NAME}`,
+			authGroup: authGroup,
+			type: 'global',
+			'meta.core': coreType,
+			core: true
+		};
+		return dal.getCoreProduct(query);
+	},
+	async getCoreProducts(authGroup, name) {
+		const query = {
+			$or: [
+				{ 'meta.core': 'groupAdmin'},
+				{ 'meta.core': 'orgAdmin'}
+			],
 			authGroup: authGroup.id,
 			type: 'global',
 			core: true
 		};
-		return dal.getCoreProduct(query);
+		if(name) query.name = name;
+		return dal.getCoreProducts(query);
 	},
 	async updateCoreMetaData(authGroup, id, meta) {
 		const result = dal.updateCoreMetaData(authGroup, id, meta);

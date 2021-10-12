@@ -65,7 +65,7 @@ const roleSchema = new mongoose.Schema({
 	}
 },{ _id: false });
 
-roleSchema.index({ name: 1, authGroup: 1}, { unique: true });
+roleSchema.index({ name: 1, authGroup: 1, product: 1}, { unique: true });
 roleSchema.index({ codedId: 1, authGroup: 1, product: 1}, { unique: true });
 
 roleSchema.pre('save', function(callback) {

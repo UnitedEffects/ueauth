@@ -19,7 +19,7 @@ export default {
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
 				// ensure a core product exists
-				if (!req.permissions.core || !req.permissions.core.product) throw Boom.forbidden(ERROR_MESSAGE);
+				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group access
 				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
 				// if root user, they have priority
@@ -41,10 +41,10 @@ export default {
 				targets.map((t) => {
 					if(bFound === false) {
 						requestTarget = (!requestTarget) ? t : `${requestTarget}-${t}`;
-						let requestPermissions = [];
 						// we assume that if a codedId exists, that will be the likely qualifier
 						let thisRequest = `${req.permissions.core.productCodedId || req.permissions.core.product}:::${requestTarget}::${requestAction}`;
-						requestPermissions = req.permissions.permissions.filter((p) => {
+						console.info(thisRequest); //todo delete this...
+						let requestPermissions = req.permissions.permissions.filter((p) => {
 							return p.includes(thisRequest);
 						});
 						if(requestPermissions.length !== 0) {
@@ -122,37 +122,71 @@ export default {
 			}
 
 			// we look up the core product and ensure all the permissions match the id associated.
-			const coreProduct = await helper.cacheCoreProduct(req.query.resetCache, req.authGroup);
+			const coreProducts = await helper.cacheCoreProduct(req.query.resetCache, req.authGroup);
+			if(!coreProducts.length) throw new Error('Could not identify core products for this authgroup');
 			req.permissions.core = {
 				group: req.permissions.req_group,
-				product: coreProduct.id || coreProduct._id,
-				productCodedId: coreProduct.codedId
+				products: [],
+				productCodedIds: []
 			};
+			coreProducts.map((p) => {
+				req.permissions.core.products.push(p.id || p._id);
+				req.permissions.core.productCodedIds.push(p.codedId);
+			});
 			// filtering out any product references that are not the core from the user's permissions
 			if(req.permissions.products) {
 				req.permissions.products = req.permissions.products.filter((p) => {
-					return (p === req.permissions.core.product);
+					return (req.permissions.core.products.includes(p));
 				});
 			}
 			// filtering out any permissions that are not from the core product from the user's permissions
+			let permFilter = [];
+			let roleFilter = [];
+			req.permissions.core.productCodedIds.map((ci) => {
+				if(req.permissions.permissions) {
+					const temp = req.permissions.permissions.filter((p) => {
+						return (p.includes(`${ci}:::`));
+					});
+					permFilter.concat(temp);
+				}
+				if(req.permissions.roles) {
+					const temp = req.permissions.roles.filter((r) => {
+						return (r.includes(`${ci}::`));
+					});
+					roleFilter.concat(temp);
+				}
+			});
+			req.permissions.core.products.map((pr) => {
+				if(req.permissions.permissions) {
+					const temp = req.permissions.permissions.filter((p) => {
+						return (p.includes(`${pr}:::`));
+					});
+					permFilter.concat(temp);
+				}
+				if(req.permissions.roles) {
+					const temp = req.permissions.roles.filter((r) => {
+						return (r.includes(`${pr}::`));
+					});
+					roleFilter.concat(temp);
+				}
+			});
+			// ensure member permissions are preserved
 			if(req.permissions.permissions) {
-				req.permissions.permissions = req.permissions.permissions.filter((p) => {
-					return (p.includes(`${req.permissions.core.productCodedId}:::`) || p.includes(`${req.permissions.core.product}:::`));
+				const temp = req.permissions.permissions.filter((p) => {
+					return (p.includes(`${req.authGroup.id}-member:::`));
 				});
+				permFilter.concat(temp);
+			}
+			// filtering out any permissions that are not part of the core products
+			if(req.permissions.permissions) {
+				req.permissions.permissions = permFilter;
 			}
 			// filtering out any roles that are not from the core product from the user's permissions
 			if(req.permissions.roles) {
-				req.permissions.roles = req.permissions.roles.filter((r) => {
-					return (r.includes(`${req.permissions.core.productCodedId}::`) || r.includes(`${req.permissions.core.product}::`));
-				});
+				req.permissions.roles = roleFilter;
 			}
-			if(req.permissions.groupAccess && req.permissions.groupAccess.includes('member')) {
-				if(!req.permissions.permissions) req.permissions.permissions = [];
-				config.MEMBER_PERMISSIONS.map((p) => {
-					req.permissions.permissions.push(p.replace('member:::', `${req.permissions.core.productCodedId}:::`));
-				});
-				req.permissions.permissions = [...new Set(req.permissions.permissions)];
-			}
+
+			req.permissions.permissions = [...new Set(req.permissions.permissions)];
 			return next();
 		} catch (error) {
 			next(error);
@@ -218,7 +252,7 @@ function translateMethod(method) {
 /**
  * Roles: owner, member, developer (dev is only through plugin)
  * Actions: create update:all|own read:all|own delete:all|own
- */
+
 const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operations:client', 'operations:reset-user-password', 'operations:user', 'operations:invite', 'operations', 'token:initial-access', 'token', 'notification', 'notifications'];
 
 // this roles is for client-credential tokens
@@ -256,3 +290,4 @@ const Client = [
 		actions: 'create:own'
 	}
 ];
+ */

@@ -38,10 +38,14 @@ export default {
 			'client_name': config.PLATFORM_NAME,
 			'grant_types': ['client_credentials', 'authorization_code', 'implicit'],
 			'response_types': ['code id_token', 'code', 'id_token'],
-			'redirect_uris': [`https://${config.UI_URL}`, `https://${config.SWAGGER}/oauth2-redirect.html`],
-			'post_logout_redirect_uris': [`https://${config.UI_URL}`, `https://${config.SWAGGER}/oauth2-redirect.html`],
+			'redirect_uris': [`https://${config.UI_URL}`],
+			'post_logout_redirect_uris': [`https://${config.UI_URL}`],
 			'auth_group': authGroup.id,
 		};
+		if(config.ENV !== 'dev') {
+			options['post_logout_redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
+			options['redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
+		}
 		if(authGroup.primaryDomain) {
 			if (authGroup.primaryDomain !== config.UI_URL) {
 				let agDom = authGroup.primaryDomain;

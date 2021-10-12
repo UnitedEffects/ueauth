@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
-import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
 
@@ -54,7 +53,21 @@ const accountSchema = new mongoose.Schema({
 			organization: {
 				id: String,
 				domains: [String],
-				roles: [String]
+				roles: [String],
+				terms: {
+					required: {
+						type: Boolean,
+						default: false
+					},
+					accepted: {
+						type: Boolean,
+						default: false
+					},
+					termsDeliveredOn: Date,
+					termsOfAccess: String,
+					termsAcceptedOn: Date,
+					termsVersion: String
+				}
 			}
 		}
 	],
@@ -67,6 +80,7 @@ const accountSchema = new mongoose.Schema({
 
 accountSchema.index({ email: 1, authGroup: 1}, { unique: true });
 accountSchema.index({ username: 1, authGroup: 1}, { unique: true });
+accountSchema.index( { email: 'text', username: 'text' });
 
 accountSchema.pre('save', function(callback) {
 	const account = this;
@@ -106,8 +120,6 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret._id;
 	delete ret.password;
 	delete ret.blocked;
-	//delete ret.organizations;
-	//delete ret.orgDomains;
 	delete ret.access;
 	delete ret.__v;
 };

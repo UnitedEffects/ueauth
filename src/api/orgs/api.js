@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { say } from '../../say';
 import org from './orgs';
+import dom from '../domains/domain';
 import permissions from '../../permissions';
 import ueEvents from '../../events/ueEvents';
 
@@ -15,8 +16,18 @@ const api = {
 				req.body.createdBy = req.user.sub;
 				req.body.modifiedBy = req.user.sub;
 			}
-			const result = await org.writeOrg(req.authGroup.id, req.body);
-			return res.respond(say.created(result, RESOURCE));
+			const organization = await org.writeOrg(req.authGroup.id, req.body);
+			const adminDomain = {
+				name: `${req.authGroup.name} - ${organization.name} - Administrative Domain`,
+				description: `Use this domain to enable user and permissions management of ${organization.name}. Do not delete as system access will be compromised.`,
+				authGroup: req.authGroup.id,
+				organization: organization._id,
+				createdBy: req.user.sub,
+				associatedOrgProducts: organization.associatedProducts,
+				core: true
+			};
+			const domain = await dom.writeDomain(adminDomain);
+			return res.respond(say.created({ organization, domain }, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.organization.error', error);
 			next(error);

@@ -174,7 +174,7 @@ function oidcConfig(g) {
 			}
 		},
 		extraClientMetadata: {
-			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url', 'client_optional_skip_logout_prompt'],
+			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url', 'client_optional_skip_logout_prompt', 'associated_product'],
 			validator(key, value, metadata) {
 				if (key === 'auth_group') {
 					try {

@@ -101,9 +101,9 @@ export default {
 	},
 	async cacheCoreProduct(reset, authGroup) {
 		let result;
-		const cache = (reset) ? undefined : await myCache.get(`${authGroup.id}:CoreProduct`);
+		const cache = (reset) ? undefined : await myCache.get(`${authGroup.id}:CoreAdminPortal`);
 		if(!cache) {
-			result = await product.getCoreProduct(authGroup);
+			result = await product.getCoreProducts(authGroup);
 		} else {
 			result = JSON.parse(cache);
 		}
@@ -112,7 +112,7 @@ export default {
 			const holdThis = JSON.parse(JSON.stringify(result));
 			holdThis._id = result._id;
 			holdThis.core = result.core;
-			await myCache.set(`${authGroup.id}:CoreProduct`, JSON.stringify(holdThis), 86400);
+			await myCache.set(`${authGroup.id}:CoreAdminPortal`, JSON.stringify(holdThis), 86400);
 		}
 		return result;
 	},

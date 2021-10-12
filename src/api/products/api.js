@@ -5,9 +5,9 @@ import perms from '../permissions/permissions';
 import permissions from '../../permissions';
 import ueEvents from '../../events/ueEvents';
 import roles from '../roles/roles';
-import {nanoid} from "nanoid";
 const coreProductInfo = require('../../../init/currentCore.json');
-const corePermissions = require('../../../init/permissions.json');
+const coreAdminPermissions = require('../../../init/groupAdminPermissions.json');
+const coreOrgPermissions = require('../../../init/orgProductPermissions.json');
 const coreRoles = require('../../../init/roles.json');
 const config = require('../../config');
 const RESOURCE = 'Product';
@@ -16,24 +16,32 @@ const api = {
 	async getCoreProductMetaData(req, res, next) {
 		try {
 			if (!req.authGroup) throw Boom.badRequest('AuthGroup not defined');
-			const result = await prod.getCoreProduct(req.authGroup);
-			if(!result) throw Boom.badRequest('No Core Product Detected. Contact the Admin');
+			const result = await prod.getCoreProducts(req.authGroup);
+			if(!result.length) throw Boom.badRequest('No Core Product Detected. Contact the Admin');
 			const output = {
 				id: req.authGroup.id,
 				prettyName: req.authGroup.prettyName,
-				coreProduct: result.name,
-				coreProductId: result.id,
-				coreAccessDataVersion: {
-					permissions: (result.meta) ? result.meta.permissionsVersion : undefined,
-					roles: (result.meta) ? result.meta.rolesVersion : undefined
-				},
+				coreProducts: result,
 				availableVersion: coreProductInfo,
+				force: false,
 				updateRequired: false
 			};
-			if(!result.meta || !result.meta.permissionsVersion || !result.meta.rolesVersion) output.updateRequired = true;
-			else {
-				if(result.meta.permissionsVersion !== coreProductInfo.permissionsVersion) output.updateRequired = true;
-				if(result.meta.rolesVersion !== coreProductInfo.rolesVersion) output.updateRequired = true;
+			result.map((r) => {
+				const prodCheck = JSON.parse(JSON.stringify(r));
+				if(!prodCheck.meta && !prodCheck.meta.permissionsVersion && !prodCheck.meta.rolesVersion) {
+					output.updateRequired = true;
+					output.force = true;
+				} else {
+					if(prodCheck.meta.permissionsVersion !== coreProductInfo.permissionsVersion) {
+						output.updateRequired = true;
+					}
+					if(prodCheck.meta.rolesVersion !== coreProductInfo.rolesVersion) {
+						output.updateRequired = true;
+					}
+				}
+			});
+			if(output.updateRequired === true && coreProductInfo.force === true) {
+				output.force = true;
 			}
 			return res.respond(say.ok(output, RESOURCE));
 		} catch(error) {
@@ -43,73 +51,90 @@ const api = {
 	async updateCoreProduct(req, res, next) {
 		try {
 			if (!req.authGroup) throw Boom.badRequest('AuthGroup not defined');
-			const result = await prod.getCoreProduct(req.authGroup);
-			if(!result) throw Boom.badRequest('No Core Product Detected. Contact the Admin');
-			let EXISTING = JSON.parse(JSON.stringify(await perms.getPermissions(req.authGroup.id, result.id, {})));
-			const bulkWritePermissions = [];
-			const bulkDeletePermissions = [];
-			corePermissions.map((p) => {
-				const updatedCode = (p.ownershipRequired===true) ? `${p.target}::${p.action}:own` : `${p.target}::${p.action}`;
-				const checkExisting = EXISTING.filter((p) => {
-					return p.coded === updatedCode;
-				});
-				if(!checkExisting.length) {
-					p.description = `${config.PLATFORM_NAME} permission. System Created. DO NOT DELETE`;
-					p.product = result.id;
-					p.authGroup = req.authGroup.id;
-					bulkWritePermissions.push(p);
-				}
-				if(checkExisting.length) {
-					if(p.DEPRECATED) {
-						const destroyId = checkExisting[0]._id || checkExisting[0].id;
-						bulkDeletePermissions.push(destroyId);
-						EXISTING = EXISTING.filter((p) => {
-							return (p !== destroyId);
-						});
-					}
-				}
-			});
-			const updated = await perms.bulkWrite(req.authGroup.id, bulkWritePermissions);
-			EXISTING = EXISTING.concat(updated);
-			const output = {
-				added: bulkWritePermissions,
-				removed: bulkDeletePermissions,
-				roles: []
-			};
-			const roleTask = coreRoles.map(async (rl) => {
-				const query = {};
-				query.name = rl.role;
-				query.authGroup = req.authGroup.id;
-				query.product = result.id;
-				query.productCodedId = result.codedId;
-				query.core = true;
-				let newpermissions = [];
-				rl.permissions.map((p) => {
-					const found = EXISTING.filter((list) => {
-						return list.coded === p;
+			const results = await prod.getCoreProducts(req.authGroup);
+			if(!results.length) throw Boom.badRequest('No Core Product Detected. Contact the Admin');
+			let output = {};
+			const main = results.map(async (result) => {
+				let EXISTING = JSON.parse(JSON.stringify(await perms.getPermissions(req.authGroup.id, result.id, {})));
+				const bulkWritePermissions = [];
+				const bulkDeletePermissions = [];
+				const corePermissions = (result.meta && result.meta.core && result.meta.core === 'groupAdmin')
+					? coreAdminPermissions : coreOrgPermissions;
+				corePermissions.map((p) => {
+					const updatedCode = (p.ownershipRequired===true) ? `${p.target}::${p.action}:own` : `${p.target}::${p.action}`;
+					const checkExisting = EXISTING.filter((p) => {
+						return p.coded === updatedCode;
 					});
-					newpermissions.push(`${found[0].id} ${found[0].coded}`);
+					if(!checkExisting.length) {
+						p.description = `${config.PLATFORM_NAME} permission. System Created. DO NOT DELETE`;
+						p.product = result.id;
+						p.authGroup = req.authGroup.id;
+						bulkWritePermissions.push(p);
+					} else {
+						if(p.DEPRECATED) {
+							const destroyId = checkExisting[0]._id || checkExisting[0].id;
+							bulkDeletePermissions.push(destroyId);
+							EXISTING = EXISTING.filter((p) => {
+								return (p !== destroyId);
+							});
+						}
+					}
 				});
-				newpermissions = [...new Set(newpermissions)];
-				let updatedRole = await roles.updateCoreRole(req.authGroup.id, query, { permissions: newpermissions });
-				if(!updatedRole) {
-					const data = {
-						...query,
-						createdBy: req.user.sub || 'SYSTEM',
-						description : (!rl.description) ? `${config.PLATFORM_NAME} Role. System Generated. Do Not Delete` : rl.description,
-						permissions: newpermissions
-					};
-					updatedRole = await roles.writeRoleFull(data);
-				}
-				output.roles.push(updatedRole);
-				return updatedRole;
+				const updated = await perms.bulkWrite(req.authGroup.id, bulkWritePermissions);
+				EXISTING = EXISTING.concat(updated);
+				output[`${result.name}`] = {
+					id: result.id || result._id,
+					added: bulkWritePermissions,
+					removed: bulkDeletePermissions,
+					roles: []
+				};
+				const prodRoles = (result.meta && result.meta.core && result.meta.core === 'groupAdmin')
+					? coreRoles.groupAdminPortal : coreRoles.orgAdminPortal;
+				const roleTask = prodRoles.map(async (rl) => {
+					const query = {};
+					query.name = rl.role;
+					query.authGroup = req.authGroup.id;
+					query.product = result.id;
+					query.productCodedId = result.codedId;
+					query.core = true;
+					let newpermissions = [];
+					rl.permissions.map((p) => {
+						const found = EXISTING.filter((list) => {
+							return list.coded === p;
+						});
+						if(found.length !== 0) {
+							newpermissions.push(`${found[0].id} ${found[0].coded}`);
+						} else if (config.ENV !== 'production') {
+							throw new Error('A permission is being added to a role that does not exist');
+						}
+					});
+					newpermissions = [...new Set(newpermissions)];
+					let updatedRole = await roles.updateCoreRole(req.authGroup.id, query, { permissions: newpermissions });
+					if(!updatedRole) {
+						const data = {
+							...query,
+							createdBy: req.user.sub || 'SYSTEM',
+							description : (!rl.description)
+								? `${req.authGroup.name} Group Admin Portal Role. System Generated. Do Not Delete` : rl.description,
+							permissions: newpermissions
+						};
+						updatedRole = await roles.writeRoleFull(data);
+					}
+					output[`${result.name}`].roles.push(updatedRole);
+					return updatedRole;
+				});
+				await Promise.all(roleTask);
+				const newMeta = JSON.parse(JSON.stringify(coreProductInfo));
+				delete newMeta.force;
+				newMeta.core = result.meta.core;
+				await prod.updateCoreMetaData(req.authGroup.id, result.id, newMeta);
+				const permTask = bulkDeletePermissions.map(async (p) => {
+					return perms.deletePermission(req.authGroup.id, result.id, p);
+				});
+				await Promise.all(permTask);
+				return result;
 			});
-			await Promise.all(roleTask);
-			await prod.updateCoreMetaData(req.authGroup.id, result.id, coreProductInfo);
-			const permTask = bulkDeletePermissions.map(async (p) => {
-				return perms.deletePermission(req.authGroup.id, result.id, p);
-			});
-			await Promise.all(permTask);
+			await Promise.all(main);
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
 			next(error);
