@@ -93,5 +93,22 @@ export default {
 			authGroup,
 			$text : { $search : q }
 		}).select({ _id: 1, email: 1, username: 1});
-	}
+	},
+	async getAllOrgs(authGroup, id) {
+		let output = {
+			id,
+			authGroup,
+			access: []
+		};
+		const result = await Account.findOne({ _id:id, authGroup }).select({ access: 1 });
+		if(result && result.access.length !== 0) {
+			result.access.map((org) => {
+				output.access.push(org);
+			});
+		}
+		return output;
+	},
+	async checkOneUserOrganizations(authGroup, organizations, id) {
+		return Account.findOne({ _id: id, authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
+	},
 };

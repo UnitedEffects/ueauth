@@ -38,8 +38,21 @@ router.delete('/:group/access/organization/:org/account/:id', [
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('userAccess')
+	m.access('accounts', 'organization')
 ], user.removeOrgFromAccess);
+router.get('/:group/access/organizations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], user.getAllOrgs);
+router.put('/:group/access/organization/:org/terms', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], user.acceptOrDeclineOrgTerms);
 router.get('/:group/access/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

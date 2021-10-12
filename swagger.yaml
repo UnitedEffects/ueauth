@@ -1115,7 +1115,7 @@ paths:
         description: Updated access object
         required: true
 
-# User Access
+  # User Access
   /api/{group}/access/account/{id}:
     get:
       tags:
@@ -1265,6 +1265,99 @@ paths:
       security:
         - bearer: []
         - openId: []
+
+  /api/{group}/access/organizations:
+    get:
+      tags:
+        - User Access
+      description: returns the list of organizations to which a user (the caller) has been added
+      operationId: getMyOrgs
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/access/organization/{org}/terms:
+    put:
+      tags:
+        - User Access
+      summary: Accept or decline terms of access for an organization. Declining will remove you from the organization.
+      description: Accept or decline terms of access for an organization. Declining will remove you from the organization.
+      operationId: acceptOrDeclineOrg
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: Organization id access is being applied to
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - 'accept'
+                    - 'decline'
+        required: true
 
   # Invite APIs
   /api/{group}/invite:
@@ -5553,6 +5646,10 @@ components:
     writeOrganization:
       type: object
       additionalProperties: false
+      required:
+        - name
+        - description
+        - contactEmail
       description: An organization is a tenant within an AuthGroup
       properties:
         externalId:
@@ -5581,12 +5678,25 @@ components:
           type: string
         contactPhone:
           type: string
+        contactEmail:
+          type: string
+          format: email
         emailDomains:
           type: array
           items:
             type: string
             description: email domains that are allowed
             example: example.com
+        access:
+          type: object
+          properties:
+            required:
+              type: boolean
+              default: false
+              description: if set to true, users which are added must agree to terms of access
+            terms:
+              type: string
+              description: the terms of access which must be accepted. this should be either a text block or a url
         meta:
           type: string
           description: additional custom structured information
@@ -5626,6 +5736,8 @@ components:
     writeDomain:
       type: object
       additionalProperties: false
+      required:
+        - name
       properties:
         name:
           type: string

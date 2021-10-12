@@ -68,7 +68,7 @@ const api = {
 					return (ac.organization.id === req.organization.id);
 				});
 				if(!checkForOrg.length) {
-					result = await access.defineAccess(req.authGroup.id, req.organization.id, user._id, {});
+					result = await access.defineAccess(req.authGroup.id, req.organization, user._id, {});
 				} else result = user;
 			} else {
 				try {
@@ -79,7 +79,7 @@ const api = {
 						password
 					});
 					if(!newUser) throw new Error('Could not create user');
-					result = await access.defineAccess(req.authGroup.id, req.organization.id, newUser._id, {});
+					result = await access.defineAccess(req.authGroup.id, req.organization, newUser._id, {});
 				} catch (e) {
 					if(newUser && newUser._id) await acct.deleteAccount(req.authGroup.id, newUser._id);
 					throw e;
@@ -323,7 +323,7 @@ const api = {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			const result = await access.defineAccess(req.authGroup.id, req.organization.id, req.params.id, req.body, req.organization.emailDomains);
+			const result = await access.defineAccess(req.authGroup.id, req.organization, req.params.id, req.body, req.organization.emailDomains);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
@@ -350,9 +350,41 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to remove');
-			if(req.user.sub !== req.params.id) await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(!req.permissions.permissions) throw Boom.preconditionRequired('Permission error');
+			const orgLevelPermission = req.permissions.permissions.filter((p) => {
+				return (p.includes('accounts-organization::delete'));
+			});
+			if(!orgLevelPermission.length) await permissions.enforceOwn(req.permissions, req.params.id);
+			else await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await access.removeOrgFromAccess(req.authGroup.id, req.organization.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, 'Access'));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);
+			next(error);
+		}
+	},
+	async getAllOrgs(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			const id = req.user.sub;
+			const result = await access.getAllOrgs(req.authGroup.id, id);
+			return res.respond(say.ok(result, 'Access'));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async acceptOrDeclineOrgTerms(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to remove');
+			if(!req.body.action) throw Boom.badRequest('You must specify an action: accept or decline');
+			const id = req.user.sub;
+			const org = await access.checkOneUserOrganizations(req.authGroup, req.organization.id, id);
+			if(!org || org.id !== id) {
+				throw Boom.badRequest('You have not been added to the organization', { organization: req.organization.id });
+			}
+			const result = await access.userActionOnOrgTerms(req.authGroup, req.organization.id, id, req.body.action);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);

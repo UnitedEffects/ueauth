@@ -53,7 +53,21 @@ const accountSchema = new mongoose.Schema({
 			organization: {
 				id: String,
 				domains: [String],
-				roles: [String]
+				roles: [String],
+				terms: {
+					required: {
+						type: Boolean,
+						default: false
+					},
+					accepted: {
+						type: Boolean,
+						default: false
+					},
+					termsDeliveredOn: Date,
+					termsOfAccess: String,
+					termsAcceptedOn: Date,
+					termsVersion: String
+				}
 			}
 		}
 	],
@@ -106,8 +120,6 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret._id;
 	delete ret.password;
 	delete ret.blocked;
-	//delete ret.organizations;
-	//delete ret.orgDomains;
 	delete ret.access;
 	delete ret.__v;
 };

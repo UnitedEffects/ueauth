@@ -141,7 +141,7 @@ export default {
 				domains: [initDomain.id],
 				roles: [adminRole[0].id]
 			};
-			initUserAccess = await access.defineAccess(authGroup.id, initOrg.id, creator.id, accessBody);
+			initUserAccess = await access.defineAccess(authGroup.id, initOrg, creator.id, accessBody);
 			return {
 				products: [ initProductAdmin, initProductOrg ],
 				organization: initOrg,
