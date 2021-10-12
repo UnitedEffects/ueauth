@@ -9,7 +9,7 @@ export default {
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
-			recipientSms: user.sms,
+			recipientSms: user.txt,
 			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/interaction/${uid}/passwordless?token=${iAccessToken.jti}&sub=${user.id}`,
 			subject: `${authGroup.prettyName} - Password Free Login`,
 			message: 'You have requested a password free login. Click the link to complete your authentication. This link will expire in 15 minutes.',

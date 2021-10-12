@@ -1703,6 +1703,7 @@ paths:
       summary: Limited update capability from outside normal oidc api - auth group owner
       description: Limited update capability from outside normal oidc api - auth group owner
       operationId: patchOne
+      deprecated: true
       parameters:
         - name: group
           in: path

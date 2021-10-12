@@ -159,6 +159,7 @@ router.delete('/:group/account/:id', [
 router.put('/:group/organization/:org/account',[
 	m.validateAuthGroup,
 	m.validateOrganization,
+	m.getGlobalPluginSettings,
 	m.isAuthenticated,
 	m.getGlobalPluginSettings,
 	m.permissions,
@@ -184,8 +185,9 @@ router.get('/:group/clients', [
 	m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access('clients')], client.get);
 router.get('/:group/client/:id', [
 	m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access('clients')], client.getOne);
+/*
 router.patch('/:group/client/:id', [
-	m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access('clients')], client.patchOne);
+	m.validateAuthGroup, 	m.isAuthenticated, m.schemaCheck, m.permissions, m.access('clients')], client.patchOne);*/
 router.delete('/:group/client/:id', [
 	m.validateAuthGroup, m.isAuthenticated, m.permissions, m.access('clients')], client.deleteOne);
 

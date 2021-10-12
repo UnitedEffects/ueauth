@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
+import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
 
@@ -52,7 +53,18 @@ const productSchema = new mongoose.Schema({
 		default: false
 	},
 	meta: metaSchema,
-	associatedClients: [String],
+	associatedClients: [
+		{
+			type: String,
+			validate: {
+				validator: function (v) {
+					const ag = this.authGroup;
+					return h.validateClientReference(mongoose.model('client'), v, ag);
+				},
+				message: 'Client does not exist in this authGroup'
+			}
+		}
+	],
 	_id: {
 		type: String,
 		default: uuid

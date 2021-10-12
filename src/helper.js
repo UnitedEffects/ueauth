@@ -145,6 +145,10 @@ export default {
 		const result = await model.findOne({ _id: id, authGroup });
 		return !!result;
 	},
+	async validateClientReference (model, id, authGroup) {
+		const result = await model.findOne({ _id: id, 'payload.auth_group': authGroup });
+		return !!result;
+	},
 	async validateOrgProductReference (model, orgId, authGroup, productId) {
 		const result = await model.findOne({ _id: orgId, authGroup }).select( { associatedProducts: 1 });
 		if(!result) return false;

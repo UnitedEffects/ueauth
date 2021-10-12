@@ -16,11 +16,11 @@ const api = {
             next(error);
         }
     },
-
     async getOne(req, res, next) {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+            // todo, this needs revision
             await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await client.getOne(req.authGroup, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
@@ -29,7 +29,7 @@ const api = {
             next(error);
         }
     },
-
+    /*
     async patchOne(req, res, next) {
         try {
             // We may deprecate this in favor of the more secure update process built into OIDC
@@ -72,7 +72,7 @@ const api = {
             next(error);
         }
     },
-
+*/
     async deleteOne(req, res, next) {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));

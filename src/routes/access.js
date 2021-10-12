@@ -21,6 +21,7 @@ router.put('/:group/updatecore', [
 router.put('/:group/access/organization/:org/account/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
+	m.getGlobalPluginSettings,
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
