@@ -126,7 +126,6 @@ const api = {
 				client = await cl.generateClient(req.authGroup);
 			} catch (e) {
 				if(e.code === 11000){
-					console.info('found a duplicate');
 					client = await cl.getOneByNameAndAG(req.authGroup, config.PLATFORM_NAME);
 				} else throw e;
 			}

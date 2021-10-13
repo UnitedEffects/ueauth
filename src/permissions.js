@@ -42,19 +42,22 @@ export default {
 					if(bFound === false) {
 						requestTarget = (!requestTarget) ? t : `${requestTarget}-${t}`;
 						// we assume that if a codedId exists, that will be the likely qualifier
-						let thisRequest = `${req.permissions.core.productCodedId || req.permissions.core.product}:::${requestTarget}::${requestAction}`;
-						console.info(thisRequest); //todo delete this...
-						let requestPermissions = req.permissions.permissions.filter((p) => {
-							return p.includes(thisRequest);
-						});
-						if(requestPermissions.length !== 0) {
-							bFound = true;
-							if(requestPermissions.length === 1) {
-								if(requestPermissions[0].includes(':own')) {
-									req.permissions.enforceOwn = true;
+						const productList = (req.permissions.core.productCodedIds.length) ?
+							req.permissions.core.productCodedIds : req.permissions.core.products;
+						productList.map((pcId) => {
+							let thisRequest = `${pcId}:::${requestTarget}::${requestAction}`;
+							let requestPermissions = req.permissions.permissions.filter((p) => {
+								return p.includes(thisRequest);
+							});
+							if(requestPermissions.length !== 0) {
+								bFound = true;
+								if(requestPermissions.length === 1) {
+									if(requestPermissions[0].includes(':own')) {
+										req.permissions.enforceOwn = true;
+									}
 								}
 							}
-						}
+						});
 					}
 				});
 
@@ -108,6 +111,7 @@ export default {
 				if(accessObject['x-access-roles']) req.permissions.roles = accessObject['x-access-roles'].split(' ');
 				if(accessObject['x-access-permissions']) req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 			}
+
 			// Root super user
 			if(req.user.subject_group && req.user.subject_group.prettyName === 'root') {
 				if(req.user.group === req.permissions.sub_group){
@@ -147,13 +151,13 @@ export default {
 					const temp = req.permissions.permissions.filter((p) => {
 						return (p.includes(`${ci}:::`));
 					});
-					permFilter.concat(temp);
+					permFilter = permFilter.concat(temp);
 				}
 				if(req.permissions.roles) {
 					const temp = req.permissions.roles.filter((r) => {
 						return (r.includes(`${ci}::`));
 					});
-					roleFilter.concat(temp);
+					roleFilter = roleFilter.concat(temp);
 				}
 			});
 			req.permissions.core.products.map((pr) => {
@@ -161,13 +165,13 @@ export default {
 					const temp = req.permissions.permissions.filter((p) => {
 						return (p.includes(`${pr}:::`));
 					});
-					permFilter.concat(temp);
+					permFilter = permFilter.concat(temp);
 				}
 				if(req.permissions.roles) {
 					const temp = req.permissions.roles.filter((r) => {
 						return (r.includes(`${pr}::`));
 					});
-					roleFilter.concat(temp);
+					roleFilter = roleFilter.concat(temp);
 				}
 			});
 			// ensure member permissions are preserved
@@ -175,7 +179,7 @@ export default {
 				const temp = req.permissions.permissions.filter((p) => {
 					return (p.includes(`${req.authGroup.id}-member:::`));
 				});
-				permFilter.concat(temp);
+				permFilter = permFilter.concat(temp);
 			}
 			// filtering out any permissions that are not part of the core products
 			if(req.permissions.permissions) {
