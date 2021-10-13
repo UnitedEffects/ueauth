@@ -11,6 +11,8 @@ import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
 const cryptoRandomString = require('crypto-random-string');
 
+const config = require('../../config');
+
 const RESOURCE = 'Account';
 
 const api = {
@@ -120,7 +122,14 @@ const api = {
 			req.body.verified = true;
 			account = await acct.writeAccount(req.body);
 			if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
-			client = await cl.generateClient(req.authGroup);
+			try {
+				client = await cl.generateClient(req.authGroup);
+			} catch (e) {
+				if(e.code === 11000){
+					console.info('found a duplicate');
+					client = await cl.getOneByNameAndAG(req.authGroup, config.PLATFORM_NAME);
+				} else throw e;
+			}
 			if(!client) throw Boom.expectationFailed('Auth Group Client Not Created! Rolling back.');
 			const access = await initAccess.createDefaultOrgAndDomain(req.authGroup, account);
 			let g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);

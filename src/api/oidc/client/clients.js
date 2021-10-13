@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { snakeCase } from 'lodash';
 import qs from "qs";
 import axios from "axios";
+import auth from "../../../auth/auth";
 
 const config = require('../../../config');
 const Validator = require('jsonschema').Validator;
@@ -29,6 +30,10 @@ const snakeKeys = (obj) => {
 };
 
 export default {
+	async getOneByNameAndAG(authGroup, name) {
+		return dal.getOneByNameAndAG(authGroup, name);
+	},
+
 	async generateClient(authGroup) {
 		const options = {
 			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),

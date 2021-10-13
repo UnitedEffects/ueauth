@@ -8,7 +8,6 @@ const metaSchema = new mongoose.Schema({
 	// this allows us to create unique internal identifiers when required for setup.
 	core: {
 		type: String,
-		unique: true,
 		default: uuid
 	},
 }, { _id: false, strict: false });
@@ -73,7 +72,7 @@ const productSchema = new mongoose.Schema({
 
 productSchema.index({ name: 1, authGroup: 1}, { unique: true });
 productSchema.index({ codedId: 1, authGroup: 1}, { unique: true });
-
+productSchema.index({ 'meta.core': 1, authGroup: 1}, { unique: true });
 
 productSchema.pre('save', function(callback) {
 	//license check

@@ -48,6 +48,12 @@ export default {
 			$or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
 		}).select({ 'payload.client_secret': 0 });
 	},
+	async getOneByNameAndAG(authGroup, name) {
+		return Client.findOne({
+			'payload.client_name': name,
+			$or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
+		}).select({ payload: 1 });
+	},
 	async getOneByName(authGroup, name) {
 		return Client.findOne({
 			'payload.client_name': name,
