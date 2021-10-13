@@ -83,7 +83,6 @@ const config = {
 		registration: true,
 		account: true,
 		group: true,
-		invite: true,
 		pluginNotification: true,
 		organization: true,
 		domain: true,

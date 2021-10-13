@@ -97,14 +97,6 @@ const OP_EVENTS = {
 		'ue.group.destroy',
 		'ue.group.initialize'
 	],
-	invite: [
-		'ue.invite.create',
-		'ue.invite.destroy',
-		'ue.invite.accepted',
-		'ue.invite.declined',
-		'ue.invite.resent',
-		'ue.invite.error'
-	],
 	pluginNotification: [
 		'ue.plugin.notification.create',
 		'ue.plugin.notification.sent',
