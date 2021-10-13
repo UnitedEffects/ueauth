@@ -132,7 +132,7 @@ router.get('/:group/accounts/search', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('accounts', 'organization'),
+	m.access('accounts-organization'),
 ], account.searchAccounts);
 router.get('/:group/account/:id', [
 	m.validateAuthGroup,

@@ -146,6 +146,27 @@
     "description": "UE Core permission"
   },
   {
+    "target": "domains-limited",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains-limited",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains-limited",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
     "target": "products",
     "action": "read",
     "ownershipRequired": true,

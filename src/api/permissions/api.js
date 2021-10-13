@@ -30,7 +30,7 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
-			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
+			await permissions.enforceOwnProduct(req.permissions, req.product.id);
 			const result = await perm.getPermissions(req.authGroup.id, req.product.id, req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -55,7 +55,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
-			await permissions.enforceOwnProduct(req.permissions, req.product.id);
+			if (req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const permission = await perm.getPermission(req.authGroup.id, req.product.id, req.params.id);
 			if(permission.core === true) await permissions.enforceRoot(req.permissions);
 			const result = await perm.deletePermission(req.authGroup.id, req.product.id, req.params.id);
@@ -71,7 +71,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
-			await permissions.enforceOwnProduct(req.permissions, req.product.id);
+			if (req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const permission = await perm.getPermission(req.authGroup.id, req.product.id, req.params.id);
 			const result = await roles.checkForPermissions(req.authGroup.id, req.product.id, `${permission.id} ${permission.coded}`);
 			return res.respond(say.ok(result, RESOURCE));
@@ -84,7 +84,7 @@ const api = {
 			try {
 				if (!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
 				if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
-				await permissions.enforceOwnProduct(req.permissions, req.product.id);
+				if (req.permissions.enforceOwn === true) throw Boom.forbidden();
 				const result = await perm.getTargetsOrActions(meta, req.authGroup.id, req.product.id);
 				return res.respond(say.ok(result, RESOURCE));
 			} catch (error) {

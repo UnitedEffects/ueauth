@@ -13,10 +13,19 @@ export default {
 	},
 	async getAllRolesAcrossProductsByOrg(g, o, query) {
 		query.query.authGroup = g;
-		query.query.$or = [
-			{ organization: o },
-			{ organization: { $exists: false } }
-		];
+		let temp = {
+			$or: []
+		};
+		o.associatedProducts.map((product) => {
+			temp.$or.push({ product });
+		});
+		query.query.$and = [temp];
+		query.query.$and.push({
+			$or: [
+				{organization: o.id},
+				{organization: {$exists: false}}
+			]
+		});
 		return Role.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
 	async getOrganizationRoles(g, p, o, query) {
@@ -48,7 +57,7 @@ export default {
 		return Role.findOne({ _id: id, authGroup, product, organization });
 	},
 	async deleteRoleByOrgProdId(authGroup, product, organization, id) {
-		return Role.findOneAndRemove({ _id: id, authGroup, product, organization });
+		return Role.findOneAndRemove({ _id: id, authGroup, product, organization, custom: true });
 	},
 	async getRoleByOrganizationAndId(authGroup, organization, id) {
 		const query = {
@@ -72,7 +81,7 @@ export default {
 	async patchOrganizationRole(authGroup, id, organization, product, data) {
 		data.modifiedAt = Date.now();
 		const options = { new: true, overwrite: true, runValidators: true };
-		return Role.findOneAndUpdate({ _id: id, authGroup, organization, product }, data, options);
+		return Role.findOneAndUpdate({ _id: id, authGroup, organization, product, custom: true }, data, options);
 	},
 	async checkProduct(authGroup, productId) {
 		return Role.find( { authGroup, product: productId }).select( { _id: 1, name: 1, description: 1, productCodedId: 1});

@@ -41,23 +41,26 @@ export default {
 				targets.map((t) => {
 					if(bFound === false) {
 						requestTarget = (!requestTarget) ? t : `${requestTarget}-${t}`;
-						// we assume that if a codedId exists, that will be the likely qualifier
 						const productList = (req.permissions.core.productCodedIds.length) ?
 							req.permissions.core.productCodedIds : req.permissions.core.products;
+						productList.push(`${req.authGroup.id}-member`);
+						let requestPermissions = [];
 						productList.map((pcId) => {
 							let thisRequest = `${pcId}:::${requestTarget}::${requestAction}`;
-							let requestPermissions = req.permissions.permissions.filter((p) => {
+							let temp = req.permissions.permissions.filter((p) => {
 								return p.includes(thisRequest);
 							});
-							if(requestPermissions.length !== 0) {
-								bFound = true;
-								if(requestPermissions.length === 1) {
-									if(requestPermissions[0].includes(':own')) {
-										req.permissions.enforceOwn = true;
-									}
-								}
-							}
+							requestPermissions = requestPermissions.concat(temp);
 						});
+						if(requestPermissions.length !== 0) {
+							bFound = true;
+							const checkOwn = requestPermissions.filter((p) => {
+								return (p.includes(':own'));
+							});
+							if(checkOwn.length === requestPermissions.length) {
+								req.permissions.enforceOwn = true;
+							}
+						}
 					}
 				});
 
@@ -138,11 +141,15 @@ export default {
 				req.permissions.core.productCodedIds.push(p.codedId);
 			});
 			// filtering out any product references that are not the core from the user's permissions
+			// todo this is probably not needed and not good
+			/*
 			if(req.permissions.products) {
 				req.permissions.products = req.permissions.products.filter((p) => {
 					return (req.permissions.core.products.includes(p));
 				});
 			}
+
+			 */
 			// filtering out any permissions that are not from the core product from the user's permissions
 			let permFilter = [];
 			let roleFilter = [];
@@ -200,7 +207,6 @@ export default {
 		if(p.enforceOwn === true) {
 			if(!p.sub) throw Boom.forbidden();
 			if(p.sub !== resourceOwner) {
-				console.error('unauthorized resource request');
 				throw Boom.notFound(resourceOwner);
 			}
 		}

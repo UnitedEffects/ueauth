@@ -61,7 +61,8 @@ const api = {
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			await permissions.enforceOwnOrg(req.permissions, req.params.id);
 			const organization = await org.getOrg(req.authGroup.id, req.params.id);
-			if(organization.core === true) await permissions.enforceRoot(req.permissions);
+			//todo need to control this better for core=true
+			//if(organization.core === true) await permissions.enforceRoot(req.permissions);
 			const result = await org.patchOrg(req.authGroup, organization, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

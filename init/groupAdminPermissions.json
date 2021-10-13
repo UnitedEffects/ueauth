@@ -66,6 +66,12 @@
   {
     "target": "accounts-organization",
     "action": "read",
+    "core": true,
+    "description": "UE Core permission. Allows organization admins to browse accounts to add and limits details search results."
+  },
+  {
+    "target": "accounts-organization",
+    "action": "read",
     "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission. Allows organization admins to browse accounts to add and limits details search results."
@@ -159,24 +165,28 @@
   {
     "target": "invites",
     "action": "create",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
   {
     "target": "invites",
     "action": "update",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
   {
     "target": "invites",
     "action": "read",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
   {
     "target": "invites",
     "action": "delete",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -184,6 +194,7 @@
     "target": "invites",
     "action": "update",
     "ownershipRequired": true,
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -191,6 +202,7 @@
     "target": "invites",
     "action": "read",
     "ownershipRequired": true,
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -198,6 +210,7 @@
     "target": "invites",
     "action": "delete",
     "ownershipRequired": true,
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -383,6 +396,27 @@
   },
   {
     "target": "domains",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains-limited",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains-limited",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "domains-limited",
     "action": "delete",
     "ownershipRequired": true,
     "core": true,
@@ -546,12 +580,14 @@
     "target": "operations-invite",
     "action": "create",
     "core": true,
+    "DEPRECATED": true,
     "description": "UE Core permission"
   },
   {
     "target": "operations-invite",
     "action": "create",
     "ownershipRequired": true,
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },

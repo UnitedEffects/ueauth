@@ -183,7 +183,7 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			await permissions.enforceOwnProduct(req.permissions, req.params.id);
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const product = await prod.getProduct(req.authGroup.id || req.authGroup._id, req.params.id);
 			if(product.core === true) await permissions.enforceRoot(req.permissions);
 			const result = await prod.patchProduct(req.authGroup, product, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
@@ -197,7 +197,7 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
-			await permissions.enforceOwnProduct(req.permissions, req.params.id);
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const product = await prod.getProduct(req.authGroup.id || req.authGroup._id, req.params.id);
 			if(product.core === true) await permissions.enforceRoot(req.permissions);
 			const permissions = await perms.deletePermissionsByProduct(req.authGroup.id, req.params.id);
@@ -217,6 +217,7 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.product) throw Boom.preconditionRequired('You need to specify a product');
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			const result = await perms.checkForProductReference(req.authGroup.id, req.product.id);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

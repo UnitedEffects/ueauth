@@ -7,13 +7,12 @@ import ueEvents from '../../events/ueEvents';
 const RESOURCE = 'Role';
 
 const api = {
-	// todo - make sure this is only those products associated to the org (so not ALL products)
 	async getAllRolesAcrossProductsByOrg (req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide organization');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			const result = await role.getAllRolesAcrossProductsByOrg(req.authGroup.id, req.organization.id, req.query);
+			const result = await role.getAllRolesAcrossProductsByOrg(req.authGroup.id, req.organization, req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -29,7 +28,6 @@ const api = {
 			next(error);
 		}
 	},
-	// todo - make sure this returns all global roles + roles for this org
 	async getOrganizationRoles(req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');

@@ -105,7 +105,7 @@ router.get('/:group/organizations/:org/domains', [
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('domains')
+	m.access('domains', 'limited')
 ], dom.getDomains);
 router.post('/:group/organizations/:org/domains', [
 	m.validateAuthGroup,
@@ -113,14 +113,14 @@ router.post('/:group/organizations/:org/domains', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access('domains')
+	m.access('domains', 'limited')
 ], dom.writeDomain);
 router.get('/:group/organizations/:org/domains/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('domains')
+	m.access('domains', 'limited')
 ], dom.getDomain);
 router.patch('/:group/organizations/:org/domains/:id', [
 	m.validateAuthGroup,
@@ -128,14 +128,14 @@ router.patch('/:group/organizations/:org/domains/:id', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access('domains')
+	m.access('domains', 'limited')
 ], dom.patchDomain);
 router.delete('/:group/organizations/:org/domains/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('domains')
+	m.access('domains', 'organization')
 ], dom.deleteDomain);
 
 // Products

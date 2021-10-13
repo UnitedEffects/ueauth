@@ -115,6 +115,7 @@ const factory = {
 	async getUserAccess(authGroup, id, query) {
 		const user = await dal.getAccountByAccess(authGroup, id, query.org);
 		if(!user) throw Boom.notFound(`user not found: ${id}`);
+		console.info(user.access.organization);
 		const userAccess = user.access || [];
 		const response = {
 			sub: id,
