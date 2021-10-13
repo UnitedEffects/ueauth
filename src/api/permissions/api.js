@@ -78,6 +78,19 @@ const api = {
 		} catch (error) {
 			next(error);
 		}
+	},
+	getTargetsOrActions(meta) {
+		return async function (req, res, next) {
+			try {
+				if (!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+				if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
+				await permissions.enforceOwnProduct(req.permissions, req.product.id);
+				const result = await perm.getTargetsOrActions(meta, req.authGroup.id, req.product.id);
+				return res.respond(say.ok(result, RESOURCE));
+			} catch (error) {
+				next(error);
+			}
+		};
 	}
 };
 

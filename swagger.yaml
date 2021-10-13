@@ -28,8 +28,6 @@ tags:
     description: Managing user accounts and access associated to an organization
   - name: User Access
     description: roles and permissions by account
-  - name: Invite Dashboard
-    description: API to manage invites to ownership or access
   - name: Clients
     description: Administration of Group Registered Clients - Beyond OIDC Scope
   - name: Notification
@@ -1359,239 +1357,6 @@ paths:
                     - 'decline'
         required: true
 
-  # Invite APIs
-  /api/{group}/invite:
-    post:
-      tags:
-        - Invite Dashboard
-      summary: Invites are used to notify and allow a user to accept ownership of a resource or access to a resource. (ACCESS NOT YET IMPLEMENTED).
-      description: Create an invitiation for group transfer or account access. Invites for a given user can be queried by that user. In UE Auth they are available as part of the Invite Dashboard
-      operationId: createInvite
-      deprecated: true
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-      responses:
-        '201':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inviteObject'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/createInvite'
-        description: Invite data to be written
-        required: true
-  /api/{group}/invites:
-    get:
-      tags:
-        - Invite Dashboard
-      summary: Retrieve all invites (CRUD operation)
-      description: 'Uses oData filtering to retrieve Invites. Admins and Owners only.'
-      operationId: getInvites
-      deprecated: true
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-        - name: $filter
-          in: query
-          description: oData filter Query
-          required: false
-          schema:
-            type: string
-        - name: $select
-          in: query
-          description: oData select Query
-          required: false
-          schema:
-            type: string
-        - name: $orderby
-          in: query
-          description: oData orderby Query
-          required: false
-          schema:
-            type: string
-        - name: $skip
-          in: query
-          description: oData skip Query
-          required: false
-          schema:
-            type: string
-        - name: $top
-          in: query
-          description: oData top Query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/getInvites'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-  '/api/{group}/invite/{id}':
-    get:
-      tags:
-        - Invite Dashboard
-      summary: Find an Invite with ID
-      description: Identify a single Invite. Must be intended recipient or owner of auth group
-      operationId: getInvite
-      deprecated: true
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-        - name: id
-          in: path
-          description: id of invite type to return
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inviteObject'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-    delete:
-      tags:
-        - Invite Dashboard
-      summary: Hard delete an Invite - only authGroup owner
-      description: Hard delete an Invite - only authGroup owner
-      operationId: deleteInvite
-      deprecated: true
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-        - name: id
-          in: path
-          description: id of invite to delete
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/inviteObject'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-  /api/{group}/operations/invite/{id}:
-    post:
-      tags:
-        - Operations
-      summary: Accept or decline an invitiation
-      description: Accept or reject an invitiation. Operations include 'accept' or 'decline'
-      operationId: inviteOperation
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-        - name: id
-          in: path
-          description: the id of the invite
-          schema:
-            type: string
-          required: true
-      responses:
-        '204':
-          description: successful operation
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/inviteOperation'
-        description: Invite data to be written
-        required: true
-
   # Non-OIDC Specific Client APIs
   /api/{group}/clients:
     get:
@@ -1694,53 +1459,6 @@ paths:
           $ref: '#/components/responses/InvalidInput'
         '417':
           $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
-    patch:
-      tags:
-        - Clients
-      summary: Limited update capability from outside normal oidc api - auth group owner
-      description: Limited update capability from outside normal oidc api - auth group owner
-      operationId: patchOne
-      deprecated: true
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-        - name: id
-          in: path
-          description: id of account type to return
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/getClient'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/jsonPatch'
-        description: JSON Patch specific to your account object
-        required: true
       security:
         - bearer: []
         - openId: []
@@ -4339,6 +4057,107 @@ paths:
         - bearer: []
         - openId: []
 
+  /api/{group}/products/{product}/permission/actions:
+    get:
+      tags:
+        - Permissions
+      summary: Get all of the available permission actions for a product
+      description: Get all of the available permission actions for a product. These are used to create permissions.
+      operationId: getPermissionTargets
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    default: 'actions'
+                  values:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/products/{product}/permission/targets:
+    get:
+      tags:
+        - Permissions
+      summary: Get all of the available permission targets for a product
+      description: Get all of the available permission targets for a product. These are used to create permissions.
+      operationId: getPermissionTargets
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    default: 'targets'
+                  values:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
   # Health Check Endpoint
   /api/health:
     get:
@@ -5106,86 +4925,6 @@ components:
         data:
           type: object
           $ref: '#/components/schemas/authGroup'
-
-    getInvites:
-      properties:
-        type:
-          type: string
-          enum:
-            - Invites
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/inviteObject'
-
-    inviteObject:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/inviteCore'
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: unique id of the invitiation
-        createdAt:
-          type: string
-          format: date-time
-          description: when the invite was created
-        expiresAt:
-          type: string
-          format: date-time
-          description: when the account was created
-        authGroup:
-          type: string
-          description: authGroup of the invite
-
-    inviteCore:
-      type: object
-      additionalProperties: false
-      properties:
-        type:
-          type: string
-          enum:
-            - owner
-            - access
-          description: owner type allows a user to be invited to own/admin a resource. access type notifies a user of access and allows them to accept.
-        sub:
-          type: string
-          description: Subject/User ID of the user for whom this is intended
-        resources:
-          type: array
-          items:
-            $ref: '#/components/schemas/inviteResources'
-
-    inviteResources:
-      type: object
-      additionalProperties: false
-      properties:
-        resourceType:
-          type: string
-          enum:
-            - group
-            - organization
-            - domain
-            - product
-        resourceId:
-          type: string
-
-
-    createInvite:
-      type: object
-      additionalProperties: false
-      required:
-        - type
-        - sub
-        - resources
-      allOf:
-        - $ref: '#/components/schemas/inviteCore'
-      properties:
-        daysToExpire:
-          type: number
-          format: int32
-          description: how many days should the invite be active? Default is 7 days.
 
     globalPlugins:
       type: object

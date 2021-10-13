@@ -300,6 +300,20 @@ router.delete('/:group/products/:product/permissions/:id', [
 	m.permissions,
 	m.access('permissions')
 ], perm.deletePermission);
+router.get('/:group/products/:product/permission/targets', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], perm.getTargetsOrActions('target'));
+router.get('/:group/products/:product/permission/actions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], perm.getTargetsOrActions('action'));
 
 // Reference Checks
 router.get('/:group/products/:product/permissions/:id/reference-check/role', [

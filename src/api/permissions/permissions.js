@@ -49,5 +49,15 @@ export default {
 		const result = await dal.bulkWrite(permissions);
 		ueEvents.emit(authGroupId, 'ue.permission.create', result);
 		return result;
+	},
+
+	async getTargetsOrActions(data, authGroup, product) {
+		const result = await dal.getTargetsOrActions(data, authGroup, product);
+		const out = result[0];
+		if(out._id) {
+			out.id = out._id;
+			delete out._id;
+		}
+		return out;
 	}
 };

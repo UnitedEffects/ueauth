@@ -1,7 +1,6 @@
 import express from 'express';
 import account from '../api/accounts/api';
 import group from '../api/authGroup/api';
-import invite from '../api/invites/api';
 import client from '../api/oidc/client/api';
 import plugins from '../api/plugins/api';
 import m from '../middleware';
@@ -229,42 +228,5 @@ router.post('/:group/operations/reset-user-password', [
 	m.getGlobalPluginSettings,
 	m.isWhitelisted
 ], account.resetPassword);
-// Accept Invites
-router.post('/:group/operations/invite/:id', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access('operations', 'invite'),
-	m.getGlobalPluginSettings
-], invite.inviteOperations);
-
-// Invite Dashboard APIs - DEPRECATED
-router.post('/:group/invite',[
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access('invites'),
-	m.getGlobalPluginSettings
-], invite.createInvite);
-router.get('/:group/invites', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.permissions,
-	m.access('invites')
-], invite.getInvites);
-router.get('/:group/invite/:id', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.permissions,
-	m.access('invites')
-], invite.getInvite);
-router.delete('/:group/invite/:id', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.permissions,
-	m.access('invites')
-], invite.deleteInvite);
 
 module.exports = router;

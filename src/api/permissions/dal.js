@@ -24,5 +24,20 @@ export default {
 	},
 	async bulkWrite(permissions) {
 		return Permission.insertMany(permissions);
+	},
+	async getTargetsOrActions(data, authGroup, product) {
+		const projection = {};
+		projection[data] = 1;
+		const aggQuery = [
+			{ $match: { authGroup, product } },
+			{ $project: projection },
+			{ $group: {
+				_id: `${data}s`,
+				values: {
+					$addToSet: `$${data}`
+				}
+			}}
+		];
+		return Permission.aggregate(aggQuery);
 	}
 };
