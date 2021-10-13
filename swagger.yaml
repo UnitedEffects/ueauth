@@ -2460,7 +2460,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/product'
+              $ref: '#/components/schemas/jsonPatch'
         description: Updated user object
         required: true
     delete:

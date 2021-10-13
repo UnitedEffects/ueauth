@@ -260,10 +260,6 @@ function translateMethod(method) {
 }
 
 /**
- * Roles: owner, member, developer (dev is only through plugin)
- * Actions: create update:all|own read:all|own delete:all|own
-
-const Targets = ['group', 'groups', 'accounts', 'invite', 'invites', 'accept', 'account', 'clients', 'client', 'operations:client', 'operations:reset-user-password', 'operations:user', 'operations:invite', 'operations', 'token:initial-access', 'token', 'notification', 'notifications'];
 
 // this roles is for client-credential tokens
 const Client = [

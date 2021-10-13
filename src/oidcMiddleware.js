@@ -1,6 +1,5 @@
 import Boom from '@hapi/boom';
 import clients from './api/oidc/client/clients';
-import group from './api/authGroup/group';
 import IAT from './api/oidc/initialAccess/iat';
 import errHandler from './customErrorHandler';
 import helper from './helper';

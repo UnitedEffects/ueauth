@@ -4,7 +4,7 @@ import ueEvents from '../../events/ueEvents';
 import dom from '../domains/domain';
 import role from '../roles/roles';
 import oidc from '../oidc/oidc';
-import n from "../plugins/notifications/notifications";
+import n from '../plugins/notifications/notifications';
 
 const config = require('../../config');
 
@@ -115,7 +115,6 @@ const factory = {
 	async getUserAccess(authGroup, id, query) {
 		const user = await dal.getAccountByAccess(authGroup, id, query.org);
 		if(!user) throw Boom.notFound(`user not found: ${id}`);
-		console.info(user.access.organization);
 		const userAccess = user.access || [];
 		const response = {
 			sub: id,
