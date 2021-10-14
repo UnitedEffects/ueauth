@@ -130,9 +130,9 @@ const api = {
 				} else throw e;
 			}
 			if(!client) throw Boom.expectationFailed('Auth Group Client Not Created! Rolling back.');
-			const access = await initAccess.createDefaultOrgAndDomain(req.authGroup, account);
 			let g = await group.activateNewAuthGroup(req.authGroup, account, client.client_id);
 			if(!g) throw Boom.expectationFailed('Auth Group Not Activated! Rolling back.');
+			const access = await initAccess.createDefaultOrgAndDomain(g, account);
 			g = JSON.parse(JSON.stringify(g));
 			if(g.config) delete g.config.keys;
 			const out = {
@@ -226,16 +226,6 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			let bpwd = false;
-			let access = false;
-			if(req.body && Array.isArray(req.body)){
-				for(let i=0; i<req.body.length; i++) {
-					if(req.body[i].op === 'replace' && req.body[i].path === '/password') bpwd = true;
-					if(req.body[i].path.includes('/organizations')) access = true;
-					if(req.body[i].path.includes('/orgDomains')) access = true;
-					if(req.body[i].path.includes('/access')) access = true;
-				}
-			}
-			if(access === true) throw Boom.badRequest('You cannot set access properties through this API');
 			if(req.user && req.user.decoded && req.user.decoded.kind === 'InitialAccessToken') {
 				if (req.body) {
 					if(req.body.length > 1 || req.body[0].path !== '/password' || req.body[0].op !== 'replace') {
@@ -244,7 +234,7 @@ const api = {
 				}
 			}
 			await permissions.enforceOwn(req.permissions, req.params.id);
-			const result = await acct.patchAccount(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd);
+			const result = await acct.patchAccount(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd, req.permissions.enforceOwn);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);

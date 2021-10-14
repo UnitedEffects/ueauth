@@ -85,7 +85,10 @@ export default {
 				authGroup: authGroup.id,
 				organization: initOrg.id,
 				createdBy: creator.id,
-				associatedOrgProducts: [initProductAdmin.id],
+				associatedOrgProducts: initOrg.associatedProducts,
+				meta: {
+					admin: initOrg.id
+				},
 				core: true
 			};
 			initDomain = await domain.writeDomain(defaultDom);

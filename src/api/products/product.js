@@ -5,8 +5,7 @@ import org from '../orgs/orgs';
 import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
-
-const config = require('../../config');
+import Joi from 'joi';
 
 export default {
 	async writeProduct(data) {
@@ -43,6 +42,7 @@ export default {
 	async patchProduct(authGroup, product, id, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(product.toObject(), update);
 		patched.modifiedBy = modifiedBy;
+		await standardPatchValidation(product, patched);
 		const result = await dal.patchProduct(authGroup.id || authGroup._id, id, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.product.edit', result);
 		return result;
@@ -75,3 +75,31 @@ export default {
 		return result;
 	}
 };
+
+async function standardPatchValidation(original, patched) {
+	const definition = {
+		createdAt: Joi.any().valid(original.createdAt).required(),
+		createdBy: Joi.string().valid(original.createdBy).required(),
+		modifiedAt: Joi.any().required(),
+		modifiedBy: Joi.string().required(),
+		authGroup: Joi.string().valid(original.authGroup).required(),
+		core: Joi.boolean().valid(original.core).required(),
+		_id: Joi.string().valid(original._id).required(),
+		codedId: Joi.string().valid(original.codedId).required()
+	};
+	if(original.core === true) {
+		definition.name = Joi.string().valid(original.name).required();
+	}
+	const metaSchema = Joi.object().keys({
+		core: Joi.string().valid(original.meta.core).required()
+	});
+	const prodSchema = Joi.object().keys(definition);
+	const main = await prodSchema.validateAsync(patched, {
+		allowUnknown: true
+	});
+	if(main.error) throw main.error;
+	const meta = await metaSchema.validateAsync(patched.meta, {
+		allowUnknown: true
+	});
+	if(meta.error) throw meta.error;
+}

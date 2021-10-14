@@ -3010,8 +3010,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/jsonPatch'
+              $ref: '#/components/schemas/jsonPatch'
         description: Create a new role
         required: true
       security:

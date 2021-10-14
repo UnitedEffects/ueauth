@@ -90,7 +90,7 @@ router.patch('/:group/organizations/:id', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access('organizations')
+	m.access('organizations', 'limited')
 ], org.patchOrg);
 router.delete('/:group/organizations/:id', [
 	m.validateAuthGroup,

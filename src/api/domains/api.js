@@ -64,8 +64,6 @@ const api = {
 				await permissions.enforceOwnDomain(req.permissions, req.params.org, req.params.id);
 			}
 			const domain = await dom.getDomain(req.authGroup.id || req.authGroup._id, req.params.org, req.params.id);
-			// todo is this ok?
-			//if(domain.core === true) await permissions.enforceRoot(req.permissions);
 			const result = await dom.patchDomain(req.authGroup, domain, req.params.org, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

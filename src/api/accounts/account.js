@@ -5,6 +5,8 @@ import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
+import Joi from "joi";
+import {v4 as uuid} from "uuid";
 
 const config = require('../../config');
 
@@ -45,27 +47,14 @@ export default {
 		return result;
 	},
 
-	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false) {
+	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false, limit = false) {
 		const account = await dal.getAccount(authGroup.id || authGroup._id, id);
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
 		}
-		const originalOrgs = [...new Set(account.organizations)];
-		const updatedOrgs = [...new Set(patched.organizations)];
-		const domains = [...new Set(patched.orgDomains)];
-		if(updatedOrgs.length < originalOrgs.length) {
-			const newDomains = [];
-			for(let i=0; i<updatedOrgs.length; i++) {
-				for(let x=0; x<domains.length; x++) {
-					if (domains[x].includes(updatedOrgs[i])) {
-						newDomains.push(domains[x]);
-					}
-				}
-			}
-			patched.orgDomains = newDomains;
-		}
+		await standardPatchValidation(account, patched, limit);
 		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.account.edit', result);
 		return result;
@@ -202,3 +191,29 @@ export default {
 		return dal.searchAccounts(authGroup, q);
 	}
 };
+
+async function standardPatchValidation(original, patched, limit) {
+	const definition = {
+		createdAt: Joi.any().valid(original.createdAt).required(),
+		modifiedAt: Joi.any().required(),
+		modifiedBy: Joi.string().required(),
+		authGroup: Joi.string().valid(original.authGroup).required(),
+		_id: Joi.string().valid(original._id).required()
+	};
+	if(limit === true) {
+		definition.verified = Joi.string().valid(original.verified).required();
+	}
+	if(original.access && original.access.length !== 0) {
+		definition.access = Joi.array().valid(original.access).required();
+	}
+	if(!original.access || !original.access.length) {
+		if(patched.access && patched.access.length !== 0) {
+			throw Boom.forbidden('You can not set access through this API');
+		}
+	}
+	const accSchema = Joi.object().keys(definition);
+	const main = await accSchema.validateAsync(patched, {
+		allowUnknown: true
+	});
+	if(main.error) throw main.error;
+}

@@ -3,6 +3,13 @@ import { v4 as uuid } from 'uuid';
 import h from "../../helper";
 
 mongoose.set('useCreateIndex', true);
+const metaSchema = new mongoose.Schema({
+	// this allows us to create unique internal identifiers when required for setup.
+	admin: {
+		type: String,
+		default: `unique-placeholder-${uuid}`
+	},
+}, { _id: false, strict: false });
 
 const domainSchema = new mongoose.Schema({
 	createdAt: {
@@ -55,6 +62,7 @@ const domainSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
+	meta: metaSchema,
 	externalId: String,
 	_id: {
 		type: String,
@@ -62,7 +70,8 @@ const domainSchema = new mongoose.Schema({
 	}
 },{ _id: false });
 
-domainSchema.index({ name: 1, organization: 1}, { unique: true });
+domainSchema.index({ name: 1, organization: 1, authGroup: 1 }, { unique: true });
+domainSchema.index({ 'meta.admin': 1, organization: 1, authGroup: 1 }, { unique: true });
 
 
 domainSchema.pre('save', function(callback) {

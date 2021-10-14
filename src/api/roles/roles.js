@@ -4,6 +4,7 @@ import dal from './dal';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import access from '../accounts/access';
+import Joi from 'joi';
 
 export default {
 	async writeCustomRole(data) {
@@ -95,6 +96,7 @@ export default {
 	async patchOrganizationRole(authGroup, role, id, organization, product, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(role.toObject(), update);
 		patched.modifiedBy = modifiedBy;
+		await standardPatchValidation(role, patched);
 		const result = await dal.patchOrganizationRole(authGroup.id || authGroup._id, id, organization, product, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.role.edit', result);
 		return result;
@@ -138,3 +140,30 @@ export default {
 		return result;
 	}
 };
+
+async function standardPatchValidation(original, patched) {
+	const definition = {
+		createdAt: Joi.any().valid(original.createdAt).required(),
+		createdBy: Joi.string().valid(original.createdBy).required(),
+		modifiedAt: Joi.any().required(),
+		modifiedBy: Joi.string().required(),
+		authGroup: Joi.string().valid(original.authGroup).required(),
+		core: Joi.boolean().valid(original.core).required(),
+		_id: Joi.string().valid(original._id).required(),
+		custom: Joi.boolean().valid(original.custom).required(),
+		product: Joi.string().valid(original.product).required(),
+		productCodedId: Joi.string().valid(original.productCodedId).required(),
+		codedId: Joi.string().valid(original.codedId).required()
+	};
+	if(original.core === true) {
+		definition.name = Joi.string().valid(original.name).required();
+	}
+	if(original.custom === true) {
+		definition.organizatin = Joi.string().valid(original.organizatin).required();
+	}
+	const roleSchema = Joi.object().keys(definition);
+	const main = await roleSchema.validateAsync(patched, {
+		allowUnknown: true
+	});
+	if(main.error) throw main.error;
+}

@@ -4,6 +4,7 @@ import access from '../accounts/access';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import Boom from '@hapi/boom';
+import Joi from 'joi';
 
 export default {
 	async writeDomain(data) {
@@ -34,6 +35,7 @@ export default {
 	async patchDomain(authGroup, dom, orgId, id, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(dom.toObject(), update);
 		patched.modifiedBy = modifiedBy;
+		await standardPatchValidation(dom, patched);
 		const result = await dal.patchDomain(authGroup.id || authGroup._id, orgId, id, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.domain.edit', result);
 		return result;
@@ -43,5 +45,39 @@ export default {
 		const result = await dal.checkProducts(authGroup, organization, id);
 		if(result.length === 0) return false;
 		return result;
+	},
+
+	async updateAdminDomainAssociatedProducts(authGroup, organization) {
+		const result = await dal.updateAdminDomainAssociatedProducts(authGroup, organization);
+		ueEvents.emit(authGroup, 'ue.domain.edit', result);
+		return result;
 	}
 };
+
+async function standardPatchValidation(original, patched) {
+	const definition = {
+		createdAt: Joi.any().valid(original.createdAt).required(),
+		createdBy: Joi.string().valid(original.createdBy).required(),
+		modifiedAt: Joi.any().required(),
+		modifiedBy: Joi.string().required(),
+		authGroup: Joi.string().valid(original.authGroup).required(),
+		core: Joi.boolean().valid(original.core).required(),
+		_id: Joi.string().valid(original._id).required(),
+		organization: Joi.string().valid(original.organization).required(),
+	};
+	if(original.core === true) {
+		definition.name = Joi.string().valid(original.name).required();
+	}
+	const metaSchema = Joi.object().keys({
+		admin: Joi.string().valid(original.meta.admin).required()
+	});
+	const domSchema = Joi.object().keys(definition);
+	const main = await domSchema.validateAsync(patched, {
+		allowUnknown: true
+	});
+	if(main.error) throw main.error;
+	const meta = await metaSchema.validateAsync(patched.meta, {
+		allowUnknown: true
+	});
+	if(meta.error) throw meta.error;
+}

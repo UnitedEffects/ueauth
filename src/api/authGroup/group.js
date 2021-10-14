@@ -7,6 +7,9 @@ import k from './generate-keys';
 import iat from "../oidc/initialAccess/iat";
 import n from "../plugins/notifications/notifications";
 import ueEvents from "../../events/ueEvents";
+import Joi from "joi";
+import ms from "ms";
+import {nanoid} from "nanoid";
 
 const config = require('../../config');
 
@@ -127,6 +130,7 @@ const agp = {
 			}
 		}
 		patched.modifiedBy = user;
+		await standardPatchValidation(group, patched);
 		const result = await dal.patch(group.id || group._id, patched);
 		ueEvents.emit(group.id || group._id, 'ue.group.edit', result);
 		return result;
@@ -198,5 +202,23 @@ const agp = {
 		};
 	},
 };
+
+async function standardPatchValidation(original, patched) {
+	const definition = {
+		createdAt: Joi.any().valid(original.createdAt).required(),
+		modifiedAt: Joi.any().required(),
+		modifiedBy: Joi.string().required(),
+		_id: Joi.string().valid(original._id).required(),
+		associatedClient: Joi.string().valid(original.associatedClient).required()
+	};
+	if(original.securityExpiration) {
+		definition.securityExpiration = Joi.any().valid(original.securityExpiration).required();
+	}
+	const groupSchema = Joi.object().keys(definition);
+	const main = await groupSchema.validateAsync(patched, {
+		allowUnknown: true
+	});
+	if(main.error) throw main.error;
+}
 
 export default agp;

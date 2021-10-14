@@ -11,13 +11,13 @@
       },
       {
         "role": "OrganizationAdmin",
-        "permissions": ["accounts::create:own", "accounts::update:own", "accounts-organization::read:own", "accounts-organization::update:own", "accounts::delete:own", "notification::create", "notification::read:own", "notification::update:own", "notification::delete:own", "organizations::update:own", "organizations::read:own", "products::read:own", "domains::create:own", "domains::delete:own", "domains::update:own", "domains::read:own", "roles::create:own", "roles::read:own", "roles::update:own", "roles::delete:own", "permissions::read:own", "userAccess::update:own", "accounts-organization::delete:own", "operations-user-organization::create:own" ]
+        "permissions": ["accounts::create:own", "accounts::update:own", "accounts-organization::read:own", "accounts-organization::update:own", "accounts::delete:own", "notification::create", "notification::read:own", "notification::update:own", "notification::delete:own", "organizations-limited::update:own", "organizations::read:own", "products::read:own", "domains::create:own", "domains::delete:own", "domains::update:own", "domains::read:own", "roles::create:own", "roles::read:own", "roles::update:own", "roles::delete:own", "permissions::read:own", "userAccess::update:own", "accounts-organization::delete:own", "operations-user-organization::create:own" ]
       }
   ],
   "orgAdminPortal": [
       {
         "role": "OrganizationAdmin",
-        "permissions": ["accounts::create:own", "accounts::update:own", "accounts-organization::read:own", "accounts-organization::update:own","accounts::delete:own", "notification::create", "notification::read:own", "notification::update:own", "notification::delete:own", "organizations::update:own", "organizations::read:own", "products::read:own", "domains::create:own", "domains::delete:own", "domains::update:own", "domains::read:own", "roles::create:own", "roles::read:own", "roles::update:own", "roles::delete:own", "permissions::read:own", "userAccess::update:own", "accounts-organization::delete:own", "operations-user-organization::create:own" ]
+        "permissions": ["accounts::create:own", "accounts::update:own", "accounts-organization::read:own", "accounts-organization::update:own","accounts::delete:own", "notification::create", "notification::read:own", "notification::update:own", "notification::delete:own", "organizations-limited::update:own", "organizations::read:own", "products::read:own", "domains::create:own", "domains::delete:own", "domains::update:own", "domains::read:own", "roles::create:own", "roles::read:own", "roles::update:own", "roles::delete:own", "permissions::read:own", "userAccess::update:own", "accounts-organization::delete:own", "operations-user-organization::create:own" ]
       }
   ]
 }
