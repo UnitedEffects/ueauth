@@ -240,6 +240,7 @@ const mid = {
 	},
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
 	isAuthenticated: authorizer.isAuthenticated,
+	isOIDCValid: authorizer.isOIDCValid,
 	isWhitelisted: authorizer.isWhitelisted
 };
 

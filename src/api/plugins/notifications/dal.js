@@ -18,8 +18,9 @@ export default {
 	async getNotification(agId, id) {
 		return Notify.findOne( { _id: id, authGroupId: agId });
 	},
-	async deleteNotification(agId, id) {
-		return Notify.findOneAndRemove( { _id: id, authGroupId: agId });
+	async deleteNotification(agId, id, user) {
+		const query = (user) ? { _id: id, authGroupId: agId, createdBy: user } : { _id: id, authGroupId: agId };
+		return Notify.findOneAndRemove(query);
 	},
 	async notificationsNotProcessed(agId) {
 		return Notify.find({ authGroupId: agId, processed: false }).limit(25);

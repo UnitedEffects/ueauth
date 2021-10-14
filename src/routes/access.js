@@ -62,7 +62,7 @@ router.get('/:group/access/account/:id', [
 ], user.getUserAccess);
 router.get('/:group/access/validate', [
 	m.validateAuthGroup,
-	m.isAuthenticated
+	m.isOIDCValid
 ], user.getUserAccess);
 
 // Organizations

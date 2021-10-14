@@ -74,8 +74,11 @@ export default {
 		return result;
 	},
 	// @notTested
-	async getNotifications(ag, q) {
+	async getNotifications(ag, q, user) {
 		const query = await helper.parseOdataQuery(q);
+		if(user) {
+			query.query.createdBy = user;
+		}
 		return dal.getNotifications(ag.id, query);
 	},
 	// @notTested
@@ -83,8 +86,8 @@ export default {
 		return dal.getNotification(ag.id, id);
 	},
 	// @notTested
-	async deleteNotification(ag, id) {
-		return dal.deleteNotification(ag.id, id);
+	async deleteNotification(ag, id, user) {
+		return dal.deleteNotification(ag.id, id, user);
 	},
 	// @notTested
 	async notify(global, data, ag) {

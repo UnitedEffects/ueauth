@@ -80,7 +80,8 @@ const api = {
 	async getNotifications(req, res, next) {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-			const result = await notifications.getNotifications(req.authGroup, req.query);
+			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
+			const result = await notifications.getNotifications(req.authGroup, req.query, includeUser);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -90,8 +91,8 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			await permissions.enforceOwn(req.permissions, req.params.id);
 			const result = await notifications.getNotification(req.authGroup, req.params.id);
+			await permissions.enforceOwn(req.permissions, result.createdBy);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -102,8 +103,8 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			await permissions.enforceOwn(req.permissions, req.params.id);
-			const result = await notifications.deleteNotification(req.authGroup, req.params.id);
+			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
+			const result = await notifications.deleteNotification(req.authGroup, req.params.id, includeUser);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -115,7 +116,7 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			await permissions.enforceOwn(req.permissions, req.params.id);
+			if(req.permissions.enforceOwn === true) throw Boom.unauthorized();
 			const result = await notifications.processNotification(req.globalSettings, req.authGroup, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
@@ -131,7 +132,8 @@ const api = {
 	},
 	async bulkNotificationProcess(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(req.permissions.enforceOwn === true) throw Boom.unauthorized();
 			const result = await notifications.bulkNotificationProcess(req.globalSettings, req.authGroup.id);
 			const out = {
 				message: 'Request received and processing attempted. Validate processed property on each result. This API returns 200 upon completion of the task regardless of outcome for each result',

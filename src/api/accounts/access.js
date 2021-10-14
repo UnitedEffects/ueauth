@@ -73,14 +73,16 @@ const factory = {
 				id: organization,
 				domains: access.domains,
 				roles: access.roles,
-				terms: (ogRecord && ogRecord.terms) ? ogRecord.terms : { required: false }
+				terms: (ogRecord && ogRecord.organization && ogRecord.organization.terms) ?
+					ogRecord.organization.terms : { required: false }
 			}
 		};
 		// setting terms of access that must be accepted
 		if(org.access && org.access.required === true) {
-			if(!ogRecord || !ogRecord.terms || (ogRecord.terms && org.access.required && !ogRecord.terms.accepted) ||
-				(ogRecord.terms && org.access.required && ogRecord.terms.accepted &&
-					ogRecord.terms.termsVersion !== org.access.termsVersion)) {
+			if(!ogRecord || !ogRecord.organization || !ogRecord.organization.terms ||
+				(ogRecord.organization.terms && org.access.required && !ogRecord.organization.terms.accepted) ||
+				(ogRecord.organization.terms && org.access.required && ogRecord.organization.terms.accepted &&
+					ogRecord.organization.terms.termsVersion !== org.access.termsVersion)) {
 				orgRecord.organization.terms = {
 					required: true,
 					accepted: false,
@@ -141,9 +143,12 @@ const factory = {
 			}
 			if (termsAllow === true) {
 				orgs.push(userAccess[i].organization.id);
+				const terms = JSON.parse(JSON.stringify(userAccess[i].organization.terms));
+				delete terms.termsOfAccess;
 				const accessItem = {
 					organization: {
 						id: userAccess[i].organization.id,
+						terms,
 						domainAccess: [],
 						productAccess: [],
 						productRoles: []
