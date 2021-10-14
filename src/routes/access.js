@@ -113,7 +113,7 @@ router.post('/:group/organizations/:org/domains', [
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
-	m.access('domains', 'limited')
+	m.access('domains')
 ], dom.writeDomain);
 router.get('/:group/organizations/:org/domains/:id', [
 	m.validateAuthGroup,
@@ -135,7 +135,7 @@ router.delete('/:group/organizations/:org/domains/:id', [
 	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('domains', 'organization')
+	m.access('domains', 'limited')
 ], dom.deleteDomain);
 
 // Products

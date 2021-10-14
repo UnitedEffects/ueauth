@@ -3,7 +3,6 @@ import iat from './initialAccess/iat';
 import oidc from './oidc';
 import helper from '../../helper';
 import group from '../authGroup/group';
-import events from '../../events/events';
 
 const api = {
 	async oidcCaller(req, res, next) {

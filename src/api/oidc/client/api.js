@@ -9,8 +9,9 @@ const RESOURCE = 'Clients';
 const api = {
     async get(req, res, next) {
         try {
-            if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
+            if(!req.params.group) throw Boom.preconditionRequired('Must provide Auth Group');
             const result = await client.get(req.authGroup, req.query);
+            if(req.permissions.enforceOwn === true) throw Boom.forbidden();
             return res.respond(say.ok(result, RESOURCE));
         } catch (error) {
             next(error);
@@ -20,7 +21,6 @@ const api = {
         try {
             if(!req.params.group) return next(Boom.preconditionRequired('Must provide Auth Group'));
             if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-            // todo, this needs revision
             await permissions.enforceOwn(req.permissions, req.params.id);
             const result = await client.getOne(req.authGroup, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
@@ -80,6 +80,7 @@ const api = {
             if(req.params.id === req.authGroup.associatedClient) {
                 return next(Boom.badRequest('You can not delete your Auth Group primary client'));
             }
+            if(req.permissions.enforceOwn === true) throw Boom.forbidden();
             const result = await client.deleteOne(req.authGroup, req.params.id);
             if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
             return res.respond(say.ok(result, RESOURCE));

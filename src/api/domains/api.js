@@ -29,9 +29,12 @@ const api = {
 	},
 	async getDomains(req, res, next) {
 		try {
-			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-			if(!req.params.org) return next(Boom.preconditionRequired('Must provide organization'));
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.org) throw Boom.preconditionRequired('Must provide organization');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(req.permissions.permissions.includes('domains-limited::read:own')){
+				throw Boom.forbidden();
+			}
 			const result = await dom.getDomains(req.authGroup.id || req.authGroup._id, req.params.org, req.query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -44,7 +47,7 @@ const api = {
 			if(!req.params.org) return next(Boom.preconditionRequired('Must provide organization'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			if(req.permissions.permissions.includes('domains-limited::update:own')){
+			if(req.permissions.permissions.includes('domains-limited::read:own')){
 				await permissions.enforceOwnDomain(req.permissions, req.params.org, req.params.id);
 			}
 			const result = await dom.getDomain(req.authGroup.id || req.authGroup._id, req.params.org, req.params.id);
@@ -77,7 +80,7 @@ const api = {
 			if(!req.params.org) throw Boom.preconditionRequired('Must provide organization');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			if(req.permissions.permissions.includes('domains-limited::update:own')){
+			if(req.permissions.permissions.includes('domains-limited::delete:own')){
 				await permissions.enforceOwnDomain(req.permissions, req.params.org, req.params.id);
 			}
 			const domain = await dom.getDomain(req.authGroup.id || req.authGroup._id, req.params.org, req.params.id);
