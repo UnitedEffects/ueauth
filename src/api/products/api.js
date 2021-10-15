@@ -66,10 +66,12 @@ const api = {
 						return p.coded === updatedCode;
 					});
 					if(!checkExisting.length) {
-						p.description = `${config.PLATFORM_NAME} permission. System Created. DO NOT DELETE`;
-						p.product = result.id;
-						p.authGroup = req.authGroup.id;
-						bulkWritePermissions.push(p);
+						if(!p.DEPRECATED) {
+							p.description = `${config.PLATFORM_NAME} permission. System Created. DO NOT DELETE`;
+							p.product = result.id;
+							p.authGroup = req.authGroup.id;
+							bulkWritePermissions.push(p);
+						}
 					} else {
 						if(p.DEPRECATED) {
 							const destroyId = checkExisting[0]._id || checkExisting[0].id;
@@ -102,10 +104,10 @@ const api = {
 						const found = EXISTING.filter((list) => {
 							return list.coded === p;
 						});
-						if(found.length !== 0) {
+						if(found && found.length !== 0) {
 							newpermissions.push(`${found[0].id} ${found[0].coded}`);
 						} else if (config.ENV !== 'production') {
-							throw new Error('A permission is being added to a role that does not exist');
+							throw new Error(`A permission is being added to a role that does not exist: ${p}`);
 						}
 					});
 					newpermissions = [...new Set(newpermissions)];

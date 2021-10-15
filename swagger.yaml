@@ -18,42 +18,43 @@ info:
   userinfo: '/{group}/me'</code><br><br>
   <small>While the OIDC API is not fully detailed, a few of the endpoints are defined below to aid in debug or testing.</small><br><br>
   UE Auth General and Access APIs are completely defined and documented below for your convenience. These APIs are distinguished in the service with prefix <code>/api</code>.
+  <h2>Query and Patch Standards</h2>This API uses <a href='https://www.odata.org/documentation/'>oData</a> and <a href='http://jsonpatch.com/'>JSON Patch</a> as standards for most paginated GET and PATCH methods. You may wish to review these standards.
   <h2>Getting Started</h2><i>If you are the service owner and deploying it for the first time, see the github wiki for <a href='https://github.com/UnitedEffects/ueauth/wiki/Developer-Info#the-root-account'>initial setup instructions.</a></i><br><br>First, please familiarize yourself with the concepts these resources (AuthGroup, Organization, etc...) represent by reading about them <a href='https://github.com/UnitedEffects/ueauth/wiki'>here</a>.<br><br>Second, please review the overview of how permissions manage access to this API <a href='https://github.com/UnitedEffects/ueauth/wiki/UE-Auth-Permissions'>here</a>.<br><br>Finally, you'll need an Auth Group to utilize the service.<ul><li>POST a new Auth Group making sure to save the Initial Access Token provided upon creation.</li><li>Once you have it, POST a new user account to the same auth group, making sure to use the same email address and the initial access token as a bearer token.</li><li>This will activate your auth group, create the account, and provide you with a client_id and secret to use for all interactions with this API.</li><li>Access the wellknown using your group ID or group 'pretty name': https://qa.ueauth.io/{group}/.well-known/openid-configuration</li></ul>"
   x-logo:
     url: https://ue-platform-content.s3.amazonaws.com/0f8aeec8-8e9b-4629-b06c-6672b4a2e9ad
 tags:
   - name: Auth Groups
-    description: Auth Groups
-  - name: Plugins
-    description: Plugin configurations for the service
-  - name: Users
-    description: User Accounts
-  - name: Organization Users
-    description: Managing user accounts and access associated to an organization
-  - name: User Access
-    description: roles and permissions by account
-  - name: Clients
-    description: Administration of Group Registered Clients - Beyond OIDC Scope
-  - name: Notification
-    description: Manage notifications sent to the http notification plugin
-  - name: Organizations
-    description: Create or View organization data
-  - name: Domains
-    description: Create, Update, View or Delete domains within a Org
-  - name: Products
-    description: Create, Update, View or Delete Products
-  - name: Roles
-    description: Create, Update, View or Delete roles globally for all products and all organizations
-  - name: Organization Roles
-    description: Create, Update, View or Delete roles specific to a single organization
-  - name: Permissions
-    description: Create, Update, View or Delete permissions
-  - name: Operations
-    description: Commands for Artifact or Security Updates
-  - name: General Functional
-    description: APIs specifically for the United Effects UI implementation
+    description: Auth Groups are a pool of globally unique users
   - name: OIDC
     description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
+  - name: Users
+    description: User Accounts unique to the Auth Group. Email must be unique
+  - name: User Access
+    description: Manageing enterprise access being applied to users
+  - name: Clients
+    description: Reading or Deleting Clients in your Auth Group. User OIDC /reg for Create or Updates
+  - name: Notification
+    description: Manage notifications sent to the http notification plugin. Requires the plugin to be enabled.
+  - name: Organizations
+    description: Manage subsets of the Auth Group data to represent customers, departments, etc. Apply Products to indicate licensed software
+  - name: Organization Users
+    description: User Account management through the Organization context
+  - name: Domains
+    description: Seperate an Organization into smaller subsets to which product access can be assigned
+  - name: Products
+    description: Manage Products within your Auth Group
+  - name: Roles
+    description: Manage Roles globally for all Products and all Organizations
+  - name: Organization Roles
+    description: Manage Roles specific to a single organization. Sometimes referred to as "Custom Roles"
+  - name: Permissions
+    description: Manage Permissinos for one Product at a time.
+  - name: Operations
+    description: Commands for Artifact or Security Updates
+  - name: Plugins
+    description: Plugin configurations for the service tied to the Root AuthGroup (e.g. Notifications)
+  - name: General Functional
+    description: General APIs to aid data updates or UI functionality
   - name: Health
 
 paths:
@@ -62,8 +63,8 @@ paths:
     get:
       tags:
         - General Functional
-      summary: Return a clientID for Core UI from authGroup
-      description: Return a clientID for Core UI from authGroup. secured by UI host whitelist
+      summary: Return a clientId for UE Auth UI from the AuthGroup.
+      description: This API can be used by a caller to return the clientId associated to an AuthGroup so that the appropriate OIDC login link can be generated (i.e. /{group}/auth?client_id={client_id}). This endpoint is secured be ensuring https and a UI host whitelist.
       parameters:
         - name: group
           in: path
@@ -101,8 +102,8 @@ paths:
     get:
       tags:
         - General Functional
-      summary: Returns true if you should trigger a core update /api/group/updatecore
-      description: Returns true if you should trigger a core update /api/group/updatecore
+      summary: This API informs you if it is advisable to trigger a system update via /api/group/updatecore
+      description: As roles and permissions data for the UE Auth application is periodically updated, this endpoint will let you know if you should update and whether or not that update is required or can wait.
       parameters:
         - name: group
           in: path
@@ -116,22 +117,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    example: V1StGXR8_Z5jdHi6B-myT
-                  prettyName:
-                    type: string
-                  coreProductId:
-                    type: string
-                    format: uuid
-                  coreAccessDataVersion:
-                    type: string
-                  availableVersion:
-                    type: string
-                  updateRequired:
-                    type: boolean
+                $ref: '#/components/schemas/checkForUpdate'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -148,7 +134,7 @@ paths:
       tags:
         - General Functional
       summary: Update the permissions and roles of UEAuth to the latest available
-      description: Update the permissions and roles of UEAuth to the latest available
+      description: This API will attempt to update the permissions and roles associated to UEAuth and the auto generated products of your AuthGroup.
       parameters:
         - name: group
           in: path
@@ -162,22 +148,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    example: V1StGXR8_Z5jdHi6B-myT
-                  prettyName:
-                    type: string
-                  coreProductId:
-                    type: string
-                    format: uuid
-                  coreAccessDataVersion:
-                    type: string
-                  availableVersion:
-                    type: string
-                  updateRequired:
-                    type: boolean
+                $ref: '#/components/schemas/updateCore'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -189,12 +160,14 @@ paths:
       security:
         - bearer: [ ]
         - openId: [ ]
+
+  # Auth Group APIS
   /api/groupcheck/{prettyName}:
     get:
       tags:
         - Auth Groups
       summary: Check if a pretty name is available to save to a group
-      description: Check if a pretty name is available to save to a group
+      description: Pretty names, a.k.a. a url slug or tenant alias, are url safe unique strings that can be used as an alias in place of an ID when referencing an AuthGroup.
       parameters:
         - name: prettyName
           in: path
@@ -227,14 +200,12 @@ paths:
       security:
         - bearer: []
         - openId: []
-
-  # Group APIs
   /api/group:
     post:
       tags:
         - Auth Groups
       summary: Register a new auth group
-      description: Register a new auth group
+      description: Create your AuthGroup and hold on to the Initial Access Token that will be generated and returned upon creation. You will need it to create your Account user (POST /api/{group}/account) with the same email address you used to create your AuthGroup (owner). The AuthGroup will be inactive until you create your owner Account, at which point it will activate and all necassary data will be generated.
       responses:
         '201':
           description: successful operation
@@ -264,8 +235,8 @@ paths:
     get:
       tags:
         - Auth Groups
-      summary: Retrieve all auth groups (CRUD operation) - THIS SHOULD BE SYSTEM ADMIN ONLY
-      description: 'Uses oData filtering to retrieve Accounts. This will need permissions.'
+      summary: Retrieve all auth groups
+      description: This will return all Auth Groups within a given instance of this sofware. No permission for this endpoint is defined. Instead, you must be part of the Root AuthGroup to access.
       parameters:
         - name: $filter
           in: query
@@ -322,7 +293,7 @@ paths:
       tags:
         - Auth Groups
       summary: Find an Auth Group with ID
-      description: Identify a single auth group. Will require permissions
+      description: Identify a single Auth Group by its ID or prettyName
       parameters:
         - name: id
           in: path
@@ -354,8 +325,8 @@ paths:
     patch:
       tags:
         - Auth Groups
-      summary: Patch an existing Auth Group - Owner or SYSTEM ADMIN
-      description: Patch an existing Auth Group. This will require permissions.
+      summary: Patch an existing Auth Group
+      description: Patch an existing Auth Group. You must use the ID for this as a precaution, prettyName will not work to identify the record being updated.
       parameters:
         - name: id
           in: path
@@ -503,7 +474,7 @@ paths:
       tags:
         - Users
       summary: Register a new user
-      description: Register a new user
+      description: Register a new user to an Auth Group independant of any organization or other access considerations. Self-registration is possible if the Auth Group has defined locked=false. Otherwise, an appropriately permissioned member of the Auth Group must create the user.
       operationId: writeAccount
       parameters:
         - name: group
@@ -614,8 +585,8 @@ paths:
     get:
       tags:
         - Users
-      summary: Retrieve all users (CRUD operation)
-      description: 'Uses oData filtering to retrieve Accounts. This will need permissions.'
+      summary: Retrieve all users in the Auth Group
+      description: This will return every Account (user) associated to the Auth Group.
       operationId: getAccounts
       parameters:
         - name: group
@@ -679,7 +650,7 @@ paths:
       tags:
         - Users
       summary: Find a User with ID
-      description: Identify a single user. Will require permissions
+      description: Identify a single user by their user ID. If you enter "me" in the ID field, it will return your own information.
       operationId: getAccount
       parameters:
         - name: group
@@ -717,8 +688,8 @@ paths:
     delete:
       tags:
         - Users
-      summary: Hard delete a user - only authGroup owner
-      description: Hard delete a user - only authGroup owner
+      summary: Hard delete a user
+      description: This request will completely remove the unique Account from the AuthGroup. You should be careful with this method as it may lead to unforeseen data states such as orphaned records if you have tightly integrated with this API.
       operationId: deleteAccount
       parameters:
         - name: group
@@ -757,7 +728,7 @@ paths:
       tags:
         - Users
       summary: Patch an existing User
-      description: Patch an existing User. This will require permissions.
+      description: This allows you to update an Account record. While there is a permission to allow administrators of the AuthGroup to do this, it is recommended that you typically allow users themselves to manage their information unless they request assistance.
       operationId: patchAccount
       parameters:
         - name: group
@@ -2076,8 +2047,8 @@ paths:
     post:
       tags:
         - OIDC
-      summary: Request an OIDC initial access token
-      description: Request an OIDC initial access token. You can use this to create a client or even provide it to someone so they can register to a locked auth group (a.k.a. user pool)
+      summary: Request an OIDC initial access token (IAT)
+      description: Request an OIDC initial access token (IAT). There are many uses for an IAT; however, one primary use in this API is to create new clients. Use this endpoint to request the IAT and then use that as your bearer token to create a new client. This only applies if open registration is disabled.
       operationId: getInitialAccessToken
       parameters:
         - name: group
@@ -4227,10 +4198,10 @@ components:
     bearer:
       type: http
       scheme: bearer
-      description: 'For Bearer based tokens, simply enter the token (prefixing with "bearer" is not required). Until Swagger UI supports OIDC directly, you can use this security field with OIDC tokens as well.'
+      description: 'For Bearer based tokens, simply enter the token (prefixing with "bearer" is not required).'
     openId:
       type: openIdConnect
-      description: OIDC specific OAuth2 implementation. You should be accessing the instance of swagger specific to your group to use this - /{group}/swagger.
+      description: OIDC specific OAuth2 implementation. You should be accessing swagger or the api docs specific to your group to use this - /{group}/swagger or /{group}/api.
       openIdConnectUrl: http://example.com/group/.well-known/openid-configuration
 
   schemas:
@@ -5537,3 +5508,55 @@ components:
         description:
           type: string
           description: something to present on the screen explaining what this is for
+
+    checkForUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          example: V1StGXR8_Z5jdHi6B-myT
+        prettyName:
+          type: string
+        coreProducts:
+          type: array
+          items:
+            type: object
+        availableVersion:
+          type: string
+        updateRequired:
+          type: boolean
+        force:
+          type: boolean
+          description: if this is true, you should force the update ASAP
+
+    updateCore:
+      type: array
+      items:
+        type: object
+        properties:
+          UEAuthCoreProductName:
+            type: object
+            description: 'This is actually a dynamic property name which will represent your auto-generated Product: Organization Admin Portal'
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: ID of the product
+              added:
+                type: array
+                description: permissions which were added to the product on this update
+                items:
+                  type: object
+              removed:
+                type: array
+                description: ids of the permissions that were removed
+                items:
+                  type: string
+                  format: uuid
+              roles:
+                type: array
+                description: the roles updated associated to the product
+                items:
+                  type: object
+
+

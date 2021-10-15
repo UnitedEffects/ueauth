@@ -54,16 +54,20 @@ export default {
 			initProductOrg = await product.writeProduct(defaultProduct2);
 			if(!initProductOrg) throw new Error('Could not initialize platform product for organization admins');
 			permArray.map((p) => {
-				p.description = `${authGroup.name} - AuthGroup Admin Portal Permission. System Created. DO NOT DELETE`;
-				p.product = initProductAdmin.id;
-				p.authGroup = authGroup.id;
-				bulkPermWrite.push(p);
+				if(!p.DEPRECATED) {
+					p.description = `${authGroup.name} - AuthGroup Admin Portal Permission. System Created. DO NOT DELETE`;
+					p.product = initProductAdmin.id;
+					p.authGroup = authGroup.id;
+					bulkPermWrite.push(p);
+				}
 			});
 			permOrgArray.map((p) => {
-				p.description = `${authGroup.name} - Organization Admin Portal Permission. System Created. DO NOT DELETE`;
-				p.product = initProductOrg.id;
-				p.authGroup = authGroup.id;
-				bulkPermOrgWrite.push(p);
+				if(!p.DEPRECATED) {
+					p.description = `${authGroup.name} - Organization Admin Portal Permission. System Created. DO NOT DELETE`;
+					p.product = initProductOrg.id;
+					p.authGroup = authGroup.id;
+					bulkPermOrgWrite.push(p);
+				}
 			});
 			permissionsAdmin = await perm.bulkWrite(authGroup.id, bulkPermWrite);
 			permissionsOrg = await perm.bulkWrite(authGroup.id, bulkPermOrgWrite);

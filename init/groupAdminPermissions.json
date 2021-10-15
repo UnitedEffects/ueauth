@@ -2,18 +2,21 @@
   {
     "target": "group",
     "action": "update",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
   {
     "target": "group",
     "action": "read",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
   {
     "target": "group",
     "action": "delete",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -34,6 +37,7 @@
   {
     "target": "group",
     "action": "delete",
+    "DEPRECATED": true,
     "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission"

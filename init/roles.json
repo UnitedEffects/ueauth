@@ -7,7 +7,7 @@
       {
         "role": "Client",
         "description": "Used to provide access to client_credential M2M communication. System Generated. Do not delete.",
-        "permissions": ["group::read:own", "accounts::read", "invites::read", "clients::read", "clients::update:own", "notification::create", "notification::read", "notification::update", "operations-reset-user-password::create", "operations-client::create:own" ]
+        "permissions": ["group::read:own", "accounts::read", "clients::read", "clients::update:own", "notification::create", "notification::read", "notification::update", "operations-reset-user-password::create", "operations-client::create:own" ]
       },
       {
         "role": "OrganizationAdmin",
