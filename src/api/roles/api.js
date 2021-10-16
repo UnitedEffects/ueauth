@@ -33,6 +33,7 @@ const api = {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (!req.organization) throw Boom.forbidden('Custom roles must be associated to one organization');
+			if (!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(req.product.id);
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			await permissions.enforceOwnProduct(req.permissions, req.product.id);
 			const result = await role.getOrganizationRoles(req.authGroup.id, req.product.id, req.organization.id, req.query);
@@ -47,6 +48,7 @@ const api = {
 			if (req.authGroup.active === false) throw Boom.forbidden('You can not add roles in an inactive group');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (!req.organization) throw Boom.forbidden('Custom roles must be associated to one organization');
+			if (!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(req.product.id);
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			await permissions.enforceOwnProduct(req.permissions, req.product.id);
 			if (req.user && req.user.sub) {
@@ -145,6 +147,7 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (!req.organization) throw Boom.forbidden('Roles must be associated to an organization');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if (!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(req.product.id);
 			await permissions.enforceOwnProduct(req.permissions, req.product.id);
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await role.getRoleByOrgProdId(req.authGroup.id, req.product.id, req.organization.id, req.params.id);
@@ -160,6 +163,7 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (!req.organization) throw Boom.forbidden('Roles must be associated to an organization');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if (!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(req.product.id);
 			await permissions.enforceOwnProduct(req.permissions, req.product.id);
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await role.deleteRoleByOrgProdId(req.authGroup.id, req.product.id, req.organization.id, req.params.id);
@@ -175,6 +179,7 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (!req.organization) throw Boom.forbidden('Roles must be associated to your organization');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if (!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(req.product.id);
 			await permissions.enforceOwnProduct(req.permissions, req.product.id);
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const thisRole = await role.getRoleByOrgProdId(req.authGroup.id, req.product.id, req.organization.id, req.params.id);

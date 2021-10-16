@@ -16,6 +16,7 @@ const api = {
 			if (req.body.enabled === true && !req.body.notificationServiceUri) {
 				return next(Boom.preconditionRequired('notification service url is required'));
 			}
+			await permissions.enforceRoot(req.permissions);
 			const user = req.user.sub;
 			const result = await pins.toggleGlobalNotifications(req.body, user, req.authGroup);
 			return res.respond(say.created(result, RESOURCE));
@@ -26,6 +27,7 @@ const api = {
 	async getLatestPluginOptions(req, res, next) {
 		try {
 			const result = await pins.getLatestPluginOptions();
+			await permissions.enforceRoot(req.permissions);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -34,6 +36,7 @@ const api = {
 	async auditPluginOptions(req, res, next) {
 		try {
 			const result = await pins.auditPluginOptions();
+			await permissions.enforceRoot(req.permissions);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);

@@ -78,15 +78,18 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 properties:
-                  id:
+                  type:
                     type: string
-                    example: V1StGXR8_Z5jdHi6B-myT
-                  prettyName:
-                    type: string
-                  clientId:
-                    type: string
+                  data:
+                    type: object
+                    properties:
+                      group:
+                        type: string
+                        example: V1StGXR8_Z5jdHi6B-myT
+                      id:
+                        type: string
+                        description: the client_id of the AuthGroup
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -117,7 +120,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/checkForUpdate'
+                properties:
+                  type:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/checkForUpdate'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -148,7 +155,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/updateCore'
+                properties:
+                  type:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/updateCore'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -187,8 +198,11 @@ paths:
                     type: string
                     enum:
                       - Auth Group
-                  available:
-                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      available:
+                        type: boolean
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -212,7 +226,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/authGroupInitial'
+                properties:
+                  type:
+                    type: string
+                    example: Auth Group
+                  data:
+                    $ref: '#/components/schemas/authGroupInitial'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -474,7 +493,7 @@ paths:
       tags:
         - Users
       summary: Register a new user
-      description: Register a new user to an Auth Group independant of any organization or other access considerations. Self-registration is possible if the Auth Group has defined locked=false. Otherwise, an appropriately permissioned member of the Auth Group must create the user.
+      description: Register a new user to an Auth Group independant of any organization or other access considerations. Self-registration is possible if the Auth Group has defined locked=false. Otherwise, an appropriately permissioned member of the Auth Group must create the user. Please note that the only data provided by this endpoint (or any Account API) is the id, username, and email (and creat/modify/active meta data) of the user within this AuthGroup. The Account record holds no personal information aside from this email address and an optional phone number which is only visible to that Account owner. It is possible to add personal data into the metadata field, but this is a discouraged action.
       operationId: writeAccount
       parameters:
         - name: group
@@ -544,30 +563,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 properties:
-                  exact:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                          format: uuid
-                        email:
-                          type: string
-                          format: email
-                  like:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                          format: uuid
-                        email:
-                          type: string
-                          format: email
+                  type:
+                    type: string
+                    example: Account
+                  data:
+                    $ref: '#/components/schemas/searchAccounts'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -777,7 +778,7 @@ paths:
       tags:
         - Organization Users
       summary: Register a new or existing user as part of an organization
-      description: Register a new or existing user as part of an organization
+      description: If you intend to add or create a user specific to your organization, this is the correct API. You may want to use the account/search API first. This method will check to see if a user with the email specified exists. If the user exists, an organization access record will be added to that user's account, otherwise, the user is first created and then the access record added. This API does not allow you to set a password, one will be generated. If notifications are enabled (recommended), the caller will never see the password and a notification will be sent to the user or they can simply trigger a password reset to claim the account. If notifications are not enabled, the generated password will be returned with this call and include a warning that notifications are disabled. Please note that the only data provided by this endpoint (or any Account API) is the id, username, and email of the user within this AuthGroup. The Account record holds no personal information aside from this email address and an optional phone number which is only visible to that Account owner.
       operationId: writeAccountToOrg
       parameters:
         - name: group
@@ -826,8 +827,8 @@ paths:
       tags:
         - Organization Users
       summary: Retrieve all users associated to an organization
-      description: 'Uses oData filtering to retrieve Accounts'
-      operationId: getAccounts
+      description: This API allows you to browse the email and id of every user that has been added to your organization.
+      operationId: getAccountsByOrg
       parameters:
         - name: group
           in: path
@@ -896,7 +897,7 @@ paths:
       tags:
         - Organization Users
       summary: Find a User with ID
-      description: Identify a single user associated to an organization.
+      description: Identify a single user associated to an organization. Remember that Account records only return create/modified/active metadata, an email and an id.
       operationId: getAccountByOrg
       parameters:
         - name: group
@@ -943,7 +944,7 @@ paths:
       tags:
         - Organization Users
       summary: Remove an organization from user's access
-      description: Remove an organization from user's access
+      description: This endpoint removes a user form an organization and cuts off all access immediately. Please be advised, if a user obtained access records as part ofa  JWT token, that token may still show access until it expires.
       operationId: remove Org from access
       parameters:
         - name: group
@@ -970,7 +971,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/updateUserAccess'
+                $ref: '#/components/schemas/userAccessAction'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -990,7 +991,7 @@ paths:
       tags:
         - Organization Users
       summary: Get defined user access in order to make edits with PUT
-      description: Get defined user access
+      description: Get the specific record of domains and roles within the context of an organization. You can update and send back this record as part of the associated PUT endpoint to make changes.
       operationId: getDefinedUserAccess
       parameters:
         - name: group
@@ -1017,7 +1018,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/access'
+                $ref: '#/components/schemas/writeAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1036,8 +1037,8 @@ paths:
     put:
       tags:
         - Organization Users
-      summary: Apply org, domain, or roles to a user
-      description: Define a user's access
+      summary: Overwrite defined user access of an Account in the context of a single Organization
+      description: This endpoint allows you to change the domains and roles associated to an Account within the context of an Organization. Remember that this will overwrite the record not patch it.
       operationId: defineUserAccess
       parameters:
         - name: group
@@ -1093,7 +1094,8 @@ paths:
     get:
       tags:
         - User Access
-      description: Get user roles & permissions
+      summary: Query the organizations, products, roles and permissions of a user
+      description: This API will return all of the access information available for a specific user. It is not recommended that anyone other than AuthGroup administrators be given permissions to this endpoint.
       operationId: getUserAccess
       parameters:
         - name: group
@@ -1151,7 +1153,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/userAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1171,7 +1178,8 @@ paths:
     get:
       tags:
         - User Access
-      description: returns the roles and permissions(optional) that the token is specifically authorized for
+      summary: Query your own organizations, products, roles and permissions
+      description: This AIP returns the caller's specific access data as defined by the caller's token. This endpoint is unique in the API in that it is not specific to the associated client and audience of the API itself. You can use this endpoint to validate access information for any user across any supported product.
       operationId: validateToken
       parameters:
         - name: group
@@ -1222,7 +1230,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/userAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1243,7 +1256,8 @@ paths:
     get:
       tags:
         - User Access
-      description: returns the list of organizations to which a user (the caller) has been added
+      summary: Allows a user to view their account organizations and the state of those organizations
+      description: When an organization is applied to a user, it may be fully functional immediately (providing full access) or it may require the user to accept Terms of Access. This API allows the user to view the state of those organizations so the user can accept, decline or otherwise take action with regards to their account and information relative to organizations.
       operationId: getMyOrgs
       parameters:
         - name: group
@@ -1258,7 +1272,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/userAccess'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1279,7 +1298,7 @@ paths:
       tags:
         - User Access
       summary: Accept or decline terms of access for an organization. Declining will remove you from the organization.
-      description: Accept or decline terms of access for an organization. Declining will remove you from the organization.
+      description: This API allows a user to agree to the terms of access imposed by an organization, or decline and remove all access from that organization.
       operationId: acceptOrDeclineOrg
       parameters:
         - name: group
@@ -1300,7 +1319,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userAccess'
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/userAccessAction'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1337,9 +1361,9 @@ paths:
     get:
       tags:
         - Clients
-      summary: Retrieve all clients (CRUD operation) - ADMIN
-      description: 'Uses oData filtering to retrieve Clients. This will need permissions.'
-      operationId: get
+      summary: Retrieve all clients in your AuthGroup
+      description: Allows the caller to get a list of every registered Client in the AuthGroup. Sensative information like the client_secret is ommitted.
+      operationId: getClients
       parameters:
         - name: group
           in: path
@@ -1401,9 +1425,9 @@ paths:
     get:
       tags:
         - Clients
-      summary: Sanitized Response (no secrets) - Find a client with ID
-      description: Identify a single client. Will require permissions
-      operationId: getOne
+      summary: Returns a single Client from within the AuthGroup
+      description: This will bypass the normally protected GET /reg/{id} as long as the caller has the correct permissions. This is a convenience API and not the same as the OIDC call on the /reg endpoint which may require a registration access token. This API will sanitize the response.
+      operationId: getOneClient
       parameters:
         - name: group
           in: path
@@ -1440,9 +1464,9 @@ paths:
     delete:
       tags:
         - Clients
-      summary: Hard delete - authGroup owners only
-      description: Hard delete - authGroup owners only
-      operationId: deleteOne
+      summary: This will delete a Client
+      description: This API will bypass the OIDC /reg endpoint and allow an authorized caller from the AuthGroup to delete a Client.
+      operationId: deleteOneClient
       parameters:
         - name: group
           in: path
@@ -1734,9 +1758,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/notification'
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/notification'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1777,7 +1806,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/notification'
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1812,7 +1846,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/notification'
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1884,9 +1923,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/notification'
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/notification'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1905,8 +1949,8 @@ paths:
     get:
       tags:
         - Notification
-      summary: return a specific notification
-      description: return a specific notification. Keep in mind notifications have a 30 day TTL
+      summary: Return a specific notification
+      description: Return a specific notification. Keep in mind notification records only have a 30 day TTL
       operationId: getNotification
       parameters:
         - name: group
@@ -1927,7 +1971,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/notification'
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1966,7 +2015,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/notification'
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2245,7 +2299,8 @@ paths:
     get:
       tags:
         - Products
-      description: Get all products
+      summary: Get all Products
+      description: Return all Products defined as part of your AuthGroup
       operationId: getProducts
       parameters:
         - name: group
@@ -2290,9 +2345,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/product'
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/product'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2309,7 +2369,8 @@ paths:
     post:
       tags:
         - Products
-      description: Create new products
+      summary: Define a Products in your AuthGroup
+      description: In this API, the concept of a Product is a business level entity that represents software your company creates or otherwise manages to which access must be provided to Accounts, Organizations, and Domains. Products are not the same thing as an OIDC Client, but you may wish to have a one to many relationship between Products and OIDC Clients, something which can be managed on the Product object with the asssociatedClients array. This system does not enforce access to a Product in any way, we are simply recording and categorizing the relationship of the Product to the AuthGroup, Organizatin, Domains and ultimately Accounts (Users). It is the responsibility of the Product software itself (that is to say, not the responsibility of UE Auth or United Effects) to appropriately request tokens, scopes, and other information from this system (UE Auth) to then determine and enforce access.
       operationId: createProduct
       parameters:
         - name: group
@@ -2324,9 +2385,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/product'
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/product'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2352,7 +2418,8 @@ paths:
     get:
       tags:
         - Products
-      description: Get products info
+      summary: Get a Product's Info
+      description: Query a single Product by ID
       operationId: getProduct
       parameters:
         - name: group
@@ -2374,7 +2441,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/product'
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    $ref: '#/components/schemas/product'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2393,7 +2465,8 @@ paths:
     patch:
       tags:
         - Products
-      description: Create products for the DELETE
+      summary: Update a Product's information
+      description: Change information about your Product
       operationId: updateProduct
       parameters:
         - name: group
@@ -2415,7 +2488,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/product'
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    $ref: '#/components/schemas/product'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2441,7 +2519,8 @@ paths:
     delete:
       tags:
         - Products
-      description: Delete products. Deleting a product will delete all associated permissions.
+      summary: Delete a Product
+      description: This will completely delete a product. There are limits to deleting a Product if it associated to Organizations and Domains. You may need to dissassociate them first as those associations potentially represent internal (internal to your company) licenses or agreements. Once cleared of assocations, deleting a product will delete all associated permissions.
       operationId: deleteProduct
       parameters:
         - name: group
@@ -2463,7 +2542,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/product'
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    $ref: '#/components/schemas/product'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2506,15 +2590,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 properties:
-                  totalReferences:
-                    type: number
-                  permissionIds:
-                    type: array
-                    items:
-                      type: string
-                      format: uuid
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    properties:
+                      totalReferences:
+                        type: number
+                      permissionIds:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2535,8 +2623,8 @@ paths:
     get:
       tags:
         - Roles
-      summary: Scoped to authgroup and available across organizations and products
-      description: get all roles across products in your authgroup
+      summary: Get all Roles across Products in your AuthGroup
+      description: Scoped to an AuthGroup and available across Organizations and Products. This will return custom Role data specific to individual Organizations as well. Be very careful who has access to this API.
       operationId: getAllRolesAcrossProducts
       parameters:
         - name: group
@@ -2581,10 +2669,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2605,8 +2698,8 @@ paths:
     get:
       tags:
         - Organization Roles
-      summary: Scoped to this specific organization - returns global roles + org specific across all organization products
-      description: get all roles across products in your organization
+      description: Scoped to this specific Organization - returns available global Roles along with Organization specific Roles across all associated Organization Products
+      summary: Get all roles across Products in your Organization
       operationId: getAllRolesAcrossProductsByOrg
       parameters:
         - name: group
@@ -2657,10 +2750,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2680,8 +2778,8 @@ paths:
     get:
       tags:
         - Organization Roles
-      summary: Scoped to this specific organization - returns global roles and roles specific to the provided org for a given product
-      description: get roles info for a product
+      description: Scoped to this specific Organization - returns global Roles and thos Roles specific to the provided organization for a given product. If the product requested is not associated to the Organization it will return a 404.
+      summary: Get Roles in a single Product
       operationId: getProductRolesByOrg
       parameters:
         - name: group
@@ -2739,10 +2837,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2761,8 +2864,8 @@ paths:
     put:
       tags:
         - Organization Roles
-      summary: Scoped to this specific organization for a given product
-      description: Define new roles specific to this organization. Should not be used for global roles.
+      description: Scoped to this specific organization for a given Product, this API allows you to create custom Roles that only those in the Organization will be able to see. Be careful not to use this API when you intend to create a Global Role. If the specified product is not associated to the Organization, this returns a 404. There is a non-standard way of associating a permission to a Role. The property "permissions" takes an array of strings comprised of a concat of the Permission Ids and the Permission code. As an example, "3fa85f64-5717-4562-b3fc-2c963f66afa6 user::read:own" would be one string entry.
+      summary: Define new roles specific to this Organization.
       operationId: createRoleByOrg
       parameters:
         - name: group
@@ -2789,8 +2892,12 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2807,8 +2914,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/roleWrite'
+              $ref: '#/components/schemas/roleWrite'
         description: Create a new role
         required: true
       security:
@@ -2819,8 +2925,8 @@ paths:
     delete:
       tags:
         - Organization Roles
-      summary: Scoped to this specific organization - delete a role specific to this organization
-      description: remove a custom role specific to this organizatino and product
+      description: Scoped to this specific organization - delete a Role specific to this Organization. If the Product specified is not associated to the Organization, you will get a 404.
+      summary: Remove a custom Role specific to this Organization and Product
       operationId: deleteProductRoleByOrg
       parameters:
         - name: group
@@ -2854,10 +2960,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2876,8 +2986,8 @@ paths:
     get:
       tags:
         - Organization Roles
-      summary: Scoped to this specific organization - returns a role, either globally available or specific to this organization
-      description: get roles info for a product
+      description: Scoped to this specific Organization - returns a Role, either globally available or specific to this Organization. If the product specified is not assocaited to the Organization, a 404 is returned.
+      summary: Get Role information for a Product in your Organization
       operationId: getProductRoleByOrg
       parameters:
         - name: group
@@ -2911,10 +3021,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2933,8 +3047,8 @@ paths:
     patch:
       tags:
         - Organization Roles
-      summary: Scoped to this specific organization - updates a role specific to this organization
-      description: Update a role specific to the organization. This should not be used for global roles.
+      description: Scoped to this specific Organization - updates a role specific to this Organization. This API is specific to custom roles (custom=true) created by the Organization. If you are an AuthGroup Admin and you wish to update a globally available Role, use the other PATCH Role endpoint. If the specified product is not associated to the Organization, you will recieve a 404. There is a non-standard way of associating a permission to a Role. The property "permissions" takes an array of strings comprised of a concat of the Permission Ids and the Permission code. As an example, "3fa85f64-5717-4562-b3fc-2c963f66afa6 user::read:own" would be one string entry.
+      summary: Update a Role specific to the Organization
       operationId: updateRoleByOrg
       parameters:
         - name: group
@@ -2962,13 +3076,17 @@ paths:
           schema:
             type: string
       responses:
-        '201':
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2996,8 +3114,8 @@ paths:
     get:
       tags:
         - Roles
-      summary: Scoped to authgroup and available across organizations
-      description: get roles info for a product. Use oData filters to see just global or specific to an organization.
+      description: Scoped to authgroup - this API will return Roles data across Organizations including custom Role information scoped to single Organizations. Be very careful who has access to this API endpoint.
+      summary: Get all available Roles for a given Product in your AuthGroup
       operationId: getProductRoles
       parameters:
         - name: group
@@ -3049,10 +3167,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3071,8 +3193,8 @@ paths:
     post:
       tags:
         - Roles
-      summary: Scoped to authgroup and available across organizations
-      description: Create new globally available roles. All organizations will see this role in their list of product roles.
+      description: Scoped to AuthGroup and available across all organizations when the applicable Product is assocaited to them. In other words, all organizations will see this role in their list of product roles. Roles associate Permissions to Users. There is a non-standard way of associating a permission to a Role. The property "permissions" takes an array of strings comprised of a concat of the Permission Ids and the Permission code. As an example, "3fa85f64-5717-4562-b3fc-2c963f66afa6 user::read:own" would be one string entry.
+      summary: Create a new globally available Role
       operationId: createRole
       parameters:
         - name: group
@@ -3093,8 +3215,12 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3111,8 +3237,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/roleWrite'
+              $ref: '#/components/schemas/roleWrite'
         description: Create a new role
         required: true
       security:
@@ -3122,8 +3247,8 @@ paths:
     get:
       tags:
         - Roles
-      summary: Scoped to authgroup and available across organizations
-      description: return info of any role regardless of scope (i.e. global or organization)
+      description: Scoped to the AuthGroup and available across Organizations - it is possible to request any Role.
+      summary: Return any Role by ID
       operationId: getRole
       parameters:
         - name: group
@@ -3150,8 +3275,12 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3170,8 +3299,8 @@ paths:
     patch:
       tags:
         - Roles
-      summary: Scoped to authgroup and available across organizations
-      description: Update any role regardless of scope (global or organization)
+      description: This API will let you update any Role, including its assocaited permissions. All organizations in the AuthGroup will be affected by this API, be careful. There is a non-standard way of associating a permission to a Role. The property "permissions" takes an array of strings comprised of a concat of the Permission Ids and the Permission code. As an example, "3fa85f64-5717-4562-b3fc-2c963f66afa6 user::read:own" would be one string entry.
+      summary: Update any Role regardless of scope (AuthGroup or Organization)
       operationId: updateRole
       parameters:
         - name: group
@@ -3198,8 +3327,12 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/role'
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3225,8 +3358,8 @@ paths:
     delete:
       tags:
         - Roles
-      summary: Scoped to authgroup and available across organizations
-      description: Delete any role
+      description: This will allow you to delete any Role and will impact all Organizations in the AuthGroup, be careful. There are limits on Role deletions when the Accounts (users) have been assigned Roles. You may need to clear those assignments before you can delete.
+      summary: Delete any Role in your AuthGroup associated to a Product
       operationId: deleteRole
       parameters:
         - name: group
@@ -3248,8 +3381,17 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        '200':
           description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    $ref: '#/components/schemas/role'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3270,7 +3412,8 @@ paths:
     get:
       tags:
         - Organizations
-      description: Get organizations
+      summary: Get all Organizations
+      description: Returns all organizations (customers, departments, etc...) in an AuthGroup
       parameters:
         - name: group
           in: path
@@ -3314,9 +3457,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/organization'
+                properties:
+                  type:
+                    type: string
+                    example: Organization
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/organization'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3335,7 +3483,8 @@ paths:
     post:
       tags:
         - Organizations
-      description: Create a organization
+      summary: Create an Organization inside your AuthGroup
+      description: Organizations allow you to create subsets of the AuthGroup users for access to specific products and domains. The most common use case for an Organization would be to represent your Customers. You can also create Organizations to define subsets of users for internal departments or other groupings. Organizations represent the primary mechanism to determine product access. In the example of defining a Customer as an Organization, you can select which of your products that Customer has licensed and associate them to the Organization through the associatedProducts property. Every Organization automatically has an Administrative Domain created to allow access to the UEAuth product. It is not recommended that you (or the organizatino admin) add users to this Administrative Domain other than those who you wish to manage users, domains and roles for the Organization.
       parameters:
         - name: group
           in: path
@@ -3349,7 +3498,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/organization'
+                properties:
+                  type:
+                    type: string
+                    example: Organization
+                  data:
+                    $ref: '#/components/schemas/organization'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3376,7 +3530,8 @@ paths:
     get:
       tags:
         - Organizations
-      description: Get organization by Id
+      summary: Get Organization by Id
+      description: Return a single Organization using its ID
       operationId: getOrg
       parameters:
         - name: group
@@ -3397,7 +3552,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/organization'
+                properties:
+                  type:
+                    type: string
+                    example: Organization
+                  data:
+                    $ref: '#/components/schemas/organization'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3416,7 +3576,8 @@ paths:
     patch:
       tags:
         - Organizations
-      description: Refresh Org Data manually by hitting the source of truth
+      summary: Update an organization
+      description: Update an organization's information.
       operationId: updateOrg
       parameters:
         - name: group
@@ -3437,7 +3598,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/organization'
+                properties:
+                  type:
+                    type: string
+                    example: Organization
+                  data:
+                    $ref: '#/components/schemas/organization'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3463,7 +3629,8 @@ paths:
     delete:
       tags:
         - Organizations
-      description: Delete local IAM record of the organization
+      summary: Delete an Organization
+      description: There are limits on the ability to delete an organization that has already been assigned to users.
       operationId: deleteOrg
       parameters:
         - name: group
@@ -3479,8 +3646,17 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        '200':
           description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Organization
+                  data:
+                    $ref: '#/components/schemas/organization'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3501,7 +3677,8 @@ paths:
     get:
       tags:
         - Domains
-      description: Get domain info by Id
+      summary: Get Domain by ID
+      description: Return a single Domain from within an Organization
       operationId: getDomain
       parameters:
         - name: group
@@ -3528,7 +3705,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/domain'
+                properties:
+                  type:
+                    type: string
+                    example: Domain
+                  data:
+                    $ref: '#/components/schemas/domain'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3544,11 +3726,11 @@ paths:
       security:
         - bearer: []
         - openId: []
-
     patch:
       tags:
         - Domains
-      description: Update domain Info
+      summary: Update a Domain
+      description: Update a Domain's data
       operationId: updateDomain
       parameters:
         - name: group
@@ -3575,7 +3757,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/domain'
+                properties:
+                  type:
+                    type: string
+                    example: Domain
+                  data:
+                    $ref: '#/components/schemas/domain'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3601,7 +3788,8 @@ paths:
     delete:
       tags:
         - Domains
-      description: Delete domain
+      summary: Delete a Domain
+      description: This will hard delete your Domain. There are limits on delete when a domain has been associated to a user. You may need to remove users first.
       operationId: deleteDomain
       parameters:
         - name: group
@@ -3623,8 +3811,17 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        '200':
           description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Domain
+                  data:
+                    $ref: '#/components/schemas/domain'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3645,7 +3842,8 @@ paths:
     get:
       tags:
         - Domains
-      description: Get all domains by organizations Id
+      summary: Get all Domains by Organizations Id
+      description: Returns all Domains within an Organization
       operationId: getDomains
       parameters:
         - name: group
@@ -3696,9 +3894,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/domain'
+                properties:
+                  type:
+                    type: string
+                    example: Domain
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/domain'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3717,7 +3920,8 @@ paths:
     post:
       tags:
         - Domains
-      description: Create a domain in a specified organizations
+      summary: Create a Domain in a specified Organizations
+      description: Domains allow you to further refine access within the context of an Organization. Domains are used as the primary association mechanism of Products to Users. In other words, if you wish a User to have access to a product, that user must be added to a Domain which already has that Product associated (the property is called associatedOrgProducts). Only those Products associated to the parent Organization are available to be associated to a child Domain. Every Organization automatically has an Administrative Domain created to allow access to the UEAuth product. It is not recommended that you add users to this Domain other than those who you wish to manage users, domains and roles.
       operationId: createDomain
       parameters:
         - name: group
@@ -3738,7 +3942,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/domain'
+                properties:
+                  type:
+                    type: string
+                    example: Domain
+                  data:
+                    $ref: '#/components/schemas/domain'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3766,7 +3975,8 @@ paths:
     get:
       tags:
         - Permissions
-      description: get permissions
+      summary: Get all Permissions for a Product
+      description: Returns all of the Permissions assocaited to this Product
       operationId: getPermissions
       parameters:
         - name: group
@@ -3817,9 +4027,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/permission'
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/permission'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3838,7 +4053,8 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Create a permission. Once created, it can't be updated. You must delete and create new.
+      summary: Create a permission.
+      description: Permissions have a many to one relationship to Products, meaning all Permissions must specify exactly one Product. Once created, a Permission can't be updated... you must delete it and create a new one. You will see references to a Permission's code in this and other UE Auth docs. This is refering to the shorthand and unique (within the AuthGroup and Product) encoding that UE Auth automatically creates for each permission object in the format of target::action:ownership. For a detailed explanation of Permissions in UE Auth, you may review this <a href='https://github.com/UnitedEffects/ueauth/wiki/UE-Auth-Permissions'>Wiki Document</a>.
       operationId: createPermission
       parameters:
         - name: group
@@ -3859,7 +4075,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/permission'
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    $ref: '#/components/schemas/permission'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3888,7 +4109,7 @@ paths:
       tags:
         - Permissions
       summary: Get a permission by Id
-      description: Get a permission by Id
+      description: Query a single Permission for its description, code and other meta data
       operationId: getPermission
       parameters:
         - name: group
@@ -3915,7 +4136,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/permission'
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    $ref: '#/components/schemas/permission'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3934,7 +4160,8 @@ paths:
     delete:
       tags:
         - Permissions
-      description: Delete permission will automatically clear all references from roles. Use /permissions/check/role to see which
+      summary: Delete a Permission
+      description: Delete Permission will automatically clear all references from roles. Use /permissions/check/role to see which
       operationId: deletePermission
       parameters:
         - name: group
@@ -3956,8 +4183,17 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        '200':
           description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    $ref: '#/components/schemas/permission'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4006,15 +4242,20 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 properties:
-                  totalReferences:
-                    type: number
-                  roleIds:
-                    type: array
-                    items:
-                      type: string
-                      format: uuid
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    type: object
+                    properties:
+                      totalReferences:
+                        type: number
+                      roleIds:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4035,9 +4276,9 @@ paths:
     get:
       tags:
         - Permissions
-      summary: Get all of the available permission actions for a product
-      description: Get all of the available permission actions for a product. These are used to create permissions.
-      operationId: getPermissionTargets
+      summary: Get all of the available Permission Actions for a Product
+      description: Get all of the available Permission actions for a product. Note, there is no separate Actions table or collection. This API aggregates all Actions used across an AuthGroup and Product and returns them as a reference. To add new Actions, simply specify a previously unused Action when creating a Permission.
+      operationId: getPermissionActions
       parameters:
         - name: group
           in: path
@@ -4057,15 +4298,20 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 properties:
-                  id:
+                  type:
                     type: string
-                    default: 'actions'
-                  values:
-                    type: array
-                    items:
-                      type: string
+                    example: Permission
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        default: 'actions'
+                      values:
+                        type: array
+                        items:
+                          type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4085,8 +4331,8 @@ paths:
     get:
       tags:
         - Permissions
-      summary: Get all of the available permission targets for a product
-      description: Get all of the available permission targets for a product. These are used to create permissions.
+      summary: Get all of the available Permission Targets for a Product
+      description: Get all of the available Permission targets for a product. Note, there is no separate Targets table or collection. This API aggregates all Targets used across an AuthGroup and Product and returns them as a reference. To add new Targets, simply specify a previously unused Target when creating a Permission.
       operationId: getPermissionTargets
       parameters:
         - name: group
@@ -4107,15 +4353,20 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 properties:
-                  id:
+                  type:
                     type: string
-                    default: 'targets'
-                  values:
-                    type: array
-                    items:
-                      type: string
+                    example: Permission
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        default: 'targets'
+                      values:
+                        type: array
+                        items:
+                          type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4320,19 +4571,6 @@ components:
           type: string
           description: Not part of the OIDC specification - used for UEAuth
 
-    inviteOperation:
-      type: object
-      required:
-        - operation
-      additionalProperties: false
-      properties:
-        operation:
-          type: string
-          enum:
-            - accept
-            - decline
-            - resend
-
     accessTokens:
       properties:
         access_token:
@@ -4389,13 +4627,10 @@ components:
           type: string
           enum: ['Account']
         data:
-          type: object
           $ref: '#/components/schemas/accountObject'
         authGroup:
-          type: object
           $ref: '#/components/schemas/authGroup'
         client:
-          type: object
           $ref: '#/components/schemas/clientObject'
 
 
@@ -4406,7 +4641,6 @@ components:
           type: string
           enum: ['Account']
         data:
-          type: object
           $ref: '#/components/schemas/accountObject'
 
     getClients:
@@ -4418,7 +4652,6 @@ components:
         data:
           type: array
           items:
-            type: object
             $ref: '#/components/schemas/clientObject'
 
     getClient:
@@ -4428,7 +4661,6 @@ components:
           type: string
           enum: ['Client']
         data:
-          type: object
           $ref: '#/components/schemas/clientObject'
 
     writeClientObject:
@@ -4609,6 +4841,26 @@ components:
           type: boolean
           description: if the account has been verified via external email or text message
 
+    minimalAccountsInfo:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+          email:
+            type: string
+            format: email
+
+    searchAccounts:
+      type: object
+      properties:
+        exact:
+          $ref: '#/components/schemas/minimalAccountsInfo'
+        like:
+          $ref: '#/components/schemas/minimalAccountsInfo'
+
     accountObject:
       type: object
       additionalProperties: false
@@ -4655,13 +4907,16 @@ components:
         password:
           type: string
           description: this is a password
-        txt:
-          type: string
-          pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
-          description: optionally used for verifying account, requires country code. e.g. +1
+        phone:
+          type: object
+          properties:
+            txt:
+              type: string
+              pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
+              description: used for notifications. only visible to the user in question.
         metadata:
           type: object
-          description: additional context provided by the implementer
+          description: additional context provided by the implementer. this field will be retured when secured profiles are available (see readme roadmap)
 
     writeAccountByOrg:
       type: object
@@ -4897,7 +5152,6 @@ components:
           enum:
             - Auth Group
         data:
-          type: object
           $ref: '#/components/schemas/authGroup'
 
     globalPlugins:
@@ -5190,11 +5444,25 @@ components:
                 format: uuid
 
     updateUserAccess:
-      allOf:
-        - $ref: '#/components/schemas/accountObject'
       properties:
+        id:
+          type: string
+          description: user/account id
+          format: uuid
         access:
           $ref: '#/components/schemas/access'
+
+    userAccessAction:
+      allOf:
+        - $ref: '#/components/schemas/updateUserAccess'
+      properties:
+        organization:
+          type: string
+          format: uuid
+          description: organization that action occurred against
+        action:
+          type: string
+          description: what happened
 
     userAccess:
       properties:
@@ -5325,8 +5593,8 @@ components:
           type: array
           items:
             type: string
-            format: uuid
-            description: permissionIds
+            example: "3fa85f64-5717-4562-b3fc-2c963f66afa6 target::action:own"
+            description: this is a concatenation of the permission ID and its code
 
     organization:
       type: object

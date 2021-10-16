@@ -8,6 +8,7 @@ import plugs from '../plugins/plugins';
 //import permissions from '../../permissions';
 import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
+import permissions from "../../permissions";
 const config = require('../../config');
 
 
@@ -119,6 +120,9 @@ const api = {
 			if (!req.body.name) return next(Boom.preconditionRequired('name is required'));
 			if (req.body.prettyName) {
 				if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
+			}
+			if (config.OPEN_GROUP_REG === false) {
+				await permissions.enforceRoot(req.permissions);
 			}
 			result = await group.write(req.body);
 			const output = await group.completeGroupSignup(result, req.globalSettings, req.body.owner);

@@ -189,7 +189,7 @@ const api = {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
 			await permissions.enforceOwn(req.permissions, id);
-			const result = await acct.getAccount(req.params.group, id);
+			const result = await acct.getAccount(req.params.group, id, (req.user.sub === id));
 			if (!result) throw Boom.notFound(`id requested was ${id}`);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

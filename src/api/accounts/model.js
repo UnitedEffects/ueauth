@@ -37,7 +37,9 @@ const accountSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-	txt: String,
+	phone: {
+		txt: String,
+	},
 	verified: {
 		type: Boolean,
 		default: false
@@ -121,6 +123,7 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret.password;
 	delete ret.blocked;
 	delete ret.access;
+	delete ret.phone;
 	delete ret.__v;
 };
 

@@ -100,7 +100,7 @@ const factory = {
 		user.access = userAccess;
 		user.modifiedBy = modifiedBy;
 		user.modifiedAt = Date.now();
-		const result = await user.save();
+		await user.save();
 		if (globalSettings && globalSettings.notifications.enabled === true &&
 			ag.pluginOptions.notification.enabled === true) {
 			try {
@@ -112,7 +112,10 @@ const factory = {
 			}
 		}
 		ueEvents.emit(authGroup, 'ue.access.defined', { sub: id, access: orgRecord });
-		return result;
+		return {
+			id,
+			access: [orgRecord]
+		};
 	},
 	async getUserAccess(authGroup, id, query) {
 		const user = await dal.getAccountByAccess(authGroup, id, query.org);
@@ -289,7 +292,12 @@ const factory = {
 		if (orgIndex === undefined && orgRecord) throw Boom.notFound(`Unexpected error finding organization ${organization} on user ${id}`);
 		userAccess.splice(orgIndex, 1);
 		user.access = userAccess;
-		return user.save();
+		await user.save();
+		return {
+			id,
+			organization,
+			action: 'removed'
+		};
 	},
 	async checkOrganizations(ag, orgId) {
 		const result = await dal.checkOrganizations(ag, orgId);
@@ -333,7 +341,13 @@ const factory = {
 			userAccess[orgIndex].organization.terms.accepted = true;
 			userAccess[orgIndex].organization.terms.termsAcceptedOn = Date.now();
 			user.access = userAccess;
-			return user.save();
+			await user.save();
+			return {
+				id,
+				organization,
+				action: 'accepted',
+				access: [userAccess[orgIndex]]
+			};
 		case 'decline':
 			return factory.removeOrgFromAccess(authGroup, organization, id);
 		default:

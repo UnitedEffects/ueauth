@@ -124,6 +124,7 @@
   {
     "target": "userAccess",
     "action": "create",
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -131,6 +132,7 @@
     "target": "userAccess",
     "action": "update",
     "core": true,
+    "DEPRECATED": true,
     "description": "UE Core permission"
   },
   {
@@ -143,12 +145,14 @@
     "target": "userAccess",
     "action": "delete",
     "core": true,
+    "DEPRECATED": true,
     "description": "UE Core permission"
   },
   {
     "target": "userAccess",
     "action": "update",
     "ownershipRequired": true,
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -163,6 +167,7 @@
     "target": "userAccess",
     "action": "delete",
     "ownershipRequired": true,
+    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },

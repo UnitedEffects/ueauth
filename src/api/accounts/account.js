@@ -5,8 +5,7 @@ import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
-import Joi from "joi";
-import {v4 as uuid} from "uuid";
+import Joi from 'joi';
 
 const config = require('../../config');
 
@@ -25,8 +24,13 @@ export default {
 		return dal.getAccounts(authGroupId, query);
 	},
 
-	async getAccount(authGroupId, id) {
-		return dal.getAccount(authGroupId, id);
+	async getAccount(authGroupId, id, self = false) {
+		const acc = await dal.getAccount(authGroupId, id);
+		if(!self) return acc;
+		return {
+			...JSON.parse(JSON.stringify(acc)),
+			phone: acc.phone
+		};
 	},
 
 	// @notTested
@@ -114,7 +118,7 @@ export default {
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
-			recipientSms: user.txt,
+			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
 			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/verifyaccount?code=${iAccessToken.jti}`,
 			subject: `${authGroup.name} - Verify and Claim Your New Account`,
 			message: `You have been added to the authentication group '${authGroup.name}'. Please click the button below or copy past the link in a browser to verify your identity and set your password.`,
@@ -137,12 +141,12 @@ export default {
 					}
 				]
 			}
-		}
+		};
 
 		if(formats.length === 0) {
 			data.formats = [];
 			if(user.email) data.formats.push('email');
-			if(user.sms) data.formats.push('sms');
+			if(user.phone && user.phone.txt) data.formats.push('sms');
 		}
 		return data;
 	},
@@ -156,7 +160,7 @@ export default {
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
-			recipientSms: user.txt,
+			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
 			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
 			subject: `${authGroup.name} - User Password Reset`,
 			message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
@@ -179,11 +183,11 @@ export default {
 					}
 				]
 			}
-		}
+		};
 		if(formats.length === 0) {
 			data.formats = [];
 			if(user.email) data.formats.push('email');
-			if(user.sms) data.formats.push('sms');
+			if(user.phone && user.phone.txt) data.formats.push('sms');
 		}
 		return data;
 	},
