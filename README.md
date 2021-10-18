@@ -58,7 +58,7 @@ Please note, documentation is still a work in progress. If you can't find someth
 * [Getting Started](https://github.com/UnitedEffects/ueauth/wiki/Getting-Started)
 * [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
 * [Specifications](https://github.com/UnitedEffects/ueauth/wiki/Specifications)
-* System Configuration - Coming Soon
+* [System Configuration](https://github.com/UnitedEffects/ueauth/wiki/System-Configuration)
 * [AuthGroup Configuration](https://github.com/UnitedEffects/ueauth/wiki/AuthGroup-Configuration)
 * [Notification Plugin](https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin)
 * [FAQ & Tips](https://github.com/UnitedEffects/ueauth/wiki/FAQ-and-Tips)

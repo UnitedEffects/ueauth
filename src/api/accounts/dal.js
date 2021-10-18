@@ -1,5 +1,5 @@
 import Account from './model';
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcryptjs';
 
 export default {
 	async writeAccount(data) {
@@ -13,6 +13,10 @@ export default {
 	async getAccountsByOrg(g, o, query) {
 		query.query.authGroup = g;
 		query.query.access = { $elemMatch: { 'organization.id': o } };
+		if(query.query.domains) {
+			query.query.access.$elemMatch['organization.domains'] = query.query.domains;
+			delete query.query.domains;
+		}
 		return Account.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
 	async getAccount(authGroup, id) {
