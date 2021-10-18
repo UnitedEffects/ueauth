@@ -2,58 +2,69 @@
 
 [![CI](https://github.com/UnitedEffects/ueauth/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/UnitedEffects/ueauth/actions/workflows/main.yml)
 
-UE Auth is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management and provides the missing pieces enterprises typically have to develop on their own in a single package.
+[UEAuth](https://ueauth.io) is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management and provides the missing pieces enterprises typically have to develop on their own in a single package.
 
 The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider), which is the only [openid.net](https://openid.net/developers/certified/) certified javascript library currently listed. Multi-tenancy in this context means each tenant is an "AuthGroup" and all artifacts such as accounts (users) and clients are unique and locked to the AuthGroup.
 
-The primary areas of functionality are:
+## Object Relationship Model
 
-* **AuthGroup** - An AuthGroup is a pool of uniquely identified users. AuthGroups can be private, requiring admins to add users, or public, allowing users to simply self-register. It is also possible to make the AuthGroup public but add further restrictions at an Organization, Domain or Product level. AuthGroups allow configuration of the OIDC authorization solution which users employ for login. Current logins supported include all standard OIDC flows and Magic Links built on OIDC. In the future we will support SAML and MFA. Email based interaction are provided through a notification plugin interface.
-* **User Management** - The ability to define and administrate accounts (users) within the context of an AuthGroup, Organization, or Domain.
-* **Organization Management** - The ability to define collections of accounts within an AuthGroup that have common access to things like customers or departments. For example: If Sage Industries has an AuthGroup representing a pool of unique users, they may also have a b2b customer called Acme Rockets Inc. which some of their users would need to access. Acme Rockets Inc. is an Organization within the Sage Industries AuthGroup.
-* **Domain Management** - Domains further subsets of Organizations which create finer access control. For example: Lets say Sage Industries sells Enterprise Resource Management (ERM) software to Acme Rockets Inc. Sage Industries has a large global pool of users, this is their AuthGroup, and some of those users need access to Acme Rockets Inc. which is represented as an Organization within Sage Industries. Acme Rockets has multiple departments that use the new ERM software and each needs different access to that software. Each department could be represented as a Domain with in the Acme Rockets Organization.
-* **Product Management** - Product Management allows you to define the products to which your users, organizations, or domains will need access and permissions. Products could be public with self-service access or private requiring admin provided access.
-* **Role Management** - Roles are groupings of permissions which can be applied to Accounts (users) within the context of an Organization, Domain, and Product.
-* **Permission Management** - Permissions are nothing more than a data record indicating a coupling of a TARGET and an allowed ACTION within the context of a Product. The UE Auth Permissions service does not enforce permissions, it defines them. Permissions will be present on tokens either directly or through a provided link on the token depending on their size. The permissions provided on the token can be scoped to a single organization/domain/product for that user or return all possible permissions.
+![Object Relationships Diagram](https://unitedeffects.com/docs/object-relationships.jpeg)
 
-## Documentation
+## API Documentation and Demo
 
-Please note that we are just now open sourcing this project, and we are still working through the documentation. It will get better over time.
+* [Demo Service](https://qa.ueauth.io)
+* The UE Auth API is well documented and available here: https://qa.ueauth.io/api
+* You can create an AuthGroup and experiment with the API in the demo account using swagger: https://qa.ueauth.io/swagger
+    * See Getting Started below for details
+* Once you have an AuthGroup, you can actually utilize the AuthGroup to login directly from swagger by inserting the group into the swagger URL as follows: https://qa.ueauth.io/{yourgroup id or prettyName}/swagger
+    * Click Authorize and scroll down to the Code Authorization flow. You'll need your AuthGroup associated client_id and client_secret, which would have been provided when you signed up
+    * Please note, you will still need to enter a value into the required group fields throughout the API to make openapi requests; however, for your convenience, the ID of the authgroup you've selected is displayed and used rather than whatever you may enter in the field.
 
-### Full API
+## Manual Quick Start with the Demo
 
-https://qa.ueauth.io/api
+1. Navigate to https://qa.ueauth.io/swagger
+2. Access the [Group creation API - POST /api/group](https://qa.ueauth.io/swagger#/Auth%20Groups/post_api_group)
+3. Click "Try it out" and define the POST request object ensuring the required fields are defined:
+```json
+{
+  "name": "Your Group Name",
+  "prettyName": "your_url_friendly_name",
+  "owner": "you@example.com",
+  "locked": false,
+  "primaryDomain": "https://example.com",
+  "primaryEmail": "info@example.com"
+}
+```
+4. Make the request and take note of the response properties. One of them will be an initialAccessToken.
+5. Access the [Account creation API - POST /api/your_url_friendly_name/account](https://qa.ueauth.io/swagger#/Users/writeAccount)
+6. Click the Authorization button and paste the initialAccessToken from step 4 into the bearer field
+7. Click "Try it out" and define the POST request object for the account. Make sure you use the same email address you used to define the Owner when you created your AuthGroup - your@example.com
+```json
+{
+  "username": "you@example.com",
+  "email": "you@example.com",
+  "password": "yourpassword"
+}
+```
+8. Make the request. This will create your account, activate your AuthGroup, provide a oAuth Client with client_id and client_secret, initialize the primary products, organizations and domains and finally associate you to those products so you have full Admin privileges.
+9. Access your well-known URL here: https://qa.ueauth.io/your_url_friendly_name/.well-known/openid-configuration
+    
+## Guides
 
-### Getting Started
+* [UE Auth](https://github.com/UnitedEffects/ueauth/wiki)
+* [Overview](https://github.com/UnitedEffects/ueauth/wiki/Overview)
+* [Getting Started](https://github.com/UnitedEffects/ueauth/wiki/Getting-Started)
+* [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
+* [Specifications](https://github.com/UnitedEffects/ueauth/wiki/Specifications)
+* System Configuration - Coming Soon
+* [AuthGroup Configuration](https://github.com/UnitedEffects/ueauth/wiki/AuthGroup-Configuration)
+* [Notification Plugin](https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin)
+* [FAQ & Tips](https://github.com/UnitedEffects/ueauth/wiki/FAQ-and-Tips)
 
-https://github.com/UnitedEffects/ueauth/wiki/Quick-Start
+## Upcoming Roadmap
 
-### Permissions Overview
-
-https://github.com/UnitedEffects/ueauth/wiki/UE-Auth-Permissions
-
-### Specifications
-
-https://github.com/UnitedEffects/ueauth/wiki/Specifications
-
-### Developer Info
-
-https://github.com/UnitedEffects/ueauth/wiki/Developer-Info
-
-## Notifications Plugin
-
-https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin
-
-## Links
-
-### Demo
-
-https://qa.ueauth.io
-
-### Project Page
-
-https://ueauth.io
-
-### United Effects
-
-https://unitedeffects.com
+* Secured Profiles
+* Federated SSO and Social Logins
+* Multi-Factor Authentication
+ 
+Copyright (c) 2021 [United Effects LLC](https://unitedeffects.com), all rights reserved.
