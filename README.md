@@ -35,7 +35,7 @@ The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER
   "primaryEmail": "info@example.com"
 }
 ```
-4. Make the request and take note of the response properties. One of them will be an initialAccessToken.
+4. Make the request and take note of the response properties. One of them will be an initialAccessToken. Another property will be the securityExpiration, which is how long you have to create your account and activate the AuthGroup before it auto deletes.
 5. Access the [Account creation API - POST /api/your_url_friendly_name/account](https://qa.ueauth.io/swagger#/Users/writeAccount)
 6. Click the Authorization button and paste the initialAccessToken from step 4 into the bearer field
 7. Click "Try it out" and define the POST request object for the account. Make sure you use the same email address you used to define the Owner when you created your AuthGroup - your@example.com
