@@ -51,6 +51,8 @@ The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER
     
 ## Guides
 
+Please note, documentation is still a work in progress. If you can't find something you need, reach out: [United Effects Team](mailto:team@unitedeffects.com)
+
 * [UE Auth](https://github.com/UnitedEffects/ueauth/wiki)
 * [Overview](https://github.com/UnitedEffects/ueauth/wiki/Overview)
 * [Getting Started](https://github.com/UnitedEffects/ueauth/wiki/Getting-Started)
