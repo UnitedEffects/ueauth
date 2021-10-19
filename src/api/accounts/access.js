@@ -123,6 +123,7 @@ const factory = {
 		const userAccess = user.access || [];
 		const response = {
 			sub: id,
+			type: 'user',
 			authGroup: {
 				id: authGroup.id,
 				owner: (authGroup.owner === id),
@@ -131,7 +132,9 @@ const factory = {
 			},
 			access: []
 		};
-		const condensed = {};
+		const condensed = {
+			type: 'user'
+		};
 		let orgs = [];
 		let domains = [];
 		let products = [];
@@ -293,11 +296,13 @@ const factory = {
 		userAccess.splice(orgIndex, 1);
 		user.access = userAccess;
 		await user.save();
-		return {
+		const output = {
 			id,
 			organization,
 			action: 'removed'
 		};
+		ueEvents.emit(authGroup, 'ue.access.destroy', output);
+		return output;
 	},
 	async checkOrganizations(ag, orgId) {
 		const result = await dal.checkOrganizations(ag, orgId);

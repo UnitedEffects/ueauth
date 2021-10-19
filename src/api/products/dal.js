@@ -29,5 +29,27 @@ export default {
 	},
 	async updateCoreMetaData(authGroup, id, meta) {
 		return Product.findOneAndUpdate({ _id: id, authGroup }, { meta } , { new: true });
-	}
+	},
+	async addAssociatedClient(authGroup, id, clientId) {
+		const product = await Product.findOne({ _id: id, authGroup });
+		if(product) {
+			if(!product.associatedClients) product.associatedClients = [];
+			product.associatedClients.push(clientId);
+			//ensure no duplicates
+			product.associatedClients = [...new Set(product.associatedClients)];
+			return product.save();
+		}
+		return product;
+	},
+	async removeAssociatedClient(authGroup, id, clientId) {
+		const product = await Product.findOne({ _id: id, authGroup });
+		if(product) {
+			if(!product.associatedClients || product.associatedClients.length === 0) return product;
+			product.associatedClients = product.associatedClients.filter((c) => {
+				return c !== clientId;
+			});
+			return product.save();
+		}
+		return product;
+	},
 };

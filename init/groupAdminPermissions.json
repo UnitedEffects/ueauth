@@ -157,6 +157,24 @@
     "description": "UE Core permission"
   },
   {
+    "target": "clientAccess",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
     "target": "userAccess",
     "action": "read",
     "ownershipRequired": true,
