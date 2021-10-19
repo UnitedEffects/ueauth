@@ -2,6 +2,7 @@ import Boom from '@hapi/boom';
 import dal from './dal';
 import role from '../../roles/roles';
 import ueEvents from '../../../events/ueEvents';
+import dom from "../../domains/domain";
 
 function cleanupAccessResponse(object) {
 	let result = object;
@@ -27,6 +28,36 @@ export default {
 		let result = await dal.getClientAccess(authGroup, id);
         result = cleanupAccessResponse(result);
 		return result;
+	},
+	async getFormattedClientAccess(authGroup, id) {
+		let result = await dal.getClientAccess(authGroup, id);
+		result = cleanupAccessResponse(result);
+		const response = {
+			sub: id,
+			type: 'client',
+			authGroup: result.authGroup,
+			member: (result.authGroup === authGroup.id),
+		};
+		if(result.access.roles && result.access.product) {
+			response.products = result.access.product;
+			const roles = [];
+			const permissions = [];
+			const roleTask = result.access.roles.map(async (rl) => {
+				const myRole = await role.getRole(authGroup.id, result.access.product, rl);
+				roles.push(`${myRole.productCodedId || myRole.product}::${myRole.codedId}`);
+				myRole.permissions.map((p) => {
+					const perm = p.split(' ');
+					if(perm.length === 2) {
+						permissions.push(`${myRole.productCodedId || myRole.product}:::${perm[1]}`);
+					}
+				});
+				return rl;
+			});
+			await Promise.all(roleTask);
+			response.productRoles = roles.join(' ');
+			response.permissions = permissions.join(' ');
+		}
+		return response;
 	},
 	async applyClientAccess(authGroup, id, access) {
 		if(!access || !access.roles || !Array.isArray(access.roles)) throw new Error('incorrect input. access.roles should be an array');

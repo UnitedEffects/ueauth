@@ -1,7 +1,8 @@
 import { v4 as uuid } from 'uuid';
 import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
-import access from '../accounts/access';
+import userAccess from '../accounts/access';
+import clientAccess from '../oidc/client/access';
 import middle from '../../oidcMiddleware';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
@@ -260,9 +261,9 @@ function oidcConfig(g) {
 			} else {
 				let scope;
 				let group;
-				if (typeof token.scope !== 'object') {
+				if (!Array.isArray(token.scope)) {
 					try {
-						scope = token.scope.split(' ');
+						scope = (token.scope) ? token.scope.split(' ') : [];
 					} catch (e) {
 						console.error(e);
 						scope = [];
@@ -281,70 +282,79 @@ function oidcConfig(g) {
 			// backing up claim before attempting access inclusion
 			const backup = JSON.parse(JSON.stringify(claims));
 			// getting access information for the user
-			try {
-				const scopes = token.scope.split(' ');
-				let bAccess = false;
-				scopes.map((s) => {
-					if(ACCESS_SCOPES.includes(s)) {
-						bAccess = true;
+			if(token.scope) {
+				try {
+					const scopes = token.scope.split(' ');
+					let bAccess = false;
+					scopes.map((s) => {
+						if(ACCESS_SCOPES.includes(s)) {
+							bAccess = true;
+						}
+					});
+					const query = {
+						minimized: true
+					};
+					if(ctx.oidc.body.x_access_filter_organization){
+						query.org = ctx.oidc.body.x_access_filter_organization;
 					}
-				});
-				const query = {
-					minimized: true
-				};
-				if(ctx.oidc.body.x_access_filter_organization){
-					query.org = ctx.oidc.body.x_access_filter_organization;
-				}
-				if(ctx.oidc.body.x_access_filter_domain){
-					query.domain = ctx.oidc.body.x_access_filter_domain;
-				}
-				if(ctx.oidc.body.x_access_filter_product){
-					query.product = ctx.oidc.body.x_access_filter_product;
-				}
-				if(bAccess === true && ctx.authGroup) {
-					const userAccess = await access.getUserAccess(ctx.authGroup, token.accountId, query);
-					if(token.format === 'jwt' && sizeof(userAccess) > config.ACCESS_OBJECT_SIZE_LIMIT) {
-						const url = `${config.PROTOCOL}://${config.SWAGGER}/api/${ctx.authGroup.id}/access/validate`;
-						let urlQuery = '?';
-						if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
-						if(query.domain) {
-							urlQuery = (urlQuery === '?') ? `${urlQuery}domain=${query.domain}` : `&${urlQuery}domain=${query.domain}`;
+					if(ctx.oidc.body.x_access_filter_domain){
+						query.domain = ctx.oidc.body.x_access_filter_domain;
+					}
+					if(ctx.oidc.body.x_access_filter_product){
+						query.product = ctx.oidc.body.x_access_filter_product;
+					}
+					if(bAccess === true && ctx.authGroup) {
+						let access;
+						if(token.accountId) {
+							// user - accessToken
+							access = await userAccess.getUserAccess(ctx.authGroup, token.accountId, query);
+						} else {
+							// client - clientCredential
+							access = await clientAccess.getFormattedClientAccess(ctx.authGroup, token.clientId);
 						}
-						if(query.product) {
-							urlQuery = (urlQuery === '?') ? `${urlQuery}product=${query.product}` : `&${urlQuery}product=${query.product}`;
-						}
-						claims['x-access-url'] = (urlQuery === '?') ? url : `${url}${urlQuery}`;
-						claims['x-access-method'] = 'GET';
-					} else {
-						if(userAccess) {
-							if(userAccess.owner === true && (scopes.includes('access') || scopes.includes('access:group'))) {
-								claims['x-access-group'] = 'owner';
+						if(token.format === 'jwt' && sizeof(access) > config.ACCESS_OBJECT_SIZE_LIMIT) {
+							const url = `${config.PROTOCOL}://${config.SWAGGER}/api/${ctx.authGroup.id}/access/validate`;
+							let urlQuery = '?';
+							if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
+							if(query.domain) {
+								urlQuery = (urlQuery === '?') ? `${urlQuery}domain=${query.domain}` : `&${urlQuery}domain=${query.domain}`;
 							}
-							if(userAccess.member === true && (scopes.includes('access') || scopes.includes('access:group'))) {
-								if(!claims['x-access-group']) claims['x-access-group'] = 'member';
-								else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
+							if(query.product) {
+								urlQuery = (urlQuery === '?') ? `${urlQuery}product=${query.product}` : `&${urlQuery}product=${query.product}`;
 							}
-							if(userAccess.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
-								claims['x-access-organizations'] = userAccess.orgs;
-							}
-							if(userAccess.orgDomains && (scopes.includes('access') || scopes.includes('access:domains'))) {
-								claims['x-access-domains'] = userAccess.orgDomains;
-							}
-							if(userAccess.products && (scopes.includes('access') || scopes.includes('access:products'))) {
-								claims['x-access-products'] = userAccess.products;
-							}
-							if(userAccess.productRoles && (scopes.includes('access') || scopes.includes('access:roles'))) {
-								claims['x-access-roles'] = userAccess.productRoles;
-							}
-							if(userAccess.permissions && (scopes.includes('access') || scopes.includes('access:permissions'))) {
-								claims['x-access-permissions'] = userAccess.permissions;
+							claims['x-access-url'] = (urlQuery === '?') ? url : `${url}${urlQuery}`;
+							claims['x-access-method'] = 'GET';
+						} else {
+							if(access) {
+								if(access.owner === true && (scopes.includes('access') || scopes.includes('access:group'))) {
+									claims['x-access-group'] = 'owner';
+								}
+								if(access.member === true && (scopes.includes('access') || scopes.includes('access:group'))) {
+									if(!claims['x-access-group']) claims['x-access-group'] = 'member';
+									else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
+								}
+								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
+									claims['x-access-organizations'] = access.orgs;
+								}
+								if(access.orgDomains && (scopes.includes('access') || scopes.includes('access:domains'))) {
+									claims['x-access-domains'] = access.orgDomains;
+								}
+								if(access.products && (scopes.includes('access') || scopes.includes('access:products'))) {
+									claims['x-access-products'] = access.products;
+								}
+								if(access.productRoles && (scopes.includes('access') || scopes.includes('access:roles'))) {
+									claims['x-access-roles'] = access.productRoles;
+								}
+								if(access.permissions && (scopes.includes('access') || scopes.includes('access:permissions'))) {
+									claims['x-access-permissions'] = access.permissions;
+								}
 							}
 						}
 					}
+				} catch (e) {
+					console.error(e);
+					claims = backup;
 				}
-			} catch (e) {
-				console.error(e);
-				claims = backup;
 			}
 			return claims;
 		},

@@ -88,7 +88,7 @@ router.get('/:group/access/client/:id', [
 router.get('/:group/access/validate', [
 	m.validateAuthGroup,
 	m.isOIDCValid
-], user.getUserAccess);
+], client.validateAccess);
 
 
 // Organizations

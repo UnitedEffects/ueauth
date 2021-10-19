@@ -6,6 +6,7 @@ import rat from '../regAccess/rat';
 import permissions from '../../../permissions';
 import product from '../../products/product';
 import ueEvents from '../../../events/ueEvents';
+import accountApi from '../../accounts/api';
 
 const RESOURCE = 'Clients';
 
@@ -118,7 +119,20 @@ const api = {
 			ueEvents.emit(req.authGroup.id, 'ue.client.access.error', error);
 			next(error);
 		}
-	}
+	},
+	async validateAccess(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.user) throw Boom.badRequest('Requesting party not a client or user');
+			if(!req.user.client_credential) return accountApi.getUserAccess(req, res, next);
+			if(!req.user.client_id) throw Boom.badRequest('Client Credential token identified but no clientId specified');
+			const result = await access.getFormattedClientAccess(req.authGroup, req.user.client_id);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.client.access.error', error);
+			next(error);
+		}
+	},
 };
 
 export default api;

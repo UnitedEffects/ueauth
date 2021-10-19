@@ -123,6 +123,7 @@ const factory = {
 		const userAccess = user.access || [];
 		const response = {
 			sub: id,
+			type: 'user',
 			authGroup: {
 				id: authGroup.id,
 				owner: (authGroup.owner === id),
@@ -131,7 +132,9 @@ const factory = {
 			},
 			access: []
 		};
-		const condensed = {};
+		const condensed = {
+			type: 'user'
+		};
 		let orgs = [];
 		let domains = [];
 		let products = [];
