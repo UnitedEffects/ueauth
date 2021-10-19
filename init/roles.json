@@ -2,7 +2,7 @@
   "groupAdminPortal": [
       {
         "role": "Admin",
-        "permissions": ["group::update:own", "group::read:own", "accounts::create", "accounts::update", "accounts::read", "accounts::delete", "accounts-organization::read", "clients::create", "clients::read", "clients::update", "clients::delete", "operations::create", "initialAccessToken::create", "notification::create", "notification::read", "notification::update", "notification::delete", "organizations::create", "organizations::delete", "organizations::update", "organizations::read", "products::create", "products::delete", "products::read", "products::update", "domains::create", "domains::delete", "domains::update", "domains::read", "roles::create", "roles::read", "roles::update", "roles::delete", "permissions::create", "permissions::delete", "permissions::read", "userAccess::read" ]
+        "permissions": ["group::update:own", "group::read:own", "accounts::create", "accounts::update", "accounts::read", "accounts::delete", "accounts-organization::read", "clients::create", "clients::read", "clients::update", "clients::delete", "operations::create", "initialAccessToken::create", "notification::create", "notification::read", "notification::update", "notification::delete", "organizations::create", "organizations::delete", "organizations::update", "organizations::read", "products::create", "products::delete", "products::read", "products::update", "domains::create", "domains::delete", "domains::update", "domains::read", "roles::create", "roles::read", "roles::update", "roles::delete", "permissions::create", "permissions::delete", "permissions::read", "userAccess::read", "clientAccess::read", "clientAccess::update", "clientAccess::delete" ]
       },
       {
         "role": "Client",

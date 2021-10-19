@@ -70,7 +70,19 @@ export default {
 		return dal.getCoreProducts(query);
 	},
 	async updateCoreMetaData(authGroup, id, meta) {
-		const result = dal.updateCoreMetaData(authGroup, id, meta);
+		const result = await dal.updateCoreMetaData(authGroup, id, meta);
+		ueEvents.emit(authGroup, 'ue.product.edit', result);
+		return result;
+	},
+	async addAssociatedClient(authGroup, id, clientId) {
+		const result = await dal.addAssociatedClient(authGroup, id, clientId);
+		if(!result) throw Boom.notFound(id);
+		ueEvents.emit(authGroup, 'ue.product.edit', result);
+		return result;
+	},
+	async removeAssociatedClient(authGroup, id, clientId) {
+		const result = await dal.removeAssociatedClient(authGroup, id, clientId);
+		if(!result) throw Boom.notFound(id);
 		ueEvents.emit(authGroup, 'ue.product.edit', result);
 		return result;
 	}

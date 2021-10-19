@@ -293,11 +293,13 @@ const factory = {
 		userAccess.splice(orgIndex, 1);
 		user.access = userAccess;
 		await user.save();
-		return {
+		const output = {
 			id,
 			organization,
 			action: 'removed'
 		};
+		ueEvents.emit(authGroup, 'ue.access.destroy', output);
+		return output;
 	},
 	async checkOrganizations(ag, orgId) {
 		const result = await dal.checkOrganizations(ag, orgId);

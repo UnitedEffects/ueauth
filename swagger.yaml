@@ -33,6 +33,8 @@ tags:
     description: Manageing enterprise access being applied to users
   - name: Clients
     description: Reading or Deleting Clients in your Auth Group. User OIDC /reg for Create or Updates
+  - name: Client Access
+    description: Clients can be supplied with a single product reference and multiple roles to empower them with permissions
   - name: Notification
     description: Manage notifications sent to the http notification plugin. Requires the plugin to be enabled.
   - name: Organizations
@@ -1354,6 +1356,167 @@ paths:
                   enum:
                     - 'accept'
                     - 'decline'
+        required: true
+
+  # Client Access
+  /api/{group}/access/client/{id}:
+    get:
+      tags:
+        - Client Access
+      summary: Return the product and roles associated to a client
+      description: Clients can be associated with a single Product and assigned roles from that product. This API returns the defined access of a specified client and product combination.
+      operationId: getClientAccess
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: client_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/clientAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/access/client/{id}/product/{product}:
+    delete:
+      tags:
+        - Client Access
+      summary: Completely dissassociate a product from the client and remove the attributed roles
+      description: Clients can be associated with a single Product and assigned roles from that product. This API removes that access by deleting the product and associated roles form the Client's access object. This will NOT remove the client ID from the associatedClients array of the product object.
+      operationId: removeClientAccess
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: client_id
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: the id of the product associated
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/clientAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    put:
+      tags:
+        - Client Access
+      summary: Add a Product and Roles to a Client so that it can act with permissions using a client_credential token
+      description: Clients can be associated with a single Product and assigned roles from that product. This API associates a Product and Roles to the client. It will also update the associatedClients object of the Product in question.
+      operationId: applyClientAccess
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: client_id
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: the id of the product associated
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: User Access
+                  data:
+                    $ref: '#/components/schemas/clientAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeClientAccess'
+        description: Account data to be written
         required: true
 
   # Non-OIDC Specific Client APIs
@@ -5463,6 +5626,41 @@ components:
         action:
           type: string
           description: what happened
+
+    writeClientAccess:
+      type: object
+      description: array of roles to assocaite to the client
+      additionalProperties: false
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+
+    clientAccess:
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: the ID fo the client
+        authGroup:
+          type: string
+          description: the ID of the AuthGroup
+        access:
+          type: object
+          properties:
+            product:
+              type: string
+              format: uuid
+              description: the associated product
+            roles:
+              type: array
+              items:
+                type: string
+                format: uuid
+                description: role ids
 
     userAccess:
       properties:

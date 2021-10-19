@@ -5,6 +5,7 @@ import prod from '../api/products/api';
 import role from '../api/roles/api';
 import user from '../api/accounts/api';
 import perm from '../api/permissions/api';
+import client from '../api/oidc/client/api';
 import m from '../middleware';
 
 const router = express.Router();
@@ -60,10 +61,35 @@ router.get('/:group/access/account/:id', [
 	m.permissions,
 	m.access('userAccess')
 ], user.getUserAccess);
+
+// Client Access
+router.put('/:group/access/client/:id/product/:product', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('clientAccess')
+], client.applyClientAccess);
+router.delete('/:group/access/client/:id/product/:product', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('clientAccess')
+], client.removeClientAccess);
+router.get('/:group/access/client/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('clientAccess')
+], client.getClientAccess);
+
+// Access Validation - both users and clients
 router.get('/:group/access/validate', [
 	m.validateAuthGroup,
 	m.isOIDCValid
 ], user.getUserAccess);
+
 
 // Organizations
 router.get('/:group/organizations', [

@@ -1,5 +1,5 @@
 {
-  "force": false,
-  "permissionsVersion": "10-14-2021",
-  "rolesVersion": "10-14-2021"
+  "force": true,
+  "permissionsVersion": "10-18-2021",
+  "rolesVersion": "10-18-2021"
 }
