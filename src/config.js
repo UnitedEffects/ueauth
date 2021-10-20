@@ -119,7 +119,8 @@ const config = {
 		product: true,
 		access: true,
 		role: true,
-		permission: true
+		permission: true,
+		orgProfile: true
 	}
 };
 

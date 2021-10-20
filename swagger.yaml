@@ -43,6 +43,8 @@ tags:
     description: Manage subsets of the Auth Group data to represent customers, departments, etc. Apply Products to indicate licensed software
   - name: Organization Users
     description: User Account management through the Organization context
+  - name: Organization User Profiles
+    description: Personal information (name, address, number) added and only accessible by the Organization and referenced Account
   - name: Domains
     description: Seperate an Organization into smaller subsets to which product access can be assigned
   - name: Products
@@ -775,6 +777,295 @@ paths:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
         required: true
+
+  # Organization User Profiles
+  /api/{group}/organization/{org}/profiles:
+    post:
+      tags:
+        - Organization User Profiles
+      summary: Create an Organization User Profile (name, contact info, bio, etc.) for an Account associated to this Organization
+      description: "While Accounts themselves do not carry personal information, two concepts in UE Auth do: Secured Profiles (functionality pending) and Organization User Profiles (as described here). Organizations may need to define information about their users such as first and last name, address, or other data over which they wish to have a measure of control. This data is limited in scope to the Organization itself and access is limited to Organization administrators or the Account holder. As such, Organization User Profiles are unique only to the Organization but reference a single unique Account in the AuthGroup. One Account could have as many Organization User Profiles as there are Organizations to which the Account has been given access. In contrast, Secured Profiles (functionality pending) or entirely controlled by the Account holder (user) and not accessible by anyone other than that user. Secured Profile data can be requested but must always be actively approved and provided or denied by the User. In future iterations, it will be possible to request an Organization User Profile be seeded from a Secured Profile."
+      operationId: writeOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/orgUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeOrgUserProfile'
+        description: Profile data to be written
+        required: true
+    get:
+      tags:
+        - Organization User Profiles
+      summary: Query all of the Organization User Profiles in an Organization
+      description: Return and/or filter every Organization specific User Profile defined for this Organization.
+      operationId: getOrgProfiles
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/orgUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/organization/{org}/profile/{id}:
+    patch:
+      tags:
+        - Organization User Profiles
+      summary: Update an Organization User Profile (name, contact info, bio, etc.) for an Account associated to this Organization
+      description: This will change values of the Organization User Profile assocaited to the Account within a specified Organization. This will not update any information on the Account's Secured Profile (secured profile functionality pending).
+      operationId: updateOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the organization user profile ID OR the Account ID of the User
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/orgUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: Profile data to be written
+        required: true
+    get:
+      tags:
+        - Organization User Profiles
+      summary: Retrieve an Organization User Profile
+      description: This will return only the Profile information and not any Account information associated to the record except the Account ID or other information mirrored.
+      operationId: getOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the organization user profile ID OR the Account ID of the User
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/orgUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    delete:
+      tags:
+        - Organization User Profiles
+      summary: Completel remove an Organization User Profile
+      description: This will delete the Organization User Profile but not change or update either the Account or Secured Profile (pending) in any way.
+      operationId: removeOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the organization user profile ID OR the Account ID of the User
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/orgUserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # User Account API restricted to Organizations
   /api/{group}/organization/{org}/account:
@@ -5520,12 +5811,39 @@ components:
                 type: string
                 description: 'Path to copy or move to'
 
-    userProfileWrite:
+    writeOrgUserProfile:
       type: object
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/securedProfileWrite'
+      properties:
+        externalId:
+          type: string
+          description: used to associate this Organization User to an internal record of the user in an HCM or other system
+
+    orgUserProfile:
+      type: object
+      description: Organization User Profiles are unique only to the Organization but reference a single unique Account in the AuthGroup. One Account could have as many Organization User Profiles as there are Organizations to which the Account has been given access.
+      allOf:
+        - $ref: '#/components/schemas/securedProfile'
+      properties:
+        externalId:
+          type: string
+          description: used to associate this Organization User to an internal record of the user in an HCM or other system
+        organization:
+          type: string
+          format: uuid
+          description: organization id this profile is associated to
+
+    securedProfileWrite:
+      type: object
+      required:
+        - accountId
       additionalProperties: false
       properties:
         accountId:
           type: string
+          format: uuid
           description: user ID
         givenName:
           type: string
@@ -5538,29 +5856,35 @@ components:
           description: preferred display name of the user - sometimes a nickname
         bio:
           type: string
+          description: optional block of text about the user
         picture:
           type: string
           description: URI to an image for profile use
-        emails:
+          example: https://example-cdn.com/id-of-your-image.jpeg
+        additionalEmails:
           type: array
           items:
-            type: string
-            format: email
-            description: unique email address of the user
+            type: object
+            properties:
+              label:
+                type: string
+              email:
+                type: string
+                format: email
         contactNumbers:
           type: array
           items:
             type: object
             properties:
-              description:
+              label:
                 type: string
               number:
                 type: string
 
-    userProfile:
+    securedProfile:
       type: object
       allOf:
-        - $ref: '#/components/schemas/userProfileWrite'
+        - $ref: '#/components/schemas/securedProfileWrite'
       properties:
         id:
           type: string
@@ -5905,6 +6229,10 @@ components:
             termsVersion:
               type: string
               description: optional method to version your terms. recommended if you want to update them later
+        profileNotifications:
+          type: boolean
+          description: When this is set to true, any Organization User Profile creation or update events result in a notification to the associated Account (user)
+          default: false
         meta:
           type: string
           description: additional custom structured information
