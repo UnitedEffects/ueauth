@@ -71,6 +71,10 @@ const orgSchema = new mongoose.Schema({
 		terms: String,
 		termsVersion: String
 	},
+	profileNotifications: {
+		type: Boolean,
+		default: false
+	},
 	restrictEmailDomains: {
 		type: Boolean,
 		default: false

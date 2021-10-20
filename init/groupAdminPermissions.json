@@ -651,5 +651,57 @@
     "action": "create",
     "core": true,
     "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "create",
+    "core": true,
+    "ownershipRequired": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "read",
+    "core": true,
+    "ownershipRequired": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "update",
+    "core": true,
+    "ownershipRequired": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "orgUserProfile",
+    "action": "delete",
+    "core": true,
+    "ownershipRequired": true,
+    "description": "UE Core permission"
   }
 ]

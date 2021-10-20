@@ -229,4 +229,4 @@ router.post('/:group/operations/reset-user-password', [
 	m.isWhitelisted
 ], account.resetPassword);
 
-module.exports = router;
+export default router;

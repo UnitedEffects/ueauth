@@ -97,4 +97,4 @@ router.get('/:group/verifyaccount', [
 router.use('/:group', api.oidcCaller);
 
 
-module.exports = router;
+export default router;

@@ -4,7 +4,7 @@ import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 
-import { Root, Identity, Access, OIDC } from './routes';
+import { Root, Identity, Access, OIDC, Profiles } from './routes';
 import middle from './middleware';
 
 const config = require('./config');
@@ -30,6 +30,7 @@ app.use('/', Root);
 app.use('/', OIDC);
 app.use('/api', Identity);
 app.use('/api', Access);
+app.use('/api', Profiles);
 
 // catch 404 and other errors
 app.use(middle.catch404);

@@ -357,4 +357,4 @@ router.get('/:group/products/:product/reference-check/permissions', [
 	m.access('permissions')
 ], prod.checkForPermissions);
 
-module.exports = router;
+export default router;

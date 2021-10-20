@@ -138,6 +138,12 @@ const OP_EVENTS = {
 		'ue.permission.create',
 		'ue.permission.destroy',
 		'ue.permission.error'
+	],
+	orgProfile: [
+		'ue.organization.profile.create',
+		'ue.organization.profile.edit',
+		'ue.organization.profile.destroy',
+		'ue.organization.profile.error'
 	]
 };
 
