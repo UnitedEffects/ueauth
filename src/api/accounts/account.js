@@ -1,4 +1,5 @@
 import jsonPatch from 'jsonpatch';
+import assert from 'assert';
 import dal from './dal';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
@@ -208,7 +209,12 @@ async function standardPatchValidation(original, patched, limit) {
 		definition.verified = Joi.string().valid(original.verified).required();
 	}
 	if(original.access && original.access.length !== 0) {
-		definition.access = Joi.array().valid(original.access).required();
+		try {
+			assert.deepEqual(patched.access, JSON.parse(JSON.stringify(original.access)));
+		} catch(error) {
+			console.error(error);
+			throw Boom.forbidden('You can not set access through this API');
+		}
 	}
 	if(!original.access || !original.access.length) {
 		if(patched.access && patched.access.length !== 0) {

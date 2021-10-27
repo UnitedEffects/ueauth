@@ -4,12 +4,10 @@ import dal from './dal';
 import plugins from '../plugins/plugins';
 import helper from '../../helper';
 import k from './generate-keys';
-import iat from "../oidc/initialAccess/iat";
-import n from "../plugins/notifications/notifications";
-import ueEvents from "../../events/ueEvents";
-import Joi from "joi";
-import ms from "ms";
-import {nanoid} from "nanoid";
+import iat from '../oidc/initialAccess/iat';
+import n from '../plugins/notifications/notifications';
+import ueEvents from '../../events/ueEvents';
+import Joi from 'joi';
 
 const config = require('../../config');
 
