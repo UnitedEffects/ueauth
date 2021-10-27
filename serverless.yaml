@@ -31,6 +31,7 @@ provider:
     PLATFORM_NAME: ${env:PLATFORM_NAME, file(./.env/env.${self:provider.env}.json):PLATFORM_NAME}
     UI_WHITE_LIST: ${env:UI_WHITE_LIST, file(./.env/env.${self:provider.env}.json):UI_WHITE_LIST}
     UI_CORE_AUDIENCE_ORIGIN: ${env:UI_CORE_AUDIENCE_ORIGIN, file(./.env/env.${self:provider.env}.json):UI_CORE_AUDIENCE_ORIGIN}
+    UI_PKCE_REQUIRED: ${env:UI_PKCE_REQUIRED, file(./.env/env.${self:provider.env}.json):UI_PKCE_REQUIRED}
     CORE_SCOPES: ${env:CORE_SCOPES, file(./.env/env.${self:provider.env}.json):CORE_SCOPES}
     STATIC_ASSETS: ${env:STATIC_ASSETS, file(./.env/env.${self:provider.env}.json):STATIC_ASSETS}
     CUSTOM_FONTS_URL: ${env:CUSTOM_FONTS_URL, file(./.env/env.${self:provider.env}.json):CUSTOM_FONTS_URL}

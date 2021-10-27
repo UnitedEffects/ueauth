@@ -50,6 +50,9 @@ export default {
 			options['post_logout_redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
 			options['redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
 		}
+		if(config.UI_PKCE_REQUIRED === true || config.UI_PKCE_REQUIRED === 'true') {
+			options['token_endpoint_auth_method'] = 'none';
+		}
 		if(authGroup.primaryDomain) {
 			if (authGroup.primaryDomain !== config.UI_URL) {
 				let agDom = authGroup.primaryDomain;

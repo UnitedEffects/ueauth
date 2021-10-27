@@ -70,6 +70,8 @@ const config = {
 	},
 	// UE Auth assumes you will provide an audience to access its API
 	UI_CORE_AUDIENCE_ORIGIN: process.env.UI_CORE_AUDIENCE_ORIGIN || envVars.UI_CORE_AUDIENCE_ORIGIN || 'http://localhost:3000',
+	// UI_PKCE_REQUIRED tells UE Auth whether to set “token_endpoint_auth_method” to "none" or not for AuthGroup Client creation: true=none
+	UI_PKCE_REQUIRED: (process.env.UI_PKCE_REQUIRED === 'true') || envVars.UI_PKCE_REQUIRED || true,
 	// Any globally available (across AuthGroups) scopes beyond what is hardcoded or defined per AuthGroup can be set here
 	CORE_SCOPES () {
 		try {
