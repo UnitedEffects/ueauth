@@ -16,6 +16,10 @@ const config = {
 	SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',
 	// Reference to where the UI is hosted. This repo is just the backend witch central OIDC UI screen.
 	UI_URL: process.env.UI_URL || envVars.UI_URL || 'example.com',
+	// Reference to where the UI redirect URL should go after logout for AuthGroup access to the UI
+	UI_LOGIN_REDIRECT_PATH: process.env.UI_LOGIN_REDIRECT_PATH || envVars.UI_LOGIN_REDIRECT_PATH || '/signout',
+	// Reference to where the UI redirect URL should go for AuthGroup access to the UI
+	UI_LOGOUT_REDIRECT_PATH: process.env.UI_LOGOUT_REDIRECT_PATH || envVars.UI_LOGOUT_REDIRECT_PATH || '/signin',
 	// Reference to where users should be linked when they need to complete a registration (optional)
 	ROOT_GROUP_REGISTRATION_UI_URL: process.env.ROOT_GROUP_REGISTRATION_UI_URL || envVars.ROOT_GROUP_REGISTRATION_UI_URL || undefined,
 	// This service can persist http errors in mongo logs. Not recommended for production

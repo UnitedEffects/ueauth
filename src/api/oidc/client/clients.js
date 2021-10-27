@@ -42,8 +42,8 @@ export default {
 			'client_name': config.PLATFORM_NAME,
 			'grant_types': ['client_credentials', 'authorization_code', 'implicit'],
 			'response_types': ['code id_token', 'code', 'id_token'],
-			'redirect_uris': [`https://${config.UI_URL}`],
-			'post_logout_redirect_uris': [`https://${config.UI_URL}`],
+			'redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`],
+			'post_logout_redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`],
 			'auth_group': authGroup.id,
 		};
 		if(config.ENV !== 'dev') {
