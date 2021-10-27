@@ -47,8 +47,8 @@ jobs:
           NODE_ENV: ${{ secrets.NODE_ENV }}
           SWAGGER: ${{ secrets.SWAGGER }}
           UI_URL: ${{ secrets.UI_URL }}
-          UI_LOGIN_REDIRECT_PATH: /signout-oidc
-          UI_LOGOUT_REDIRECT_PATH: /signin-oidc
+          UI_LOGIN_REDIRECT_PATH: /signin-oidc
+          UI_LOGOUT_REDIRECT_PATH: /signout-oidc
           PROTOCOL: ${{ secrets.PROTOCOL }}
           MONGO: ${{ secrets.MONGO }}
           REPLICA: ${{ secrets.REPLICA }}
