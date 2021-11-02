@@ -30,7 +30,7 @@ export default {
 			const ogMeta = { ...meta, core: 'orgAdmin' };
 			const defaultProduct1 = {
 				name: `${authGroup.name} - AuthGroup Admin Portal`,
-				description: `AuthGroup management product reference for group '${authGroup.name}'. Add users to this product to manage authgroup configuraiton and features. Do not delete as system access will be compromised`,
+				description: `AuthGroup management product reference for group '${authGroup.name}'. Add users to this product to manage authgroup configuration and features. Do not delete as system access will be compromised`,
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
