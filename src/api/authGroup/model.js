@@ -194,8 +194,8 @@ authGroup.set('toJSON', {
 authGroup.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
-	delete ret.active;
-	delete ret.owner;
+	//delete ret.active;
+	//delete ret.owner;
 	delete ret.__v;
 };
 
