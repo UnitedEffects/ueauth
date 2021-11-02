@@ -121,7 +121,7 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.password;
-	delete ret.blocked;
+	//delete ret.blocked;
 	delete ret.access;
 	delete ret.phone;
 	delete ret.__v;
