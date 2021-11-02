@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid';
 export default {
 	async writeProduct(data) {
 		data.codedId = nanoid(10);
+		if(!data.meta) data.meta = {};
 		const product =  new Product(data);
 		return product.save();
 	},
