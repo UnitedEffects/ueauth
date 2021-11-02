@@ -2,6 +2,7 @@ import Domain from './model';
 
 export default {
 	async writeDomain(data) {
+		if(!data.meta) data.meta = {};
 		const dom =  new Domain(data);
 		return dom.save();
 	},
