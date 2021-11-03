@@ -5,8 +5,7 @@ import fs from 'fs';
 const swag = yaml.parse(fs.readFileSync('./swagger.yaml', 'utf8'));
 let doc = swag;
 (async()=>{
-    console.info('swagger parsed - if this happens too frequently, you can pre-build');
-    doc = await merge(await ref.dereference(swag));
+	doc = await merge(await ref.dereference(swag));
 })();
 
 export default doc;

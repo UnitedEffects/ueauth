@@ -14,7 +14,8 @@ import plugins from './api/plugins/plugins';
 
 const config = require('./config');
 const p = require('../package.json');
-const date = new Date();    
+const date = new Date();
+
 const schema = new OpenApiValidator(swag, { ajvOptions: { formats: { email: true, password: true, uri: true, url: true, uuid: true } } });
 
 const mid = {
@@ -85,8 +86,10 @@ const mid = {
 	async schemaCheck(req, res, next) {
 		try {
 			let path  = `/api${req.route.path}`;
+			// translating express path syntax to openApi syntax
 			await Promise.all(Object.keys(req.params).map((p)=>{
 				path = path.replace(`:${p}`, `{${p}}`);
+				return p;
 			}));
 			return schema.validate(req.method.toString().toLowerCase(), path.toLowerCase())(req, res, next);
 		} catch (error) {
