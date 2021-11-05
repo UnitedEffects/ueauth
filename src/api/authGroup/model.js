@@ -73,7 +73,8 @@ const authGroup = new mongoose.Schema({
 			type: Boolean,
 			default: false
 		},
-		customDomain: String,
+		customDomainUI: String,
+		customDomainOIDC: String,
 		ui: {
 			// fullCustom is for a future update that allows the AG to implement a fully custom UI of their choosing
 			// keeping this false until later

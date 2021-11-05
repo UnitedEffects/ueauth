@@ -5531,9 +5531,13 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
-        customDomain:
+        customDomainUI:
           type: string
-          description: custom domain information
+          description: custom domain information for the UI
+          format: url
+        customDomainOIDC:
+          type: string
+          description: custom domain information for the oidc provider service and centralized screens
           format: url
         ui:
           type: object
