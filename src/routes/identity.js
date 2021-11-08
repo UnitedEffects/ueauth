@@ -17,6 +17,7 @@ router.get('/health', m.health);
 // Auth Group Functional
 router.get('/groupcheck/:prettyName', [m.isWhitelisted], group.check);
 router.get('/:group/group', [m.isWhitelisted], group.getPublicGroupInfo);
+router.get('/group-info/:group', [m.isWhitelisted], group.getPublicGroupInfov2);
 
 // Auth Groups
 router.post('/group', [
@@ -41,6 +42,19 @@ router.patch('/group/:id', [
 	m.isAuthenticated,
 	m.permissions,
 	m.access('group')], group.patch);
+
+// Alias DNS - root only or client credential from root
+router.post('/group/:id/alias-dns', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('group-aliasDns')], group.addAliasDns);
+router.delete('/group/:id/alias-dns', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('group-aliasDns')], group.removeAliasDns);
 
 // Plugins
 router.post('/plugins/global/notifications', [

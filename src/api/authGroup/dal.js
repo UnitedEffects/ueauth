@@ -20,6 +20,16 @@ export default {
 		if(onlyIncludeActive === true) query.active = true;
 		return Group.findOne(query);
 	},
+	async getPublicOne(q) {
+		const query = {
+			active: true,
+			$or: [
+				{ _id: q },
+				{ prettyName: q },
+				{ aliasDnsUi: q }
+			]};
+		return Group.findOne(query);
+	},
 	async patch(id, data) {
 		data.modifiedAt = Date.now();
 		return Group.findOneAndUpdate({ _id: id, active: true }, data, { new: true, overwrite: true });

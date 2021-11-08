@@ -49,7 +49,7 @@ async function introspect(token, authGroup) {
 	let result = {
 		active: (accessToken.iat < accessToken.exp),
 		iss: provider.issuer,
-		sub: accessToken.accountId,
+		sub: accessToken.accountId || accessToken.clientId,
 		client_id: accessToken.clientId,
 		exp: accessToken.exp,
 		iat: accessToken.iat,
@@ -76,8 +76,6 @@ async function runDecodedChecks(token, issuer, decoded, authGroup, externalValid
 	}
 	if(!issuer.includes(decoded.iss)) {
 		// check iss
-		console.info(issuer);
-		console.info(decoded.iss);
 		throw Boom.unauthorized('Token issuer not recognized');
 	}
 	if(!decoded.group) {
@@ -106,14 +104,23 @@ async function runDecodedChecks(token, issuer, decoded, authGroup, externalValid
 			}
 		}
 		if (decoded.client_id) {
-			if(decoded.client_id !== authGroup.associatedClient) {
-				throw Boom.unauthorized('Token client ID not specific to this auth group client');
+			if(decoded.sub && decoded.sub !== decoded.client_id) {
+				// this is an access token and we expect users to only use the associatedClient
+				// otherwise we will let the client check further below validate
+				if(decoded.client_id !== authGroup.associatedClient) {
+					throw Boom.unauthorized('Access Token client ID not specific to this auth group client');
+				}
 			}
+
 		}
 		if(decoded.azp) {
 			// client credential issuing client - azp
-			if(decoded.azp !== authGroup.associatedClient) {
-				throw Boom.unauthorized('Client Credential token not issued by group associated client');
+			if(decoded.sub && decoded.sub !== decoded.azp) {
+				// this is an access token and we expect users to only use the associatedClient
+				// otherwise we will let the client check further below validate
+				if(decoded.azp !== authGroup.associatedClient) {
+					throw Boom.unauthorized('Access Token client ID not specific to this auth group client');
+				}
 			}
 		}
 	}
@@ -307,87 +314,87 @@ async (req, token, next) => {
 ));
 
 passport.use('oidc-token-validation', new BearerStrategy({
-		passReqToCallback: true
-	},
-	async (req, token, next) => {
-		try {
-			// subject (user) auth group
-			// this is distinct from the authGroup which was specified in the request and now under req.authGroup
-			let subAG = req.authGroup;
-			let issuer;
-			if(!subAG) {
+	passReqToCallback: true
+},
+async (req, token, next) => {
+	try {
+		// subject (user) auth group
+		// this is distinct from the authGroup which was specified in the request and now under req.authGroup
+		let subAG = req.authGroup;
+		let issuer;
+		if(!subAG) {
+			issuer = null;
+		} else {
+			issuer = issuerArray(oidc(subAG), subAG);
+		}
+		if(helper.isJWT(token)){
+			const preDecoded = jwt.decode(token, {complete: true});
+			if(issuer !== null && preDecoded.payload.group !== subAG.id) {
+				// there is a problem with the token authgroup,
+				// we reset issuer here so we can check to see if this is a root account (super admin)
+				// console.info('debug check (delete later) - issuer cleared');
 				issuer = null;
-			} else {
-				issuer = issuerArray(oidc(subAG), subAG);
 			}
-			if(helper.isJWT(token)){
-				const preDecoded = jwt.decode(token, {complete: true});
-				if(issuer !== null && preDecoded.payload.group !== subAG.id) {
-					// there is a problem with the token authgroup,
-					// we reset issuer here so we can check to see if this is a root account (super admin)
-					// console.info('debug check (delete later) - issuer cleared');
-					issuer = null;
-				}
-				if(issuer === null) {
-					subAG = await group.getOneByEither(preDecoded.payload.group);
-					if(!subAG) return next(null, false);
-					if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
-					if(!req.authGroup) req.authGroup = subAG;
-					issuer = issuerArray(oidc(subAG), subAG);
-				}
-				const pub = { keys: subAG.config.keys };
-				const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
-				const jwk = myKeySet.findKeyById(preDecoded.header.kid);
-				const myPubKey = jwk.key.toPublicKeyPEM();
-
-				return jwt.verify(token, myPubKey, async (err, decoded) => {
-					if(err) {
-						console.error(err);
-						return next(null, false);
-					}
-					if(decoded) {
-						try {
-							const result = await runDecodedChecks(token, issuer, decoded, subAG, true);
-							return next(null, result, { token });
-						} catch (error) {
-							console.error(error);
-							return next(null, false);
-						}
-					}
-				});
-			}
-			//opaque token
 			if(issuer === null) {
-				//assume this is a root request
-				subAG = await group.getOneByEither('root');
+				subAG = await group.getOneByEither(preDecoded.payload.group);
+				if(!subAG) return next(null, false);
+				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
+				if(!req.authGroup) req.authGroup = subAG;
 				issuer = issuerArray(oidc(subAG), subAG);
 			}
-			const inspect = await introspect(token, subAG);
-			if(inspect) {
-				if (inspect.active === false) return next(null, false);
-				try {
-					if(subAG.id !== inspect.group) {
-						//check to see if this is a root account
-						subAG = await group.getOneByEither(inspect.group);
-						if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
-						// now we know its a root account so we reset subAG
-						issuer = issuerArray(oidc(subAG), subAG);
-					}
-					const result = await runDecodedChecks(token, issuer, inspect, subAG, true);
-					if(!req.authGroup) req.authGroup = subAG;
-					return next(null, result, { token });
-				} catch (error) {
-					console.error(error);
+			const pub = { keys: subAG.config.keys };
+			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
+			const jwk = myKeySet.findKeyById(preDecoded.header.kid);
+			const myPubKey = jwk.key.toPublicKeyPEM();
+
+			return jwt.verify(token, myPubKey, async (err, decoded) => {
+				if(err) {
+					console.error(err);
 					return next(null, false);
 				}
-			}
-			console.error('Token expired');
-			return next(null, false);
-		} catch (error) {
-			console.error(error);
-			return next(null, false);
+				if(decoded) {
+					try {
+						const result = await runDecodedChecks(token, issuer, decoded, subAG, true);
+						return next(null, result, { token });
+					} catch (error) {
+						console.error(error);
+						return next(null, false);
+					}
+				}
+			});
 		}
+		//opaque token
+		if(issuer === null) {
+			//assume this is a root request
+			subAG = await group.getOneByEither('root');
+			issuer = issuerArray(oidc(subAG), subAG);
+		}
+		const inspect = await introspect(token, subAG);
+		if(inspect) {
+			if (inspect.active === false) return next(null, false);
+			try {
+				if(subAG.id !== inspect.group) {
+					//check to see if this is a root account
+					subAG = await group.getOneByEither(inspect.group);
+					if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
+					// now we know its a root account so we reset subAG
+					issuer = issuerArray(oidc(subAG), subAG);
+				}
+				const result = await runDecodedChecks(token, issuer, inspect, subAG, true);
+				if(!req.authGroup) req.authGroup = subAG;
+				return next(null, result, { token });
+			} catch (error) {
+				console.error(error);
+				return next(null, false);
+			}
+		}
+		console.error('Token expired');
+		return next(null, false);
+	} catch (error) {
+		console.error(error);
+		return next(null, false);
 	}
+}
 ));
 
 // @notTested
