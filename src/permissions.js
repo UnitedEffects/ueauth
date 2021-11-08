@@ -18,16 +18,16 @@ export default {
 				if (req.user.initialAccessToken) return next();
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
-				// ensure a core product exists
-				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
-				// ensure group access
-				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
 				// if root user, they have priority
 				if (req.permissions.groupAccess.includes('super')) {
 					if (config.FULL_SUPER_CONTROL === true) return next();
 					if (superAccess(req)) return next();
 					throw Boom.unauthorized('Super Admin is not fully enabled');
 				}
+				// ensure a core product exists
+				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
+				// ensure group access
+				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group member
 				if (!req.permissions.groupAccess.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
 				let bFound = false;
@@ -114,20 +114,20 @@ export default {
 				if(accessObject['x-access-roles']) req.permissions.roles = accessObject['x-access-roles'].split(' ');
 				if(accessObject['x-access-permissions']) req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 			}
-
 			// Root super user
 			if(req.user.subject_group && req.user.subject_group.prettyName === 'root') {
-				if(req.user.group === req.permissions.sub_group){
+				if((req.user.group || req.user.auth_group) === req.permissions.sub_group){
 					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
 					req.permissions.groupAccess.push('super');
 				}
 			}
-			// todo, remove this once client_access is implemented
+			/*
+			// Deprecated now
 			if(req.user.client_credential === true) {
 				if(!req.permissions.roles) req.permissions.roles = [];
 				req.permissions.roles.push('client');
 			}
-
+			*/
 			// we look up the core product and ensure all the permissions match the id associated.
 			const coreProducts = await helper.cacheCoreProduct(req.query.resetCache, req.authGroup);
 			if(!coreProducts.length) throw new Error('Could not identify core products for this authgroup');
@@ -141,14 +141,13 @@ export default {
 				req.permissions.core.productCodedIds.push(p.codedId);
 			});
 			// filtering out any product references that are not the core from the user's permissions
-			// todo this is probably not needed and not good
+			// todo deprecate and delete
 			/*
 			if(req.permissions.products) {
 				req.permissions.products = req.permissions.products.filter((p) => {
 					return (req.permissions.core.products.includes(p));
 				});
 			}
-
 			 */
 			// filtering out any permissions that are not from the core product from the user's permissions
 			let permFilter = [];
@@ -181,12 +180,14 @@ export default {
 					roleFilter = roleFilter.concat(temp);
 				}
 			});
-			// ensure member permissions are preserved
-			if(req.permissions.permissions) {
-				const temp = req.permissions.permissions.filter((p) => {
-					return (p.includes(`${req.authGroup.id}-member:::`));
-				});
-				permFilter = permFilter.concat(temp);
+			if(req.user.client_credential !== true) {
+				// ensure member permissions are preserved
+				if(req.permissions.permissions) {
+					const temp = req.permissions.permissions.filter((p) => {
+						return (p.includes(`${req.authGroup.id}-member:::`));
+					});
+					permFilter = permFilter.concat(temp);
+				}
 			}
 			// filtering out any permissions that are not part of the core products
 			if(req.permissions.permissions) {
@@ -258,42 +259,3 @@ function translateMethod(method) {
 		return false;
 	}
 }
-
-/**
-
-// this roles is for client-credential tokens
-const Client = [
-	{
-		target: 'group',
-		actions: 'read:own'
-	},
-	{
-		target: 'account',
-		actions: 'read:all'
-	},
-	{
-		target: 'invite',
-		actions: 'read:all'
-	},
-	{ //delete this
-		target: 'clients',
-		actions: 'read:all update:own'
-	},
-	{
-		target: 'client',
-		actions: 'read:own update:own'
-	},
-	{
-		target: 'notification',
-		actions: 'create read:all update:all'
-	},
-	{
-		target: 'operations:reset-user-password',
-		actions: 'create'
-	},
-	{
-		target: 'operations:client',
-		actions: 'create:own'
-	}
-];
- */

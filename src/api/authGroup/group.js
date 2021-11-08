@@ -174,8 +174,43 @@ const agp = {
 	},
 
 	// @notTested
+	async updateAliasDns(id, body, user) {
+		const update = {
+			aliasDnsUi: body.aliasDnsUi,
+			aliasDnsOIDC: body.aliasDnsOIDC,
+			modifiedBy: user
+		};
+		const result = await dal.patchNoOverwrite(id, update);
+		if(!result) throw Boom.notFound(id);
+		const output = JSON.parse(JSON.stringify(result));
+		delete output.config;
+		delete output.pluginOptions;
+		ueEvents.emit(id, 'ue.group.edit', output);
+		return output;
+	},
+
+	// @notTested
+	async removeAliasDns(id, user) {
+		const update = {
+			modifiedBy: user,
+			$unset: { aliasDnsOIDC: '', aliasDnsUi: '' }
+		};
+		const result = await dal.patchNoOverwrite(id, update);
+		if(!result) throw Boom.notFound(id);
+		const output = JSON.parse(JSON.stringify(result));
+		delete output.config;
+		delete output.pluginOptions;
+		ueEvents.emit(id, 'ue.group.edit', output);
+		return output;
+	},
+
+	// @notTested
+	async getPublicOne(search) {
+		return dal.getPublicOne(search);
+	},
+
+	// @notTested
 	groupCreationNotifyOptions(authGroup, owner) {
-		console.info(owner);
 		return {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
 			createdBy: owner,
@@ -211,6 +246,12 @@ async function standardPatchValidation(original, patched) {
 	};
 	if(original.securityExpiration) {
 		definition.securityExpiration = Joi.any().valid(original.securityExpiration).required();
+	}
+	if(patched.aliasDnsUi || original.aliasDnsUi) {
+		definition.aliasDnsUi = Joi.string().valid(original.aliasDnsUi);
+	}
+	if(patched.aliasDnsOIDC || original.aliasDnsOIDC) {
+		definition.aliasDnsOIDC = Joi.string().valid(original.aliasDnsOIDC);
 	}
 	const groupSchema = Joi.object().keys(definition);
 	const main = await groupSchema.validateAsync(patched, {

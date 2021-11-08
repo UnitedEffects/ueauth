@@ -65,12 +65,55 @@ tags:
 
 paths:
   # Functional APIs
-  /api/{group}/group:
+  /api/group-info/{group}:
     get:
       tags:
         - General Functional
       summary: Return a clientId for UE Auth UI from the AuthGroup.
       description: This API can be used by a caller to return the clientId associated to an AuthGroup so that the appropriate OIDC login link can be generated (i.e. /{group}/auth?client_id={client_id}). This endpoint is secured be ensuring https and a UI host whitelist.
+      parameters:
+        - name: group
+          in: path
+          description: id, prettyName, or aliasDnsUI value for the AuthGroup
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      group:
+                        type: string
+                        example: V1StGXR8_Z5jdHi6B-myT
+                      id:
+                        type: string
+                        description: the client_id of the AuthGroup
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+  /api/{group}/group:
+    get:
+      tags:
+        - General Functional
+      summary: Deprecated. Return a clientId for UE Auth UI from the AuthGroup.
+      description: This API can be used by a caller to return the clientId associated to an AuthGroup so that the appropriate OIDC login link can be generated (i.e. /{group}/auth?client_id={client_id}). This endpoint is secured be ensuring https and a UI host whitelist. This API will be removed in the next API update. Use group-info/{group} instead.
+      deprecated: true
       parameters:
         - name: group
           in: path
@@ -386,6 +429,85 @@ paths:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
         required: true
+
+  /api/group/{id}/alias-dns:
+    post:
+      tags:
+        - Auth Groups
+      summary: Add an alias DNS for UI access to the AuthGroup
+      description: Typically, this API should only be accessed by a Root user or client. This allows you to set unique DNS aliases for the AuthGroup. Keep in mind that this means that every DNS entry can only be used once, so you will want to impliment functionality externally to this system to validate ownership of a DNS domain. The API only writes and overwrites, it does not remove existing values. Use DELETE to remove values. Additionally, this API does not do any validation or DNS mapping directly. This is just a record to associate the DNS to the AuthGroup.
+      parameters:
+        - name: id
+          in: path
+          description: ID of group to update. Must be the ID, prettyName is not sufficient for this request.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Auth Group
+                  data:
+                    $ref: '#/components/schemas/authGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/agAliasDns'
+        description: DNS domains to be written
+        required: true
+    delete:
+      tags:
+        - Auth Groups
+      summary: Remove alias DNS for UI access to the AuthGroup
+      description: Typically, this API should only be accessed by a Root user or client. This allows you to remove unique DNS aliases for the AuthGroup.
+      parameters:
+        - name: id
+          in: path
+          description: ID of group to update. Must be the ID, prettyName is not sufficient for this request.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Auth Group
+                  data:
+                    $ref: '#/components/schemas/authGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # Plugins
   /api/plugins/global/audit:
@@ -5454,6 +5576,7 @@ components:
     agPluginOptions:
       type: object
       description: these are plugin configurations
+      additionalProperties: false
       properties:
         notification:
           type: object
@@ -5470,6 +5593,7 @@ components:
     agConfigOptions:
       type: object
       description: these configurations alter how OIDC is processed
+      additionalProperties: false
       properties:
         #keys:
         #  type: array
@@ -5531,14 +5655,6 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
-        customDomainUI:
-          type: string
-          description: custom domain information for the UI
-          format: url
-        customDomainOIDC:
-          type: string
-          description: custom domain information for the oidc provider service and centralized screens
-          format: url
         ui:
           type: object
           properties:
@@ -5581,6 +5697,7 @@ components:
           type: string
       allOf:
         - $ref: '#/components/schemas/writeAuthGroup'
+        - $ref: '#/components/schemas/agAliasDns'
 
     authGroupInitial:
       type: object
@@ -5594,6 +5711,22 @@ components:
         initialAccessToken:
           type: string
           description: bearer token to use when first connecting an account
+
+    agAliasDns:
+      type: object
+      additionalProperties: false
+      required:
+        - aliasDnsUi
+        - aliasDnsOIDC
+      properties:
+        aliasDnsUi:
+          type: string
+          description: an alias DNS domain (example.com) that the authgroup may claim. This simply provides a record and does not actually implement custom domain check and dns registration functionality.
+          format: url
+        aliasDnsOIDC:
+          type: string
+          description: an alias DNS domain other than the aliasDnsUi (oidc.example.com) that the authgrup may claim for centralized UI interactions of the OIDC provider. This alias only applies to UI interactions and centralized screens, API calls will not work. This simply provides a record and does not actually implement custom domain check and dns registration functionality.
+          format: url
 
 
     getGroup:

@@ -13,6 +13,10 @@ const api = {
 			if (req.authGroup.active === false) throw Boom.forbidden('You can not add roles in an inactive group');
 			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if (req.permissions.enforceOwn === true) throw Boom.forbidden();
+			if (req.product.core === true) {
+				// ensure only root users can add permissions to core products
+				await permissions.enforceRoot(req.permissions);
+			}
 			if (req.user && req.user.sub) {
 				req.body.createdBy = req.user.sub;
 				req.body.modifiedBy = req.user.sub;
@@ -56,8 +60,14 @@ const api = {
 			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if (req.permissions.enforceOwn === true) throw Boom.forbidden();
+			if (req.product.core === true) {
+				// ensure only root users remove permissions from core products
+				await permissions.enforceRoot(req.permissions);
+			}
 			const permission = await perm.getPermission(req.authGroup.id, req.product.id, req.params.id);
-			if(permission.core === true) await permissions.enforceRoot(req.permissions);
+			if(permission.core === true) {
+				await permissions.enforceRoot(req.permissions);
+			}
 			const result = await perm.deletePermission(req.authGroup.id, req.product.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, RESOURCE));

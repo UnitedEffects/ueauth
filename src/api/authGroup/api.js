@@ -184,6 +184,29 @@ const api = {
 			next(error);
 		}
 	},
+	async addAliasDns(req, res, next) {
+		// create or overwrite the aliasDns entries on the group. This does not delete
+		try {
+			const body = req.body;
+			await permissions.enforceRoot(req.permissions);
+			const result = await group.updateAliasDns(req.params.id, body, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.params.id, 'ue.group.error', error);
+			next(error);
+		}
+	},
+	async removeAliasDns(req, res, next) {
+		// deletes both aliasDns entries from an authGroup
+		try {
+			await permissions.enforceRoot(req.permissions);
+			const result = await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.params.id, 'ue.group.error', error);
+			next(error);
+		}
+	},
 	async getPublicGroupInfo(req, res, next) {
 		try {
 			const ag = req.params.group;
@@ -191,6 +214,21 @@ const api = {
 			if(!result) throw Boom.notFound(ag);
 			const out = {
 				group: ag,
+				id: result.associatedClient
+			};
+			return res.respond(say.ok(out, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getPublicGroupInfov2(req, res, next) {
+		try {
+			const ag = req.params.group;
+			const result = await group.getPublicOne(ag);
+			if(!result) throw Boom.notFound(ag);
+			const out = {
+				searched: ag,
+				group: result.prettyName,
 				id: result.associatedClient
 			};
 			return res.respond(say.ok(out, RESOURCE));

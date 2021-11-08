@@ -46,6 +46,8 @@ const authGroup = new mongoose.Schema({
 	primaryPrivacyPolicy: String,
 	registerUrl: String,
 	primaryEmail: String,
+	aliasDnsUi: String,
+	aliasDnsOIDC: String,
 	config: {
 		keys: Array,
 		requireVerified: {
@@ -73,8 +75,6 @@ const authGroup = new mongoose.Schema({
 			type: Boolean,
 			default: false
 		},
-		customDomainUI: String,
-		customDomainOIDC: String,
 		ui: {
 			// fullCustom is for a future update that allows the AG to implement a fully custom UI of their choosing
 			// keeping this false until later
@@ -174,6 +174,20 @@ const authGroup = new mongoose.Schema({
 		default: nanoid
 	}
 },{ _id: false });
+
+authGroup.index({ aliasDnsUi: 1 }, {
+	unique: true,
+	partialFilterExpression: {
+		'aliasDnsUi': { $exists: true, $gt: '' }
+	}
+});
+
+authGroup.index({ aliasDnsOIDC: 1 }, {
+	unique: true,
+	partialFilterExpression: {
+		'aliasDnsOIDC': { $exists: true, $gt: '' }
+	}
+});
 
 // Execute before each user.save() call
 authGroup.pre('save', async function(next) {
