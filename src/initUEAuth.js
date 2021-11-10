@@ -58,6 +58,7 @@ export default {
 					p.description = `${authGroup.name} - AuthGroup Admin Portal Permission. System Created. DO NOT DELETE`;
 					p.product = initProductAdmin.id;
 					p.authGroup = authGroup.id;
+					p.tags = ['ag-portal'];
 					bulkPermWrite.push(p);
 				}
 			});
@@ -66,6 +67,7 @@ export default {
 					p.description = `${authGroup.name} - Organization Admin Portal Permission. System Created. DO NOT DELETE`;
 					p.product = initProductOrg.id;
 					p.authGroup = authGroup.id;
+					p.tags = ['org-portal'];
 					bulkPermOrgWrite.push(p);
 				}
 			});

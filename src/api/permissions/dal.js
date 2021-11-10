@@ -39,5 +39,29 @@ export default {
 			}}
 		];
 		return Permission.aggregate(aggQuery);
+	},
+	async getTags(authGroup, product) {
+		const projection = {};
+		projection['tags'] = 1;
+		const aggQuery = [
+			{ $match: { authGroup, product } },
+			{ $project: projection },
+			{ $group: {
+				_id: 'tags',
+				values: {
+					$addToSet: '$tags'
+				}
+			}},
+			{ $project: {
+				values: {
+					$reduce: {
+						input: '$values',
+						initialValue: [],
+						in: { $setUnion: ['$$this', '$$value'] }
+					}
+				}
+			}}
+		];
+		return Permission.aggregate(aggQuery);
 	}
 };

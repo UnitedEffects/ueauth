@@ -59,5 +59,15 @@ export default {
 			delete out._id;
 		}
 		return out;
+	},
+
+	async getTags(authGroup, product) {
+		const result = await dal.getTags(authGroup, product);
+		const out = result[0];
+		if(out._id) {
+			out.id = out._id;
+			delete out._id;
+		}
+		return out;
 	}
 };
