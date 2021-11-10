@@ -52,8 +52,8 @@ permissionSchema.index({ coded: 1, authGroup: 1, product: 1}, { unique: true });
 permissionSchema.pre('save', function(callback) {
 	const permission = this;
 	permission.coded = (permission.ownershipRequired === true) ?
-		`${permission.target}::${permission.action}:own` :
-		`${permission.target}::${permission.action}`;
+		`${permission.target.toLowerCase().replace(/ /g, '-')}::${permission.action.toLowerCase().replace(/ /g, '-')}:own` :
+		`${permission.target.toLowerCase().replace(/ /g, '-')}::${permission.action.toLowerCase().replace(/ /g, '-')}`;
 	callback();
 });
 
@@ -61,8 +61,8 @@ permissionSchema.pre('insertMany', function(callback, docs) {
 	if(Array.isArray(docs)) {
 		docs.map((permission) => {
 			permission.coded = (permission.ownershipRequired === true) ?
-				`${permission.target}::${permission.action}:own` :
-				`${permission.target}::${permission.action}`;
+				`${permission.target.toLowerCase().replace(/ /g, '-')}::${permission.action.toLowerCase().replace(/ /g, '-')}:own` :
+				`${permission.target.toLowerCase().replace(/ /g, '-')}::${permission.action.toLowerCase().replace(/ /g, '-')}`;
 		});
 	}
 	callback();
