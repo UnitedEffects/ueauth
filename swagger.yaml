@@ -4960,6 +4960,61 @@ paths:
       security:
         - bearer: []
         - openId: []
+  /api/{group}/products/{product}/permission/tags:
+    get:
+      tags:
+        - Permissions
+      summary: Get all of the available Permission Tags for a Product
+      description: Get all of the available Permission Tags for a product. Note, there is no separate Tags table or collection. This API aggregates all Tags used across an AuthGroup and Product and returns them as a reference. To add new Tags, simply specify a previously unused Tag when creating a Permission.
+      operationId: getPermissionTags
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        default: 'targets'
+                      values:
+                        type: array
+                        items:
+                          type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # Health Check Endpoint
   /api/health:
@@ -6464,6 +6519,14 @@ components:
         description:
           type: string
           description: something to present on the screen explaining what this is for
+        tags:
+          type: array
+          description: descriptive labels to aid in search and general categorization
+          example:
+            - 'api'
+            - 'ui'
+          items:
+            type: string
 
     checkForUpdate:
       type: object

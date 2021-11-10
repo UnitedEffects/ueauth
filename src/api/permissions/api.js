@@ -101,6 +101,17 @@ const api = {
 				next(error);
 			}
 		};
+	},
+	async getTags(req, res, next) {
+		try {
+			if (!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
+			if (req.permissions.enforceOwn === true) throw Boom.forbidden();
+			const result = await perm.getTags(req.authGroup.id, req.product.id);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
 	}
 };
 

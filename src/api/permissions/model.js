@@ -40,6 +40,7 @@ const permissionSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
+	tags: [String],
 	_id: {
 		type: String,
 		default: uuid

@@ -340,6 +340,13 @@ router.get('/:group/products/:product/permission/actions', [
 	m.permissions,
 	m.access('permissions')
 ], perm.getTargetsOrActions('action'));
+router.get('/:group/products/:product/permission/tags', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], perm.getTags);
 
 // Reference Checks
 router.get('/:group/products/:product/permissions/:id/reference-check/role', [
