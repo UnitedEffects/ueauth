@@ -5936,7 +5936,21 @@ components:
                 description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
               value:
                 type: object
-                description: 'The object, array or object to set the property at the above path to'
+                description: 'The object to set the property at the above path to'
+          - required:
+              - op
+              - path
+              - value
+            properties:
+              op:
+                type: string
+                enum: [ 'replace', 'add', 'remove', 'test' ]
+              path:
+                type: string
+                description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+              value:
+                type: array
+                description: 'The array to set the property at the above path to'
           - required:
             - op
             - path
