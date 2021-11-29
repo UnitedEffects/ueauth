@@ -1,14 +1,12 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
-import h from "../../helper";
+import h from '../../helper';
 
 mongoose.set('useCreateIndex', true);
+
 const metaSchema = new mongoose.Schema({
 	// this allows us to create unique internal identifiers when required for setup.
-	admin: {
-		type: String,
-		default: `unique-placeholder-${uuid}`
-	},
+	admin: String
 }, { _id: false, strict: false });
 
 const domainSchema = new mongoose.Schema({
@@ -75,7 +73,10 @@ domainSchema.index({ 'meta.admin': 1, organization: 1, authGroup: 1 }, { unique:
 
 
 domainSchema.pre('save', function(callback) {
-	//license check
+	const domain = this;
+	if(!domain.meta.admin) {
+		domain.meta.admin = `unique-placeholder-${uuid()}`;
+	}
 	callback();
 });
 

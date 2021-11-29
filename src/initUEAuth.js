@@ -116,7 +116,7 @@ export default {
 				temp.codedId = nanoid(10);
 				rl.permissions.map((p) => {
 					const found = permissionsAdmin.filter((list) => {
-						return list.coded === p;
+						return list.coded === p.toLowerCase();
 					});
 					temp.permissions.push(`${found[0].id} ${found[0].coded}`);
 				});
@@ -136,7 +136,7 @@ export default {
 				temp.codedId = nanoid(10);
 				rl.permissions.map((p) => {
 					const found = permissionsOrg.filter((list) => {
-						return list.coded === p;
+						return list.coded === p.toLowerCase();
 					});
 					temp.permissions.push(`${found[0].id} ${found[0].coded}`);
 				});
