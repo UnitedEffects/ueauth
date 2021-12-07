@@ -2,27 +2,6 @@
   {
     "target": "group",
     "action": "update",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "group",
-    "action": "read",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "group",
-    "action": "delete",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "group",
-    "action": "update",
     "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission"
@@ -30,14 +9,6 @@
   {
     "target": "group",
     "action": "read",
-    "ownershipRequired": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "group",
-    "action": "delete",
-    "DEPRECATED": true,
     "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission"
@@ -123,36 +94,7 @@
   },
   {
     "target": "userAccess",
-    "action": "create",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "userAccess",
-    "action": "update",
-    "core": true,
-    "DEPRECATED": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "userAccess",
     "action": "read",
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "userAccess",
-    "action": "delete",
-    "core": true,
-    "DEPRECATED": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "userAccess",
-    "action": "update",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -178,66 +120,6 @@
     "target": "userAccess",
     "action": "read",
     "ownershipRequired": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "userAccess",
-    "action": "delete",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "create",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "update",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "read",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "delete",
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "update",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "read",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "invites",
-    "action": "delete",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -359,14 +241,6 @@
   {
     "target": "organizations",
     "action": "delete",
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "organizations",
-    "action": "update",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
@@ -608,21 +482,6 @@
     "target": "operations-user",
     "action": "create",
     "ownershipRequired": true,
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "operations-invite",
-    "action": "create",
-    "core": true,
-    "DEPRECATED": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "operations-invite",
-    "action": "create",
-    "ownershipRequired": true,
-    "DEPRECATED": true,
     "core": true,
     "description": "UE Core permission"
   },
