@@ -5,6 +5,7 @@ import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import authorizer from './auth/auth';
 import helper from './helper';
+import group from './api/authGroup/group';
 import orgs from './api/orgs/orgs';
 import product from './api/products/product';
 import account from './api/accounts/account';
@@ -14,6 +15,7 @@ import swag from './swagger';
 import plugins from './api/plugins/plugins';
 
 const config = require('./config');
+
 const p = require('../package.json');
 const date = new Date();
 
@@ -130,6 +132,22 @@ const mid = {
 			next(error);
 		}
 	},
+	async validateHostDomain (req, res, next) {
+		try {
+			if(req.hostname === config.SWAGGER.split(':')[0]) return next();
+			req.customDomain = undefined;
+			req.customDomainUI = undefined;
+			const AG = await group.findByAliasDNS(req.hostname);
+			if(!AG) throw Boom.notFound('DNS not recognized');
+			req.customDomain = req.hostname;
+			req.customDomainUI = AG.aliasDnsUi;
+			req.authGroup = AG;
+			req.params.group = AG._id || AG.id;
+			next();
+		} catch (error) {
+			next(error);
+		}
+	},
 	async validateAuthGroup (req, res, next) {
 		try {
 			// special case for /group paths
@@ -149,6 +167,13 @@ const mid = {
 			const result = await helper.cacheAG(req.query.resetCache, 'AG', req.params.group);
 			req.authGroup = result;
 			req.params.group = result._id || result.id;
+			req.customDomain = undefined;
+			req.customDomainUI = undefined;
+			if(req.hostname !== config.SWAGGER.split(':')[0]) {
+				if(req.authGroup.aliasDnsOIDC !== req.hostname) throw Boom.notFound('DNS not recognized');
+				req.customDomain = req.hostname;
+				req.customDomainUI = req.authGroup.aliasDnsUi;
+			}
 			return next();
 		} catch (error) {
 			next(error);
