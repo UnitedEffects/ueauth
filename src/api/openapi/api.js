@@ -13,7 +13,7 @@ export default {
 	async serveApiJson(req, res) {
 		try{
 			let swag = JSON.parse(JSON.stringify(swagger));
-			swag = modify.updateSwag(swag, req.authGroup, req.params);
+			swag = modify.updateSwag(swag, req.authGroup, req.params, req.customDomain);
 			return res.json(swag);
 		}catch (error) {
 			console.info(error);
