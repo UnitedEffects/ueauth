@@ -23,7 +23,7 @@ class UEProvider {
 	find(group, issuer, options) {
 		const agId = group.id || group._id;
 		const op = this.get(agId);
-		if(!op) {
+		if(!op || !op.issuer) {
 			return this.define(group, issuer, options);
 		}
 		return op;
