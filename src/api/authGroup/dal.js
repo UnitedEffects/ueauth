@@ -11,6 +11,10 @@ export default {
 	async getOne(id) {
 		return Group.findOne( { _id: id });
 	},
+	async findByAliasDNS(aliasDnsOIDC) {
+		if(aliasDnsOIDC === undefined) return undefined;
+		return Group.findOne( { aliasDnsOIDC });
+	},
 	async getOneByEither(q, onlyIncludeActive=true) {
 		const query = {
 			$or: [
