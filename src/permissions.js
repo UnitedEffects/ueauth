@@ -46,7 +46,7 @@ export default {
 						productList.push(`${req.authGroup.id}-member`);
 						let requestPermissions = [];
 						productList.map((pcId) => {
-							let thisRequest = `${pcId}:::${requestTarget}::${requestAction}`;
+							let thisRequest = `${pcId}:::${(`${requestTarget}::${requestAction}`).toLowerCase()}`;
 							let temp = req.permissions.permissions.filter((p) => {
 								return p.includes(thisRequest);
 							});
