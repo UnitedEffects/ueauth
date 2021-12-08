@@ -68,5 +68,7 @@ Please note, documentation is still a work in progress. If you can't find someth
 * Secured Profiles
 * Federated SSO and Social Logins
 * Multi-Factor Authentication
- 
+
+UE Auth is a Patent Pending Technology. Please read the License before use.
+
 Copyright (c) 2021 [United Effects LLC](https://unitedeffects.com), all rights reserved.
