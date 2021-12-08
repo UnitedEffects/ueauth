@@ -224,7 +224,9 @@ async (req, token, next) => {
 function issuerArray(provider, g) {
 	const issuer = provider.issuer.split('/');
 	const id = issuer[issuer.length-1];
-	if(g._id !== id) throw new Error('OP issuer validation error');
+	if((g._id || g.id) !== id) {
+		throw new Error('OP issuer validation error');
+	}
 	issuer[issuer.length-1] = g.prettyName;
 	return [provider.issuer, issuer.join('/')];
 }
@@ -241,7 +243,7 @@ async (req, token, next) => {
 		if(!subAG) {
 			issuer = null;
 		} else {
-			issuer = issuerArray(oidc(subAG), subAG);
+			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 		}
 		if(helper.isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
@@ -256,7 +258,7 @@ async (req, token, next) => {
 				if(!subAG) return next(null, false);
 				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
 				if(!req.authGroup) req.authGroup = subAG;
-				issuer = issuerArray(oidc(subAG), subAG);
+				issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 			}
 			const pub = { keys: subAG.config.keys };
 			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
@@ -283,7 +285,7 @@ async (req, token, next) => {
 		if(issuer === null) {
 			//assume this is a root request
 			subAG = await group.getOneByEither('root');
-			issuer = issuerArray(oidc(subAG), subAG);
+			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 		}
 		const inspect = await introspect(token, subAG);
 		if(inspect) {
@@ -294,7 +296,7 @@ async (req, token, next) => {
 					subAG = await group.getOneByEither(inspect.group);
 					if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
 					// now we know its a root account so we reset subAG
-					issuer = issuerArray(oidc(subAG), subAG);
+					issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG);
 				if(!req.authGroup) req.authGroup = subAG;
@@ -325,7 +327,7 @@ async (req, token, next) => {
 		if(!subAG) {
 			issuer = null;
 		} else {
-			issuer = issuerArray(oidc(subAG), subAG);
+			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 		}
 		if(helper.isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
@@ -340,7 +342,7 @@ async (req, token, next) => {
 				if(!subAG) return next(null, false);
 				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
 				if(!req.authGroup) req.authGroup = subAG;
-				issuer = issuerArray(oidc(subAG), subAG);
+				issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 			}
 			const pub = { keys: subAG.config.keys };
 			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
@@ -367,7 +369,7 @@ async (req, token, next) => {
 		if(issuer === null) {
 			//assume this is a root request
 			subAG = await group.getOneByEither('root');
-			issuer = issuerArray(oidc(subAG), subAG);
+			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 		}
 		const inspect = await introspect(token, subAG);
 		if(inspect) {
@@ -378,7 +380,7 @@ async (req, token, next) => {
 					subAG = await group.getOneByEither(inspect.group);
 					if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
 					// now we know its a root account so we reset subAG
-					issuer = issuerArray(oidc(subAG), subAG);
+					issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
 				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG, true);
 				if(!req.authGroup) req.authGroup = subAG;

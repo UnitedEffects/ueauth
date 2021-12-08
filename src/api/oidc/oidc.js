@@ -404,7 +404,10 @@ const corsOptions = {
 
 function oidcWrapper(tenant) {
 	const options = oidcConfig(tenant);
-	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id}`;
+	if(!(tenant._id || tenant.id)) {
+		throw new Error('OIDC Provider requires an Auth Group with ID');
+	}
+	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id||tenant.id}`;
 	const oidc = ueP.find(tenant, issuer, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());
