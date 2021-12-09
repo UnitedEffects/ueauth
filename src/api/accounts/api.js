@@ -33,7 +33,7 @@ const api = {
 				if (req.globalSettings.notifications.enabled === true &&
                     req.authGroup.pluginOptions.notification.enabled === true &&
                     req.authGroup.config.autoVerify === true) {
-					await acct.resetOrVerify(req.authGroup, req.globalSettings, result,[], (req.user) ? req.user.sub : undefined, false);
+					await acct.resetOrVerify(req.authGroup, req.globalSettings, result,[], (req.user) ? req.user.sub : undefined, false, req.customDomain);
 				}
 			} catch (er) {
 				console.error(er);
@@ -70,7 +70,7 @@ const api = {
 					return (ac.organization.id === req.organization.id);
 				});
 				if(!checkForOrg.length) {
-					result = await access.defineAccess(req.authGroup, req.organization, user._id, {}, req.globalSettings, req.user.sub, 'created');
+					result = await access.defineAccess(req.authGroup, req.organization, user._id, {}, req.globalSettings, req.user.sub, 'created', true, req.customDomainUI);
 				} else result = user;
 			} else {
 				try {
@@ -81,7 +81,7 @@ const api = {
 						password
 					});
 					if(!newUser) throw new Error('Could not create user');
-					result = await access.defineAccess(req.authGroup, req.organization, newUser._id, {}, req.globalSettings, req.user.sub, 'created');
+					result = await access.defineAccess(req.authGroup, req.organization, newUser._id, {}, req.globalSettings, req.user.sub, 'created', true, req.customDomainUI);
 				} catch (e) {
 					if(newUser && newUser._id) await acct.deleteAccount(req.authGroup.id, newUser._id);
 					throw e;
@@ -92,7 +92,7 @@ const api = {
 					if (req.globalSettings && req.globalSettings.notifications.enabled === true &&
 						req.authGroup.pluginOptions.notification.enabled === true &&
 						req.authGroup.config.autoVerify === true) {
-						await acct.resetOrVerify(req.authGroup, req.globalSettings, newUser,[], (req.user) ? req.user.sub : undefined, false);
+						await acct.resetOrVerify(req.authGroup, req.globalSettings, newUser,[], (req.user) ? req.user.sub : undefined, false, req.customDomain);
 					} else {
 						result = {
 							...JSON.parse(JSON.stringify(result)),
@@ -265,7 +265,7 @@ const api = {
 			if(req.authGroup.pluginOptions.notification.enabled === false) throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
 			const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email, req.authGroup.config.requireVerified);
 			if(!user) throw Boom.notFound('This email address is not registered with our system');
-			result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, req.body.formats, undefined, true);
+			result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, req.body.formats, undefined, true, req.customDomain);
 			return res.respond(say.noContent(RESOURCE));
 		} catch (error) {
 			if(result) {
@@ -322,7 +322,7 @@ const api = {
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to apply access to');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const notify = (!req.query.notify || req.query.notify === true);
-			const result = await access.defineAccess(req.authGroup, req.organization, req.params.id, req.body, req.globalSettings, req.user.sub, 'updated', notify);
+			const result = await access.defineAccess(req.authGroup, req.organization, req.params.id, req.body, req.globalSettings, req.user.sub, 'updated', notify, req.customDomainUI);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
@@ -462,7 +462,7 @@ async function userOperation(req, user, password) {
 		try {
 			if (req.globalSettings.notifications.enabled === true &&
 					req.authGroup.pluginOptions.notification.enabled === true) {
-				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, false);
+				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, false, req.customDomain);
 				return say.noContent(RESOURCE);
 			}
 			throw Boom.badRequest('Notifications are not enabled and are required for this operation');
@@ -476,7 +476,7 @@ async function userOperation(req, user, password) {
 		try {
 			if (req.globalSettings.notifications.enabled === true &&
 					req.authGroup.pluginOptions.notification.enabled === true) {
-				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, true);
+				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user,[], req.user.sub, true, req.customDomain);
 				return say.noContent(RESOURCE);
 			}
 			throw Boom.badRequest('Notifications are not enabled and are required for this operation');
@@ -487,7 +487,7 @@ async function userOperation(req, user, password) {
 			throw error;
 		}
 	case 'generate_password':
-		result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined);
+		result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined, req.customDomain);
 		return say.ok(result, RESOURCE);
 	default:
 		throw Boom.badRequest('Unknown operation');

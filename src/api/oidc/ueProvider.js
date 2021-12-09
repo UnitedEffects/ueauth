@@ -26,6 +26,9 @@ class UEProvider {
 		if(!op || !op.issuer) {
 			return this.define(group, issuer, options);
 		}
+		if(op.issuer !== issuer) {
+			return this.define(group, issuer, options);
+		}
 		return op;
 	}
 	removeListeners(agId) {

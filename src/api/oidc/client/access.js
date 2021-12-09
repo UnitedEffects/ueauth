@@ -2,7 +2,6 @@ import Boom from '@hapi/boom';
 import dal from './dal';
 import role from '../../roles/roles';
 import ueEvents from '../../../events/ueEvents';
-import dom from "../../domains/domain";
 
 function cleanupAccessResponse(object) {
 	let result = object;

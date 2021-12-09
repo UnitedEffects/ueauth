@@ -131,6 +131,10 @@ export default {
 		return undefined;
 	},
 	// @notTested
+	async getOneByAgId(agId, id) {
+		return dal.getOneByAgId(agId, id);
+	},
+	// @notTested
 	async getOneFull(authGroup, id) {
 		return dal.getOneFull(authGroup, id);
 	},
@@ -168,6 +172,10 @@ export default {
 			return JSON.parse(JSON.stringify(result.payload));
 		}
 		return undefined;
+	},
+	// @notTested
+	async simplePatch(authGroup, id, update) {
+		return dal.simplePatch(authGroup, id, update);
 	},
 	// @notTested
 	async deleteOne(authGroup, id) {

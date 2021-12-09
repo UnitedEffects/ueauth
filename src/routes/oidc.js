@@ -94,7 +94,7 @@ router.get('/:group/verifyaccount', [
 ], interactions.verifyAccountScreen);
 
 //pass all other requests to the OP caller
-router.use('/:group', api.oidcCaller);
+router.use('/:group', m.validateHostDomain, api.oidcCaller);
 
 
 export default router;

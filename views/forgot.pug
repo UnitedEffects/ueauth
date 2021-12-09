@@ -37,6 +37,7 @@ block content
                                     input.form-control(id='t1' required='', type='text', name='email', placeholder='your email')
                                 button.btn.btn-outline-dark.m-t-10(id='retry' type='submit') Resend Password Reset
                         else
+                            p(id='message')
                             p(id='instruct').m-t-10 Enter your email address if you exist within the auth group #{authGroupName} you will receive an email to reset your password.
                             form.m-t-10(id='send' autocomplete='off' onsubmit="testing();")
                                 .form-group
