@@ -87,7 +87,7 @@ export default {
 	},
 
 	// @notTested
-	async resetOrVerify(authGroup, globalSettings, user, formats = [], activeUser = undefined, reset=true) {
+	async resetOrVerify(authGroup, globalSettings, user, formats = [], activeUser = undefined, reset=true, aliasDns = undefined) {
 		let iAccessToken;
 		try {
 			const meta = {
@@ -98,8 +98,8 @@ export default {
 			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
 			let data;
 			if(reset === true){
-				data = this.resetPasswordOptions(authGroup, user, iAccessToken, formats, activeUser);
-			} else data = this.verifyAccountOptions(authGroup, user, iAccessToken, formats = [], activeUser);
+				data = this.resetPasswordOptions(authGroup, user, iAccessToken, formats, activeUser, aliasDns);
+			} else data = this.verifyAccountOptions(authGroup, user, iAccessToken, formats = [], activeUser, aliasDns);
 
 			return n.notify(globalSettings, data, authGroup);
 		} catch (error) {
@@ -111,23 +111,23 @@ export default {
 	},
 
 	// @notTested
-	verifyAccountOptions(authGroup, user, iAccessToken, formats = [], activeUser = undefined) {
+	verifyAccountOptions(authGroup, user, iAccessToken, formats = [], activeUser = undefined, aliasDns = undefined) {
 		const data = {
-			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
+			iss: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}`,
 			createdBy: activeUser || user.id,
 			type: 'verify',
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
 			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
-			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/verifyaccount?code=${iAccessToken.jti}`,
+			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/verifyaccount?code=${iAccessToken.jti}`,
 			subject: `${authGroup.name} - Verify and Claim Your New Account`,
 			message: `You have been added to the authentication group '${authGroup.name}'. Please click the button below or copy past the link in a browser to verify your identity and set your password.`,
 			meta: {
 				description: 'Direct API Patch Call',
 				token: iAccessToken.jti,
 				apiHeader: `bearer ${iAccessToken.jti}`,
-				apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/user/${user.id}`,
+				apiUri: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${authGroup.id}/user/${user.id}`,
 				apiMethod: 'PATCH',
 				apiBody: [
 					{
@@ -153,23 +153,23 @@ export default {
 	},
 
 	// @notTested
-	resetPasswordOptions(authGroup, user, iAccessToken, formats = [], activeUser = undefined) {
+	resetPasswordOptions(authGroup, user, iAccessToken, formats = [], activeUser = undefined, aliasDns = undefined) {
 		const data = {
-			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
+			iss: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}`,
 			createdBy: activeUser || `proxy_${user.id}`,
 			type: 'forgotPassword',
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
 			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
-			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
+			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
 			subject: `${authGroup.name} - User Password Reset`,
 			message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
 			meta: {
 				description: 'Direct API Patch Call',
 				token: iAccessToken.jti,
 				apiHeader: `bearer ${iAccessToken.jti}`,
-				apiUri: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/user/${user.id}`,
+				apiUri: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${authGroup.id}/user/${user.id}`,
 				apiMethod: 'PATCH',
 				apiBody: [
 					{

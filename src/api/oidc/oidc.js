@@ -36,7 +36,7 @@ async function introspectionAllowedPolicy(ctx, client, token) {
 	return !(client.introspectionEndpointAuthMethod === 'none' && token.clientId !== ctx.oidc.client.clientId);
 }
 
-function oidcConfig(g) {
+function oidcConfig(g, aliasDns = undefined) {
 	const jwks = JSON.parse(JSON.stringify({
 		keys: g.config.keys
 	}));
@@ -313,7 +313,7 @@ function oidcConfig(g) {
 							access = await clientAccess.getFormattedClientAccess(ctx.authGroup, token.clientId);
 						}
 						if(token.format === 'jwt' && sizeof(access) > config.ACCESS_OBJECT_SIZE_LIMIT) {
-							const url = `${config.PROTOCOL}://${config.SWAGGER}/api/${ctx.authGroup.id}/access/validate`;
+							const url = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${ctx.authGroup.id}/access/validate`;
 							let urlQuery = '?';
 							if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
 							if(query.domain) {
@@ -402,12 +402,12 @@ const corsOptions = {
 	allowMethods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 };
 
-function oidcWrapper(tenant) {
-	const options = oidcConfig(tenant);
+function oidcWrapper(tenant, aliasDns = undefined) {
+	const options = oidcConfig(tenant, aliasDns);
 	if(!(tenant._id || tenant.id)) {
 		throw new Error('OIDC Provider requires an Auth Group with ID');
 	}
-	const issuer = `${config.PROTOCOL}://${config.SWAGGER}/${tenant._id||tenant.id}`;
+	const issuer = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${tenant._id||tenant.id}`;
 	const oidc = ueP.find(tenant, issuer, options);
 	oidc.proxy = true;
 	oidc.use(bodyParser());

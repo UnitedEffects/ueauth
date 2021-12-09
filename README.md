@@ -8,7 +8,7 @@ The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER
 
 ## Object Relationship Model
 
-![Object Relationships Diagram](https://unitedeffects.com/docs/object-relationships.jpeg)
+![Object Relationships Diagram](https://info.unitedeffects.com/docs/object-relationships.jpeg)
 
 ## API Documentation and Demo
 
