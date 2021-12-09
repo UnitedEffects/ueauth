@@ -52,7 +52,7 @@ export default {
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
 			authGroup: authGroup._id,
-			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name,
+			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
 			uid,
 			locked: authGroup.locked,
