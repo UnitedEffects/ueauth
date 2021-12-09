@@ -5,10 +5,9 @@ import helper from '../../helper';
 import cl from '../oidc/client/clients';
 import acct from '../accounts/account';
 import plugs from '../plugins/plugins';
-//import permissions from '../../permissions';
 import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
-import permissions from "../../permissions";
+import permissions from '../../permissions';
 const config = require('../../config');
 
 
@@ -186,12 +185,34 @@ const api = {
 	},
 	async addAliasDns(req, res, next) {
 		// create or overwrite the aliasDns entries on the group. This does not delete
+		let result;
 		try {
 			const body = req.body;
 			await permissions.enforceRoot(req.permissions);
-			const result = await group.updateAliasDns(req.params.id, body, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			result = await group.updateAliasDns(req.params.id, body, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			const client = await cl.getOneByAgId(req.params.id, result.associatedClient);
+			if(!client) throw Boom.badData('Associated client not found');
+			const pl = JSON.parse(JSON.stringify(client.payload));
+			if(!client.payload || !pl.redirect_uris || !Array.isArray(pl.redirect_uris)) throw Boom.badData('Something went wrong updating the client redirect-uri for this authgroup');
+			if(!pl.post_logout_redirect_uris || !Array.isArray(pl.post_logout_redirect_uris)) throw Boom.badData('Something went wrong updating the client post-logout-redirect-uri for this authgroup');
+			const update = {
+				'payload.redirect_uris': pl.redirect_uris,
+				'payload.post_logout_redirect_uris': pl.post_logout_redirect_uris
+			};
+
+			//update redirect uris
+			update['payload.redirect_uris'] = update['payload.redirect_uris'].concat([`https://${result.aliasDnsUi}`, `https://${result.aliasDnsUi}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${result.aliasDnsOIDC}/oauth2-redirect.html`]);
+			update['payload.redirect_uris'] = [...new Set(update['payload.redirect_uris'])];
+
+			//update logout uris
+			update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].concat([`https://${result.aliasDnsUi}`, `https://${result.aliasDnsUi}${config.UI_LOGOUT_REDIRECT_PATH}`, `https://${result.aliasDnsOIDC}/oauth2-redirect.html`]);
+			update['payload.post_logout_redirect_uris'] = [...new Set(update['payload.post_logout_redirect_uris'])];
+			await cl.simplePatch(req.params.id, result.associatedClient, update);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
+			if(result) {
+				await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			}
 			ueEvents.emit(req.params.id, 'ue.group.error', error);
 			next(error);
 		}
@@ -201,6 +222,15 @@ const api = {
 		try {
 			await permissions.enforceRoot(req.permissions);
 			const result = await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			const update = {
+				'payload.redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`],
+				'payload.post_logout_redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`]
+			};
+			if(config.ENV !== 'dev') {
+				update['payload.post_logout_redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
+				update['payload.redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
+			}
+			await cl.simplePatch(req.params.id, result.associatedClient, update);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.params.id, 'ue.group.error', error);
