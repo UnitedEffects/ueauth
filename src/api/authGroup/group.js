@@ -217,9 +217,9 @@ const agp = {
 			type: 'general',
 			formats: ['email'],
 			recipientEmail: owner,
-			screenUrl: `${config.ROOT_GROUP_REGISTRATION_UI_URL}?group=${authGroup.id}&code=${authGroup.initialAccessToken}`,
-			subject: `${authGroup.name} - Register Your Ownership Account`,
-			message: `You created a new auth group called '${authGroup.name}'. In order to complete the creation process and activate the group, you must register your account with the same email address that you used to create the group.`,
+			screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}?code=${authGroup.initialAccessToken}`,
+			subject: `Your Have Registered a new Platform: ${authGroup.name}`,
+			message: `You created a new auth group called '${authGroup.name}'. The button below will take you to your sign-on, or if you haven't finished setup, allow you to do so. If you want to store the URL for later, use: https://${config.UI_URL}/${authGroup.prettyName}`,
 			meta: {
 				description: 'Direct API Post Call',
 				token: authGroup.initialAccessToken,
