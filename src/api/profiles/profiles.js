@@ -43,9 +43,9 @@ export default {
 			recipientUserId: user.id,
 			recipientEmail: user.email,
 			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
-			screenUrl: config.UI_URL,
-			subject: `${organizationName} Profile Update`,
-			message: `The organization, ${organizationName}, within the ${authGroup.name} platform, wishes to inform you that some of the personal profile data they have on record about you has been updated. If this is unexpected or concerning, you should reach out to ${organizationName} to review the changes.`,
+			screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}`,
+			subject: `${organizationName} Profile Update on ${authGroup.name} Platform`,
+			message: `The organization, '${organizationName}', within the ${authGroup.name} Platform, wishes to inform you that some of the personal profile data they have on record about you has been updated. If this is unexpected or concerning, you should reach out to ${organizationName} to review the changes.`,
 			meta: profile
 		};
 		if(formats.length === 0) {

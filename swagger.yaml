@@ -1476,6 +1476,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: notify
+          in: query
+          description: if notifications are enabled, you can override and skip them by setting this to false
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: successful operation

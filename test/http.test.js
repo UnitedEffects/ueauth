@@ -5,7 +5,6 @@ import app from '../src/app';
 import swagger from "../src/swagger";
 import t from './testhelper';
 import Group from '../src/api/authGroup/model';
-import Model from "../src/api/logging/model";
 const config = require('../src/config');
 const pJson = require('../package');
 const mockingoose = require('mockingoose');
@@ -108,8 +107,7 @@ describe('API tests', () => {
 
     it('version should work', async () => {
         try {
-            const res = await request(app)
-                .get('/api/version');
+            const res = await request(app).get('/api/version');
             expect(res.statusCode).toEqual(200);
             const date = new Date();
             expect(res.body).toStrictEqual({

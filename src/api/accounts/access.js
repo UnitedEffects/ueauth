@@ -25,7 +25,7 @@ const factory = {
 			roles: orgRecord.organization.roles
 		};
 	},
-	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN') {
+	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify=true) {
 		// pull user record
 		const authGroup = ag.id;
 		const user = await dal.getAccount(authGroup, id);
@@ -101,14 +101,16 @@ const factory = {
 		user.modifiedBy = modifiedBy;
 		user.modifiedAt = Date.now();
 		await user.save();
-		if (globalSettings && globalSettings.notifications.enabled === true &&
-			ag.pluginOptions.notification.enabled === true) {
-			try {
-				// we will attempt a notification
-				const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy);
-				await n.notify(globalSettings, notificationObject, ag);
-			} catch (error) {
-				ueEvents.emit(authGroup, 'ue.plugin.notification.error', { error });
+		if (notify === true) {
+			if (globalSettings && globalSettings.notifications.enabled === true &&
+				ag.pluginOptions.notification.enabled === true) {
+				try {
+					// we will attempt a notification
+					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type);
+					await n.notify(globalSettings, notificationObject, ag);
+				} catch (error) {
+					ueEvents.emit(authGroup, 'ue.plugin.notification.error', { error });
+				}
 			}
 		}
 		ueEvents.emit(authGroup, 'ue.access.defined', { sub: id, access: orgRecord });
@@ -361,7 +363,7 @@ const factory = {
 	}
 };
 
-function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined) {
+function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type) {
 	const data = {
 		iss: oidc(authGroup).issuer,
 		createdBy: activeUser,
@@ -370,9 +372,9 @@ function accessNotificationObject(authGroup, organization, user, formats = [], a
 		recipientUserId: user.id,
 		recipientEmail: user.email,
 		recipientSms: user.txt,
-		screenUrl: `${config.UI_URL}`,
-		subject: `Access Provided to ${organization} on ${authGroup.name}`,
-		message: `You have been provided access to an organization called ${organization} within the ${authGroup.name} authentication network. This access allows you to access products or applications licensed and administrated by ${organization}. Please note that your access may require a 'terms of access' consent. If so, you can access your ${authGroup.name} authentication network profile by clicking the button and logging into the system. There you will be able to manage all of the organizations to which you've been provided access. If there is a terms of access notification for this organization you can accept or decline from there. Should you decline, the access will be revoked.`
+		screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}`,
+		subject: `Access ${type} to ${organization} on ${authGroup.name} Platform`,
+		message: `You have been provided access to an organization called '${organization}' within the ${authGroup.name} Platform. This access allows you to access products or applications licensed and administrated by ${organization}. Please note that your access may require a 'terms of access' consent. If so, you can access your ${authGroup.name} authentication network profile by clicking the button and logging into the system. There you will be able to manage all of the organizations to which you've been provided access. If there is a terms of access notification for this organization you can accept or decline from there. Should you decline, the access will be revoked.`
 	};
 	if(formats.length === 0) {
 		data.formats = [];
