@@ -9,9 +9,12 @@ const api = {
 		try {
 			if (!req.params.group) throw Boom.notFound('Auth Group');
 			if (helper.protectedNames(req.params.group)) return next();
-			const tenant = await group.getOneByEither(req.params.group, false);
-			if(!tenant) throw Boom.notFound('Auth Group');
-			const provider = oidc(tenant);
+			let tenant;
+			if(!req.authGroup) {
+				tenant = await group.getOneByEither(req.params.group, false);
+				if(!tenant) throw Boom.notFound('Auth Group');
+			} else tenant = req.authGroup;
+			const provider = oidc(tenant, req.customDomain);
 			return provider.callback()(req, res, next);
 		} catch (error) {
 			next(error);

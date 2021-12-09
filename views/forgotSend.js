@@ -37,11 +37,11 @@ window.addEventListener( 'load', function () {
 
 		XHR.addEventListener( 'load', function(event) {
 			if (event.target.status !== 204) {
+				console.info('error');
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
 				document.getElementById('message').innerHTML = 'There may be a problem. Try again later or contact the admin.';
 			} else {
-				console.info('this happened');
 				document.getElementById('title').innerHTML = 'Check Your Email or Mobile Device';
 				const m1 = document.getElementById('message');
 				if(m1) m1.classList.add('success');

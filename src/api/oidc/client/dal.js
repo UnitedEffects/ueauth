@@ -48,6 +48,9 @@ export default {
 			$or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
 		}).select({ 'payload.client_secret': 0 });
 	},
+	async getOneByAgId(agId, id) {
+		return Client.findOne({ _id: id, 'payload.auth_group': agId });
+	},
 	async getOneByNameAndAG(authGroup, name) {
 		const result = await Client.findOne({
 			'payload.client_name': name,
@@ -73,6 +76,12 @@ export default {
 			_id: id,
 			$or: [{'payload.auth_group': authGroup._id}, {'payload.auth_group': authGroup.prettyName}]
 		}, data, {new: true, overwrite: true}).select({payload: 1});
+	},
+	async simplePatch(authGroup, id, data) {
+		return Client.findOneAndUpdate({
+			_id: id,
+			'payload.auth_group': authGroup
+		}, data, {new: true });
 	},
 	async deleteOne(authGroup, id) {
 		return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.id }, { 'payload.auth_group': authGroup.prettyName }] });
