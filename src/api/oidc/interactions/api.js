@@ -6,8 +6,8 @@ import iat from '../initialAccess/iat';
 import interactions from './interactions';
 import n from '../../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
-import Pug from "koa-pug";
-import path from "path";
+import Pug from 'koa-pug';
+import path from 'path';
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -47,16 +47,16 @@ export default {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			switch (prompt.name) {
-				case 'login': {
-					return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params));
+			case 'login': {
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params));
+			}
+			case 'consent': {
+				if(client.client_skip_consent === true) {
+					const result = await interactions.confirmAuthorization(provider, intDetails, req.authGroup);
+					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				case 'consent': {
-					if(client.client_skip_consent === true) {
-						const result = await interactions.confirmAuthorization(provider, intDetails, req.authGroup);
-						return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
-					}
-					return res.render('interaction', interactions.consentLogin(req.authGroup, client, debug, session, prompt, uid, params));
-				}
+				return res.render('interaction', interactions.consentLogin(req.authGroup, client, debug, session, prompt, uid, params));
+			}
 			default:
 				return undefined;
 			}
@@ -84,7 +84,7 @@ export default {
 			if (params.passwordless === false ||
 				req.authGroup.pluginOptions.notification.enabled === false ||
 				req.globalSettings.notifications.enabled === false) {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'))
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
 			}
 			return res.render('passwordless', interactions.pwdlessLogin(req.authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
@@ -311,7 +311,7 @@ export default {
 				if(!req.globalSettings || !req.globalSettings.notifications || req.globalSettings.notifications.enabled !== true)
 				{
 					return res.render('error', {
-						title: `Forgot Password Not Enabled by the OP Admin`,
+						title: 'Forgot Password Not Enabled by the OP Admin',
 						message: 'This UE Auth instance has not activated the global notifications plugin. This is required before secure password resets are allowed through self service.',
 						details: 'Please contact your UE Auth Admin.'
 					});
@@ -339,7 +339,7 @@ export default {
 				if (ctx.oidc && ctx.oidc.client && ctx.oidc.client.client_optional_skip_logout_prompt === true) {
 					// post_logout_redirect_uri further requires an id_token_hint or client_id
 					if(ctx.req.query.post_logout_redirect_uri) {
-						skipPrompt = true
+						skipPrompt = true;
 					}
 				}
 			}
