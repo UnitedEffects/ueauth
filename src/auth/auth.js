@@ -32,14 +32,14 @@ async function getClient(authGroup, decoded) {
 }
 
 // @notTested
-async function introspect(token, authGroup) {
+async function introspect(token, authGroup, aliasDns = undefined) {
 	/**
      * Looking up the token directly for decoding since this is the system of record.
 	 * External systems would make an http request to the
      * introspect endpoint.
      * @type {AccessToken}
      */
-	const provider = oidc(authGroup);
+	const provider = oidc(authGroup, aliasDns);
 	let accessToken = await provider.AccessToken.find(token);
 	if(!accessToken) {
 		// try client-credentials
@@ -243,7 +243,7 @@ async (req, token, next) => {
 		if(!subAG) {
 			issuer = null;
 		} else {
-			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+			issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 		}
 		if(helper.isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
@@ -258,7 +258,10 @@ async (req, token, next) => {
 				if(!subAG) return next(null, false);
 				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
 				if(!req.authGroup) req.authGroup = subAG;
-				issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+				if(req.customDomain) {
+					if(subAG.aliasDnsOIDC && subAG.aliasDnsOIDC !== req.customDomain) return next(null, false);
+				}
+				issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 			}
 			const pub = { keys: subAG.config.keys };
 			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
@@ -285,9 +288,12 @@ async (req, token, next) => {
 		if(issuer === null) {
 			//assume this is a root request
 			subAG = await group.getOneByEither('root');
-			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+			if(req.customDomain) {
+				if(subAG.aliasDnsOIDC && subAG.aliasDnsOIDC !== req.customDomain) return next(null, false);
+			}
+			issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 		}
-		const inspect = await introspect(token, subAG);
+		const inspect = await introspect(token, subAG, req.customDomain);
 		if(inspect) {
 			if (inspect.active === false) return next(null, false);
 			try {
@@ -296,7 +302,10 @@ async (req, token, next) => {
 					subAG = await group.getOneByEither(inspect.group);
 					if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
 					// now we know its a root account so we reset subAG
-					issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+					if(req.customDomain) {
+						if(subAG.aliasDnsOIDC && subAG.aliasDnsOIDC !== req.customDomain) return next(null, false);
+					}
+					issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG);
 				if(!req.authGroup) req.authGroup = subAG;
@@ -327,7 +336,7 @@ async (req, token, next) => {
 		if(!subAG) {
 			issuer = null;
 		} else {
-			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+			issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 		}
 		if(helper.isJWT(token)){
 			const preDecoded = jwt.decode(token, {complete: true});
@@ -342,7 +351,10 @@ async (req, token, next) => {
 				if(!subAG) return next(null, false);
 				if(subAG.prettyName !== 'root') return next(null, false); //hard coded check that only root can access across auth groups
 				if(!req.authGroup) req.authGroup = subAG;
-				issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+				if(req.customDomain) {
+					if(subAG.aliasDnsOIDC && subAG.aliasDnsOIDC !== req.customDomain) return next(null, false);
+				}
+				issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 			}
 			const pub = { keys: subAG.config.keys };
 			const myKeySet = njwk.JWKSet.fromJSON(JSON.stringify(pub));
@@ -369,9 +381,12 @@ async (req, token, next) => {
 		if(issuer === null) {
 			//assume this is a root request
 			subAG = await group.getOneByEither('root');
-			issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+			if(req.customDomain) {
+				if(subAG.aliasDnsOIDC && subAG.aliasDnsOIDC !== req.customDomain) return next(null, false);
+			}
+			issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 		}
-		const inspect = await introspect(token, subAG);
+		const inspect = await introspect(token, subAG, req.customDomain);
 		if(inspect) {
 			if (inspect.active === false) return next(null, false);
 			try {
@@ -380,7 +395,10 @@ async (req, token, next) => {
 					subAG = await group.getOneByEither(inspect.group);
 					if(subAG.prettyName !== 'root') return next(null, false); //we already know this is invalid
 					// now we know its a root account so we reset subAG
-					issuer = issuerArray(oidc(subAG), JSON.parse(JSON.stringify(subAG)));
+					if(req.customDomain) {
+						if(subAG.aliasDnsOIDC && subAG.aliasDnsOIDC !== req.customDomain) return next(null, false);
+					}
+					issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 				}
 				const result = await runDecodedChecks(token, issuer, inspect, subAG, true);
 				if(!req.authGroup) req.authGroup = subAG;

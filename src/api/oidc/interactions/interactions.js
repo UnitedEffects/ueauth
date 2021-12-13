@@ -1,16 +1,16 @@
 const config = require('../../../config');
 const { strict: assert } = require('assert');
 export default {
-	passwordLessOptions(authGroup, user, iAccessToken, formats = [], uid) {
+	passwordLessOptions(authGroup, user, iAccessToken, formats = [], uid, aliasDns = undefined) {
 		const data = {
-			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
+			iss: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}`,
 			createdBy: `proxy-${user.id}`,
 			type: 'passwordless',
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
 			recipientSms: user.txt,
-			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}/interaction/${uid}/passwordless?token=${iAccessToken.jti}&sub=${user.id}`,
+			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/interaction/${uid}/passwordless?token=${iAccessToken.jti}&sub=${user.id}`,
 			subject: `${authGroup.prettyName} - Password Free Login`,
 			message: 'You have requested a password free login. Click the link to complete your authentication. This link will expire in 15 minutes.',
 		};
@@ -31,10 +31,10 @@ export default {
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
 			locked: authGroup.locked,
-			registerUrl: client.register_url || authGroup.registerUrl || undefined,
+			registerUrl: client.register_url || authGroup.registerUrl || authGroup.primaryDomain || undefined,
 			uid,
-			tos: authGroup.primaryTOS,
-			policy: authGroup.primaryPrivacyPolicy,
+			tos: authGroup.primaryTOS || authGroup.primaryDomain || undefined,
+			policy: authGroup.primaryPrivacyPolicy || authGroup.primaryDomain || undefined,
 			details: prompt.details,
 			params,
 			title: 'Sign-in',
@@ -56,10 +56,10 @@ export default {
 			splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
 			uid,
 			locked: authGroup.locked,
-			registerUrl: client.register_url || authGroup.registerUrl || undefined,
+			registerUrl: client.register_url || authGroup.registerUrl || authGroup.primaryDomain || undefined,
 			details: prompt.details,
-			tos: authGroup.primaryTOS,
-			policy: authGroup.primaryPrivacyPolicy,
+			tos: authGroup.primaryTOS || authGroup.primaryDomain || undefined,
+			policy: authGroup.primaryPrivacyPolicy || authGroup.primaryDomain || undefined,
 			params,
 			title: 'Sign-in Password Free',
 			session: session ? debug(session) : undefined,
@@ -80,8 +80,8 @@ export default {
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
 			details: prompt.details,
-			tos: authGroup.primaryTOS,
-			policy: authGroup.primaryPrivacyPolicy,
+			tos: authGroup.primaryTOS || authGroup.primaryDomain || undefined,
+			policy: authGroup.primaryPrivacyPolicy || authGroup.primaryDomain || undefined,
 			params,
 			title: 'Authorize',
 			session: session ? debug(session) : undefined,
@@ -91,32 +91,32 @@ export default {
 			}
 		};
 	},
-	verifyScreen(authGroup, query) {
+	verifyScreen(authGroup, query, aliasDns = undefined, aliasUi = undefined) {
 		return {
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			tos: authGroup.primaryTOS,
 			policy: authGroup.primaryPrivacyPolicy,
 			title: 'Verify And Claim Your Account',
 			iat: query.code,
-			redirect: query.redirect || authGroup.primaryDomain || `https://${config.UI_URL}/${authGroup.prettyName}` || undefined,
+			redirect: query.redirect || authGroup.primaryDomain || `https://${(aliasUi) ? aliasUi : config.UI_URL}/${authGroup.prettyName}` || undefined,
 			flash: 'Verification requires you to reset your password. Type the new one and confirm.',
-			url: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup._id}/setpass`,
-			retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup._id}/operations/user/reset-password`,
+			url: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup._id}/setpass`,
+			retryUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns: config.SWAGGER}/api/${authGroup._id}/operations/user/reset-password`,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
 		};
 	},
-	forgotScreen(authGroup, query) {
+	forgotScreen(authGroup, query, aliasDns = undefined, aliasUi = undefined) {
 		return {
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			title: 'Forgot Password',
 			tos: authGroup.primaryTOS,
 			policy: authGroup.primaryPrivacyPolicy,
 			iat: query.code,
-			redirect: query.redirect || authGroup.primaryDomain || `https://${config.UI_URL}/${authGroup.prettyName}` || undefined,
+			redirect: query.redirect || authGroup.primaryDomain || `https://${(aliasUi) ? aliasUi : config.UI_URL}/${authGroup.prettyName}` || undefined,
 			flash: 'Type in your new password to reset',
-			url: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup._id}/setpass`,
-			retryUrl: `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup._id}/operations/reset-user-password`,
+			url: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup._id}/setpass`,
+			retryUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${authGroup._id}/operations/reset-user-password`,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
 		};
