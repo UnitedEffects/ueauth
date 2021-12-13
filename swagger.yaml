@@ -5957,6 +5957,11 @@ components:
               value:
                 type: array
                 description: 'The array to set the property at the above path to'
+                items:
+                  oneOf:
+                    - type: string
+                    - type: object
+                    - type: number
           - required:
             - op
             - path
