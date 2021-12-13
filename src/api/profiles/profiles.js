@@ -33,17 +33,17 @@ export default {
 		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
 		return result;
 	},
-	async profileUpdateNotification (authGroup, organizationName, id, activeUser = 'SYSTEM ADMIN', formats = [], profile){
-	    const user = await account.getAccount(authGroup.id, id);
+	async profileUpdateNotification (authGroup, organizationName, id, activeUser = 'SYSTEM ADMIN', formats = [], profile, aliasDns = undefined, aliasUi = undefined) {
+		const user = await account.getAccount(authGroup.id, id);
 		const data = {
-			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,
+			iss: `${config.PROTOCOL}://${aliasDns || config.SWAGGER}/${authGroup.id}`,
 			createdBy: activeUser,
 			type: 'general',
 			formats,
 			recipientUserId: user.id,
 			recipientEmail: user.email,
 			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
-			screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}`,
+			screenUrl: `https://${aliasUi || config.UI_URL}/${authGroup.prettyName}`,
 			subject: `${organizationName} Profile Update on ${authGroup.name} Platform`,
 			message: `The organization, '${organizationName}', within the ${authGroup.name} Platform, wishes to inform you that some of the personal profile data they have on record about you has been updated. If this is unexpected or concerning, you should reach out to ${organizationName} to review the changes.`,
 			meta: profile

@@ -31,7 +31,7 @@ const debug = (obj) => querystring.stringify(Object.entries(obj).reduce((acc, [k
 export default {
 	async getInt(req, res, next) {
 		try {
-			const provider = await oidc(req.authGroup);
+			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
@@ -67,7 +67,7 @@ export default {
 
 	async passwordless (req, res, next) {
 		try {
-			const provider = await oidc(req.authGroup);
+			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			const client = await provider.Client.find(params.client_id);
 			if(client.auth_group !== req.authGroup.id) {
@@ -96,7 +96,7 @@ export default {
 		try {
 			const iAccessToken = req.query.token;
 			const id = req.query.sub;
-			const provider = await oidc(req.authGroup);
+			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			const client = await provider.Client.find(params.client_id);
 			if(client.auth_group !== req.authGroup.id) {
@@ -142,7 +142,7 @@ export default {
 
 	async login(req, res, next) {
 		try {
-			const provider = await oidc(req.authGroup);
+			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -185,7 +185,7 @@ export default {
 		let _session;
 		let _prompt;
 		try {
-			const provider = await oidc(req.authGroup);
+			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			_uid = uid;
 			_params = params;
@@ -215,7 +215,7 @@ export default {
 				uid
 			};
 			iAccessToken = await iat.generateIAT(900, ['auth_group'], req.authGroup, meta);
-			const notificationData = interactions.passwordLessOptions(req.authGroup, account, iAccessToken, [], uid);
+			const notificationData = interactions.passwordLessOptions(req.authGroup, account, iAccessToken, [], uid, req.customDomain);
 			await n.notify(req.globalSettings, notificationData, req.authGroup);
 			return res.render('success', {
 				title: 'SUCCESS!',
@@ -234,7 +234,7 @@ export default {
 
 	async confirm (req, res, next) {
 		try {
-			const provider = await oidc(req.authGroup);
+			const provider = await oidc(req.authGroup, req.customDomain);
 			const interactionDetails = await provider.interactionDetails(req, res);
 			const result = await interactions.confirmAuthorization(provider, interactionDetails, req.authGroup);
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
@@ -248,7 +248,7 @@ export default {
 				error: 'access_denied',
 				error_description: 'End-User aborted interaction',
 			};
-			await oidc(req.authGroup).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+			await oidc(req.authGroup, req.customDomain).interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);
 		}
@@ -292,7 +292,7 @@ export default {
 				});
 
 			}
-			return res.render('verify', interactions.verifyScreen(req.authGroup, req.query));
+			return res.render('verify', interactions.verifyScreen(req.authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (err) {
 			next (err);
 		}
@@ -325,7 +325,7 @@ export default {
 				}
 
 			}
-			return res.render('forgot', interactions.forgotScreen(req.authGroup, req.query));
+			return res.render('forgot', interactions.forgotScreen(req.authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (err) {
 			next (err);
 		}
