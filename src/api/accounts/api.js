@@ -323,7 +323,6 @@ const api = {
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const notify = (!req.query.notify || req.query.notify === true);
 			const result = await access.defineAccess(req.authGroup, req.organization, req.params.id, req.body, req.globalSettings, req.user.sub, 'updated', notify, req.customDomainUI, req.customDomain);
-
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
