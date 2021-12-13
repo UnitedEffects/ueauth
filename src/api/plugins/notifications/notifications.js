@@ -2,9 +2,9 @@ import dal from './dal';
 import axios from 'axios';
 import client from '../../oidc/client/clients';
 import group from '../../authGroup/group';
-import helper from "../../../helper";
+import helper from '../../../helper';
 import plugins from '../plugins';
-import ueEvents from "../../../events/ueEvents";
+import ueEvents from '../../../events/ueEvents';
 
 export default {
 	async createNotification(data) {
