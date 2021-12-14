@@ -27,8 +27,11 @@ const agp = {
 		data.securityExpiration = new Date(Date.now() + (config.GROUP_SECURE_EXPIRES * 1000));
 
 		// set primary domain
-		if(data.primaryDomain && !data.primaryDomain.includes('://')) {
-			data.primaryDomain = `https://${data.primaryDomain}`;
+		if (data.primaryDomain) {
+			data.primaryDomain = decodeURIComponent(data.primaryDomain);
+			if (!data.primaryDomain.includes('://')) {
+				data.primaryDomain = `https://${data.primaryDomain}`;
+			}
 		}
 
 		// if notifications are off
