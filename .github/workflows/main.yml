@@ -38,6 +38,9 @@ jobs:
       - name: Install Serverless
         run: yarn global add serverless
 
+      - name: Validating this works
+        run: echo ${{ secrets.NODE_ENV }}
+
       # Deploy to QA
       - name: Deploy
         run: yarn simple-deploy
