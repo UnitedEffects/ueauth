@@ -6,31 +6,42 @@ const config = require('./config');
 let mongoConnect = config.MONGO;
 
 if (!mongoConnect) {
-    console.error('Mongo Connection not set. Exiting.');
-    process.exit(1);
+	console.error('Mongo Connection not set. Exiting.');
+	process.exit(1);
 }
 
 console.info(`Connection string: ${mongoConnect}`);
 connection.create(mongoConnect, config.REPLICA);
 
 function normalizePort(val) {
-    const port = parseInt(val, 10);
+	const port = parseInt(val, 10);
 
-    if (isNaN(port)) {
-        // named pipe
-        return val;
-    }
+	if (isNaN(port)) {
+		// named pipe
+		return val;
+	}
 
-    if (port >= 0) {
-        // port number
-        return port;
-    }
+	if (port >= 0) {
+		// port number
+		return port;
+	}
 
-    return false;
+	return false;
 }
 
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-
-module.exports.handler = sls(app);
+const handler = sls(app, {
+	request: (req, event, context) => {
+		req.requestId = context.awsRequestId;
+	}
+});
+module.exports.handler = async (event, context) => {
+	// eslint-disable-next-line no-console
+	console.log(`START GATEWAY REQUEST: ${event.requestContext.requestId}`);
+	const result = await handler(event, context);
+	// eslint-disable-next-line no-console
+	console.log(`END GATEWAY REQUEST: ${event.requestContext.requestId}`);
+	return result;
+};
