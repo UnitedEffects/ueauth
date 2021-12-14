@@ -32,7 +32,16 @@ function normalizePort(val) {
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-
-module.exports.handler = sls(app, {
-	requestId: 'X-ReqId'
+const handler = sls(app, {
+	request: (req, event, context) => {
+		req.requestId = context.awsRequestId;
+	}
 });
+module.exports.handler = async (event, context) => {
+	// eslint-disable-next-line no-console
+	console.log(`START GATEWAY REQUEST: ${event.requestContext.requestId}`);
+	const result = await handler(event, context);
+	// eslint-disable-next-line no-console
+	console.log(`END GATEWAY REQUEST: ${event.requestContext.requestId}`);
+	return result;
+};

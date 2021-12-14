@@ -43,11 +43,13 @@ const mid = {
 	},
 	async requestId(req, res, next) {
 		try {
-			// where serverless puts it
-			if(req.headers.requestId) {
-				req.requestId = req.headers.requestId;
+			if(req.requestId) return next();
+			// try mapping from gateway if the request is missing...
+			if(req.headers['x-request-id']) {
+				req.requestId = req.headers['x-request-id'];
 				return next();
 			}
+			// create our own
 			req.requestId = uuid();
 			return next();
 		} catch (error) {
