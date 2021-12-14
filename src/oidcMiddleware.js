@@ -81,6 +81,7 @@ const mid = {
 			if (error.error === 'server_error') {
 				error.message = `Unexpected OIDC error. ${ctx.response.body.error_description}. Work with admin to review Logs`;
 			}
+			if(ctx.req.requestId) error['_id'] = ctx.req.requestId;
 			ctx.response.body = await errHandler.oidcLogger(error);
 		}
 

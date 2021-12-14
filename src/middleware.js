@@ -1,5 +1,6 @@
 import { OpenApiValidator } from 'express-openapi-validate';
 import Boom from '@hapi/boom';
+import { v4 as uuid } from 'uuid';
 import handleErrors from './customErrorHandler';
 import { sayMiddleware } from './say';
 import authorizer from './auth/auth';
@@ -40,6 +41,19 @@ const mid = {
 			next(error);
 		}
 	},
+	async requestId(req, res, next) {
+		try {
+			// where serverless puts it
+			if(req.headers.requestId) {
+				req.requestId = req.headers.requestId;
+				return next();
+			}
+			req.requestId = uuid();
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
 	catch404 (req, res, next) {
 		try {
 			next(handleErrors.catch404());
@@ -50,7 +64,7 @@ const mid = {
 	async catchErrors (err, req, res, next) {
 		try {
 			if(config.ENV !== 'production') console.info(err);
-			const error = await handleErrors.parse(err);
+			const error = await handleErrors.parse(err, req.requestId);
 			if(req.method.toLowerCase() === 'get' && !req.path.includes('/api')) {
 				if(req.headers.accept !== 'application/json') {
 					if(error.statusCode === 404) {

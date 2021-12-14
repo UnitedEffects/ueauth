@@ -6,7 +6,7 @@ export default {
 	catch404() {
 		return Boom.notFound('Resource not found');
 	},
-	async parse(error) {
+	async parse(error, id=undefined) {
 		try {
 			if(error.code === 11000) {
 				const conflict = Boom.conflict(error.errmsg.split('E11000 duplicate key error collection: ').join(''));
@@ -14,6 +14,7 @@ export default {
 			}
 			const tE = await doParse(error);
 			const err = tE.output.payload;
+			if(id) tE.output.payload['_id'] = id;
 			return logger(err, tE);
 		} catch (error) {
 			const result = await doParse(error);
