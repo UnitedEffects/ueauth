@@ -15,7 +15,6 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    environment: QA
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -31,9 +30,3 @@ jobs:
       # Install Build
       - name: Build
         run: yarn build
-
-      - name: Validating this works 1
-        run: echo ${{ secrets.NODE_ENV }}
-
-      - name: Validating this works 2
-        run: echo ${{ secrets.GROUP_SECURE_EXPIRES }}
