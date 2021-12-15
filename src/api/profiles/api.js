@@ -90,14 +90,14 @@ async function tryNotification(req, result) {
         if (req.globalSettings && req.globalSettings.notifications.enabled === true &&
             req.authGroup.pluginOptions.notification.enabled === true &&
             req.organization.profileNotifications === true) {
-            await notifyUser(req.globalSettings, req.authGroup, req.organization.name, result.accountId, req.user.sub || 'SYSTEM ADMIN', JSON.parse(JSON.stringify(result)));
+            await notifyUser(req.globalSettings, req.authGroup, req.organization.name, result.accountId, req.user.sub || 'SYSTEM ADMIN', JSON.parse(JSON.stringify(result)), req.customDomain, req.customDomainUI);
         }
     } catch (error) {
         ueEvents.emit(req.authGroup.id, 'ue.organization.profile.error', {notification: 'failed', error});
     }
 }
 
-async function notifyUser(globalSettings, authGroup, organizationName, userId, activeUser, profile) {
-	const sendObject = await profiles.profileUpdateNotification(authGroup, organizationName, userId, activeUser, [], profile);
+async function notifyUser(globalSettings, authGroup, organizationName, userId, activeUser, profile, aliasDns, aliasUi) {
+	const sendObject = await profiles.profileUpdateNotification(authGroup, organizationName, userId, activeUser, [], profile, aliasDns, aliasUi);
 	return n.notify(globalSettings, sendObject, authGroup);
 }

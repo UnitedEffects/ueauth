@@ -213,6 +213,11 @@ const agp = {
 	},
 
 	// @notTested
+	async findByAliasDNS(aliasDnsOIDC) {
+		return dal.findByAliasDNS(aliasDnsOIDC);
+	},
+
+	// @notTested
 	groupCreationNotifyOptions(authGroup, owner) {
 		return {
 			iss: `${config.PROTOCOL}://${config.SWAGGER}/${authGroup.id}`,

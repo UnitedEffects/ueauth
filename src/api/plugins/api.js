@@ -49,7 +49,7 @@ const api = {
 			const data = req.body;
 			data.authGroupId = req.authGroup.id;
 			data.createdBy = req.user.sub;
-			data.iss = `${config.PROTOCOL}://${config.SWAGGER}/${req.authGroup.id}`;
+			data.iss = `${config.PROTOCOL}://${req.customDomain || config.SWAGGER}/${req.authGroup.id}`;
 			data.destinationUri = req.globalSettings.notifications.notificationServiceUri;
 			if(!data.formats) {
 				data.formats = [];

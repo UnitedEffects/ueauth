@@ -25,7 +25,7 @@ const factory = {
 			roles: orgRecord.organization.roles
 		};
 	},
-	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify=true) {
+	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify= true, aliasUi = undefined, aliasDns = undefined) {
 		// pull user record
 		const authGroup = ag.id;
 		const user = await dal.getAccount(authGroup, id);
@@ -106,7 +106,7 @@ const factory = {
 				ag.pluginOptions.notification.enabled === true) {
 				try {
 					// we will attempt a notification
-					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type);
+					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type, aliasUi, aliasDns);
 					await n.notify(globalSettings, notificationObject, ag);
 				} catch (error) {
 					ueEvents.emit(authGroup, 'ue.plugin.notification.error', { error });
@@ -363,16 +363,16 @@ const factory = {
 	}
 };
 
-function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type) {
+function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type, aliasUi = undefined, aliasDns = undefined) {
 	const data = {
-		iss: oidc(authGroup).issuer,
+		iss: oidc(authGroup, aliasDns).issuer,
 		createdBy: activeUser,
 		type: 'general',
 		formats,
 		recipientUserId: user.id,
 		recipientEmail: user.email,
 		recipientSms: user.txt,
-		screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}`,
+		screenUrl: `https://${(aliasUi) ? aliasUi : config.UI_URL}/${authGroup.prettyName}`,
 		subject: `Access ${type} to ${organization} on ${authGroup.name} Platform`,
 		message: `You have been provided access to an organization called '${organization}' within the ${authGroup.name} Platform. This access allows you to access products or applications licensed and administrated by ${organization}. Please note that your access may require a 'terms of access' consent. If so, you can access your ${authGroup.name} authentication network profile by clicking the button and logging into the system. There you will be able to manage all of the organizations to which you've been provided access. If there is a terms of access notification for this organization you can accept or decline from there. Should you decline, the access will be revoked.`
 	};
