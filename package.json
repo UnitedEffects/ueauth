@@ -1,7 +1,7 @@
 {
   "name": "ue-auth",
   "altName": "UE-Auth",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "UE Auth is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions",
   "private": false,
   "license": "SEE LICENSE IN ./LICENSE.md",
@@ -105,6 +105,7 @@
     "mockingoose": "^2.15.2",
     "nodemon": "^2.0.12",
     "regenerator-runtime": "^0.13.3",
+    "serverless": "^2.69.1",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-domain-manager": "^5.1.5",
     "supertest": "^4.0.2",
