@@ -1,71 +1,70 @@
 service: ${env:NAME, file(./package.json):altName}
-
-provider:
-  name: aws
-  runtime: nodejs12.x
-  env: ${env:SLS_ENV, 'test'}
-  stage: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
-  region: us-east-1
-  timeout: 30
-  environment:
-    NODE_ENV: ${env:NODE_ENV, file(./.env/env.${self:provider.env}.json):NODE_ENV}
-    SWAGGER: ${env:SWAGGER, file(./.env/env.${self:provider.env}.json):SWAGGER}
-    UI_URL: ${env:UI_URL, file(./.env/env.${self:provider.env}.json):UI_URL}
-    UI_LOGIN_REDIRECT_PATH: ${env:UI_LOGIN_REDIRECT_PATH, file(./.env/env.${self:provider.env}.json):UI_LOGIN_REDIRECT_PATH}
-    UI_LOGOUT_REDIRECT_PATH: ${env:UI_LOGOUT_REDIRECT_PATH, file(./.env/env.${self:provider.env}.json):UI_LOGOUT_REDIRECT_PATH}
-    PROTOCOL: ${env:PROTOCOL, file(./.env/env.${self:provider.env}.json):PROTOCOL}
-    MONGO: ${env:MONGO, file(./.env/env.${self:provider.env}.json):MONGO}
-    REPLICA: ${env:REPLICA, file(./.env/env.${self:provider.env}.json):REPLICA}
-    PERSIST_HTTP_ERRORS: ${env:PERSIST_HTTP_ERRORS, file(./.env/env.${self:provider.env}.json):PERSIST_HTTP_ERRORS}
-    WRITE_LOGS_TO_DB: ${env:WRITE_LOGS_TO_DB, file(./.env/env.${self:provider.env}.json):WRITE_LOGS_TO_DB}
-    SINGLE_USE_IAT: ${env:SINGLE_USE_IAT, file(./.env/env.${self:provider.env}.json):SINGLE_USE_IAT}
-    GROUP_SECURE_EXPIRES: ${env:GROUP_SECURE_EXPIRES, file(./.env/env.${self:provider.env}.json):GROUP_SECURE_EXPIRES}
-    COOKIE_KEYS: ${env:COOKIE_KEYS, file(./.env/env.${self:provider.env}.json):COOKIE_KEYS}
-    ALLOW_ROOT_CREATION: ${env:ALLOW_ROOT_CREATION, file(./.env/env.${self:provider.env}.json):ALLOW_ROOT_CREATION}
-    ROOT_EMAIL: ${env:ROOT_EMAIL, file(./.env/env.${self:provider.env}.json):ROOT_EMAIL}
-    ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${env:ONE_TIME_PERSONAL_ROOT_CREATION_KEY, file(./.env/env.${self:provider.env}.json):ONE_TIME_PERSONAL_ROOT_CREATION_KEY}
-    FULL_SUPER_CONTROL: ${env:FULL_SUPER_CONTROL, file(./.env/env.${self:provider.env}.json):FULL_SUPER_CONTROL}
-    OPEN_GROUP_REG: ${env:OPEN_GROUP_REG, file(./.env/env.${self:provider.env}.json):OPEN_GROUP_REG}
-    ROOT_COMPANY_NAME: ${env:ROOT_COMPANY_NAME, file(./.env/env.${self:provider.env}.json):ROOT_COMPANY_NAME}
-    INIT_ROOT_PRIMARY_DOMAIN: ${env:INIT_ROOT_PRIMARY_DOMAIN, file(./.env/env.${self:provider.env}.json):INIT_ROOT_PRIMARY_DOMAIN}
-    INIT_ROOT_PRIMARY_TOS: ${env:INIT_ROOT_PRIMARY_TOS, file(./.env/env.${self:provider.env}.json):INIT_ROOT_PRIMARY_TOS}
-    INIT_ROOT_PRIMARY_POLICY: ${env:INIT_ROOT_PRIMARY_POLICY, file(./.env/env.${self:provider.env}.json):INIT_ROOT_PRIMARY_POLICY}
-    PLATFORM_NAME: ${env:PLATFORM_NAME, file(./.env/env.${self:provider.env}.json):PLATFORM_NAME}
-    UI_WHITE_LIST: ${env:UI_WHITE_LIST, file(./.env/env.${self:provider.env}.json):UI_WHITE_LIST}
-    UI_CORE_AUDIENCE_ORIGIN: ${env:UI_CORE_AUDIENCE_ORIGIN, file(./.env/env.${self:provider.env}.json):UI_CORE_AUDIENCE_ORIGIN}
-    UI_PKCE_REQUIRED: ${env:UI_PKCE_REQUIRED, file(./.env/env.${self:provider.env}.json):UI_PKCE_REQUIRED}
-    CORE_SCOPES: ${env:CORE_SCOPES, file(./.env/env.${self:provider.env}.json):CORE_SCOPES}
-    STATIC_ASSETS: ${env:STATIC_ASSETS, file(./.env/env.${self:provider.env}.json):STATIC_ASSETS}
-    CUSTOM_FONTS_URL: ${env:CUSTOM_FONTS_URL, file(./.env/env.${self:provider.env}.json):CUSTOM_FONTS_URL}
-    ROOT_GROUP_REGISTRATION_UI_URL: ${env:ROOT_GROUP_REGISTRATION_UI_URL, file(./.env/env.${self:provider.env}.json):ROOT_GROUP_REGISTRATION_UI_URL}
-    DEFAULT_UI_SKIN_SPLASH: ${env:DEFAULT_UI_SKIN_SPLASH, file(./.env/env.${self:provider.env}.json):DEFAULT_UI_SKIN_SPLASH}
-    DEFAULT_UI_SKIN_GRADIENT_LOW: ${env:DEFAULT_UI_SKIN_GRADIENT_LOW, file(./.env/env.${self:provider.env}.json):DEFAULT_UI_SKIN_GRADIENT_LOW}
-    DEFAULT_UI_SKIN_GRADIENT_HIGH: ${env:DEFAULT_UI_SKIN_GRADIENT_HIGH, file(./.env/env.${self:provider.env}.json):DEFAULT_UI_SKIN_GRADIENT_HIGH}
-    EVENT_EMITTER_CLEAN_SENSITIVE: ${env:EVENT_EMITTER_CLEAN_SENSITIVE, file(./.env/env.${self:provider.env}.json):EVENT_EMITTER_CLEAN_SENSITIVE}
-    ACCESS_OBJECT_SIZE_LIMIT: ${env:ACCESS_OBJECT_SIZE_LIMIT, file(./.env/env.${self:provider.env}.json):ACCESS_OBJECT_SIZE_LIMIT}
-package:
-  exclude:
-    - src/**
-
-plugins:
- - serverless-domain-manager
- - serverless-apigw-binary
-
+variablesResolutionMode: 20210326
 custom:
+  local_env: ${sls:stage, 'test'}
   customDomain:
-    domainName: ${env:SWAGGER, file(./.env/env.${self:provider.env}.json):SWAGGER}
+    domainName: ${env:SWAGGER, file(./.env/env.${self:custom.local_env}.json):SWAGGER}
     basePath: ''
-    stage: ${self:provider.stage}
+    stage: ${sls:stage}
     createRoute53Record: true
   apigwBinary:
     types:
       - 'multipart/form-data'
       - 'image/jpeg'
       - 'image/png'
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+  timeout: 30
+  lambdaHashingVersion: 20201221
+  environment:
+    NODE_ENV: ${env:NODE_ENV, file(./.env/env.${self:custom.local_env}.json):NODE_ENV}
+    SWAGGER: ${env:SWAGGER, file(./.env/env.${self:custom.local_env}.json):SWAGGER}
+    UI_URL: ${env:UI_URL, file(./.env/env.${self:custom.local_env}.json):UI_URL}
+    UI_LOGIN_REDIRECT_PATH: ${env:UI_LOGIN_REDIRECT_PATH, file(./.env/env.${self:custom.local_env}.json):UI_LOGIN_REDIRECT_PATH}
+    UI_LOGOUT_REDIRECT_PATH: ${env:UI_LOGOUT_REDIRECT_PATH, file(./.env/env.${self:custom.local_env}.json):UI_LOGOUT_REDIRECT_PATH}
+    PROTOCOL: ${env:PROTOCOL, file(./.env/env.${self:custom.local_env}.json):PROTOCOL}
+    MONGO: ${env:MONGO, file(./.env/env.${self:custom.local_env}.json):MONGO}
+    REPLICA: ${env:REPLICA, file(./.env/env.${self:custom.local_env}.json):REPLICA}
+    PERSIST_HTTP_ERRORS: ${env:PERSIST_HTTP_ERRORS, file(./.env/env.${self:custom.local_env}.json):PERSIST_HTTP_ERRORS}
+    WRITE_LOGS_TO_DB: ${env:WRITE_LOGS_TO_DB, file(./.env/env.${self:custom.local_env}.json):WRITE_LOGS_TO_DB}
+    SINGLE_USE_IAT: ${env:SINGLE_USE_IAT, file(./.env/env.${self:custom.local_env}.json):SINGLE_USE_IAT}
+    GROUP_SECURE_EXPIRES: ${env:GROUP_SECURE_EXPIRES, file(./.env/env.${self:custom.local_env}.json):GROUP_SECURE_EXPIRES}
+    COOKIE_KEYS: ${env:COOKIE_KEYS, file(./.env/env.${self:custom.local_env}.json):COOKIE_KEYS}
+    ALLOW_ROOT_CREATION: ${env:ALLOW_ROOT_CREATION, file(./.env/env.${self:custom.local_env}.json):ALLOW_ROOT_CREATION}
+    ROOT_EMAIL: ${env:ROOT_EMAIL, file(./.env/env.${self:custom.local_env}.json):ROOT_EMAIL}
+    ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${env:ONE_TIME_PERSONAL_ROOT_CREATION_KEY, file(./.env/env.${self:custom.local_env}.json):ONE_TIME_PERSONAL_ROOT_CREATION_KEY}
+    FULL_SUPER_CONTROL: ${env:FULL_SUPER_CONTROL, file(./.env/env.${self:custom.local_env}.json):FULL_SUPER_CONTROL}
+    OPEN_GROUP_REG: ${env:OPEN_GROUP_REG, file(./.env/env.${self:custom.local_env}.json):OPEN_GROUP_REG}
+    ROOT_COMPANY_NAME: ${env:ROOT_COMPANY_NAME, file(./.env/env.${self:custom.local_env}.json):ROOT_COMPANY_NAME}
+    INIT_ROOT_PRIMARY_DOMAIN: ${env:INIT_ROOT_PRIMARY_DOMAIN, file(./.env/env.${self:custom.local_env}.json):INIT_ROOT_PRIMARY_DOMAIN}
+    INIT_ROOT_PRIMARY_TOS: ${env:INIT_ROOT_PRIMARY_TOS, file(./.env/env.${self:custom.local_env}.json):INIT_ROOT_PRIMARY_TOS}
+    INIT_ROOT_PRIMARY_POLICY: ${env:INIT_ROOT_PRIMARY_POLICY, file(./.env/env.${self:custom.local_env}.json):INIT_ROOT_PRIMARY_POLICY}
+    PLATFORM_NAME: ${env:PLATFORM_NAME, file(./.env/env.${self:custom.local_env}.json):PLATFORM_NAME}
+    UI_WHITE_LIST: ${env:UI_WHITE_LIST, file(./.env/env.${self:custom.local_env}.json):UI_WHITE_LIST}
+    UI_CORE_AUDIENCE_ORIGIN: ${env:UI_CORE_AUDIENCE_ORIGIN, file(./.env/env.${self:custom.local_env}.json):UI_CORE_AUDIENCE_ORIGIN}
+    UI_PKCE_REQUIRED: ${env:UI_PKCE_REQUIRED, file(./.env/env.${self:custom.local_env}.json):UI_PKCE_REQUIRED}
+    CORE_SCOPES: ${env:CORE_SCOPES, file(./.env/env.${self:custom.local_env}.json):CORE_SCOPES}
+    STATIC_ASSETS: ${env:STATIC_ASSETS, file(./.env/env.${self:custom.local_env}.json):STATIC_ASSETS}
+    CUSTOM_FONTS_URL: ${env:CUSTOM_FONTS_URL, file(./.env/env.${self:custom.local_env}.json):CUSTOM_FONTS_URL}
+    ROOT_GROUP_REGISTRATION_UI_URL: ${env:ROOT_GROUP_REGISTRATION_UI_URL, file(./.env/env.${self:custom.local_env}.json):ROOT_GROUP_REGISTRATION_UI_URL}
+    DEFAULT_UI_SKIN_SPLASH: ${env:DEFAULT_UI_SKIN_SPLASH, file(./.env/env.${self:custom.local_env}.json):DEFAULT_UI_SKIN_SPLASH}
+    DEFAULT_UI_SKIN_GRADIENT_LOW: ${env:DEFAULT_UI_SKIN_GRADIENT_LOW, file(./.env/env.${self:custom.local_env}.json):DEFAULT_UI_SKIN_GRADIENT_LOW}
+    DEFAULT_UI_SKIN_GRADIENT_HIGH: ${env:DEFAULT_UI_SKIN_GRADIENT_HIGH, file(./.env/env.${self:custom.local_env}.json):DEFAULT_UI_SKIN_GRADIENT_HIGH}
+    EVENT_EMITTER_CLEAN_SENSITIVE: ${env:EVENT_EMITTER_CLEAN_SENSITIVE, file(./.env/env.${self:custom.local_env}.json):EVENT_EMITTER_CLEAN_SENSITIVE}
+    ACCESS_OBJECT_SIZE_LIMIT: ${env:ACCESS_OBJECT_SIZE_LIMIT, file(./.env/env.${self:custom.local_env}.json):ACCESS_OBJECT_SIZE_LIMIT}
+package:
+  patterns:
+    - '!src/**'
+
+plugins:
+ - serverless-domain-manager
+ - serverless-apigw-binary
 
 functions:
   app:
     handler: dist/slsapp.handler
     events:
       - http: ANY /
-      - http: 'ANY {proxy+}'
+      - http: 'ANY /{proxy+}'
