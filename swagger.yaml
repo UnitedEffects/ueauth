@@ -5725,6 +5725,9 @@ components:
             skin:
               type: object
               properties:
+                backgroundImage:
+                  type: string
+                  description: this is a placeholder for a UI backdrop but is not directly used by this library aside from providing the reference
                 splashImage:
                   type: string
                   description: this is the splash image used on login and authorization screens. there is a system default
@@ -5734,6 +5737,9 @@ components:
                 bgGradientHigh:
                   type: string
                   description: this is the background color higher end gradient color
+                meta:
+                  type: object
+                  description: this object can be used to define customization of any specific UI implementation
 
     authGroup:
       type: object
