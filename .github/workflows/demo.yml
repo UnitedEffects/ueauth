@@ -33,8 +33,8 @@ jobs:
         run: yarn build
 
       # Install serverless
-      - name: Install Serverless
-        run: yarn global add serverless
+      # - name: Install Serverless
+      #  run: yarn global add serverless
 
       # Deploy to QA
       - name: Deploy
