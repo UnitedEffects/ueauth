@@ -152,7 +152,9 @@ const api = {
 			const result = await group.getOne(req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			const output = JSON.parse(JSON.stringify(result));
-			if(output.config) delete output.config.keys;
+			if(output.config) {
+				if(await permissions.canAccessGroupKeys(req.permissions) === false) delete output.config.keys;
+			}
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
 			next(error);

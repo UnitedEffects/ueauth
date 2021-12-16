@@ -235,6 +235,18 @@ export default {
 	},
 	async enforceRoot(p) {
 		if(!p.groupAccess.includes('super')) throw Boom.forbidden();
+	},
+	async canAccessGroupKeys(p) {
+		let keyPerms = [];
+		if(p && p.core) {
+			const core = p.core.productCodedIds;
+			core.map((prod) => {
+				keyPerms = keyPerms.concat(p.permissions.filter((p) => {
+					return p.includes(`${prod}:::group-keys::read:own`);
+				}));
+			});
+		}
+		return !(keyPerms.length === 0 && !p.groupAccess.includes('super'));
 	}
 };
 

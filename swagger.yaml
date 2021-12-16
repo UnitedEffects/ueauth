@@ -5182,7 +5182,7 @@ components:
           type: string
         redirect_uri:
           type: string
-          format: url
+          format: uri
         code:
           type: string
           description: code recieved from authorization redirect
@@ -5246,7 +5246,7 @@ components:
           type: array
           items:
             type: string
-            format: url
+            format: uri
             description: urls that are valid for redirection upon authorization
 
     getAccounts:
@@ -5369,7 +5369,7 @@ components:
           description: only use this for first-party clients (those you control directly)
         register_url:
           type: string
-          format: url
+          format: uri
           description: used to populate the href for the register link on login using this client
         tos_url:
           type: string
@@ -5615,15 +5615,15 @@ components:
           $ref: '#/components/schemas/agPluginOptions'
         primaryDomain:
           type: string
-          format: url
+          format: uri
           description: primary domain url
         primaryTOS:
           type: string
-          format: url
+          format: uri
           description: link to your company terms of service
         primaryPrivacyPolicy:
           type: string
-          format: url
+          format: uri
           description: link to your company privacty policy
         primaryEmail:
           type: string
@@ -5631,7 +5631,7 @@ components:
           description: this should be a contact email for your authgroup for assistance or inquiry
         registerUrl:
           type: string
-          format: url
+          format: uri
           description: link to your company primary registration link, if one exists. This will be overrided by client registration links.
 
     agPluginOptions:
@@ -5728,9 +5728,11 @@ components:
                 backgroundImage:
                   type: string
                   description: this is a placeholder for a UI backdrop but is not directly used by this library aside from providing the reference
+                  format: uri
                 splashImage:
                   type: string
                   description: this is the splash image used on login and authorization screens. there is a system default
+                  format: uri
                 bgGradientLow:
                   type: string
                   description: this is the background color lower end gradient color
@@ -5789,11 +5791,11 @@ components:
         aliasDnsUi:
           type: string
           description: an alias DNS domain (example.com) that the authgroup may claim. This simply provides a record and does not actually implement custom domain check and dns registration functionality.
-          format: url
+          format: uri
         aliasDnsOIDC:
           type: string
           description: an alias DNS domain other than the aliasDnsUi (oidc.example.com) that the authgrup may claim for centralized UI interactions of the OIDC provider. This alias only applies to UI interactions and centralized screens, API calls will not work. This simply provides a record and does not actually implement custom domain check and dns registration functionality.
-          format: url
+          format: uri
 
 
     getGroup:
@@ -5901,6 +5903,7 @@ components:
         screenUrl:
           type: string
           description: optional field to direct the recipient to a specific screen - automatically populated based on type if not provided
+          format: uri
         subject:
           type: string
           description: a subject line for the recipient
