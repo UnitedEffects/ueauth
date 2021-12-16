@@ -14,6 +14,13 @@
     "description": "UE Core permission"
   },
   {
+    "target": "group-keys",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission - field level to read OIDC keys"
+  },
+  {
     "target": "accounts",
     "action": "create",
     "core": true,

@@ -63,7 +63,7 @@ const api = {
 				corePermissions.map((p) => {
 					const updatedCode = (p.ownershipRequired===true) ? `${p.target}::${p.action}:own` : `${p.target}::${p.action}`;
 					const checkExisting = EXISTING.filter((p) => {
-						return p.coded === updatedCode;
+						return p.coded === updatedCode.toLowerCase().replace(/ /g, '-');
 					});
 					if(!checkExisting.length) {
 						if(!p.DEPRECATED) {
@@ -102,7 +102,7 @@ const api = {
 					let newpermissions = [];
 					rl.permissions.map((p) => {
 						const found = EXISTING.filter((list) => {
-							return list.coded === p;
+							return list.coded === p.toLowerCase();
 						});
 						if(found && found.length !== 0) {
 							newpermissions.push(`${found[0].id} ${found[0].coded}`);
