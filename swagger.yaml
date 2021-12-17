@@ -107,49 +107,6 @@ paths:
       security:
         - bearer: [ ]
         - openId: [ ]
-  /api/{group}/group:
-    get:
-      tags:
-        - General Functional
-      summary: Deprecated. Return a clientId for UE Auth UI from the AuthGroup.
-      description: This API can be used by a caller to return the clientId associated to an AuthGroup so that the appropriate OIDC login link can be generated (i.e. /{group}/auth?client_id={client_id}). This endpoint is secured be ensuring https and a UI host whitelist. This API will be removed in the next API update. Use group-info/{group} instead.
-      deprecated: true
-      parameters:
-        - name: group
-          in: path
-          description: id or prettyName of the authgroup
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                properties:
-                  type:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      group:
-                        type: string
-                        example: V1StGXR8_Z5jdHi6B-myT
-                      id:
-                        type: string
-                        description: the client_id of the AuthGroup
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: [ ]
-        - openId: [ ]
   /api/{group}/checkforupdates:
     get:
       tags:

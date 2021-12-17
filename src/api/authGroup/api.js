@@ -242,20 +242,6 @@ const api = {
 	async getPublicGroupInfo(req, res, next) {
 		try {
 			const ag = req.params.group;
-			const result = await group.getOne(ag);
-			if(!result) throw Boom.notFound(ag);
-			const out = {
-				group: ag,
-				id: result.associatedClient
-			};
-			return res.respond(say.ok(out, RESOURCE));
-		} catch (error) {
-			next(error);
-		}
-	},
-	async getPublicGroupInfov2(req, res, next) {
-		try {
-			const ag = req.params.group;
 			const result = await group.getPublicOne(ag);
 			if(!result) throw Boom.notFound(ag);
 			const out = {
