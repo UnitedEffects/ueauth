@@ -16,6 +16,9 @@ export default {
 	async deleteOrgProfile(authGroup, organization, id) {
 		return OrgProfile.findOneAndRemove( { authGroup, organization, $or: [{ _id: id }, { accountId: id }] });
 	},
+	async deleteAllOrgProfiles(authGroup, organization) {
+		return OrgProfile.deleteMany({ authGroup, organization });
+	},
 	async patchOrgProfile(authGroup, organization, id, data) {
 		data.modifiedAt = Date.now();
 		return OrgProfile.findOneAndUpdate({ authGroup, organization, $or: [{ _id: id }, { accountId: id }] }, data, { new: true, overwrite: true });

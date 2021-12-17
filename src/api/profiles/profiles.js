@@ -25,6 +25,11 @@ export default {
 		ueEvents.emit(authGroup, 'ue.organization.profile.destroy', result);
 		return result;
 	},
+	async deleteAllOrgProfiles(authGroup, organization) {
+		const result = await dal.deleteAllOrgProfiles(authGroup, organization);
+		ueEvents.emit(authGroup, 'ue.organization.profile.destroy', result);
+		return result;
+	},
 	async patchOrgProfile(authGroup, organization, profile, id, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(profile.toObject(), update);
 		patched.modifiedBy = modifiedBy;

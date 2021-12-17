@@ -98,6 +98,9 @@ export default {
 	async deleteRolesOfProduct(authGroup, product) {
 		return Role.deleteMany({ authGroup, product });
 	},
+	async deleteAllCustomRoles(authGroup, organization) {
+		return Role.deleteMany({ authGroup, organization, custom: true });
+	},
 	async updateCoreRole(query, update) {
 		return Role.findOneAndUpdate(query, update, { new: true });
 	}

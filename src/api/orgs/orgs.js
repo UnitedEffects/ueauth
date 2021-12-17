@@ -4,6 +4,8 @@ import dal from './dal';
 import dom from '../domains/domain';
 import prod from '../products/product';
 import access from '../accounts/access';
+import profile from '../profiles/profiles';
+import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
@@ -33,6 +35,11 @@ export default {
 		if(checkAccounts) {
 			throw Boom.badRequest('You have users associated to this organization. You must remove them before deleting it.', checkAccounts);
 		}
+		// attempt to delete org profiles
+		await profile.deleteAllOrgProfiles(authGroupId, id);
+		// attempt to delete org roles
+		await role.deleteAllCustomRoles(authGroupId, id);
+		// delete the org
 		const result = await dal.deleteOrg(authGroupId, id);
 		ueEvents.emit(authGroupId, 'ue.organization.destroy', result);
 		return result;

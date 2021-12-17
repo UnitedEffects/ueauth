@@ -127,6 +127,11 @@ export default {
 		ueEvents.emit(authGroupId, 'ue.roles.destroy', result);
 		return result;
 	},
+	async deleteAllCustomRoles(authGroupId, organization) {
+		const result = await dal.deleteAllCustomRoles(authGroupId, organization);
+		ueEvents.emit(authGroupId, 'ue.roles.destroy', result);
+		return result;
+	},
 	/**
 	 * FOR INTERNAL USE ONLY
 	 * @param agId
