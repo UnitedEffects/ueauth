@@ -46,27 +46,22 @@ router.get('/:group/organization/:org/profile/:id', [
 	m.access('orgUserProfile')
 ], profiles.getOrgProfile);
 
-/*
 // User Only Controls
-router.get('/:group/organizations/profiles/:id', [
+router.get('/:group/organizations/profiles/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
 	m.access('accounts')
 ], profiles.getAllMyOrgProfiles);
-router.post('/:group/organizations/:org/profiles/:id', [
+
+router.post('/:group/organizations/:org/profiles/account/:id', [
 	m.validateAuthGroup,
 	m.validateOrganization,
-	m.getGlobalPluginSettings, //notify the user regarding information created
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions,
 	m.access('accounts')
 ], profiles.myProfileRequest);
-
-/**
- * request: 'remove' || 'remain'
- */
 
 export default router;

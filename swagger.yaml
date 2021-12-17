@@ -1146,7 +1146,7 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organizations/profiles/{id}:
+  /api/{group}/organizations/profiles/account/{id}:
     get:
       tags:
         - Organization User Profiles
@@ -1213,7 +1213,7 @@ paths:
         - bearer: []
         - openId: []
 
-  /api/{group}/organizations/{org}/profiles/{id}:
+  /api/{group}/organizations/{org}/profiles/account/{id}:
     post:
       tags:
         - Organization User Profiles
