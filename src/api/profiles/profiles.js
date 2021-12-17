@@ -71,7 +71,9 @@ async function standardPatchValidation(original, patched) {
 		authGroup: Joi.string().valid(original.authGroup).required(),
 		_id: Joi.string().valid(original._id).required(),
 		organization: Joi.string().valid(original.organization).required(),
-		accountId: Joi.string().valid(original.accountId).required()
+		accountId: Joi.string().valid(original.accountId).required(),
+		deleteRequested: Joi.boolean().valid(original.deleteRequested).required(),
+		deleteRequestedDate: Joi.any().valid(original.deleteRequestedDate).required()
 	};
 	const orgProfileSchema = Joi.object().keys(definition);
 	const main = await orgProfileSchema.validateAsync(patched, {

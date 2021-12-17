@@ -58,6 +58,11 @@ const orgProfileSchema = new mongoose.Schema({
 			number: String
 		}
 	],
+	deleteRequested: {
+		type: Boolean,
+		default: false
+	},
+	deleteRequestedDate: Date,
 	_id: {
 		type: String,
 		default: uuid
