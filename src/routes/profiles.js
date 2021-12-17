@@ -46,5 +46,22 @@ router.get('/:group/organization/:org/profile/:id', [
 	m.access('orgUserProfile')
 ], profiles.getOrgProfile);
 
+// User Only Controls
+router.get('/:group/organizations/profiles/account/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('accounts')
+], profiles.getAllMyOrgProfiles);
+
+router.post('/:group/organizations/:org/profiles/account/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('accounts')
+], profiles.myProfileRequest);
 
 export default router;

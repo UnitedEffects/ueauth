@@ -1,4 +1,5 @@
 import dal from './dal';
+import Boom from '@hapi/boom';
 import account from '../accounts/account';
 import ueEvents from '../../events/ueEvents';
 import helper from '../../helper';
@@ -59,7 +60,19 @@ export default {
 			if(user.phone && user.phone.txt) data.formats.push('sms');
 		}
 		return data;
-	}
+	},
+
+	// Account Requests
+	async getAllMyOrgProfiles(authGroup, accountId) {
+		return dal.getAllMyOrgProfiles(authGroup, accountId);
+	},
+	async myProfileRequest(authGroup, organization, accountId, request) {
+		const result = await dal.myProfileRequest(authGroup, organization, accountId, request);
+		if(!result) throw Boom.notFound();
+		if(result.verified !== true) throw Boom.badRequest(result);
+		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
+		return result;
+	},
 };
 
 async function standardPatchValidation(original, patched) {
@@ -71,7 +84,9 @@ async function standardPatchValidation(original, patched) {
 		authGroup: Joi.string().valid(original.authGroup).required(),
 		_id: Joi.string().valid(original._id).required(),
 		organization: Joi.string().valid(original.organization).required(),
-		accountId: Joi.string().valid(original.accountId).required()
+		accountId: Joi.string().valid(original.accountId).required(),
+		deleteRequested: Joi.boolean().valid(original.deleteRequested).required(),
+		deleteRequestedDate: Joi.any().valid(original.deleteRequestedDate).required()
 	};
 	const orgProfileSchema = Joi.object().keys(definition);
 	const main = await orgProfileSchema.validateAsync(patched, {

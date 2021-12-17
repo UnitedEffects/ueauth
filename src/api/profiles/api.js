@@ -20,7 +20,7 @@ export default {
 				...req.body
 			};
 			const result = await profiles.writeOrgProfile(data);
-            await tryNotification(req, result);
+			await tryNotification(req, result);
 			return res.respond(say.created(result, ORG_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.organization.profile.error', error);
@@ -60,7 +60,7 @@ export default {
 			if(!req.params.id) throw Boom.badRequest('No ID provided');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await profiles.deleteOrgProfile(req.authGroup.id, req.organization.id, req.params.id);
-            await tryNotification(req, result);
+			await tryNotification(req, result);
 			return res.respond(say.ok(result, ORG_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.organization.profile.error', error);
@@ -76,25 +76,57 @@ export default {
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const profile = await profiles.getOrgProfile(req.authGroup.id, req.organization.id, req.params.id);
 			const result = await profiles.patchOrgProfile(req.authGroup.id, req.organization.id, profile, req.params.id, req.body, req.user.sub || 'SYSTEM ADMIN');
-            await tryNotification(req, result);
+			await tryNotification(req, result);
 			return res.respond(say.ok(result, ORG_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.organization.profile.error', error);
 			next(error);
 		}
-	}
+	},
+
+	// Account Access to Org Profiles
+	async getAllMyOrgProfiles(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
+			await permissions.enforceOwn(req.permissions, id);
+			const result = await profiles.getAllMyOrgProfiles(req.authGroup.id, id);
+			return res.respond(say.ok(result, ORG_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+
+	async myProfileRequest(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must specify an organization');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if(!req.body.request) throw Boom.badData('You have not requested anything');
+			if(req.body.request !== 'remove' && req.body.request !== 'remain') {
+				throw Boom.badData('You can only request to remove or remain');
+			}
+			const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
+			await permissions.enforceOwn(req.permissions, id);
+			const result = await profiles.myProfileRequest(req.authGroup.id, req.organization.id, id, req.body.request);
+			return res.respond(say.ok(result, ORG_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 };
 
 async function tryNotification(req, result) {
-    try {
-        if (req.globalSettings && req.globalSettings.notifications.enabled === true &&
+	try {
+		if (req.globalSettings && req.globalSettings.notifications.enabled === true &&
             req.authGroup.pluginOptions.notification.enabled === true &&
             req.organization.profileNotifications === true) {
-            await notifyUser(req.globalSettings, req.authGroup, req.organization.name, result.accountId, req.user.sub || 'SYSTEM ADMIN', JSON.parse(JSON.stringify(result)), req.customDomain, req.customDomainUI);
-        }
-    } catch (error) {
-        ueEvents.emit(req.authGroup.id, 'ue.organization.profile.error', {notification: 'failed', error});
-    }
+			await notifyUser(req.globalSettings, req.authGroup, req.organization.name, result.accountId, req.user.sub || 'SYSTEM ADMIN', JSON.parse(JSON.stringify(result)), req.customDomain, req.customDomainUI);
+		}
+	} catch (error) {
+		ueEvents.emit(req.authGroup.id, 'ue.organization.profile.error', {notification: 'failed', error});
+	}
 }
 
 async function notifyUser(globalSettings, authGroup, organizationName, userId, activeUser, profile, aliasDns, aliasUi) {

@@ -1146,6 +1146,150 @@ paths:
         - bearer: []
         - openId: []
 
+  /api/{group}/organizations/profiles/account/{id}:
+    get:
+      tags:
+        - Organization User Profiles
+      summary: As an Account holder, you can view all Org Profiles tied to your Account, regardless of Org Access
+      description: Even though the Organization Account Profile is controlled by the Org, Accounts can still see that the org has their data and request that data be removed at any time. Use this API to see which Organizations have an Org Account Profile tied to you and the status of any requests you've made.
+      operationId: getAllOrgProfiles
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: your Account ID
+          schema:
+            type: string
+            default: me
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        organizationId:
+                          type: string
+                          format: uuid
+                        organizationName:
+                          type: string
+                        organizationProfileId:
+                          type: string
+                          format: uuid
+                        contactEmail:
+                          type: string
+                          format: email
+                        deleteRequested:
+                          type: boolean
+                        deleteRequestedDate:
+                          type: string
+                          format: date-time
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/organizations/{org}/profiles/account/{id}:
+    post:
+      tags:
+        - Organization User Profiles
+      summary: As an Account holder, request that an Organization delete your Org Profile, regardless of your access
+      description: Even though the Organization Account Profile is controlled by the Org, Accounts can still see that the org has their data and request that data be removed at any time. Use this API to request the removal or clear the request. You can reference yourself with 'me' or if you have permissions, any Account ID.
+      operationId: requestToOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: your Account ID
+          schema:
+            type: string
+            default: me
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    type: object
+                    properties:
+                      request:
+                        type: string
+                        example: remove
+                      verified:
+                        type: boolean
+                        example: true
+                      date:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                request:
+                  type: string
+                  enum:
+                    - remove
+                    - remain
+        description: Profile data request to the Organization
+        required: true
+
   # User Account API restricted to Organizations
   /api/{group}/organization/{org}/account:
     put:
