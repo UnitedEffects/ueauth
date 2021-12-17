@@ -52,8 +52,8 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 			const result = await client.generateClient(grp);
 			expect(ModelC.Query.prototype.findOneAndUpdate).toHaveBeenCalled();
 			expect(result.auth_group).toBe(grp.id);
-			expect(result.grant_types).toMatchObject(['client_credentials', 'authorization_code', 'implicit']);
-			expect(result.response_types).toMatchObject(['code id_token', 'code', 'id_token']);
+			expect(result.grant_types).toMatchObject(['client_credentials', 'authorization_code', 'refresh_token']);
+			expect(result.response_types).toMatchObject(['code']);
 			expect(result.redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 			if (grp.primaryDomain !== config.UI_URL) {
 				expect(result.post_logout_redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`, grp.primaryDomain]);
@@ -78,8 +78,8 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 			const result = await client.generateClient(grp);
 			expect(ModelC.Query.prototype.findOneAndUpdate).toHaveBeenCalled();
 			expect(result.auth_group).toBe(grp.id);
-			expect(result.grant_types).toMatchObject(['client_credentials', 'authorization_code', 'implicit']);
-			expect(result.response_types).toMatchObject(['code id_token', 'code', 'id_token']);
+			expect(result.grant_types).toMatchObject(['client_credentials', 'authorization_code', 'refresh_token']);
+			expect(result.response_types).toMatchObject(['code']);
 			expect(result.redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 			expect(result.post_logout_redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 		} catch (error) {
@@ -486,5 +486,4 @@ describe('OIDC OP interface functions - Session', () => {
 			t.fail(error);
 		}
 	});
-
 });

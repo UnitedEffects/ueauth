@@ -18,23 +18,23 @@ block content
                                 summary Click Here to Review Authorized Scopes and Claims
                                 .m-t-15.authorize-details
                                     ul
-                                    if ([details.missingOIDCScope, details.missingOIDCClaims, details.missingResourceScopes].filter(Boolean).length === 0)
+                                    if (details && [details.missingOIDCScope, details.missingOIDCClaims, details.missingResourceScopes].filter(Boolean).length === 0)
                                         li the client is asking you to confirm a previously given authorization
-                                    if (details.missingOIDCScope)
+                                    if (details && details.missingOIDCScope)
                                         - var missingOIDCScope = new Set(details.missingOIDCScope); missingOIDCScope.delete('openid'); missingOIDCScope.delete('offline_access');
                                     if (missingOIDCScope && missingOIDCScope.size)
                                         li these scopes are being requested...
                                         ul
                                             each scope in Array.from(missingOIDCScope)
                                                 li=scope
-                                    if (details.missingOIDCClaims)
+                                    if (details && details.missingOIDCClaims)
                                         - var missingOIDCClaims = new Set(details.missingOIDCClaims); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(missingOIDCClaims));
                                     if (missingOIDCClaims && missingOIDCClaims.size)
                                         li these claims are being requested...
                                         ul
                                             each claim in Array.from(missingOIDCClaims)
                                                 li=claim
-                                    if (details.missingResourceScopes)
+                                    if (details && details.missingResourceScopes)
                                         - var missingResourceScopes = details.missingResourceScopes;
                                     if (missingResourceScopes)
                                         each obj in Array.from(missingResourceScopes)
@@ -44,7 +44,7 @@ block content
                                                     li=scope
                                     if (params && params.scope && params.scope.includes('offline_access'))
                                         li the client is asking to have offline access to this authorization
-                                            if ((!details.missingOIDCScope) || !details.missingOIDCScope.includes('offline_access'))
+                                            if (!detail || (details && !details.missingOIDCScope) || (details && !details.missingOIDCScope.includes('offline_access')))
                                                 | which you've previously granted
                             .container-login100-form-btn.m-t-20
                                 button.login100-form-btn(type='submit')

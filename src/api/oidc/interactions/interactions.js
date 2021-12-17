@@ -136,13 +136,13 @@ export default {
 				authGroup: authGroup.id
 			});
 		}
-		if (details.missingOIDCScope) {
+		if (details && details.missingOIDCScope) {
 			grant.addOIDCScope(details.missingOIDCScope.join(' '));
 		}
-		if (details.missingOIDCClaims) {
+		if (details && details.missingOIDCClaims) {
 			grant.addOIDCClaims(details.missingOIDCClaims);
 		}
-		if (details.missingResourceScopes) {
+		if (details && details.missingResourceScopes) {
 			// eslint-disable-next-line no-restricted-syntax
 			for (const [indicator, scopes] of Object.entries(details.missingResourceScopes)) {
 				grant.addResourceScope(indicator, scopes.join(' '));
