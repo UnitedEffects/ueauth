@@ -25,5 +25,8 @@ export default {
 	},
 	async checkProduct(authGroup, productId) {
 		return Organization.find( { authGroup, associatedProducts: productId }).select( { name: 1, _id: 1, description: 1, active: 1});
+	},
+	async getPrimaryOrg(authGroup) {
+		return Organization.findOne({ authGroup, core: true });
 	}
 };
