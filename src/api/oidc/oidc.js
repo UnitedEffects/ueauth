@@ -336,8 +336,8 @@ function oidcConfig(g, aliasDns = undefined) {
 								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
 									claims['x-access-organizations'] = access.orgs;
 								}
-								if(access.orgDomains && (scopes.includes('access') || scopes.includes('access:domains'))) {
-									claims['x-access-domains'] = access.orgDomains;
+								if(access.domains && (scopes.includes('access') || scopes.includes('access:domains'))) {
+									claims['x-access-domains'] = access.domains;
 								}
 								if(access.products && (scopes.includes('access') || scopes.includes('access:products'))) {
 									claims['x-access-products'] = access.products;

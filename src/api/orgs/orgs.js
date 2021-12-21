@@ -30,6 +30,10 @@ export default {
 		return dal.getOrg(authGroupId, id);
 	},
 
+	async getPrimaryOrg(authGroupId) {
+		return dal.getPrimaryOrg(authGroupId);
+	},
+
 	async deleteOrg(authGroupId, id) {
 		const checkAccounts = await access.checkOrganizations(authGroupId, id);
 		if(checkAccounts) {
