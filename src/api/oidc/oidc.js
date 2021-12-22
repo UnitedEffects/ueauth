@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid';
 import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
+import orgs from '../orgs/orgs';
 import clientAccess from '../oidc/client/access';
 import middle from '../../oidcMiddleware';
 import intApi from './interactions/api';
@@ -302,6 +303,11 @@ function oidcConfig(g, aliasDns = undefined) {
 					}
 					if(ctx.oidc.body.x_access_filter_product){
 						query.product = ctx.oidc.body.x_access_filter_product;
+					}
+					if(ctx.oidc.body.x_organization_context) {
+						const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
+						if(org && org.id) claims['x-organization-context'] = org.id;
+						if(!org) throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
 					}
 					if(bAccess === true && ctx.authGroup) {
 						let access;

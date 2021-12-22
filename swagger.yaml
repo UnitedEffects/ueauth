@@ -63,6 +63,8 @@ tags:
     description: Seperate an Organization into smaller subsets to which product access can be assigned
   - name: Organization Products
     description: Access products associated to your Organization
+  - name: Organization Permissions
+    description: Access permissions of products associated to your Organization
   - name: Organization Roles
     description: Manage Roles specific to a single organization. Sometimes referred to as "Custom Roles"
   - name: Health
@@ -3012,11 +3014,13 @@ paths:
                 style: form
               scope:
                 style: form
-              access_filter_organization:
+              x_organization_context:
                 style: form
-              access_filter_domain:
+              x_access_filter_organization:
                 style: form
-              access_filter_product:
+              x_access_filter_domain:
+                style: form
+              x_access_filter_product:
                 style: form
         required: true
 
@@ -5028,6 +5032,147 @@ paths:
         - bearer: []
         - openId: []
 
+  # Organization Permissions
+  /api/{group}/organization/{org}/products/{product}/permissions:
+    get:
+      tags:
+        - Organization Permissions
+      summary: Get all Permissions for a Product which is associated to your Organization
+      description: Returns all of the Permissions assocaited to this Product
+      operationId: getOrgPermissions
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          descrition: Organization context
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: integer
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/organization/{org}/products/{product}/permissions/{id}:
+    get:
+      tags:
+        - Organization Permissions
+      summary: Get a permission by Id if the associated product is associated to your Organization
+      description: Query a single Permission for its description, code and other meta data
+      operationId: getOrgPermission
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: permission id guid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    $ref: '#/components/schemas/permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  # Permissions CRUD
   /api/{group}/products/{product}/permissions:
     get:
       tags:
@@ -5673,15 +5818,18 @@ components:
           type: string
         client_assertion_type:
           type: string
+        x_organization_context:
+          type: string
+          description: Explicitly state which org the user is logging into regardless of overall access using the organization ID or associated externalID. Not part of the OIDC specification - used for UEAuth
         x_access_filter_organization:
           type: string
-          description: Not part of the OIDC specification - used for UEAuth
+          description: Filter the response of the access scope to a single organization. Not part of the OIDC specification - used for UEAuth
         x_access_filter_domain:
           type: string
-          description: Not part of the OIDC specification - used for UEAuth
+          description: Filter the response of the access scope to a single domain. Not part of the OIDC specification - used for UEAuth
         x_access_filter_product:
           type: string
-          description: Not part of the OIDC specification - used for UEAuth
+          description: Filter the response of the access scope to a single product. Not part of the OIDC specification - used for UEAuth
 
     accessTokens:
       properties:

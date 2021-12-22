@@ -10,7 +10,7 @@ export default {
 		return Organization.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
 	async getOrg(authGroup, id) {
-		return Organization.findOne( { _id: id, authGroup });
+		return Organization.findOne( { $or: [{ _id: id }, { externalId: id }], authGroup });
 	},
 	async deleteOrg(authGroup, id) {
 		return Organization.findOneAndRemove( { _id: id, authGroup });

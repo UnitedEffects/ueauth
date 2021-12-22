@@ -54,6 +54,36 @@ const api = {
 			next(error);
 		}
 	},
+	async getOrgPermission(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			if (!req.organization) throw Boom.preconditionRequired('Must provide an org context');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(`Product: ${req.product.id}`);
+			await permissions.enforceOwnProduct(req.permissions, req.product.id);
+			const result = await perm.getPermission(req.authGroup.id, req.product.id, req.params.id);
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getOrgPermissions(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if (!req.product) throw Boom.preconditionRequired('Permission must be associated to one product');
+			if (!req.organization) throw Boom.preconditionRequired('Must provide an org context');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(!req.organization.associatedProducts.includes(req.product.id)) throw Boom.notFound(`Product: ${req.product.id}`);
+			await permissions.enforceOwnProduct(req.permissions, req.product.id);
+			const result = await perm.getPermissions(req.authGroup.id, req.product.id, req.query);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async deletePermission(req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
