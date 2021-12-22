@@ -189,6 +189,8 @@ const mid = {
 				id: 'member'
 			};
 		}
+		// skip this if its just a swagger request
+		if(req.path.includes('swagger')) return next();
 		const primaryOrg = await orgs.getPrimaryOrg(req.authGroup.id); //todo cache
 		if(!primaryOrg) throw Boom.notFound('AuthGroup missing primary organization');
 		req.primaryOrg = primaryOrg;
