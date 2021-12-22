@@ -20,8 +20,18 @@ export default {
 		return dal.getProducts(authGroupId, query);
 	},
 
+	// @notTested
+	async getTheseProducts(authGroupId, prodArray) {
+		return dal.getTheseProducts(authGroupId, prodArray);
+	},
+
 	async getProduct(authGroupId, id) {
 		return dal.getProduct(authGroupId, id);
+	},
+
+	// @notTested
+	async getOrgProduct(authGroupId, id) {
+		return dal.getOrgProduct(authGroupId, id);
 	},
 
 	// @notTested

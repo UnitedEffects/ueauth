@@ -351,6 +351,7 @@ const api = {
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to remove');
 			if(!req.permissions.permissions) throw Boom.preconditionRequired('Permission error');
 			const orgLevelPermission = req.permissions.permissions.filter((p) => {
+				//todo this should include product code to work...
 				return (p.includes('accounts-organization::delete'));
 			});
 			if(!orgLevelPermission.length) await permissions.enforceOwn(req.permissions, req.params.id);

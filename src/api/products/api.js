@@ -169,6 +169,30 @@ const api = {
 			next(error);
 		}
 	},
+	async getOrgProducts(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization context');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			const result = await prod.getTheseProducts(req.authGroup.id, req.organization.associatedProducts || []);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getOrgProduct(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization context');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(!req.organization.associatedProducts.includes(req.params.id)) throw Boom.notFound(req.params.id);
+			const result = await prod.getOrgProduct(req.authGroup.id || req.authGroup._id, req.params.id);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async getProduct(req, res, next) {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));

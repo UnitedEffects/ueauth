@@ -61,6 +61,8 @@ tags:
     description: Manage notifications within the context of an Organization. Requires the plugin to be enabled.
   - name: Organization Domains
     description: Seperate an Organization into smaller subsets to which product access can be assigned
+  - name: Organization Products
+    description: Access products associated to your Organization
   - name: Organization Roles
     description: Manage Roles specific to a single organization. Sometimes referred to as "Custom Roles"
   - name: Health
@@ -2729,7 +2731,7 @@ paths:
         - Organization Notification
       summary: Define a new notification within the context of an Organization
       description: Define a new notification to be processed. Only possible if global & auth group notifications are enabled
-      operationId: writeNotification
+      operationId: writeOrgNotification
       parameters:
         - name: group
           in: path
@@ -2782,7 +2784,7 @@ paths:
         - Organization Notification
       summary: Retrieve all notifications in the Organization
       description: Retrieve all notifications in the group. Keep in mind notifications have a 30 day TTL
-      operationId: getNotifications
+      operationId: getOrgNotifications
       parameters:
         - name: group
           in: path
@@ -2860,7 +2862,7 @@ paths:
         - Organization Notification
       summary: Return a specific notification from the Organization
       description: Return a specific notification. Keep in mind notification records only have a 30 day TTL
-      operationId: getNotification
+      operationId: getOrgNotification
       parameters:
         - name: group
           in: path
@@ -2910,7 +2912,7 @@ paths:
         - Organization Notification
       summary: Hard delete a notification from the Organization (and AuthGroup)
       description: Hard delete a notification. Notifications can not be updated once created, they can only be deleted. Keep in mind that if the notification was already processed, this will not change how that processing communicated the notification to the recipient.
-      operationId: deleteNotification
+      operationId: deleteOrgNotification
       parameters:
         - name: group
           in: path
@@ -3216,6 +3218,140 @@ paths:
         - bearer: []
         - openId: []
 
+  # Organization Products
+  /api/{group}/organization/{org}/products:
+    get:
+      tags:
+        - Organization Products
+      summary: Get all Products associated to an Organization
+      description: Return all Products defined as part of your AuthGroup
+      operationId: getOrgProducts
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization context
+          required: true
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: integer
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/organization/{org}/products/{id}:
+    get:
+      tags:
+        - Organization Products
+      summary: Get an organization associated Product's Info
+      description: Query a single Product by ID
+      operationId: getOrgProduct
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization context
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: >-
+            Unique user identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    $ref: '#/components/schemas/product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  # Product CRUD
   /api/{group}/products:
     get:
       tags:
