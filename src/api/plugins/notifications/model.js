@@ -36,14 +36,16 @@ const notificationSchema = new mongoose.Schema({
 	screenUrl: String,
 	subject: String,
 	message: String,
-    destinationUri: {
+	destinationUri: {
 		type: String,
 		required: true
 	},
 	processed: {
-	    type: Boolean,
+		type: Boolean,
 		default: false
 	},
+	// context for customers (those without primary organization access)
+	organization: String,
 	meta: Object
 }, { _id: false});
 

@@ -75,19 +75,40 @@ export default {
 	},
 	// @notTested
 	async getNotifications(ag, q, user) {
+		let organization;
+		if (q.organization) {
+			organization = q.organization;
+			delete q.organization;
+		}
 		const query = await helper.parseOdataQuery(q);
 		if(user) {
 			query.query.createdBy = user;
 		}
+		if(organization) {
+			query.query.organization = organization;
+		}
 		return dal.getNotifications(ag.id, query);
 	},
 	// @notTested
-	async getNotification(ag, id) {
-		return dal.getNotification(ag.id, id);
+	async getNotification(ag, id, org = undefined) {
+		return dal.getNotification(ag.id, id, org);
 	},
 	// @notTested
-	async deleteNotification(ag, id, user) {
-		return dal.deleteNotification(ag.id, id, user);
+	async deleteNotification(ag, id, user, org = undefined) {
+		return dal.deleteNotification(ag.id, id, user, org);
+	},
+	// @notTested
+	async getMyNotifications(ag, me) {
+		const q = {
+			query: {
+				recipientUserId: me
+			}
+		};
+		return dal.getNotification(ag.id, q);
+	},
+	// @notTested
+	async getMyNotification(ag, me, id) {
+		return dal.getMyNotification(ag, me, id);
 	},
 	// @notTested
 	async notify(global, data, ag) {

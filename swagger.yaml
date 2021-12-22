@@ -37,30 +37,32 @@ tags:
     description: Clients can be supplied with a single product reference and multiple roles to empower them with permissions
   - name: Validate Access
     description: Use this endpoint to return the access associated to an accessToken or clientCredential
-  - name: Notification
-    description: Manage notifications sent to the http notification plugin. Requires the plugin to be enabled.
-  - name: Organizations
-    description: Manage subsets of the Auth Group data to represent customers, departments, etc. Apply Products to indicate licensed software
-  - name: Organization Users
-    description: User Account management through the Organization context
-  - name: Organization User Profiles
-    description: Personal information (name, address, number) added and only accessible by the Organization and referenced Account
-  - name: Domains
-    description: Seperate an Organization into smaller subsets to which product access can be assigned
   - name: Products
     description: Manage Products within your Auth Group
   - name: Roles
     description: Manage Roles globally for all Products and all Organizations
-  - name: Organization Roles
-    description: Manage Roles specific to a single organization. Sometimes referred to as "Custom Roles"
   - name: Permissions
     description: Manage Permissinos for one Product at a time.
+  - name: Notification
+    description: Manage notifications sent to the http notification plugin. Requires the plugin to be enabled.
   - name: Operations
     description: Commands for Artifact or Security Updates
   - name: Plugins
     description: Plugin configurations for the service tied to the Root AuthGroup (e.g. Notifications)
   - name: General Functional
     description: General APIs to aid data updates or UI functionality
+  - name: Organizations
+    description: Manage subsets of the Auth Group data to represent customers, departments, etc. Apply Products to indicate licensed software
+  - name: Organization Users
+    description: User Account management through the Organization context
+  - name: Organization User Profiles
+    description: Personal information (name, address, number) added and only accessible by the Organization and referenced Account
+  - name: Organization Notification
+    description: Manage notifications within the context of an Organization. Requires the plugin to be enabled.
+  - name: Organization Domains
+    description: Seperate an Organization into smaller subsets to which product access can be assigned
+  - name: Organization Roles
+    description: Manage Roles specific to a single organization. Sometimes referred to as "Custom Roles"
   - name: Health
 
 paths:
@@ -1149,7 +1151,7 @@ paths:
   /api/{group}/organizations/profiles/account/{id}:
     get:
       tags:
-        - Organization User Profiles
+        - User Access
       summary: As an Account holder, you can view all Org Profiles tied to your Account, regardless of Org Access
       description: Even though the Organization Account Profile is controlled by the Org, Accounts can still see that the org has their data and request that data be removed at any time. Use this API to see which Organizations have an Org Account Profile tied to you and the status of any requests you've made.
       operationId: getAllOrgProfiles
@@ -1216,7 +1218,7 @@ paths:
   /api/{group}/organizations/{org}/profiles/account/{id}:
     post:
       tags:
-        - Organization User Profiles
+        - User Access
       summary: As an Account holder, request that an Organization delete your Org Profile, regardless of your access
       description: Even though the Organization Account Profile is controlled by the Org, Accounts can still see that the org has their data and request that data be removed at any time. Use this API to request the removal or clear the request. You can reference yourself with 'me' or if you have permissions, any Account ID.
       operationId: requestToOrgProfile
@@ -1817,7 +1819,7 @@ paths:
       security:
         - bearer: []
         - openId: []
-  /api/{group}/access/organization/{org}/terms:
+  /api/{group}/access/organizations/{org}/terms:
     put:
       tags:
         - User Access
@@ -2685,6 +2687,240 @@ paths:
         - name: group
           in: path
           description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of notification to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  # Organization Context Notifications
+  /api/{group}/organization/{org}/notification:
+    post:
+      tags:
+        - Organization Notification
+      summary: Define a new notification within the context of an Organization
+      description: Define a new notification to be processed. Only possible if global & auth group notifications are enabled
+      operationId: writeNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization context
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeNotification'
+        description: the notification as stored in ue auth system
+        required: true
+
+  /api/{group}/organization/{org}/notifications:
+    get:
+      tags:
+        - Organization Notification
+      summary: Retrieve all notifications in the Organization
+      description: Retrieve all notifications in the group. Keep in mind notifications have a 30 day TTL
+      operationId: getNotifications
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization context
+          schema:
+            type: string
+          required: true
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  '/api/{group}/organization/{org}/notification/{id}':
+    get:
+      tags:
+        - Organization Notification
+      summary: Return a specific notification from the Organization
+      description: Return a specific notification. Keep in mind notification records only have a 30 day TTL
+      operationId: getNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization context
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: id of notification to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Plugins
+                  data:
+                    $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    delete:
+      tags:
+        - Organization Notification
+      summary: Hard delete a notification from the Organization (and AuthGroup)
+      description: Hard delete a notification. Notifications can not be updated once created, they can only be deleted. Keep in mind that if the notification was already processed, this will not change how that processing communicated the notification to the recipient.
+      operationId: deleteNotification
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization context
           schema:
             type: string
           required: true
@@ -4361,7 +4597,7 @@ paths:
   /api/{group}/organizations/{org}/domains/{id}:
     get:
       tags:
-        - Domains
+        - Organization Domains 
       summary: Get Domain by ID
       description: Return a single Domain from within an Organization
       operationId: getDomain
@@ -4413,7 +4649,7 @@ paths:
         - openId: []
     patch:
       tags:
-        - Domains
+        - Organization Domains 
       summary: Update a Domain
       description: Update a Domain's data
       operationId: updateDomain
@@ -4472,7 +4708,7 @@ paths:
         - openId: []
     delete:
       tags:
-        - Domains
+        - Organization Domains 
       summary: Delete a Domain
       description: This will hard delete your Domain. There are limits on delete when a domain has been associated to a user. You may need to remove users first.
       operationId: deleteDomain
@@ -4526,7 +4762,7 @@ paths:
   /api/{group}/organizations/{org}/domains:
     get:
       tags:
-        - Domains
+        - Organization Domains 
       summary: Get all Domains by Organizations Id
       description: Returns all Domains within an Organization
       operationId: getDomains
@@ -4604,7 +4840,7 @@ paths:
         - openId: []
     post:
       tags:
-        - Domains
+        - Organization Domains 
       summary: Create a Domain in a specified Organizations
       description: Domains allow you to further refine access within the context of an Organization. Domains are used as the primary association mechanism of Products to Users. In other words, if you wish a User to have access to a product, that user must be added to a Domain which already has that Product associated (the property is called associatedOrgProducts). Only those Products associated to the parent Organization are available to be associated to a child Domain. Every Organization automatically has an Administrative Domain created to allow access to the UEAuth product. It is not recommended that you add users to this Domain other than those who you wish to manage users, domains and roles.
       operationId: createDomain
@@ -5968,6 +6204,9 @@ components:
         destinationUri:
           type: string
           description: plugin service http address the request was sent to
+        organization:
+          type: string
+          description: the organization context that the notification was created
 
     writeNotification:
       type: object
@@ -5981,9 +6220,10 @@ components:
           type: string
           description: supported notification types
           enum:
-            - invite
+            - general
             - forgotPassword
             - passwordless
+            - verify
         formats:
           type: array
           description: intended formats for this notification - sent to the plugin service

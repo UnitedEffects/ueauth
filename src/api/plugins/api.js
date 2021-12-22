@@ -42,6 +42,7 @@ const api = {
 			next(error);
 		}
 	},
+	// Notifications
 	async writeNotification(req, res, next) {
 		let result;
 		try {
@@ -51,6 +52,9 @@ const api = {
 			data.createdBy = req.user.sub;
 			data.iss = `${config.PROTOCOL}://${req.customDomain || config.SWAGGER}/${req.authGroup.id}`;
 			data.destinationUri = req.globalSettings.notifications.notificationServiceUri;
+			if(req.organization) {
+				data.organization = req.organization.id;
+			}
 			if(!data.formats) {
 				data.formats = [];
 				if(data.recipientEmail) data.formats.push('email');
@@ -65,7 +69,7 @@ const api = {
 				if(data.type === 'general' && req.authGroup.pluginOptions.notification.ackRequiredOnOptional === true) {
 					throw e;
 				}
-				console.error(`Invites do not require successful notification for this authGroup: ${req.authGroup.id}`);
+				console.error(`General Notifications do not require success for this authGroup: ${req.authGroup.id}`);
 				console.error(e.message);
 			}
 			return res.respond(say.created(result, RESOURCE));
@@ -83,6 +87,9 @@ const api = {
 	async getNotifications(req, res, next) {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(req.organization) {
+				req.query.organization = req.organization.id;
+			}
 			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
 			const result = await notifications.getNotifications(req.authGroup, req.query, includeUser);
 			return res.respond(say.ok(result, RESOURCE));
@@ -94,7 +101,11 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
-			const result = await notifications.getNotification(req.authGroup, req.params.id);
+			let org;
+			if(req.organization) {
+				org = req.organization.id;
+			}
+			const result = await notifications.getNotification(req.authGroup, req.params.id, org);
 			await permissions.enforceOwn(req.permissions, result.createdBy);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
@@ -106,8 +117,12 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			let org;
+			if(req.organization) {
+				org = req.organization.id;
+			}
 			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
-			const result = await notifications.deleteNotification(req.authGroup, req.params.id, includeUser);
+			const result = await notifications.deleteNotification(req.authGroup, req.params.id, includeUser, org);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -115,6 +130,28 @@ const api = {
 			next(error);
 		}
 	},
+	// Account Notification Queries
+	async getMyNotifications(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			const result = await notifications.getMyNotifications(req.authGroup, req.user.sub);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getMyNotification(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
+			const result = await notifications.getMyNotification(req.authGroup, req.user.sub, req.params.id);
+			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	// Notification Processing
 	async processNotification(req, res, next) {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
