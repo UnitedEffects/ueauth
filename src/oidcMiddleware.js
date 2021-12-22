@@ -9,13 +9,15 @@ const mid = {
 	async validateAuthGroup (ctx, next) {
 		try {
 			if(ctx.authGroup && ctx.authGroup.active === true) {
-				ctx.req.params.group = ctx.authGroup.id || ctx.authGroup._id;
+				if(ctx.req.params.group !== (ctx.authGroup.id || ctx.authGroup._id)) {
+					ctx.req.params.group = ctx.authGroup.id || ctx.authGroup._id;
+				}
 				return next();
 			}
 			if (!ctx.req.params.group) throw Boom.preconditionRequired('authGroup is required');
 			const result = await helper.cacheAG(ctx.req.query.resetCache, 'AG', ctx.req.params.group);
 			ctx.authGroup = result;
-			ctx.req.params.group = result._id;
+			ctx.req.params.group = result._id || result.id;
 			return next();
 		} catch (error) {
 			return mid.koaErrorOut(ctx, error);
@@ -36,7 +38,6 @@ const mid = {
 
 	async uniqueClientRegCheck(ctx, next) {
 		try {
-			if (ctx.request.body) ctx.request.body.auth_group = ctx.req.params.group;
 			const checkMethods = ['PUT', 'POST', 'PATCH'];
 			if (ctx.request.body && checkMethods.includes(ctx.method) && ctx.path.includes('/reg')) {
 				if(ctx.method === 'PUT' || ctx.method === 'PATCH') {
@@ -92,7 +93,7 @@ const mid = {
 					// letting the login interaction controller handle this for us
 					return;
 				}
-				return mid.koaErrorOut(ctx, Boom.notFound('auth group not found'));
+				return mid.koaErrorOut(ctx, Boom.notFound('auth group not found. try explicitly adding auth_group to the client reg request.'));
 			}
 
 			if (config.SINGLE_USE_IAT === true) {

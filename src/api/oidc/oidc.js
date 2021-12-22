@@ -104,6 +104,12 @@ function oidcConfig(g, aliasDns = undefined) {
 				policies: {
 					'auth_group': async function (ctx, properties) {
 						try {
+							// setting defaul Auth Group
+							if (!('auth_group' in properties)) {
+								if (ctx && ctx.authGroup) {
+									properties.auth_group = ctx.authGroup.id || ctx.authGroup._id;
+								}
+							}
 							if (ctx.method === 'POST') {
 								if (!ctx.oidc.entities.InitialAccessToken.jti) {
 									throw new AccessDenied();
