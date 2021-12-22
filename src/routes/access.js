@@ -198,6 +198,22 @@ router.delete('/:group/products/:id', [
 	m.access('products')
 ], prod.deleteProduct);
 
+// Organization Products
+router.get('/:group/organization/:org/products', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('products')
+], prod.getOrgProducts);
+router.get('/:group/organization/:org/products/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('products')
+], prod.getOrgProduct);
+
 // Roles
 router.get('/:group/products/:product/roles', [
 	m.validateAuthGroup,

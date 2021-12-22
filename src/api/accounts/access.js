@@ -106,7 +106,7 @@ const factory = {
 				ag.pluginOptions.notification.enabled === true) {
 				try {
 					// we will attempt a notification
-					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type, aliasUi, aliasDns);
+					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type, aliasUi, aliasDns, org.id);
 					await n.notify(globalSettings, notificationObject, ag);
 				} catch (error) {
 					ueEvents.emit(authGroup, 'ue.plugin.notification.error', { error });
@@ -411,7 +411,7 @@ const factory = {
 	}
 };
 
-function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type, aliasUi = undefined, aliasDns = undefined) {
+function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type, aliasUi = undefined, aliasDns = undefined, orgId = undefined) {
 	const data = {
 		iss: oidc(authGroup, aliasDns).issuer,
 		createdBy: activeUser,
@@ -428,6 +428,9 @@ function accessNotificationObject(authGroup, organization, user, formats = [], a
 		data.formats = [];
 		if(user.email) data.formats.push('email');
 		if(user.txt) data.formats.push('sms');
+	}
+	if(orgId) {
+		data.organizatin = orgId;
 	}
 	return data;
 }

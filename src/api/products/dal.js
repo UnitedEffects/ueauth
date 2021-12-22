@@ -12,8 +12,16 @@ export default {
 		query.query.authGroup = g;
 		return Product.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
+	async getTheseProducts(authGroup, idArray) {
+		return Product.find({ _id: { $in: idArray}, authGroup })
+			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1 });
+	},
 	async getProduct(authGroup, id) {
 		return Product.findOne( { authGroup, $or: [{ _id: id }, { codedId: id }] });
+	},
+	async getOrgProduct(authGroup, id) {
+		return Product.findOne( { authGroup, $or: [{ _id: id }, { codedId: id }] })
+			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1 });
 	},
 	async deleteProduct(authGroup, id) {
 		return Product.findOneAndRemove( { _id: id, authGroup });
