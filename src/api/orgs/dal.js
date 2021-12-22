@@ -12,6 +12,9 @@ export default {
 	async getOrg(authGroup, id) {
 		return Organization.findOne( { $or: [{ _id: id }, { externalId: id }], authGroup });
 	},
+	async getTheseOrgs(authGroup, idArray) {
+		return Organization.find({ _id: { $in: idArray}, authGroup }).select({ _id: 1, externalId: 1, name: 1, description: 1, contactEmail: 1, contactName: 1, contactAddress: 1, contactPhone: 1});
+	},
 	async deleteOrg(authGroup, id) {
 		return Organization.findOneAndRemove( { _id: id, authGroup });
 	},

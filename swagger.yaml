@@ -1782,6 +1782,55 @@ paths:
         - bearer: []
         - openId: []
 
+  /api/{group}/access/my/organizations:
+    get:
+      tags:
+        - User Access
+      summary: Allows a user to view information about any organizations on their token
+      description: "Query details about the organizations you have access to. They must be present on your token for this to work, which means the token was requested with the scope access or access::organization"
+      operationId: getMyOrgs
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Organizations
+                  data:
+                    type: object
+                    properties:
+                      sub:
+                        tyep: string
+                        format: uuid
+                      organizations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
   /api/{group}/access/organizations:
     get:
       tags:
