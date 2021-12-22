@@ -86,6 +86,12 @@ const orgSchema = new mongoose.Schema({
 },{ _id: false });
 
 orgSchema.index({ name: 1, authGroup: 1}, { unique: true });
+orgSchema.index({ authGroup: 1, externalId: 1 }, {
+	unique: true,
+	partialFilterExpression: {
+		'externalId': { $exists: true, $gt: '' }
+	}
+});
 
 orgSchema.pre('save', function(callback) {
 	//license check
