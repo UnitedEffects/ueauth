@@ -48,6 +48,12 @@ router.get('/:group/access/organizations', [
 	m.permissions,
 	m.access('accounts')
 ], user.getAllOrgs);
+router.get('/:group/access/my/organizations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], org.getMyOrgs);
 router.put('/:group/access/organizations/:org/terms', [
 	m.validateAuthGroup,
 	m.validateOrganization,

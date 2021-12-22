@@ -30,6 +30,10 @@ export default {
 		return dal.getOrg(authGroupId, id);
 	},
 
+	async getTheseOrgs(authGroupId, idArray) {
+		return dal.getTheseOrgs(authGroupId, idArray);
+	},
+
 	async getPrimaryOrg(authGroupId) {
 		return dal.getPrimaryOrg(authGroupId);
 	},
