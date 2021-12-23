@@ -21,14 +21,14 @@ export default {
 				if (!req.permissions) throw Boom.unauthorized();
 				// if root user, they have priority
 				// todo fix this!
-				/*
+
 				if (req.permissions.groupAccess.includes('super')) {
 					if (config.FULL_SUPER_CONTROL === true) return next();
 					if (superAccess(req)) return next();
 					throw Boom.unauthorized('Super Admin is not fully enabled');
 				}
 
-				 */
+
 				// ensure a core product exists
 				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group access
