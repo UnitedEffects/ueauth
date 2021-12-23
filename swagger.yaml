@@ -5181,6 +5181,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: org
+          in: path
+          description: Organization context
+          required: true
+          schema:
+            type: string
         - name: product
           in: path
           description: Product Id
@@ -6547,7 +6553,6 @@ components:
       description: This will result in a request to an external notification processing service of your choice (see README for notification Plugin)
       required:
         - type
-        - recipientEmail
       properties:
         type:
           type: string

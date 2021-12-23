@@ -310,11 +310,6 @@ function oidcConfig(g, aliasDns = undefined) {
 					if(ctx.oidc.body.x_access_filter_product){
 						query.product = ctx.oidc.body.x_access_filter_product;
 					}
-					if(ctx.oidc.body.x_organization_context) {
-						const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
-						if(org && org.id) claims['x-organization-context'] = org.id;
-						if(!org) throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
-					}
 					if(bAccess === true && ctx.authGroup) {
 						let access;
 						if(token.accountId) {
@@ -346,6 +341,16 @@ function oidcConfig(g, aliasDns = undefined) {
 									else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
 								}
 								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
+									if(ctx.oidc.body.x_organization_context) {
+										const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
+										if(!org || !org.id) {
+											throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
+										}
+										if(!access.orgs.split(' ').includes(org.id)) {
+											throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${org.id}`);
+										}
+										claims['x-organization-context'] = org.id;
+									}
 									claims['x-access-organizations'] = access.orgs;
 								}
 								if(access.domains && (scopes.includes('access') || scopes.includes('access:domains'))) {
@@ -364,8 +369,9 @@ function oidcConfig(g, aliasDns = undefined) {
 						}
 					}
 				} catch (e) {
-					console.error(e);
+					//console.error(e);
 					claims = backup;
+					throw e;
 				}
 			}
 			return claims;

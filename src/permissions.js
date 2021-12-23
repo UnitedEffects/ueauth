@@ -1,7 +1,7 @@
 import Boom from '@hapi/boom';
 import access from './api/accounts/access';
 import helper from './helper';
-import merge from "json-schema-resolve-allof";
+import logs from './api/logging/logs';
 const config = require('./config');
 
 export default {
@@ -20,15 +20,11 @@ export default {
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
 				// if root user, they have priority
-				// todo fix this!
-
 				if (req.permissions.groupAccess.includes('super')) {
 					if (config.FULL_SUPER_CONTROL === true) return next();
 					if (superAccess(req)) return next();
 					throw Boom.unauthorized('Super Admin is not fully enabled');
 				}
-
-
 				// ensure a core product exists
 				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group access
@@ -82,7 +78,8 @@ export default {
 	async permissions(req, res, next) {
 		try {
 			// ensure the request has an organization context
-			const context = (req.orgContext) ? req.orgContext.id : undefined;
+			const inferredContext = (req.orgContext) ? req.orgContext.id : undefined;
+			let context = (req.orgContext) ? req.orgContext.id : undefined;
 			const primary = (req.primaryOrg) ? req.primaryOrg.id : undefined;
 			let mergePrimary = false;
 			if(context !== primary) mergePrimary = true;
@@ -101,6 +98,15 @@ export default {
 			if(req.user.decoded) {
 				if(req.user.decoded.scope) req.permissions.scopes = req.user.decoded.scope.split(' ');
 				let accessObject = JSON.parse(JSON.stringify(req.user.decoded));
+				// if we have an org context in the token, use it, otherwise used the previously inferredContext
+				if(req.user.decoded['x-organization-context']) {
+					context = req.user.decoded['x-organization-context'];
+					req.permissions.orgContext = context;
+					if(context !== primary) mergePrimary = true;
+					if(inferredContext !== context) {
+						logs.record(`NOTE FOR FUTURE REFINEMENT, INFERRED CONTEXT NOT SAME AS TOKEN CONTEXT. Inferred: ${inferredContext}, Token: ${context}`);
+					}
+				}
 				if(req.user.decoded['x-access-url']) {
 					accessObject = {};
 					const userAccess = await access.getUserAccess(req.user.subject_group.id, req.user.sub, { minimized: true });
@@ -133,13 +139,6 @@ export default {
 							req.permissions.domains = req.permissions.domains.concat(accessObject['x-access-domains'][primary].split(' '));
 						}
 					}
-					/*
-					for (const org in accessObject['x-access-domains']) {
-						if(context === org && req.permissions.organizations.includes(org)) {
-							req.permissions.domains = accessObject['x-access-domains'][org].split(' ');
-						}
-					}*/
-					//req.permissions.domains = accessObject['x-access-domains'].split(' ');
 				}
 				if(accessObject['x-access-products']) {
 					if(req.permissions.organizations.includes(context) && accessObject['x-access-products'][context]) {
@@ -152,18 +151,13 @@ export default {
 						}
 					}
 					const temp = [];
-					req.permissions.products.map((p) => {
-						temp.push(p.split(',')[0]);
-						return p;
-					});
-					req.permissions.products = temp;
-					/*
-					for (const org in accessObject['x-access-products']) {
-						if(context === org) {
-							req.permissions.products = accessObject['x-access-products'][org].split(' ');
-						}
-					}*/
-					//req.permissions.products = accessObject['x-access-products'].split(' ');
+					if(req.permissions.products) {
+						req.permissions.products.map((p) => {
+							temp.push(p.split(',')[0]);
+							return p;
+						});
+						req.permissions.products = temp;
+					}
 				}
 				if(accessObject['x-access-roles']) {
 					if(req.permissions.organizations.includes(context) && accessObject['x-access-roles'][context]) {
@@ -175,14 +169,6 @@ export default {
 							req.permissions.roles = req.permissions.roles.concat(accessObject['x-access-roles'][primary].split(' '));
 						}
 					}
-
-					/*
-					for (const org in accessObject['x-access-roles']) {
-						if(context === org) {
-							req.permissions.roles = accessObject['x-access-roles'][org].split(' ');
-						}
-					}*/
-					//req.permissions.roles = accessObject['x-access-roles'].split(' ');
 				}
 				if(accessObject['x-access-permissions']) {
 					if(req.permissions.organizations.includes(context) && accessObject['x-access-permissions'][context]) {
@@ -194,18 +180,10 @@ export default {
 							req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'][primary].split(' '));
 						}
 					}
-
-					/*
-					for (const org in accessObject['x-access-permissions']) {
-						if(context === org) {
-							req.permissions.permissions = accessObject['x-access-permissions'][org].split(' ');
-						}
-					}*/
 					if(accessObject['x-access-permissions'].member && req.permissions.groupAccess.includes('member')) {
 						if(!req.permissions.permissions) req.permissions.permissions = [];
 						req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'].member.split(' '));
 					}
-					//req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 				}
 			}
 			// Root super user
@@ -228,45 +206,18 @@ export default {
 				req.permissions.core.products.push(p.id || p._id);
 				req.permissions.core.productCodedIds.push(p.codedId);
 			});
-			// filtering out any product references that are not the core from the user's permissions
-			// todo deprecate and delete
-			/*
-			if(req.permissions.products) {
-				req.permissions.products = req.permissions.products.filter((p) => {
-					return (req.permissions.core.products.includes(p));
-				});
-			}
-			 */
+
 			// filtering out any permissions that are not from the core product from the user's permissions
 			let permFilter = [];
 			let roleFilter = [];
 			req.permissions.core.productCodedIds.map((ci) => {
-				/*
-				if(req.permissions.permissions) {
-					const keys = Object.keys(req.permissions.permissions);
-					for(const org of keys) {
-						const temp = req.permissions.permissions[org].filter((p) => {
-							return (p.includes(`${ci}:::`));
-						});
-						permFilter[org] = permFilter[org].concat(temp);
-					}
-				}*/
 				if(req.permissions.permissions) {
 					const temp = req.permissions.permissions.filter((p) => {
 						return (p.includes(`${ci}:::`));
 					});
 					permFilter = permFilter.concat(temp);
 				}
-				/*
-				if(req.permissions.roles) {
-					const keys = Object.keys(req.permissions.roles);
-					for(const org of keys) {
-						const temp = req.permissions.roles[org].filter((r) => {
-							return (r.includes(`${ci}::`));
-						});
-						roleFilter[org] = roleFilter[org].concat(temp);
-					}
-				}*/
+
 				if(req.permissions.roles) {
 					const temp = req.permissions.roles.filter((r) => {
 						return (r.includes(`${ci}::`));
@@ -275,16 +226,6 @@ export default {
 				}
 			});
 			req.permissions.core.products.map((pr) => {
-				/*
-				if(req.permissions.permissions) {
-					const keys = Object.keys(req.permissions.permissions);
-					for(const org of keys) {
-						const temp = req.permissions.permissions[org].filter((p) => {
-							return (p.includes(`${pr}:::`));
-						});
-						permFilter[org] = permFilter[org].concat(temp);
-					}
-				}*/
 
 				if(req.permissions.permissions) {
 					const temp = req.permissions.permissions.filter((p) => {
@@ -292,16 +233,6 @@ export default {
 					});
 					permFilter = permFilter.concat(temp);
 				}
-				/*
-				if(req.permissions.roles) {
-					const keys = Object.keys(req.permissions.roles);
-					for(const org of keys) {
-						const temp = req.permissions.roles[org].filter((r) => {
-							return (r.includes(`${pr}::`));
-						});
-						roleFilter[org] = roleFilter[org].concat(temp);
-					}
-				}*/
 
 				if(req.permissions.roles) {
 					const temp = req.permissions.roles.filter((r) => {

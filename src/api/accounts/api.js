@@ -394,12 +394,16 @@ const api = {
 	async getUserAccess(req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			let id;
 			if(!req.params.id) {
 				if(!req.user || !req.user.sub ) throw Boom.preconditionRequired('Must provide id or valid user token');
 				req.params.id = req.user.sub;
-			} else await permissions.enforceOwn(req.permissions, req.params.id);
-			const result = await access.getUserAccess(req.authGroup, req.params.id, req.query);
-			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			} else {
+				id = (req.params.id === 'me') ? req.user.sub : req.params.id;
+				await permissions.enforceOwn(req.permissions, id);
+			}
+			const result = await access.getUserAccess(req.authGroup, id, req.query);
+			if (!result) throw Boom.notFound(`id requested was ${id}`);
 			return res.respond(say.ok(result, 'Access'));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.access.error', error);

@@ -170,39 +170,33 @@ const factory = {
 						if (query.domain) {
 							if (domain.id === query.domain) {
 								accessItem.organization.domainAccess.push(domain.id);
-								//domains.push(`${userAccess[i].organization.id}::${domain.id}`);
 								if(!domains[userAccess[i].organization.id]) domains[userAccess[i].organization.id] = [];
 								domains[userAccess[i].organization.id].push(domain.id);
 								if (query.product) {
 									if (domain.associatedOrgProducts.includes(query.product)) {
 										accessItem.organization.productAccess = accessItem.organization.productAccess.concat([query.product]);
-										//products = products.concat([query.product]);
 										if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
 										products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat([query.product]);
 									}
 								} else {
 									accessItem.organization.productAccess =
 										accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
-									//products = products.concat(domain.associatedOrgProducts);
 									if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
 									products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat(domain.associatedOrgProducts);
 								}
 							}
 						} else {
 							accessItem.organization.domainAccess.push(domain.id);
-							//domains.push(`${userAccess[i].organization.id}::${domain.id}`);
 							if(!domains[userAccess[i].organization.id]) domains[userAccess[i].organization.id] = [];
 							domains[userAccess[i].organization.id].push(domain.id);
 							if (query.product) {
 								if (domain.associatedOrgProducts.includes(query.product)) {
 									accessItem.organization.productAccess = accessItem.organization.productAccess.concat([query.product]);
-									//products = products.concat([query.product]);
 									if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
 									products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat([query.product]);
 								}
 							} else {
 								accessItem.organization.productAccess = accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
-								//products = products.concat(domain.associatedOrgProducts);
 								if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
 								products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat(domain.associatedOrgProducts);
 							}
@@ -231,7 +225,6 @@ const factory = {
 												});
 												if(!permissions[userAccess[i].organization.id]) permissions[userAccess[i].organization.id] = [];
 												permissions[userAccess[i].organization.id].push(`${rl.productCodedId || rl.product}:::${p[1]}`);
-												//permissions.push(`${rl.productCodedId || rl.product}:::${p[1]}`);
 											}
 										}
 									});
@@ -251,7 +244,6 @@ const factory = {
 								const index = products[userAccess[i].organization.id].indexOf(rl.product);
 								if (index !== -1) products[userAccess[i].organization.id][index] = `${products[userAccess[i].organization.id][index]},${rl.productCodedId}`;
 							}
-							//roles.push(rolePush);
 						} else if (query.includeMiscRoles === 'true' || query.includeMiscRoles === true) {
 							if (!accessItem.organization.miscRoles) accessItem.organization.miscRoles = [];
 							accessItem.organization.miscRoles.push({
@@ -264,7 +256,6 @@ const factory = {
 								`${rl.productCodedId || rl.product}::${rl.codedId}`;
 							if(!roles['misc']) roles['misc'] = [];
 							roles['misc'].push(rolePush);
-							//miscRoles.push(rolePush);
 						}
 					}
 					return rl;
@@ -284,11 +275,6 @@ const factory = {
 			});
 		}
 
-		// dedup
-		//domains = [...new Set(domains)];
-		//products = [...new Set(products)];
-		//permissions = [...new Set(permissions)];
-
 		if(query.minimized === 'true' || query.minimized === true) {
 			condensed.sub = id;
 			condensed.authGroup = response.authGroup.id;
@@ -300,30 +286,25 @@ const factory = {
 				for (const org in domains) {
 					condensed.domains[org] = domains[org].join(' ');
 				}
-				//condensed.domains = domains
 			}
 			if(Object.keys(products).length !== 0) {
 				condensed.products = {};
 				for (const org in products) {
 					condensed.products[org] = products[org].join(' ');
 				}
-				//condensed.products = products
 			}
 			if(Object.keys(roles).length !== 0) {
 				condensed.productRoles = {};
 				for (const org in roles) {
 					condensed.productRoles[org] = roles[org].join(' ');
 				}
-				//condensed.productRoles = roles
 			}
 			if(Object.keys(permissions).length !== 0) {
 				condensed.permissions = {};
 				for (const org in permissions) {
 					condensed.permissions[org] = permissions[org].join(' ');
 				}
-				//condensed.permissions = permissions
 			}
-			//if(miscRoles.length !== 0) condensed.miscRoles = miscRoles.join(' ');
 			return condensed;
 		}
 		return response;

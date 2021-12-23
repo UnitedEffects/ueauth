@@ -114,7 +114,15 @@ async function standardPatchValidation(original, patched) {
 	if(result.error) throw result.error;
 }
 
-async function restrictedPatchValidation(original, patched) {
+async function restrictedPatchValidation(o, p) {
+	const original = JSON.parse(JSON.stringify(o));
+	const patched = JSON.parse(JSON.stringify(p));
+	if(original.associatedProducts) {
+		original.associatedProducts = original.associatedProducts.join(' ');
+	}
+	if(patched.associatedProducts) {
+		patched.associatedProducts = patched.associatedProducts.join(' ');
+	}
 	const definition = {
 		createdAt: Joi.any().valid(original.createdAt).required(),
 		createdBy: Joi.string().valid(original.createdBy).required(),
@@ -122,8 +130,8 @@ async function restrictedPatchValidation(original, patched) {
 		modifiedBy: Joi.string().required(),
 		authGroup: Joi.string().valid(original.authGroup).required(),
 		core: Joi.boolean().valid(original.core).required(),
-		_id: Joi.string().valid(original._id).required(),
-		associatedProducts: Joi.array().valid(original.associatedProducts).required(),
+		_id: Joi.string().valid(original._id || original.id).required(),
+		associatedProducts: Joi.string().valid(original.associatedProducts).required(),
 		type: Joi.string().valid(original.type).required()
 	};
 	if(original.core === true) {

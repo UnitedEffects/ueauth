@@ -194,36 +194,20 @@ const mid = {
 		const primaryOrg = await orgs.getPrimaryOrg(req.authGroup.id); //todo cache
 		if(!primaryOrg) throw Boom.notFound('AuthGroup missing primary organization');
 		req.primaryOrg = primaryOrg;
-		console.info('org context');
 		if(ogPath && req.params && req.params.id && req.path === `/${ogPath}/organizations/${req.params.id}`){
-			console.info('checking org api reference');
 			const orgCon = await orgs.getOrg(req.params.group, req.params.id);
 			if(orgCon) req.orgContext = orgCon;
-			console.info(req.orgContext.id);
 			return next();
 		}
 		if(req.params.group && req.params && req.params.org) {
-			console.info('param org');
 			const orgCon = await orgs.getOrg(req.params.group, req.params.org);
 			if(orgCon) req.orgContext = orgCon;
-			console.info(req.orgContext.id);
 			return next();
 		}
-		/*
-		if(req.params.group && req.headers && req.headers['x-org-context']) {
-			console.info('header org');
-			const orgCon = await orgs.getOrg(req.params.group, req.headers['x-org-context']);
-			if(orgCon) req.orgContext = orgCon;
-			return next();
-		}*/
 		if(req.authGroup) {
-			console.info('assuming primary org');
 			req.orgContext = primaryOrg;
-			console.info(req.orgContext.id);
 			return next();
 		}
-		console.info(req.path);
-		console.info('simple member context');
 		return next();
 	},
 	async validateOrganization (req, res, next) {
@@ -231,7 +215,6 @@ const mid = {
 			if (!req.params.org) throw Boom.preconditionRequired('organization ID is required');
 			if (!req.authGroup) throw Boom.preconditionRequired('AuthGroup is required');
 			if (req.orgContext) {
-				console.info('org context is there when validating org');
 				if(req.orgContext.id === req.params.org) req.organization = req.orgContext;
 				return next();
 			}

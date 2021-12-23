@@ -2,8 +2,9 @@ import Boom from '@hapi/boom';
 import { say } from '../../say';
 import pins from './plugins';
 import notifications from './notifications/notifications';
-import permissions from "../../permissions";
-import ueEvents from "../../events/ueEvents";
+import permissions from '../../permissions';
+import ueEvents from '../../events/ueEvents';
+import account from '../accounts/account';
 
 const config = require('../../config');
 
@@ -47,13 +48,23 @@ const api = {
 		let result;
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			if(req.body && !req.body.recipientUserId && !req.body.recipientEmail) {
+				throw Boom.preconditionRequired('You must provide either a recipientUserId or recipientEmail');
+			}
+			if(req.body.recipientUserId) {
+				const user = await account.getAccount(req.authGroup.id, req.body.recipientUserId);
+				if(!user) throw Boom.notFound('User Id not valid');
+				if(!req.body.recipientEmail) {
+					req.body.recipientEmail = user.email;
+				}
+			}
 			const data = req.body;
 			data.authGroupId = req.authGroup.id;
 			data.createdBy = req.user.sub;
 			data.iss = `${config.PROTOCOL}://${req.customDomain || config.SWAGGER}/${req.authGroup.id}`;
 			data.destinationUri = req.globalSettings.notifications.notificationServiceUri;
-			if(req.organization) {
-				data.organization = req.organization.id;
+			if(req.organization || req.permissions.orgContext) {
+				data.organization = (req.organization) ? req.organization.id : req.permissions.orgContext;
 			}
 			if(!data.formats) {
 				data.formats = [];
@@ -87,8 +98,8 @@ const api = {
 	async getNotifications(req, res, next) {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
-			if(req.organization) {
-				req.query.organization = req.organization.id;
+			if(req.organization || req.permissions.orgContext) {
+				req.query.organization = (req.organization) ? req.organization.id : req.permissions.orgContext;
 			}
 			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
 			const result = await notifications.getNotifications(req.authGroup, req.query, includeUser);
@@ -102,8 +113,8 @@ const api = {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			let org;
-			if(req.organization) {
-				org = req.organization.id;
+			if(req.organization || req.permissions.orgContext) {
+				org = (req.organization) ? req.organization.id : req.permissions.orgContext;
 			}
 			const result = await notifications.getNotification(req.authGroup, req.params.id, org);
 			await permissions.enforceOwn(req.permissions, result.createdBy);
@@ -118,8 +129,8 @@ const api = {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			let org;
-			if(req.organization) {
-				org = req.organization.id;
+			if(req.organization || req.permissions.orgContext) {
+				org = (req.organization) ? req.organization.id : req.permissions.orgContext;
 			}
 			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
 			const result = await notifications.deleteNotification(req.authGroup, req.params.id, includeUser, org);
