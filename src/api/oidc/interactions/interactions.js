@@ -152,10 +152,9 @@ export default {
 		grantId = await grant.save();
 
 		const consent = {};
-		if (!intDetails.grantId) {
-			// we don't have to pass grantId to consent, we're just modifying existing one
-			consent.grantId = grantId;
-		}
+
+		// example had this as a condition on intDetails, but that created an intermittent bug where consent hung
+		consent.grantId = grantId;
 
 		return { consent };
 	},
