@@ -179,36 +179,41 @@ const mid = {
 			return mid.organizationContext(req, res, next);
 		} catch (error) {
 			console.error(error);
-			next(Boom.notFound('No organization context could be resolved'));
+			next(Boom.notFound(error.message || 'Auth Group'));
 		}
 	},
 	async organizationContext(req, res, next) {
-		const ogPath = req.ogPathGroup || req.params.group || undefined;
-		if(!req.orgContext) {
-			req.orgContext = {
-				id: 'member'
-			};
-		}
-		// skip this if its just a swagger request
-		if(req.path.includes('swagger')) return next();
-		const primaryOrg = await helper.cachePrimaryOrg(req.query.resetCache, req.authGroup);
-		if(!primaryOrg) throw Boom.notFound('AuthGroup missing primary organization');
-		req.primaryOrg = primaryOrg;
-		if(ogPath && req.params && req.params.id && req.path === `/${ogPath}/organizations/${req.params.id}`){
-			const orgCon = await orgs.getOrg(req.params.group, req.params.id);
-			if(orgCon) req.orgContext = orgCon;
+		try {
+			const ogPath = req.ogPathGroup || req.params.group || undefined;
+			if(!req.orgContext) {
+				req.orgContext = {
+					id: 'member'
+				};
+			}
+			// skip this if its just a swagger request
+			if(req.path.includes('swagger')) return next();
+			const primaryOrg = await helper.cachePrimaryOrg(req.query.resetCache, req.authGroup);
+			if(!primaryOrg) throw Boom.notFound('AuthGroup missing primary organization');
+			req.primaryOrg = primaryOrg;
+			if(ogPath && req.params && req.params.id && req.path === `/${ogPath}/organizations/${req.params.id}`){
+				const orgCon = await orgs.getOrg(req.params.group, req.params.id);
+				if(orgCon) req.orgContext = orgCon;
+				return next();
+			}
+			if(req.params.group && req.params && req.params.org) {
+				const orgCon = await orgs.getOrg(req.params.group, req.params.org);
+				if(orgCon) req.orgContext = orgCon;
+				return next();
+			}
+			if(req.authGroup) {
+				req.orgContext = primaryOrg;
+				return next();
+			}
 			return next();
+		} catch (error) {
+			console.error(error);
+			next(Boom.notFound(error.message || 'Organization Context'));
 		}
-		if(req.params.group && req.params && req.params.org) {
-			const orgCon = await orgs.getOrg(req.params.group, req.params.org);
-			if(orgCon) req.orgContext = orgCon;
-			return next();
-		}
-		if(req.authGroup) {
-			req.orgContext = primaryOrg;
-			return next();
-		}
-		return next();
 	},
 	async validateOrganization (req, res, next) {
 		try {
