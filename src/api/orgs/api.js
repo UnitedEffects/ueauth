@@ -16,6 +16,8 @@ const api = {
 				req.body.createdBy = req.user.sub;
 				req.body.modifiedBy = req.user.sub;
 			}
+			// make sure this can not be true
+			req.body.core = false;
 			const organization = await org.writeOrg(req.authGroup.id, req.body);
 			const adminDomain = {
 				name: `${req.authGroup.name} - ${organization.name} - Administrative Domain`,

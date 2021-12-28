@@ -51,9 +51,10 @@ const orgSchema = new mongoose.Schema({
 			validate: {
 				validator: function (v) {
 					const ag = this.authGroup;
-					return h.validateProductReference(mongoose.model('products'), v, ag);
+					const core = this.core;
+					return h.validateProductReference(mongoose.model('products'), v, ag, core);
 				},
-				message: 'Product does not exist'
+				message: 'Product does not exist or is not allowed'
 			}
 		}
 	],
@@ -93,8 +94,14 @@ orgSchema.index({ authGroup: 1, externalId: 1 }, {
 	}
 });
 
+orgSchema.index({ authGroup: 1, core: 1 }, {
+	unique: true,
+	partialFilterExpression: {
+		'core': { $exists: true, $eq: true }
+	}
+});
+
 orgSchema.pre('save', function(callback) {
-	//license check
 	callback();
 });
 
@@ -116,7 +123,6 @@ orgSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
-	//delete ret.core;
 };
 
 // Export the Mongoose model

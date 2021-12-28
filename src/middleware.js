@@ -190,6 +190,8 @@ const mid = {
 					id: 'member'
 				};
 			}
+			// skip if this is a group activation event
+			if(req.groupActivationEvent === true) return next();
 			// skip this if its just a swagger request
 			if(req.path.includes('swagger')) return next();
 			const primaryOrg = await helper.cachePrimaryOrg(req.query.resetCache, req.authGroup);
@@ -273,7 +275,7 @@ const mid = {
 			req.authGroup = result;
 			req.ogPathGroup = req.params.group;
 			req.params.group = result._id;
-			return mid.organizationContext(req, res, next);
+			return next();
 		} catch (error) {
 			next(error);
 		}
