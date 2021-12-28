@@ -1781,56 +1781,6 @@ paths:
       security:
         - bearer: []
         - openId: []
-
-  /api/{group}/access/my/organizations:
-    get:
-      tags:
-        - User Access
-      summary: Allows a user to view information about any organizations on their token
-      description: "Query details about the organizations you have access to. They must be present on your token for this to work, which means the token was requested with the scope access or access::organization"
-      operationId: getMyOrgs
-      parameters:
-        - name: group
-          in: path
-          description: Auth Group Id or name
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                properties:
-                  type:
-                    type: string
-                    example: Organizations
-                  data:
-                    type: object
-                    properties:
-                      sub:
-                        tyep: string
-                        format: uuid
-                      organizations:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/organization'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
   /api/{group}/access/organizations:
     get:
       tags:
@@ -1934,6 +1884,151 @@ paths:
                     - 'accept'
                     - 'decline'
         required: true
+  /api/{group}/access/my/organizations:
+    get:
+      tags:
+        - User Access
+      summary: Allows a user to view detailed information about any organizations on their token
+      description: "Query details about the organizations you have access to. They must be present on your token for this to work, which means the token was requested with the scope access or access::organization"
+      operationId: getMyOrgDetails
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Organizations
+                  data:
+                    type: object
+                    properties:
+                      sub:
+                        tyep: string
+                        format: uuid
+                      organizations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/access/my/notifications:
+    get:
+      tags:
+        - User Access
+      summary: Allows a user to request any notifications sent to them
+      description: View all notifications not yet expired (ttl) with your user Id as the recipient
+      operationId: getMyNotifications
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Notification
+                  data:
+                    type: object
+                    properties:
+                      sub:
+                        tyep: string
+                        format: uuid
+                      notifications:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/access/my/notification/{id}:
+    get:
+      tags:
+        - User Access
+      summary: Allows a user to view a single notification that was sent to them only
+      description: Allows a user to view a notification by id if the recipientUserId is their own user id
+      operationId: getMyNotification
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: Id of the notification
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Notification
+                  data:
+                    $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # Client Access
   /api/{group}/access/client/{id}:

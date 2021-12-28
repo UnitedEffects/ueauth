@@ -104,7 +104,7 @@ export default {
 				recipientUserId: me
 			}
 		};
-		return dal.getNotification(ag.id, q);
+		return dal.getNotifications(ag.id, q);
 	},
 	// @notTested
 	async getMyNotification(ag, me, id) {

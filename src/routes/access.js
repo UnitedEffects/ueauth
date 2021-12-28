@@ -6,6 +6,7 @@ import role from '../api/roles/api';
 import user from '../api/accounts/api';
 import perm from '../api/permissions/api';
 import client from '../api/oidc/client/api';
+import notify from '../api/plugins/api';
 import m from '../middleware';
 
 const router = express.Router();
@@ -54,6 +55,18 @@ router.get('/:group/access/my/organizations', [
 	m.permissions,
 	m.access('accounts')
 ], org.getMyOrgs);
+router.get('/:group/access/my/notifications', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], notify.getMyNotifications);
+router.get('/:group/access/my/notification/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], notify.getMyNotification);
 router.put('/:group/access/organizations/:org/terms', [
 	m.validateAuthGroup,
 	m.validateOrganization,
