@@ -8,6 +8,7 @@ import n from '../../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
+import crypto from 'crypto';
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -139,7 +140,112 @@ export default {
 			next(err);
 		}
 	},
+	async callbackLogin(req, res, next) {
+		try {
+			const nonce = res.locals.cspNonce;
+			//validate AG
+			return res.render('repost', { layout: false, upstream: 'google', nonce, authGroup: req.authGroup.id });
+		} catch (error) {
+			next (error);
+		}
+	},
+	async oidcFederationClient(req, res, next) {
+		//todo move this to middleware
+		try {
+			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
+			if (req.app.authIssuer) return next();
+			const openid = require('openid-client');
+			//https://accounts.google.com/.well-known/openid-configuration
+			const google = await openid.Issuer.discover('https://qa.ueauth.io/root/.well-known/openid-configuration');
+			const client = new google.Client({
+				client_id: '45a37a5f-a295-4705-9b7e-3efde55c5bf6',
+				response_types: ['code'],
+				redirect_uris: [`${req.provider.issuer}/interaction/callback/login`],
+				//redirect_uris: [`https://examplebo.com/root/interaction/callback/login`],
+				grant_types: ['authorization_code'], //authorization_code?
+				client_secret: 'IdBU-cZgJAy.KJnLznkIJ_SA5oTJ1tjz2vfKTssSqkPyxzS-TOfhZ6OiOSShMbeljo-LhVDAOzWtFAAF-yDCvv'
+			});
+			req.provider.app.context.google = client;
+			req.app.authIssuer = google;
+			req.app.authClient = client;
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
+	async federated(req, res, next) {
+		try {
+			const provider = req.provider;
+			const { interactionFinished } = provider;
+			provider.interactionFinished = (...args) => {
+				const { login } = args[2];
+				//todo validate login.accountId
+				if (login) {
+					Object.assign(args[2].login, {
+						//acr: 'urn:mace:incommon:iap:bronze',
+						amr: login.accountId.startsWith('google.') ? ['google'] : ['pwd'],
+					});
+				}
+				return interactionFinished.call(provider, ...args);
+			};
 
+			const { prompt: { name } } = await provider.interactionDetails(req, res);
+			assert.equal(name, 'login');
+
+			const path = `/${req.authGroup.id}/interaction/${req.params.uid}/federated`;
+
+			switch (req.body.upstream) {
+			case 'google': {
+				// calculate the url where we want to redirect to
+				const callbackParams = req.app.authClient.callbackParams(req);
+				// init
+				if (!Object.keys(callbackParams).length) {
+					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
+					const nonce = crypto.randomBytes(32).toString('hex');
+
+					res.cookie('google.state', state, { path, sameSite: 'strict' });
+					res.cookie('google.nonce', nonce, { path, sameSite: 'strict' });
+
+					res.status = 303;
+					// this worked! need to update the redirectUrl in ueauth.io DB to allow it...
+					return res.redirect(req.app.authClient.authorizationUrl({
+						state, nonce, scope: 'openid email profile',
+					}));
+				}
+
+				// callback
+				console.info(req.cookies);
+				//todo throw error if you don't see the right cookies
+				const state = req.cookies['google.state'];
+				res.cookie('google.state', null, { path });
+				const nonce = req.cookies['google.nonce'];
+				res.cookie('google.nonce', null, { path });
+
+				console.info('here');
+				console.info(callbackParams);
+				console.info(req.app.authClient);
+				const tokenset = await req.app.authClient.callback(`${req.provider.issuer}/interaction/callback/login`, callbackParams, { state, nonce, response_type: 'code' });
+				console.info('tokenset');
+				console.info(tokenset);
+				const account = await Account.findByFederated('google', tokenset.claims());
+				console.info(account);
+				const result = {
+					login: {
+						accountId: account.accountId,
+					},
+				};
+				// todo this is working... should we add the token to a cookie? how do we redirect to the original url?
+				return provider.interactionFinished(req, res, result, {
+					mergeWithLastSubmission: false,
+				});
+			}
+			default:
+				return undefined;
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
 	async login(req, res, next) {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
@@ -254,7 +360,7 @@ export default {
 		}
 	},
 	async forgot (req, res, next) {
-	    try {
+		try {
 			const newPassword = req.body.password;
 			const update = [
 				{
@@ -271,7 +377,7 @@ export default {
 			await acc.patchAccount(req.authGroup, req.user.sub, update, req.user.sub, true);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
-	    	next (err);
+			next (err);
 		}
 	},
 
@@ -330,6 +436,7 @@ export default {
 			next (err);
 		}
 	},
+	// Koa controllers or OIDC library
 	async logoutSource(ctx, form) {
 		try {
 			const action = ctx.oidc.urlFor('end_session_confirm');

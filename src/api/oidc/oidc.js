@@ -1,4 +1,7 @@
 import { v4 as uuid } from 'uuid';
+import crypto from 'crypto';
+import helmet from 'helmet';
+import { promisify } from 'util';
 import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
@@ -79,6 +82,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
 			},
 		},
+		acrValues: g.config.acrValues || [],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -438,6 +442,20 @@ function oidcWrapper(tenant, aliasDns = undefined) {
 	oidc.use(middle.validateAuthGroup);
 	oidc.use(middle.uniqueClientRegCheck);
 	oidc.use(middle.noDeleteOnPrimaryClient);
+	const pHelmet = promisify(helmet({
+		contentSecurityPolicy: {
+			directives: {
+				...helmet.contentSecurityPolicy.getDefaultDirectives(),
+				'script-src': [`'self'`, (req, res) => `'nonce-${res.locals.cspNonce}'`],
+			},
+		},
+	}));
+	oidc.use(async (ctx, next) => {
+		ctx.res.locals || (ctx.res.locals = {});
+		ctx.res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+		await pHelmet(ctx.req, ctx.res);
+		return next();
+	});
 	return oidc;
 }
 

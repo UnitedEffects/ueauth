@@ -43,6 +43,22 @@ class Account {
 	 * @todo: The interface specifies findByFederated
 	 * @body: https://github.com/panva/node-oidc-provider/blob/d7a5ba5ba191d5af8e4bed9449cbb43a3d5a1619/example/support/account.js
 	 */
+	static async findByFederated(provider, claims) {
+		const id = `${provider}.${claims.sub}`;
+		/*
+		if (!logins.get(id)) {
+			logins.set(id, new Account(id, claims));
+		}*/
+		console.info('here....');
+		console.info(id);
+		console.info(claims);
+		return {
+			accountId: id,
+			async claims(use, scope) {
+				return claims;
+			},
+		};
+	}
 }
 
 export default Account;

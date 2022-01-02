@@ -101,6 +101,7 @@ const authGroup = new mongoose.Schema({
 				meta: Object
 			}
 		},
+		acrValues: [String],
 		ttl: {
 			accessToken: {
 				type: Number,
