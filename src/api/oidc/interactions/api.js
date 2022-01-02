@@ -163,7 +163,7 @@ export default {
 				redirect_uris: [`${req.provider.issuer}/interaction/callback/login`],
 				//redirect_uris: [`https://examplebo.com/root/interaction/callback/login`],
 				grant_types: ['authorization_code'], //authorization_code?
-				client_secret: 'IdBU-cZgJAy.KJnLznkIJ_SA5oTJ1tjz2vfKTssSqkPyxzS-TOfhZ6OiOSShMbeljo-LhVDAOzWtFAAF-yDCvv'
+				client_secret: 'testing'
 			});
 			req.provider.app.context.google = client;
 			req.app.authIssuer = google;
