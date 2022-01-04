@@ -22,6 +22,9 @@ export default {
 	async getAccount(authGroup, id) {
 		return Account.findOne( { _id: id, authGroup });
 	},
+	async getFederatedAccount(authGroup, provider, federatedId) {
+		return Account.findOne({ authGroup, 'identities.provider': provider, 'identities.id': federatedId });
+	},
 	async getAccountByOrg(authGroup, org, id) {
 		const query = {
 			_id: id,

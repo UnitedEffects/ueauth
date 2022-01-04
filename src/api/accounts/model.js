@@ -4,6 +4,18 @@ import bcrypt from 'bcryptjs';
 
 mongoose.set('useCreateIndex', true);
 
+const identitySchema = new mongoose.Schema({
+	id: {
+		type: String,
+		required: true
+	},
+	provider: {
+		type: String,
+		required: true
+	},
+	profile: Object
+}, { _id: false });
+
 const accountSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
@@ -74,6 +86,7 @@ const accountSchema = new mongoose.Schema({
 		}
 	],
 	metadata: Object,
+	identities: [identitySchema],
 	_id: {
 		type: String,
 		default: uuid
@@ -82,6 +95,7 @@ const accountSchema = new mongoose.Schema({
 
 accountSchema.index({ email: 1, authGroup: 1}, { unique: true });
 accountSchema.index({ username: 1, authGroup: 1}, { unique: true });
+accountSchema.index( { authGroup: 1, _id: 1, 'identities.id' : 1 }, { unique: true });
 accountSchema.index( { email: 'text', username: 'text' });
 
 accountSchema.pre('save', function(callback) {
@@ -121,10 +135,10 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.password;
-	//delete ret.blocked;
 	delete ret.access;
 	delete ret.phone;
 	delete ret.__v;
+	delete ret.identities;
 };
 
 // Export the Mongoose model

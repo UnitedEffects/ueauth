@@ -1,4 +1,5 @@
 import oidc from '../oidc';
+import { generators } from 'openid-client';
 import Account from '../../accounts/accountOidcInterface';
 import {say} from '../../../say';
 import acc from '../../accounts/account';
@@ -150,20 +151,18 @@ export default {
 		}
 	},
 	async oidcFederationClient(req, res, next) {
-		//todo move this to middleware
 		try {
+			//todo REFACTOR ALL OF THIS
 			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
 			if (req.app.authIssuer) return next();
 			const openid = require('openid-client');
-			//https://accounts.google.com/.well-known/openid-configuration
-			const google = await openid.Issuer.discover('https://qa.ueauth.io/root/.well-known/openid-configuration');
+			const google = await openid.Issuer.discover('https://accounts.google.com/.well-known/openid-configuration')
 			const client = new google.Client({
-				client_id: '45a37a5f-a295-4705-9b7e-3efde55c5bf6',
+				client_id: '...',
 				response_types: ['code'],
 				redirect_uris: [`${req.provider.issuer}/interaction/callback/login`],
-				//redirect_uris: [`https://examplebo.com/root/interaction/callback/login`],
-				grant_types: ['authorization_code'], //authorization_code?
-				client_secret: 'testing'
+				grant_types: ['authorization_code'],
+				client_secret: '...'
 			});
 			req.provider.app.context.google = client;
 			req.app.authIssuer = google;
@@ -176,6 +175,7 @@ export default {
 	async federated(req, res, next) {
 		try {
 			const provider = req.provider;
+			/*
 			const { interactionFinished } = provider;
 			provider.interactionFinished = (...args) => {
 				const { login } = args[2];
@@ -188,7 +188,7 @@ export default {
 				}
 				return interactionFinished.call(provider, ...args);
 			};
-
+			*/
 			const { prompt: { name } } = await provider.interactionDetails(req, res);
 			assert.equal(name, 'login');
 
@@ -200,41 +200,51 @@ export default {
 				const callbackParams = req.app.authClient.callbackParams(req);
 				// init
 				if (!Object.keys(callbackParams).length) {
+					const code_verifier = generators.codeVerifier();
+					const code_challenge = generators.codeChallenge(code_verifier);
 					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					const nonce = crypto.randomBytes(32).toString('hex');
-
+					await interactions.savePKCESession({
+						payload: {
+							state,
+							auth_group: req.authGroup.id,
+							code_challenge,
+							code_verifier
+						}
+					});
 					res.cookie('google.state', state, { path, sameSite: 'strict' });
 					res.cookie('google.nonce', nonce, { path, sameSite: 'strict' });
 
 					res.status = 303;
 					// this worked! need to update the redirectUrl in ueauth.io DB to allow it...
-					return res.redirect(req.app.authClient.authorizationUrl({
-						state, nonce, scope: 'openid email profile',
+					return res.redirect(req.app.authClient.authorizationUrl({ state, nonce,
+						scope: 'openid email', /*code_challenge, code_challenge_method: 'S256'*/
 					}));
 				}
 
 				// callback
-				console.info(req.cookies);
 				//todo throw error if you don't see the right cookies
 				const state = req.cookies['google.state'];
 				res.cookie('google.state', null, { path });
 				const nonce = req.cookies['google.nonce'];
 				res.cookie('google.nonce', null, { path });
-
-				console.info('here');
-				console.info(callbackParams);
-				console.info(req.app.authClient);
-				const tokenset = await req.app.authClient.callback(`${req.provider.issuer}/interaction/callback/login`, callbackParams, { state, nonce, response_type: 'code' });
+				const session = await interactions.getPKCESession(req.authGroup.id, state);
+				console.info(session);
+				const code_verifier = session.payload.code_verifier;
+				// todo error if no session
+				console.info(code_verifier);
+				const tokenset = await req.app.authClient.callback(`${req.provider.issuer}/interaction/callback/login`, callbackParams, {state, nonce, response_type: 'code'/*code_verifier*/});
 				console.info('tokenset');
 				console.info(tokenset);
-				const account = await Account.findByFederated('google', tokenset.claims());
-				console.info(account);
+				const profile = await req.app.authClient.userinfo(tokenset);
+				//console.info(profile);
+				const account = await Account.findByFederated(req.authGroup,'google', profile);
+				//console.info(account);
 				const result = {
 					login: {
 						accountId: account.accountId,
 					},
 				};
-				// todo this is working... should we add the token to a cookie? how do we redirect to the original url?
 				return provider.interactionFinished(req, res, result, {
 					mergeWithLastSubmission: false,
 				});
@@ -502,6 +512,7 @@ export default {
 		ctx.body = await pug.render('logoutSuccess', options);
 	},
 	async renderError(ctx, out, error) {
+		console.error(error);
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../../views'),
 			basedir: 'path/for/pug/extends',

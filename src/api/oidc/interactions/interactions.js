@@ -1,3 +1,5 @@
+import dal from './dal';
+
 const config = require('../../../config');
 const { strict: assert } = require('assert');
 export default {
@@ -201,5 +203,11 @@ export default {
 				primaryDomain: authGroup.primaryDomain
 			}
 		};
+	},
+	async savePKCESession(data) {
+		return dal.savePKCESession(data);
+	},
+	async getPKCESession(ag, state) {
+		return dal.getPKCESession(ag, state);
 	}
 };

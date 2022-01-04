@@ -6487,6 +6487,13 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
+        federate:
+          type: object
+          properties:
+            OIDC:
+              type: array
+              items:
+                $ref: '#/components/schemas/federatedOIDC'
         ui:
           type: object
           properties:
@@ -7386,4 +7393,59 @@ components:
                 items:
                   type: object
 
-
+    federatedOIDC:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - provider
+        - client_id
+        - discovery_url
+      properties:
+        name:
+          type: string
+          description: unique name to label this federated OIDC connection
+        provider:
+          type: string
+          description: is this a social provider like google or a custom OP you're connecting to?
+          enum: # as we add more standards, add them here...
+            - google
+            - custom
+        buttonType:
+          type: string
+          description: if this is a social connection, we can use that platform's logo if desired. standard means its a default system button with your text
+          default: standard
+          enum:
+            - google
+            - standard
+        buttonText:
+          type: string
+        PKCE:
+          type: boolean
+          description: does this OIDC connection require PKCE? Some standard social connections have this and others do not. For example, for Google, this should be false
+          default: false
+        client_id:
+          type: string
+          description: this is the OIDC client id, sometimes referred to as an App ID depending on the platform
+        client_secret:
+          type: string
+          description: if you are not using PKCE, this is a required field
+        response_types:
+          type: array
+          items:
+            type: string
+            example: code
+        grant_types:
+          type: array
+          items:
+            type: string
+            example: authorization_code
+        discovery_url:
+          type: string
+          format: url
+          description: this is the discovery oidc .well-known url usually ending in "/.well-known/openid-configuration"
+        scopes:
+          type: array
+          description: UE Auth will automatically request openid and email scopes. You can specificy additional scopes here if required for security
+          items:
+            type: string

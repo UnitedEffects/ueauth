@@ -34,6 +34,10 @@ export default {
 		};
 	},
 
+	async getFederatedAccount(authGroupId, provider, federatedId) {
+		return dal.getFederatedAccount(authGroupId, provider, federatedId);
+	},
+
 	// @notTested
 	async getAccountByOrg(authGroupId, organization, id) {
 		return dal.getAccountByOrg(authGroupId, organization, id);

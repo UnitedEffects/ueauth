@@ -1,23 +1,30 @@
 import acct from './account';
+import Boom from '@hapi/boom';
+
+const cryptoRandomString = require('crypto-random-string');
+
+function accountWithClaims(id, account) {
+	return {
+		accountId: id,
+		async claims(use, scope) {
+			return {
+				sub: id,
+				group: account.authGroup,
+				username: account.username,
+				email: account.email,
+				verified: account.verified,
+			};
+		},
+	};
+}
 
 class Account {
 	static async findAccount(ctx, id, token) {
-		const account = await acct.getAccount(ctx.authGroup._id, id);
+		let account = await acct.getAccount(ctx.authGroup._id, id);
 		if (!account) {
-			return undefined;
+			throw Boom.unauthorized('Account not found');
 		}
-		return {
-			accountId: id,
-			async claims(use, scope) {
-				return {
-					sub: id,
-					group: account.authGroup,
-					username: account.username,
-					email: account.email,
-					verified: account.verified,
-				};
-			},
-		};
+		return accountWithClaims(id, account);
 	}
 
 	// This can be anything you need to authenticate a user - in OP docs this is called findByLogin
@@ -39,25 +46,55 @@ class Account {
 		}
 	}
 
-	/**
-	 * @todo: The interface specifies findByFederated
-	 * @body: https://github.com/panva/node-oidc-provider/blob/d7a5ba5ba191d5af8e4bed9449cbb43a3d5a1619/example/support/account.js
-	 */
-	static async findByFederated(provider, claims) {
-		const id = `${provider}.${claims.sub}`;
-		/*
-		if (!logins.get(id)) {
-			logins.set(id, new Account(id, claims));
-		}*/
-		console.info('here....');
-		console.info(id);
-		console.info(claims);
-		return {
-			accountId: id,
-			async claims(use, scope) {
-				return claims;
-			},
-		};
+	static async findByFederated(authGroup, provider, claims) {
+		if(!claims.email) throw new Error('Email is a required scope for federation');
+		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
+		const profile = JSON.parse(JSON.stringify(claims));
+		if(profile.group) {
+			// in case you are federating to another UE AUTH
+			profile.federated_group = profile.group;
+			delete profile.group;
+		}
+		if(!account && authGroup.locked === true) {
+			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
+		}
+		if(!account) {
+			// write a new account with an identity...
+			account = await acct.writeAccount({
+				authGroup: authGroup.id,
+				email: claims.email,
+				username: claims.username || claims.email,
+				password: cryptoRandomString({length: 32, type: 'url-safe'}),
+				createdBy: provider,
+				modifiedBy: provider,
+				identities: [{
+					id: claims.sub,
+					provider,
+					profile
+				}]
+			});
+		} else {
+			let ident = [];
+			ident = account.identities.filter((identity) => {
+				return (identity.id === claims.sub && identity.provider === provider);
+			});
+			if (ident.length === 0) {
+				account.identities.push({
+					id: claims.sub,
+					provider,
+					profile
+				});
+				await account.save();
+			} else if (!ident[0].profile || Object.keys(ident[0].profile).length !== Object.keys(profile).length) {
+				account.identities.map((identity) => {
+					if(identity.id === claims.sub) {
+						identity.profile = profile;
+					}
+				});
+				await account.save();
+			}
+		}
+		return accountWithClaims(account.id, account);
 	}
 }
 

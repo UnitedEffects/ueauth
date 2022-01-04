@@ -7,6 +7,49 @@ const config = require('../../config');
 
 mongoose.set('useCreateIndex', true);
 
+const federatedOIDC = new mongoose.Schema({
+	name: {
+		type: String,
+		required: true
+	},
+	provider: {
+		type: String,
+		required: true,
+		enum: ['google', 'custom'] //as we add more standards, add them here...
+	},
+	buttonType: {
+		type: String,
+		default: 'standard',
+		enum: ['google', 'standard']
+	},
+	buttonText: {
+		type: String,
+		default: 'Federated Sign-in'
+	},
+	PKCE: {
+		type: Boolean,
+		default: false
+	},
+	client_id: {
+		type: String,
+		required: true
+	},
+	client_secret: String,
+	response_types: {
+		type: [String],
+		default: ['code']
+	},
+	grant_types: {
+		type: [String],
+		default: ['authorization_code']
+	},
+	discovery_url: {
+		type: String,
+		required: true
+	},
+	scopes: [String]
+}, { _id: false, strict: false });
+
 const authGroup = new mongoose.Schema({
 	createdAt: {
 		type: Date,
@@ -139,6 +182,10 @@ const authGroup = new mongoose.Schema({
 				type: Number,
 				default: ms('10d') / 1000
 			}
+		},
+		federate: {
+			OIDC: [federatedOIDC],
+			SAML: [Object]
 		}
 	},
 	pluginOptions: {
@@ -193,6 +240,8 @@ authGroup.index({ aliasDnsOIDC: 1 }, {
 	}
 });
 
+authGroup.index({ _id: 1, 'config.federate.OIDC.name': 1, 'config.federate.OIDC.provider': 1 }, { unique: true });
+
 // Execute before each user.save() call
 authGroup.pre('save', async function(next) {
 	if(!this.prettyName) this.prettyName = this._id;
@@ -213,8 +262,6 @@ authGroup.set('toJSON', {
 authGroup.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
-	//delete ret.active;
-	//delete ret.owner;
 	delete ret.__v;
 };
 
