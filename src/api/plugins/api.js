@@ -9,6 +9,7 @@ import account from '../accounts/account';
 const config = require('../../config');
 
 const RESOURCE = 'PLUGINS';
+const RESOURCE_NOTIFICATION = 'NOTIFICATION';
 
 const api = {
 	async toggleGlobalNotifications(req, res, next) {
@@ -83,7 +84,7 @@ const api = {
 				console.error(`General Notifications do not require success for this authGroup: ${req.authGroup.id}`);
 				console.error(e.message);
 			}
-			return res.respond(say.created(result, RESOURCE));
+			return res.respond(say.created(result, RESOURCE_NOTIFICATION));
 		} catch (error) {
 			if (error.isAxiosError) {
 				await notifications.deleteNotification(req.authGroup, result.id);
@@ -103,7 +104,7 @@ const api = {
 			}
 			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
 			const result = await notifications.getNotifications(req.authGroup, req.query, includeUser);
-			return res.respond(say.ok(result, RESOURCE));
+			return res.respond(say.ok(result, RESOURCE_NOTIFICATION));
 		} catch (error) {
 			next(error);
 		}
@@ -119,7 +120,7 @@ const api = {
 			const result = await notifications.getNotification(req.authGroup, req.params.id, org);
 			await permissions.enforceOwn(req.permissions, result.createdBy);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-			return res.respond(say.ok(result, RESOURCE));
+			return res.respond(say.ok(result, RESOURCE_NOTIFICATION));
 		} catch (error) {
 			next(error);
 		}
@@ -135,7 +136,7 @@ const api = {
 			const includeUser = (req.permissions.enforceOwn === true) ? req.user.sub : undefined;
 			const result = await notifications.deleteNotification(req.authGroup, req.params.id, includeUser, org);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-			return res.respond(say.ok(result, RESOURCE));
+			return res.respond(say.ok(result, RESOURCE_NOTIFICATION));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', error);
 			next(error);
@@ -146,7 +147,7 @@ const api = {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			const result = await notifications.getMyNotifications(req.authGroup, req.user.sub);
-			return res.respond(say.ok(result, RESOURCE));
+			return res.respond(say.ok(result, RESOURCE_NOTIFICATION));
 		} catch (error) {
 			next(error);
 		}
@@ -157,7 +158,7 @@ const api = {
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			const result = await notifications.getMyNotification(req.authGroup, req.user.sub, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-			return res.respond(say.ok(result, RESOURCE));
+			return res.respond(say.ok(result, RESOURCE_NOTIFICATION));
 		} catch (error) {
 			next(error);
 		}
@@ -170,7 +171,7 @@ const api = {
 			if(req.permissions.enforceOwn === true) throw Boom.unauthorized();
 			const result = await notifications.processNotification(req.globalSettings, req.authGroup, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
-			return res.respond(say.ok(result, RESOURCE));
+			return res.respond(say.ok(result, RESOURCE_NOTIFICATION));
 		}catch (error) {
 			if (error.isAxiosError) {
 				const newError = Boom.failedDependency(`The notification plugin service did not process this request for notification: ${req.params.id}`);
@@ -190,7 +191,7 @@ const api = {
 				message: 'Request received and processing attempted. Validate processed property on each result. This API returns 200 upon completion of the task regardless of outcome for each result',
 				result
 			};
-			return res.respond(say.ok(out, RESOURCE));
+			return res.respond(say.ok(out, RESOURCE_NOTIFICATION));
 		}catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.plugin.notification.error', error);
 			next(error);
