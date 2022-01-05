@@ -48,7 +48,13 @@ router.get('/:group/access/organizations', [
 	m.permissions,
 	m.access('accounts')
 ], user.getAllOrgs);
-router.put('/:group/access/organization/:org/terms', [
+router.get('/:group/access/my/organizations', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], org.getMyOrgs);
+router.put('/:group/access/organizations/:org/terms', [
 	m.validateAuthGroup,
 	m.validateOrganization,
 	m.isAuthenticated,
@@ -198,6 +204,22 @@ router.delete('/:group/products/:id', [
 	m.access('products')
 ], prod.deleteProduct);
 
+// Organization Products
+router.get('/:group/organization/:org/products', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('products')
+], prod.getOrgProducts);
+router.get('/:group/organization/:org/products/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('products')
+], prod.getOrgProduct);
+
 // Roles
 router.get('/:group/products/:product/roles', [
 	m.validateAuthGroup,
@@ -326,6 +348,26 @@ router.delete('/:group/products/:product/permissions/:id', [
 	m.permissions,
 	m.access('permissions')
 ], perm.deletePermission);
+
+// Organization Permissions
+router.get('/:group/organization/:org/products/:product/permissions', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], perm.getOrgPermissions);
+router.get('/:group/organization/:org/products/:product/permissions/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], perm.getOrgPermission);
+
+// Permission Functional
 router.get('/:group/products/:product/permission/targets', [
 	m.validateAuthGroup,
 	m.validateProduct,

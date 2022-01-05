@@ -77,8 +77,12 @@ const mid = {
 				error: ctx.response.body.error,
 				message: 'OIDC'
 			};
-			if (ctx.response.message) error.message = `${error.message} - ${ctx.response.message}`;
-			if (ctx.response.body.error_description) error.message = `${error.message} - ${ctx.response.body.error_description}`;
+			if (ctx.response.body.message) {
+				error.message = ctx.response.body.message;
+			} else {
+				if (ctx.response.message) error.message = `${error.message} - ${ctx.response.message}`;
+				if (ctx.response.body.error_description) error.message = `${error.message} - ${ctx.response.body.error_description}`;
+			}
 			if (error.error === 'server_error') {
 				error.message = `Unexpected OIDC error. ${ctx.response.body.error_description}. Work with admin to review Logs`;
 			}

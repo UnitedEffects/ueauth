@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid';
 import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
+import orgs from '../orgs/orgs';
 import clientAccess from '../oidc/client/access';
 import middle from '../../oidcMiddleware';
 import intApi from './interactions/api';
@@ -340,10 +341,20 @@ function oidcConfig(g, aliasDns = undefined) {
 									else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
 								}
 								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
+									if(ctx.oidc.body.x_organization_context) {
+										const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
+										if(!org || !org.id) {
+											throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
+										}
+										if(!access.orgs.split(' ').includes(org.id)) {
+											throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${org.id}`);
+										}
+										claims['x-organization-context'] = org.id;
+									}
 									claims['x-access-organizations'] = access.orgs;
 								}
-								if(access.orgDomains && (scopes.includes('access') || scopes.includes('access:domains'))) {
-									claims['x-access-domains'] = access.orgDomains;
+								if(access.domains && (scopes.includes('access') || scopes.includes('access:domains'))) {
+									claims['x-access-domains'] = access.domains;
 								}
 								if(access.products && (scopes.includes('access') || scopes.includes('access:products'))) {
 									claims['x-access-products'] = access.products;
@@ -358,8 +369,9 @@ function oidcConfig(g, aliasDns = undefined) {
 						}
 					}
 				} catch (e) {
-					console.error(e);
+					//console.error(e);
 					claims = backup;
+					throw e;
 				}
 			}
 			return claims;

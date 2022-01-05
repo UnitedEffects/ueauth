@@ -58,6 +58,17 @@ const api = {
 			next(error);
 		}
 	},
+	async getMyOrgs(req, res, next) {
+		try {
+			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
+			const orgs = req.permissions.organizations || [];
+			const user = req.user.sub;
+			const result = await org.getTheseOrgs(req.authGroup.id, orgs);
+			return res.respond(say.ok({ sub: user, organizations: result }, RESOURCE));
+		} catch(error) {
+			next(error);
+		}
+	},
 	async patchOrg(req, res, next) {
 		try {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));

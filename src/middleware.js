@@ -166,6 +166,7 @@ const mid = {
 			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
 			const result = await helper.cacheAG(req.query.resetCache, 'AG', req.params.group);
 			req.authGroup = result;
+			req.ogPathGroup = req.params.group;
 			req.params.group = result._id || result.id;
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
@@ -174,15 +175,49 @@ const mid = {
 				req.customDomain = req.hostname;
 				req.customDomainUI = req.authGroup.aliasDnsUi;
 			}
-			return next();
+			// adding organization context for secure API calls into this... may find a better home later
+			return mid.organizationContext(req, res, next);
 		} catch (error) {
-			next(error);
+			console.error(error);
+			next(Boom.notFound('No organization context could be resolved'));
 		}
+	},
+	async organizationContext(req, res, next) {
+		const ogPath = req.ogPathGroup || req.params.group || undefined;
+		if(!req.orgContext) {
+			req.orgContext = {
+				id: 'member'
+			};
+		}
+		// skip this if its just a swagger request
+		if(req.path.includes('swagger')) return next();
+		const primaryOrg = await orgs.getPrimaryOrg(req.authGroup.id); //todo cache
+		if(!primaryOrg) throw Boom.notFound('AuthGroup missing primary organization');
+		req.primaryOrg = primaryOrg;
+		if(ogPath && req.params && req.params.id && req.path === `/${ogPath}/organizations/${req.params.id}`){
+			const orgCon = await orgs.getOrg(req.params.group, req.params.id);
+			if(orgCon) req.orgContext = orgCon;
+			return next();
+		}
+		if(req.params.group && req.params && req.params.org) {
+			const orgCon = await orgs.getOrg(req.params.group, req.params.org);
+			if(orgCon) req.orgContext = orgCon;
+			return next();
+		}
+		if(req.authGroup) {
+			req.orgContext = primaryOrg;
+			return next();
+		}
+		return next();
 	},
 	async validateOrganization (req, res, next) {
 		try {
 			if (!req.params.org) throw Boom.preconditionRequired('organization ID is required');
 			if (!req.authGroup) throw Boom.preconditionRequired('AuthGroup is required');
+			if (req.orgContext) {
+				if(req.orgContext.id === req.params.org) req.organization = req.orgContext;
+				return next();
+			}
 			req.organization = await orgs.getOrg(req.authGroup.id, req.params.org);
 			return next();
 		} catch (error) {
@@ -231,8 +266,9 @@ const mid = {
 			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
 			const result = await helper.cacheAG(req.query.resetCache, 'AG.ALT', req.params.group, false);
 			req.authGroup = result;
+			req.ogPathGroup = req.params.group;
 			req.params.group = result._id;
-			return next();
+			return mid.organizationContext(req, res, next);
 		} catch (error) {
 			next(error);
 		}

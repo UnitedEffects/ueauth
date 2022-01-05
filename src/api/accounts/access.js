@@ -106,7 +106,7 @@ const factory = {
 				ag.pluginOptions.notification.enabled === true) {
 				try {
 					// we will attempt a notification
-					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type, aliasUi, aliasDns);
+					const notificationObject = accessNotificationObject(ag, org.name, user, [], modifiedBy, type, aliasUi, aliasDns, org.id);
 					await n.notify(globalSettings, notificationObject, ag);
 				} catch (error) {
 					ueEvents.emit(authGroup, 'ue.plugin.notification.error', { error });
@@ -138,11 +138,13 @@ const factory = {
 			type: 'user'
 		};
 		let orgs = [];
-		let domains = [];
-		let products = [];
-		let roles = [];
-		let permissions = [];
-		let miscRoles = [];
+		let domains = {};
+		let products = {};
+		let roles = {};
+		let permissions = {
+			member: []
+		};
+		//let miscRoles = [];
 		for(let i=0; i<userAccess.length; i++) {
 			let termsAllow = true;
 			if(userAccess[i].organization && userAccess[i].organization.terms && userAccess[i].organization.terms.required === true) {
@@ -168,29 +170,35 @@ const factory = {
 						if (query.domain) {
 							if (domain.id === query.domain) {
 								accessItem.organization.domainAccess.push(domain.id);
-								domains.push(`${userAccess[i].organization.id}::${domain.id}`);
+								if(!domains[userAccess[i].organization.id]) domains[userAccess[i].organization.id] = [];
+								domains[userAccess[i].organization.id].push(domain.id);
 								if (query.product) {
 									if (domain.associatedOrgProducts.includes(query.product)) {
 										accessItem.organization.productAccess = accessItem.organization.productAccess.concat([query.product]);
-										products = products.concat([query.product]);
+										if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
+										products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat([query.product]);
 									}
 								} else {
 									accessItem.organization.productAccess =
 										accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
-									products = products.concat(domain.associatedOrgProducts);
+									if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
+									products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat(domain.associatedOrgProducts);
 								}
 							}
 						} else {
 							accessItem.organization.domainAccess.push(domain.id);
-							domains.push(`${userAccess[i].organization.id}::${domain.id}`);
+							if(!domains[userAccess[i].organization.id]) domains[userAccess[i].organization.id] = [];
+							domains[userAccess[i].organization.id].push(domain.id);
 							if (query.product) {
 								if (domain.associatedOrgProducts.includes(query.product)) {
 									accessItem.organization.productAccess = accessItem.organization.productAccess.concat([query.product]);
-									products = products.concat([query.product]);
+									if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
+									products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat([query.product]);
 								}
 							} else {
 								accessItem.organization.productAccess = accessItem.organization.productAccess.concat(domain.associatedOrgProducts);
-								products = products.concat(domain.associatedOrgProducts);
+								if(!products[userAccess[i].organization.id]) products[userAccess[i].organization.id] = [];
+								products[userAccess[i].organization.id] = products[userAccess[i].organization.id].concat(domain.associatedOrgProducts);
 							}
 						}
 					}
@@ -215,7 +223,8 @@ const factory = {
 													code: p[1],
 													product: rl.product
 												});
-												permissions.push(`${rl.productCodedId || rl.product}:::${p[1]}`);
+												if(!permissions[userAccess[i].organization.id]) permissions[userAccess[i].organization.id] = [];
+												permissions[userAccess[i].organization.id].push(`${rl.productCodedId || rl.product}:::${p[1]}`);
 											}
 										}
 									});
@@ -229,7 +238,12 @@ const factory = {
 							const rolePush = (rl.organization) ?
 								`${rl.organization}::${rl.productCodedId || rl.product}::${rl.codedId}` :
 								`${rl.productCodedId || rl.product}::${rl.codedId}`;
-							roles.push(rolePush);
+							if(!roles[userAccess[i].organization.id]) roles[userAccess[i].organization.id] = [];
+							roles[userAccess[i].organization.id].push(rolePush);
+							if(rl.productCodedId) {
+								const index = products[userAccess[i].organization.id].indexOf(rl.product);
+								if (index !== -1) products[userAccess[i].organization.id][index] = `${products[userAccess[i].organization.id][index]},${rl.productCodedId}`;
+							}
 						} else if (query.includeMiscRoles === 'true' || query.includeMiscRoles === true) {
 							if (!accessItem.organization.miscRoles) accessItem.organization.miscRoles = [];
 							accessItem.organization.miscRoles.push({
@@ -240,7 +254,8 @@ const factory = {
 							const rolePush = (rl.organization) ?
 								`${rl.organization}::${rl.productCodedId || rl.product}::${rl.codedId}` :
 								`${rl.productCodedId || rl.product}::${rl.codedId}`;
-							miscRoles.push(rolePush);
+							if(!roles['misc']) roles['misc'] = [];
+							roles['misc'].push(rolePush);
 						}
 					}
 					return rl;
@@ -256,14 +271,9 @@ const factory = {
 		if(user.authGroup === authGroup.id) {
 			config.MEMBER_PERMISSIONS.map((p) => {
 				response.authGroup.memberPermissions.push(`${authGroup.id}-${p}`);
-				permissions.push(`${authGroup.id}-${p}`);
+				permissions['member'].push(`${authGroup.id}-${p}`);
 			});
 		}
-
-		// dedup
-		domains = [...new Set(domains)];
-		products = [...new Set(products)];
-		permissions = [...new Set(permissions)];
 
 		if(query.minimized === 'true' || query.minimized === true) {
 			condensed.sub = id;
@@ -271,11 +281,30 @@ const factory = {
 			condensed.owner = response.authGroup.owner;
 			condensed.member = response.authGroup.member;
 			if(orgs.length !== 0) condensed.orgs = orgs.join(' ');
-			if(domains.length !== 0) condensed.orgDomains = domains.join(' ');
-			if(products.length !== 0) condensed.products = products.join(' ');
-			if(roles.length !== 0) condensed.productRoles = roles.join(' ');
-			if(permissions.length !== 0) condensed.permissions = permissions.join(' ');
-			if(miscRoles.length !== 0) condensed.miscRoles = miscRoles.join(' ');
+			if(Object.keys(domains).length !== 0) {
+				condensed.domains = {};
+				for (const org in domains) {
+					condensed.domains[org] = domains[org].join(' ');
+				}
+			}
+			if(Object.keys(products).length !== 0) {
+				condensed.products = {};
+				for (const org in products) {
+					condensed.products[org] = products[org].join(' ');
+				}
+			}
+			if(Object.keys(roles).length !== 0) {
+				condensed.productRoles = {};
+				for (const org in roles) {
+					condensed.productRoles[org] = roles[org].join(' ');
+				}
+			}
+			if(Object.keys(permissions).length !== 0) {
+				condensed.permissions = {};
+				for (const org in permissions) {
+					condensed.permissions[org] = permissions[org].join(' ');
+				}
+			}
 			return condensed;
 		}
 		return response;
@@ -363,7 +392,7 @@ const factory = {
 	}
 };
 
-function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type, aliasUi = undefined, aliasDns = undefined) {
+function accessNotificationObject(authGroup, organization, user, formats = [], activeUser = undefined, type, aliasUi = undefined, aliasDns = undefined, orgId = undefined) {
 	const data = {
 		iss: oidc(authGroup, aliasDns).issuer,
 		createdBy: activeUser,
@@ -380,6 +409,9 @@ function accessNotificationObject(authGroup, organization, user, formats = [], a
 		data.formats = [];
 		if(user.email) data.formats.push('email');
 		if(user.txt) data.formats.push('sms');
+	}
+	if(orgId) {
+		data.organizatin = orgId;
 	}
 	return data;
 }
