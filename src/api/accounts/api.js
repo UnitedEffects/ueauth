@@ -397,7 +397,7 @@ const api = {
 			let id;
 			if(!req.params.id) {
 				if(!req.user || !req.user.sub ) throw Boom.preconditionRequired('Must provide id or valid user token');
-				req.params.id = req.user.sub;
+				id = req.user.sub;
 			} else {
 				id = (req.params.id === 'me') ? req.user.sub : req.params.id;
 				await permissions.enforceOwn(req.permissions, id);

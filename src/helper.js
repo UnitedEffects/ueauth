@@ -3,6 +3,7 @@ import Boom from '@hapi/boom';
 import group from './api/authGroup/group';
 import NodeCache from 'node-cache';
 import product from './api/products/product';
+import orgs from "./api/orgs/orgs";
 
 const myCache = new NodeCache();
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
@@ -102,17 +103,22 @@ export default {
 	async cacheCoreProduct(reset, authGroup) {
 		let result;
 		const cache = (reset) ? undefined : await myCache.get(`${authGroup.id}:CoreAdminPortal`);
-		if(!cache) {
-			result = await product.getCoreProducts(authGroup);
-		} else {
-			result = JSON.parse(cache);
-		}
+		if(!cache) result = await product.getCoreProducts(authGroup);
+		else result = JSON.parse(cache);
 		if(!result) throw Boom.notFound('Core product for this AuthGroup was not identified. Contact the admin.');
 		if (!cache) {
-			const holdThis = JSON.parse(JSON.stringify(result));
-			holdThis._id = result._id;
-			holdThis.core = result.core;
-			await myCache.set(`${authGroup.id}:CoreAdminPortal`, JSON.stringify(holdThis), 86400);
+			await cacheThis(result, authGroup, 'CoreAdminPortal');
+		}
+		return result;
+	},
+	async cachePrimaryOrg(reset, authGroup) {
+		let result;
+		const cache = (reset) ? undefined : await myCache.get(`${authGroup.id}:PrimaryOrg`);
+		if(!cache) result = await orgs.getPrimaryOrg(authGroup.id);
+		else result = JSON.parse(cache);
+		if(!result) throw Boom.notFound('Primary Org for this AuthGroup was not identified. Contact the admin.');
+		if (!cache) {
+			await cacheThis(result, authGroup, 'PrimaryOrg');
 		}
 		return result;
 	},
@@ -130,7 +136,7 @@ export default {
 			holdThis._id = result._id;
 			holdThis.owner = result.owner;
 			holdThis.active = result.active;
-			await myCache.set(`${prefix}:${id}`, JSON.stringify(holdThis), 3600);
+			await myCache.set(`${prefix}:${id}`, JSON.stringify(holdThis), 300);
 		}
 		return result;
 	},
@@ -159,3 +165,10 @@ export default {
 		return (result.associatedProducts.includes(productId));
 	}
 };
+
+async function cacheThis(data, authGroup, key) {
+	const holdThis = JSON.parse(JSON.stringify(data));
+	holdThis._id = data._id;
+	holdThis.core = data.core;
+	await myCache.set(`${authGroup.id}:${key}`, JSON.stringify(holdThis), 3600);
+}
