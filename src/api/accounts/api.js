@@ -350,12 +350,17 @@ const api = {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization to remove');
 			if(!req.permissions.permissions) throw Boom.preconditionRequired('Permission error');
-			const orgLevelPermission = req.permissions.permissions.filter((p) => {
-				//todo this should include product code to work...
+			let orgLevelPermission = [];
+			orgLevelPermission = req.permissions.permissions.filter((p) => {
 				return (p.includes('accounts-organization::delete'));
 			});
-			if(!orgLevelPermission.length) await permissions.enforceOwn(req.permissions, req.params.id);
-			else await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(orgLevelPermission.length === 0) await permissions.enforceOwn(req.permissions, req.params.id);
+			else {
+				// make sure that regardless of actual permission condition, the user belongs to this organization
+				const p = JSON.parse(JSON.stringify(req.permissions));
+				p.enforceOwn = true;
+				await permissions.enforceOwnOrg(p, req.organization.id);
+			}
 			const result = await access.removeOrgFromAccess(req.authGroup.id, req.organization.id, req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			return res.respond(say.ok(result, 'Access'));
