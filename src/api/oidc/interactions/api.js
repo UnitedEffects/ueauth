@@ -144,29 +144,44 @@ export default {
 	async callbackLogin(req, res, next) {
 		try {
 			const nonce = res.locals.cspNonce;
+			const spec = req.params.spec;
+			const provider = req.params.provider;
+			const name = req.params.name;
 			//validate AG
-			return res.render('repost', { layout: false, upstream: 'google', nonce, authGroup: req.authGroup.id });
+			return res.render('repost', { layout: false, upstream: `${spec}.${provider}.${name}`, nonce, authGroup: req.authGroup.id });
 		} catch (error) {
 			next (error);
 		}
 	},
 	async oidcFederationClient(req, res, next) {
 		try {
-			//todo REFACTOR ALL OF THIS
 			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
-			if (req.app.authIssuer) return next();
-			const openid = require('openid-client');
-			const google = await openid.Issuer.discover('https://accounts.google.com/.well-known/openid-configuration')
-			const client = new google.Client({
-				client_id: '...',
-				response_types: ['code'],
-				redirect_uris: [`${req.provider.issuer}/interaction/callback/login`],
-				grant_types: ['authorization_code'],
-				client_secret: '...'
-			});
-			req.provider.app.context.google = client;
-			req.app.authIssuer = google;
-			req.app.authClient = client;
+			if (req.authIssuer) return next();
+			if(req.body.upstream) {
+				const upstream = req.body.upstream.split('.');
+				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
+				const redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
+				const openid = require('openid-client');
+				const google = await openid.Issuer.discover(myConfig.discovery_url);
+				const clientOptions = {
+					client_id: myConfig.client_id,
+					response_types: [myConfig.response_type],
+					redirect_uris: [redirectUri],
+					grant_types: [myConfig.grant_type]
+				};
+				if(myConfig.PKCE === false) {
+					clientOptions.client_secret = myConfig.client_secret;
+				} else {
+					clientOptions.token_endpoint_auth_method = 'none';
+				}
+
+				const client = new google.Client(clientOptions);
+				req.provider.app.context.google = client;
+				req.authIssuer = google;
+				req.authClient = client;
+				req.authSpec = spec;
+				req.fedConfig = myConfig;
+			}
 			return next();
 		} catch (error) {
 			next(error);
@@ -175,71 +190,62 @@ export default {
 	async federated(req, res, next) {
 		try {
 			const provider = req.provider;
-			/*
-			const { interactionFinished } = provider;
-			provider.interactionFinished = (...args) => {
-				const { login } = args[2];
-				//todo validate login.accountId
-				if (login) {
-					Object.assign(args[2].login, {
-						//acr: 'urn:mace:incommon:iap:bronze',
-						amr: login.accountId.startsWith('google.') ? ['google'] : ['pwd'],
-					});
-				}
-				return interactionFinished.call(provider, ...args);
-			};
-			*/
 			const { prompt: { name } } = await provider.interactionDetails(req, res);
 			assert.equal(name, 'login');
-
 			const path = `/${req.authGroup.id}/interaction/${req.params.uid}/federated`;
-
-			switch (req.body.upstream) {
-			case 'google': {
-				// calculate the url where we want to redirect to
-				const callbackParams = req.app.authClient.callbackParams(req);
-				// init
+			switch (req.authSpec.toLowerCase()) {
+			case 'oidc': {
+				const callbackParams = req.authClient.callbackParams(req);
+				const myConfig = req.fedConfig;
+				const callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if (!Object.keys(callbackParams).length) {
-					const code_verifier = generators.codeVerifier();
-					const code_challenge = generators.codeChallenge(code_verifier);
 					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					const nonce = crypto.randomBytes(32).toString('hex');
-					await interactions.savePKCESession({
-						payload: {
-							state,
-							auth_group: req.authGroup.id,
-							code_challenge,
-							code_verifier
-						}
-					});
-					res.cookie('google.state', state, { path, sameSite: 'strict' });
-					res.cookie('google.nonce', nonce, { path, sameSite: 'strict' });
-
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, nonce, { path, sameSite: 'strict' });
 					res.status = 303;
-					// this worked! need to update the redirectUrl in ueauth.io DB to allow it...
-					return res.redirect(req.app.authClient.authorizationUrl({ state, nonce,
-						scope: 'openid email', /*code_challenge, code_challenge_method: 'S256'*/
-					}));
-				}
+					const authUrlOptions = {
+						state,
+						nonce,
+						scope: `openid email ${myConfig.scopes.join(' ')}`.trim()
+					};
+					if(myConfig.PKCE === true) {
+						const code_verifier = generators.codeVerifier();
+						const code_challenge = generators.codeChallenge(code_verifier);
+						await interactions.savePKCESession({
+							payload: {
+								state,
+								auth_group: req.authGroup.id,
+								code_challenge,
+								code_verifier
+							}
+						});
+						authUrlOptions.code_challenge = code_challenge;
+						authUrlOptions.code_challenge_method = 'S256';
+					}
 
+					return res.redirect(req.authClient.authorizationUrl(authUrlOptions));
+				}
 				// callback
-				//todo throw error if you don't see the right cookies
-				const state = req.cookies['google.state'];
-				res.cookie('google.state', null, { path });
-				const nonce = req.cookies['google.nonce'];
-				res.cookie('google.nonce', null, { path });
-				const session = await interactions.getPKCESession(req.authGroup.id, state);
-				console.info(session);
-				const code_verifier = session.payload.code_verifier;
-				// todo error if no session
-				console.info(code_verifier);
-				const tokenset = await req.app.authClient.callback(`${req.provider.issuer}/interaction/callback/login`, callbackParams, {state, nonce, response_type: 'code'/*code_verifier*/});
-				console.info('tokenset');
-				console.info(tokenset);
-				const profile = await req.app.authClient.userinfo(tokenset);
-				//console.info(profile);
-				const account = await Account.findByFederated(req.authGroup,'google', profile);
-				//console.info(account);
+				const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
+				const nonce = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`];
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, { path });
+				const callbackOptions = {
+					state,
+					nonce,
+					response_type: myConfig.response_type
+				};
+				if(myConfig.PKCE === true) {
+					const session = await interactions.getPKCESession(req.authGroup.id, state);
+					if(!session) throw Boom.badRequest('PKCE Session not found');
+					callbackOptions.code_verifier = session.payload.code_verifier;
+				}
+				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
+				const profile = await req.authClient.userinfo(tokenSet);
+				const account = await Account.findByFederated(req.authGroup,
+					`${myConfig.spec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`,
+					profile);
 				const result = {
 					login: {
 						accountId: account.accountId,
@@ -250,7 +256,7 @@ export default {
 				});
 			}
 			default:
-				return undefined;
+				throw Boom.badRequest('Unknown Federation Specification');
 			}
 		} catch (err) {
 			next(err);
@@ -526,3 +532,28 @@ export default {
 		ctx.body = await pug.render('error', options);
 	}
 };
+
+async function checkProvider(upstream, authGroup) {
+	if (upstream.length !== 3) throw Boom.badData(`Unknown upstream: ${upstream}`);
+	const spec = upstream[0];
+	const provider = upstream[1];
+	const name = upstream[2].replace(/_/g, ' ');
+	let agSpecs = [];
+	if(authGroup.config && authGroup.config.federate) {
+		Object.keys(authGroup.config.federate).map((key) => {
+			if(key.toLowerCase() === spec.toLowerCase()) {
+				agSpecs = authGroup.config.federate[key];
+			}
+		});
+	}
+
+	if(agSpecs.length === 0) {
+		throw Boom.badData(`Unsupported spec ${spec} or provider ${provider}`);
+	}
+
+	const option = agSpecs.filter((config) => {
+		return (config.provider.toLowerCase() === provider.toLowerCase() && config.name.toLowerCase() === name.toLowerCase());
+	});
+	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${name}`);
+	return { spec, provider, name, myConfig: option[0]};
+}

@@ -25,8 +25,26 @@ export default {
 		return data;
 	},
 	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
+		const loginOptions = [];
+		// designing for OIDC only for now, we will incorporate others as they are added
+		if(authGroup.config.federate && authGroup.config.federate.OIDC) {
+			authGroup.config.federate.OIDC.map((connect) => {
+				loginOptions.push({
+					code: `OIDC.${connect.provider}.${connect.name.replace(/ /g, '_')}`,
+					upstream: connect.provider,
+					button: connect.buttonType,
+					text: connect.buttonText
+				});
+			});
+		}
+		const loginButtons = loginOptions.filter((option) => {
+			return (client.client_federation_options.includes(option.code));
+		});
+		const altLogin = (params.passwordLess === true || loginButtons.length > 0);
 		return {
 			client,
+			altLogin,
+			loginButtons,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
 			authGroup: authGroup._id,

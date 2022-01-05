@@ -35,13 +35,13 @@ const federatedOIDC = new mongoose.Schema({
 		required: true
 	},
 	client_secret: String,
-	response_types: {
-		type: [String],
-		default: ['code']
+	response_type: {
+		type: String,
+		default: 'code'
 	},
-	grant_types: {
-		type: [String],
-		default: ['authorization_code']
+	grant_type: {
+		type: String,
+		default: 'authorization_code'
 	},
 	discovery_url: {
 		type: String,

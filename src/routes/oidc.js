@@ -49,11 +49,11 @@ router.post('/:group/interaction/:uid/federated', [
 	m.validateAuthGroup,
 	interactions.oidcFederationClient
 ], interactions.federated);
-router.get('/:group/interaction/callback/login', [
+router.get('/:group/interaction/callback/:spec/:provider/:name', [
 	jsonParser,
 	urlParser,
 	m.setNoCache,
-	m.validateAuthGroup
+	m.validateAuthGroup,
 ], interactions.callbackLogin);
 // confirm / consent interaction
 router.post('/:group/interaction/:uid/confirm', [
