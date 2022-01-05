@@ -72,6 +72,7 @@ const api = {
 			if(req.authGroup.active === false) throw Boom.forbidden('You can not add roles in an inactive group');
 			if(!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
+			if(req.body.core === true) await permissions.enforceRoot(req.permissions);
 			if (req.user && req.user.sub) {
 				req.body.createdBy = req.user.sub;
 				req.body.modifiedBy = req.user.sub;

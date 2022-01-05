@@ -9,6 +9,7 @@ import Joi from 'joi';
 export default {
 	async writeCustomRole(data) {
 		data.custom = true;
+		data.core = false;
 		data.permissions = [];
 		const output = await dal.writeRole(data);
 		ueEvents.emit(data.authGroup, 'ue.role.create', output);

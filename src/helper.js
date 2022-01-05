@@ -147,8 +147,11 @@ export default {
 		const result = await model.findOne({ _id: val[0], coded: val[1], authGroup, product });
 		return !!result;
 	},
-	async validateProductReference (model, id, authGroup) {
+	async validateProductReference (model, id, authGroup, core = false) {
 		const result = await model.findOne({ _id: id, authGroup });
+		if (result && result.meta && result.meta.core === 'groupAdmin' ) {
+			if(core === false) return false;
+		}
 		return !!result;
 	},
 	async validateClientReference (model, id, authGroup) {

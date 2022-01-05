@@ -173,6 +173,7 @@ router.post('/:group/account', [
 	m.isAuthorizedToCreateAccount,
 	m.captureAuthGroupInBody,
 	m.getGlobalPluginSettings,
+	m.organizationContext,
 	m.permissions,
 	m.access('accounts')
 ], account.writeAccount);
