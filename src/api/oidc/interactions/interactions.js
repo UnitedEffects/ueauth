@@ -173,8 +173,8 @@ export default {
 
 		const consent = {};
 
-		// example had this as a condition on intDetails, but that created an intermittent bug where consent hung
-		consent.grantId = grantId;
+		// todo bring this conditional back to see if error returns
+		if(!intDetails.grantId) consent.grantId = grantId;
 
 		return { consent };
 	},
