@@ -184,8 +184,8 @@ const authGroup = new mongoose.Schema({
 			}
 		},
 		federate: {
-			OIDC: [federatedOIDC],
-			SAML: [Object]
+			oidc: [federatedOIDC],
+			saml: [Object]
 		}
 	},
 	pluginOptions: {

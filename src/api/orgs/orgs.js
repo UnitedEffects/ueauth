@@ -16,6 +16,12 @@ export default {
 		const product = await prod.getCoreProduct(agId, 'orgAdmin');
 		if(!data.associatedProducts) data.associatedProducts = [];
 		data.associatedProducts.push(product._id);
+		if(data.sso) {
+			if(Object.keys(data.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
+			if(data.sso.oidc) {
+				data.sso.oidc.provider = data.name.toLowerCase().replace(/ /g, '_');
+			}
+		}
 		const output = await dal.writeOrg(data);
 		ueEvents.emit(data.authGroup, 'ue.organization.create', output);
 		return output;
@@ -107,6 +113,9 @@ async function standardPatchValidation(original, patched) {
 	if(original.core === true) {
 		definition.name = Joi.string().valid(original.name).required();
 	}
+	if(patched.sso) {
+		if(Object.keys(patched.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
+	}
 	const orgSchema = Joi.object().keys(definition);
 	const result = await orgSchema.validateAsync(patched, {
 		allowUnknown: true
@@ -136,6 +145,9 @@ async function restrictedPatchValidation(o, p) {
 	};
 	if(original.core === true) {
 		definition.name = Joi.string().valid(original.name).required();
+	}
+	if(patched.sso) {
+		if(Object.keys(patched.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
 	}
 	const orgSchema = Joi.object().keys(definition);
 	const result = await orgSchema.validateAsync(patched, {

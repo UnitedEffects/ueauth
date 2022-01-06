@@ -7240,6 +7240,12 @@ components:
           type: boolean
           description: When this is set to true, any Organization User Profile creation or update events result in a notification to the associated Account (user)
           default: false
+        sso:
+          type: object
+          description: while the API may define multiple options, you can only ever have one of these at a time on an organization
+          properties:
+            oidc:
+              $ref: '#/components/schemas/ssoOidcSpec'
         meta:
           type: string
           description: additional custom structured information
@@ -7393,31 +7399,17 @@ components:
                 items:
                   type: object
 
-    federatedOIDC:
+    ssoOidcSpec:
       type: object
       additionalProperties: false
       required:
         - name
-        - provider
         - client_id
         - discovery_url
       properties:
         name:
           type: string
           description: unique name to label this federated OIDC connection
-        provider:
-          type: string
-          description: is this a social provider like google or a custom OP you're connecting to?
-          enum: # as we add more standards, add them here...
-            - google
-            - custom
-        buttonType:
-          type: string
-          description: if this is a social connection, we can use that platform's logo if desired. standard means its a default system button with your text
-          default: standard
-          enum:
-            - google
-            - standard
         buttonText:
           type: string
         PKCE:
@@ -7449,3 +7441,28 @@ components:
           description: UE Auth will automatically request openid and email scopes. You can specificy additional scopes here if required for security
           items:
             type: string
+
+    federatedOIDC:
+      type: object
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/ssoOidcSpec'
+      required:
+        - name
+        - provider
+        - client_id
+        - discovery_url
+      properties:
+        provider:
+          type: string
+          description: is this a social provider like google or a custom OP you're connecting to?
+          enum: # as we add more standards, add them here...
+            - google
+            - custom
+        buttonType:
+          type: string
+          description: if this is a social connection, we can use that platform's logo if desired. standard means its a default system button with your text
+          default: standard
+          enum:
+            - google
+            - standard

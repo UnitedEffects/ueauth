@@ -3,6 +3,49 @@ import { v4 as uuid } from 'uuid';
 import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
+const federatedOIDC = new mongoose.Schema({
+	name: {
+		type: String,
+		required: true
+	},
+	provider: {
+		type: String,
+		required: true,
+		default: 'custom'
+	},
+	buttonType: {
+		type: String,
+		default: 'standard',
+		enum: ['standard']
+	},
+	buttonText: {
+		type: String,
+		default: 'Federated Sign-in'
+	},
+	PKCE: {
+		type: Boolean,
+		default: false
+	},
+	client_id: {
+		type: String,
+		required: true
+	},
+	client_secret: String,
+	response_type: {
+		type: String,
+		default: 'code'
+	},
+	grant_type: {
+		type: String,
+		default: 'authorization_code'
+	},
+	discovery_url: {
+		type: String,
+		required: true
+	},
+	scopes: [String]
+}, { _id: false, strict: false });
+
 const orgSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
@@ -79,6 +122,10 @@ const orgSchema = new mongoose.Schema({
 	restrictEmailDomains: {
 		type: Boolean,
 		default: false
+	},
+	sso: {
+		oidc: federatedOIDC,
+		saml: Object
 	},
 	_id: {
 		type: String,
