@@ -104,7 +104,11 @@ function oidcConfig(g, aliasDns = undefined) {
 		},
 		scopes: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes),
 		interactions: {
-			url(ctx, interaction) {
+			async url(ctx, interaction) {
+				if(ctx.request && ctx.request.query && ctx.request.query.org) {
+					interaction.params.org = ctx.request.query.org;
+					await interaction.save(g.config.ttl.interaction);
+				}
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
 			},
 		},

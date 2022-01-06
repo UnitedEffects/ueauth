@@ -18,9 +18,6 @@ export default {
 		data.associatedProducts.push(product._id);
 		if(data.sso) {
 			if(Object.keys(data.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
-			if(data.sso.oidc) {
-				data.sso.oidc.provider = data.name.toLowerCase().replace(/ /g, '_');
-			}
 		}
 		const output = await dal.writeOrg(data);
 		ueEvents.emit(data.authGroup, 'ue.organization.create', output);
@@ -80,6 +77,7 @@ export default {
 			throw Boom.badRequest('You are attempting to remove a product from this organization that is referenced in domains. Remove from the domains first', domains);
 		}
 		patched.modifiedBy = modifiedBy;
+
 		if(limited === true) {
 			await restrictedPatchValidation(org, patched);
 		} else await standardPatchValidation(org, patched);

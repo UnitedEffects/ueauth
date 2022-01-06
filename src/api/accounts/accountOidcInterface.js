@@ -67,6 +67,7 @@ class Account {
 				password: cryptoRandomString({length: 32, type: 'url-safe'}),
 				createdBy: provider,
 				modifiedBy: provider,
+				verified: true,
 				identities: [{
 					id: claims.sub,
 					provider,

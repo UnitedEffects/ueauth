@@ -27,10 +27,10 @@ export default {
 	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
 		const loginOptions = [];
 		// designing for OIDC only for now, we will incorporate others as they are added
-		if(authGroup.config.federate && authGroup.config.federate.OIDC) {
-			authGroup.config.federate.OIDC.map((connect) => {
+		if(authGroup.config.federate && authGroup.config.federate.oidc) {
+			authGroup.config.federate.oidc.map((connect) => {
 				loginOptions.push({
-					code: `OIDC.${connect.provider}.${connect.name.replace(/ /g, '_')}`,
+					code: `oidc.${connect.provider}.${connect.name.replace(/ /g, '_')}`.toLowerCase(),
 					upstream: connect.provider,
 					button: connect.buttonType,
 					text: connect.buttonText
@@ -38,7 +38,7 @@ export default {
 			});
 		}
 		const loginButtons = loginOptions.filter((option) => {
-			return (client.client_federation_options.includes(option.code));
+			return (client.client_federation_options.join(' | ').toLowerCase().includes(option.code));
 		});
 		const altLogin = (params.passwordLess === true || loginButtons.length > 0);
 		return {
@@ -47,7 +47,7 @@ export default {
 			loginButtons,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
-			authGroup: authGroup._id,
+			authGroup: authGroup._id || authGroup.id,
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
 			locked: authGroup.locked,

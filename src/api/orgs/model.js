@@ -8,11 +8,6 @@ const federatedOIDC = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-	provider: {
-		type: String,
-		required: true,
-		default: 'custom'
-	},
 	buttonType: {
 		type: String,
 		default: 'standard',
@@ -122,6 +117,10 @@ const orgSchema = new mongoose.Schema({
 	restrictEmailDomains: {
 		type: Boolean,
 		default: false
+	},
+	ssoLimit: {
+		type: Boolean,
+		default: true
 	},
 	sso: {
 		oidc: federatedOIDC,

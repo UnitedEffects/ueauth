@@ -3,6 +3,8 @@ import { generators } from 'openid-client';
 import Account from '../../accounts/accountOidcInterface';
 import {say} from '../../../say';
 import acc from '../../accounts/account';
+import org from '../../orgs/orgs';
+import log from '../../logging/logs';
 import iat from '../initialAccess/iat';
 import interactions from './interactions';
 import n from '../../plugins/notifications/notifications';
@@ -35,6 +37,8 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
+			const authGroup = JSON.parse(JSON.stringify(req.authGroup));
+			authGroup._id = req.authGroup;
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -44,20 +48,45 @@ export default {
 					req.authGroup.config.passwordLessSupport === true);
 			}
 
-			const client = await provider.Client.find(params.client_id);
+			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
+
+			if(params.org && client.client_allow_org_federation===true && req.authGroup) {
+				try {
+					const organization = await org.getOrg(req.authGroup, params.org);
+					if(!organization) throw 'no org';
+					// doing this for just oidc now and will make more robust later
+					if(organization.sso && organization.sso.oidc) {
+						const orgSSO = JSON.parse(JSON.stringify(organization.sso.oidc));
+						orgSSO.provider = `org:${params.org}`;
+						const code = `oidc.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
+						if(!client.client_federation_options || organization.ssoLimit === true) {
+							client.client_federation_options = [];
+						}
+						if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
+						if(!authGroup.config.federate) {
+							authGroup.config.federate = {
+								oidc: []
+							};
+						}
+						authGroup.config.federate.oidc.push(orgSSO);
+					}
+				} catch(error) {
+					log.notify('Issue with org SSO');
+				}
+			}
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			switch (prompt.name) {
 			case 'login': {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
 			}
 			case 'consent': {
 				if(client.client_skip_consent === true) {
-					const result = await interactions.confirmAuthorization(provider, intDetails, req.authGroup);
+					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				return res.render('interaction', interactions.consentLogin(req.authGroup, client, debug, session, prompt, uid, params));
+				return res.render('interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
 				return undefined;
@@ -143,6 +172,7 @@ export default {
 	},
 	async callbackLogin(req, res, next) {
 		try {
+			// note: organization sso callbacks should be /callback/{spec}/org:org_id/${name}
 			const nonce = res.locals.cspNonce;
 			const spec = req.params.spec;
 			const provider = req.params.provider;
@@ -533,11 +563,27 @@ export default {
 	}
 };
 
-async function checkProvider(upstream, authGroup) {
+async function checkProvider(upstream, ag) {
 	if (upstream.length !== 3) throw Boom.badData(`Unknown upstream: ${upstream}`);
+	const authGroup = JSON.parse(JSON.stringify(ag));
 	const spec = upstream[0];
 	const provider = upstream[1];
 	const name = upstream[2].replace(/_/g, ' ');
+	let organization = undefined;
+	if(provider.includes('org:')) {
+		const orgId = provider.split(':')[1];
+		organization = JSON.parse(JSON.stringify(await org.getOrg(authGroup.id, orgId)));
+		if(!authGroup.config.federate) {
+			authGroup.config.federate = {};
+		}
+		if(!authGroup.config.federate[spec]) {
+			authGroup.config.federate[spec] = [];
+		}
+		if(organization.sso && organization.sso[spec]){
+			organization.sso[spec].provider = provider;
+			authGroup.config.federate[spec].push(organization.sso[spec]);
+		}
+	}
 	let agSpecs = [];
 	if(authGroup.config && authGroup.config.federate) {
 		Object.keys(authGroup.config.federate).map((key) => {
