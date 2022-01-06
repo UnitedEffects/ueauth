@@ -74,7 +74,7 @@ describe('Middleware tests', () => {
 
 	test('make sure catchError response works for non-api, non-get', async () => {
 		try {
-			const err = Boom.badRequest('This is a test'), req = { path: '/test', method: 'POST' }, res = { respond: jest.fn(), header: jest.fn() }, next = jest.fn();
+			const err = Boom.badRequest('This is a test'), req = { path: '/test', method: 'POST', headers: {} }, res = { respond: jest.fn(), header: jest.fn() }, next = jest.fn();
 			await m.catchErrors(err, req, res, next);
 			const expected = {
 				error: 'Bad Request',

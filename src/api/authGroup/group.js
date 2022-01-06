@@ -47,7 +47,7 @@ const agp = {
 				}
 			}
 		}
-		if(data.config.federate && data.config.federate.OIDC && data.config.federate.OIDC.PKCE === false) {
+		if(data.config && data.config.federate && data.config.federate.OIDC && data.config.federate.OIDC.PKCE === false) {
 			if(!data.config.federate.client_secret) throw Boom.badData('When PKCE is false, you must provide a client_secret');
 		}
 		const output = await dal.write(data);

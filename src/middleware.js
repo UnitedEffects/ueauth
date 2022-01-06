@@ -70,7 +70,7 @@ const mid = {
 			if(config.ENV !== 'production') console.info(err);
 			const error = await handleErrors.parse(err, req.requestId);
 			if(!req.path.includes('/api')) {
-				if(!req.headers.accept.split(',').includes('application/json')) {
+				if(req.headers && req.headers.accept && !req.headers.accept.split(',').includes('application/json')) {
 					if(error.statusCode === 404) {
 						return res.render('error', { title: 'Not sure what you\'re looking for...', message: 'But, it looks like you may have gone to a bad URL', details: Object.entries(error).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('') });
 					}
