@@ -6490,7 +6490,7 @@ components:
         federate:
           type: object
           properties:
-            OIDC:
+            oidc:
               type: array
               items:
                 $ref: '#/components/schemas/federatedOIDC'
