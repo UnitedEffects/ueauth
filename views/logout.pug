@@ -9,18 +9,6 @@ block content
                 .col-lg-12
                     .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
                         h2=title
-                        script(nonce=nonce).
-                            window.addEventListener('load', () => {
-                                const referrer = document.referrer;
-                                console.info(referrer);
-                                if (referrer && referrer !== "") {
-                                    const cancelButton = document.getElementById('cancel');
-                                    cancelButton.style.display = 'none';
-                                    const altCancel = document.getElementById('altCancel');
-                                    altCancel.href = referrer;
-                                    altCancel.style.visibility = 'inherit';
-                                }
-                            })
                         if skipPrompt===true
                             p='Logging out, one second...'
                         else
@@ -34,7 +22,6 @@ block content
                             else
                                 button.btn.btn-outline-dark.m-r-5(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
                                 button.btn.btn-outline-dark(type="submit" form=formId id='cancel') Cancel
-                                a.btn.btn-outline-dark(type="button" id='altCancel' style='visibility:hidden;') Cancel
                         .m-t-10
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]

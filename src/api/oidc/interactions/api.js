@@ -549,7 +549,7 @@ export default {
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('logoutSuccess', options);
+		ctx.body = await pug.render('logoutSuccess', { ...options, nonce: ctx.res.locals.cspNonce });
 	},
 	async renderError(ctx, out, error) {
 		console.error(error);
@@ -563,7 +563,7 @@ export default {
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('error', options);
+		ctx.body = await pug.render('error', { ...options, nonce: ctx.res.locals.cspNonce });
 	}
 };
 
