@@ -14,17 +14,14 @@ block content
                 }
                 return query;
             }
-            var fields = parseQuery(window.location.search);
+            var fields = parseQuery(window.location.search || window.location.hash.slice(1));
             fields.upstream = '#{upstream}'
             console.log(fields);
             var uid = fields.state.split('|')[0]
-            console.info('here');
             var authGroup = '#{authGroup}'
             var form = document.createElement('form');
             form.method = 'POST';
             form.action = '/' + authGroup + '/interaction/' + uid + '/federated';
-            console.info('here too');
-            console.log(form.action);
             Object.keys(fields).forEach((key) => {
                 if (key) { // empty fragment will yield {"":""};
                     var input = document.createElement('input');
@@ -42,5 +39,4 @@ block content
                 console.log('error');
                 window.location.hash = "";
             }
-            console.info('here.........')
             form.submit();

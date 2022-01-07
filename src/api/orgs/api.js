@@ -18,7 +18,7 @@ const api = {
 			}
 			// make sure this can not be true
 			req.body.core = false;
-			const organization = await org.writeOrg(req.authGroup.id, req.body, req.authGroup.aliasDnsOIDC);
+			let organization = await org.writeOrg(req.authGroup.id, req.body);
 			const adminDomain = {
 				name: `${req.authGroup.name} - ${organization.name} - Administrative Domain`,
 				description: `Use this domain to enable user and permissions management of ${organization.name}. Do not delete as system access will be compromised.`,
@@ -32,6 +32,7 @@ const api = {
 				core: true
 			};
 			const domain = await dom.writeDomain(adminDomain);
+			organization = includeSSORedirectURIs(organization, req.authGroup.aliasDnsOIDC);
 			return res.respond(say.created({ organization, domain }, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.organization.error', error);
@@ -53,8 +54,9 @@ const api = {
 			if(!req.params.group) return next(Boom.preconditionRequired('Must provide authGroup'));
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			await permissions.enforceOwnOrg(req.permissions, req.params.id);
-			const result = await org.getOrg(req.params.group, req.params.id);
+			let result = await org.getOrg(req.authGroup.id, req.params.id);
 			if (!result) return next(Boom.notFound(`id requested was ${req.params.id}`));
+			result = includeSSORedirectURIs(result, req.authGroup.aliasDnsOIDC);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -77,7 +79,8 @@ const api = {
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			await permissions.enforceOwnOrg(req.permissions, req.params.id);
 			const organization = await org.getOrg(req.authGroup.id, req.params.id);
-			const result = await org.patchOrg(req.authGroup, organization, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', req.permissions.enforceOwn);
+			let result = await org.patchOrg(req.authGroup, organization, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', req.permissions.enforceOwn);
+			result = includeSSORedirectURIs(result, req.authGroup.aliasDnsOIDC);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.organization.error', error);
@@ -101,5 +104,23 @@ const api = {
 	},
 };
 
+function includeSSORedirectURIs(data, aliasDns) {
+	const output = JSON.parse(JSON.stringify(data));
+	if(output.sso && output.sso.oidc) {
+		const connect = output.sso.oidc;
+		output.sso.redirectUris = [];
+		output.sso.redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/oidc/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+		if(output.externalId) {
+			output.sso.redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/oidc/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+		}
+		if(aliasDns) {
+			output.sso.redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/oidc/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+			if(output.externalId) {
+				output.sso.redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/oidc/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+			}
+		}
+	}
+	return output;
+}
 
 export default api;

@@ -18,6 +18,22 @@ function accountWithClaims(id, account) {
 	};
 }
 
+function cleanProfile(profile) {
+	if(profile.group) {
+		// in case you are federating to another UE AUTH
+		profile.federated_group = profile.group;
+		delete profile.group;
+	}
+	if(profile.iss) delete profile.iss;
+	if(profile.azp) delete profile.azp;
+	if(profile.aud) delete profile.aud;
+	if(profile.nonce) delete profile.nonce;
+	if(profile.iat) delete profile.iat;
+	if(profile.exp) delete profile.exp;
+	if(profile.jti) delete profile.jti;
+	return profile;
+}
+
 class Account {
 	static async findAccount(ctx, id, token) {
 		let account = await acct.getAccount(ctx.authGroup._id, id);
@@ -49,21 +65,17 @@ class Account {
 	static async findByFederated(authGroup, provider, claims) {
 		if(!claims.email) throw new Error('Email is a required scope for federation');
 		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
-		const profile = JSON.parse(JSON.stringify(claims));
-		if(profile.group) {
-			// in case you are federating to another UE AUTH
-			profile.federated_group = profile.group;
-			delete profile.group;
-		}
+		const profile = cleanProfile(JSON.parse(JSON.stringify(claims)));
 		if(!account && authGroup.locked === true) {
 			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
 		}
+
 		if(!account) {
 			// write a new account with an identity...
 			account = await acct.writeAccount({
 				authGroup: authGroup.id,
-				email: claims.email,
-				username: claims.username || claims.email,
+				email: profile.email,
+				username: profile.username || profile.email,
 				password: cryptoRandomString({length: 32, type: 'url-safe'}),
 				createdBy: provider,
 				modifiedBy: provider,

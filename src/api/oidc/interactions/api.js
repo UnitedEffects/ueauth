@@ -196,7 +196,7 @@ export default {
 				}
 				const redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
 				const openid = require('openid-client');
-				const google = await openid.Issuer.discover(myConfig.discovery_url);
+				const issuer = await openid.Issuer.discover(myConfig.discovery_url);
 				const clientOptions = {
 					client_id: myConfig.client_id,
 					response_types: [myConfig.response_type],
@@ -209,9 +209,9 @@ export default {
 					clientOptions.token_endpoint_auth_method = 'none';
 				}
 
-				const client = new google.Client(clientOptions);
+				const client = new issuer.Client(clientOptions);
 				req.provider.app.context.google = client;
-				req.authIssuer = google;
+				req.authIssuer = issuer;
 				req.authClient = client;
 				req.authSpec = spec;
 				req.fedConfig = myConfig;
@@ -276,9 +276,9 @@ export default {
 					callbackOptions.code_verifier = session.payload.code_verifier;
 				}
 				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
-				const profile = await req.authClient.userinfo(tokenSet);
+				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
 				const account = await Account.findByFederated(req.authGroup,
-					`${myConfig.spec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`,
+					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 					profile);
 				const result = {
 					login: {

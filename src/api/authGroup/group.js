@@ -48,15 +48,6 @@ const agp = {
 			}
 		}
 		const output = await dal.write(data);
-		if(output.config && output.config.federate && output.config.federate.oidc.length) {
-			output.config.federate.oidc.map((connect, index) => {
-				output.config.federate.oidc[index].redirectUris = [];
-				output.config.federate.oidc[index].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${output._id||output.id}/interaction/callback/oidc/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
-				if(output.aliasDnsOIDC) {
-					output.config.federate.oidc[index].redirectUris.push(`${config.PROTOCOL}://${output.aliasDnsOIDC}/${output._id||output.id}/interaction/callback/oidc/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
-				}
-			});
-		}
 		ueEvents.emit(output._id || output.id, 'ue.group.create', output);
 		return output;
 	},
@@ -91,7 +82,7 @@ const agp = {
 
 	// @notTested
 	async getOne(id) {
-		return dal.getOneByEither(id, false);
+		return await dal.getOneByEither(id, false);
 	},
 
 	// @notTested
