@@ -5,6 +5,7 @@ import dom from '../domains/domain';
 import permissions from '../../permissions';
 import ueEvents from '../../events/ueEvents';
 
+const config = require('../../config');
 const RESOURCE = 'Organization';
 
 const api = {
