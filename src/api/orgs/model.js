@@ -117,7 +117,7 @@ const orgSchema = new mongoose.Schema({
 	},
 	ssoLimit: {
 		type: Boolean,
-		default: true
+		default: false
 	},
 	sso: {
 		oidc: federatedOIDC,

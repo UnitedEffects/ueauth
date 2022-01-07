@@ -10,8 +10,10 @@ import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 
+const config = require('../../config');
+
 export default {
-	async writeOrg(agId, data) {
+	async writeOrg(agId, data, aliasDns = undefined) {
 		data.authGroup = agId;
 		const product = await prod.getCoreProduct(agId, 'orgAdmin');
 		if(!data.associatedProducts) data.associatedProducts = [];
@@ -20,6 +22,20 @@ export default {
 			if(Object.keys(data.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
 		}
 		const output = await dal.writeOrg(data);
+		if(output.sso && output.sso.oidc) {
+			const connect = output.sso.oidc;
+			output.sso.redirectUris = [];
+			output.sso.redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/oidc/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+			if(output.externalId) {
+				output.sso.redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/oidc/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+			}
+			if(aliasDns) {
+				output.sso.redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/oidc/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+				if(output.externalId) {
+					output.sso.redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/oidc/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+				}
+			}
+		}
 		ueEvents.emit(data.authGroup, 'ue.organization.create', output);
 		return output;
 	},

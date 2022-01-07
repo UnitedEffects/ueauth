@@ -7422,16 +7422,12 @@ components:
         client_secret:
           type: string
           description: if you are not using PKCE, this is a required field
-        response_types:
-          type: array
-          items:
-            type: string
-            example: code
-        grant_types:
-          type: array
-          items:
-            type: string
-            example: authorization_code
+        response_type:
+          type: string
+          example: code
+        grant_type:
+          type: string
+          example: authorization_code
         discovery_url:
           type: string
           format: url

@@ -18,7 +18,7 @@ const api = {
 			}
 			// make sure this can not be true
 			req.body.core = false;
-			const organization = await org.writeOrg(req.authGroup.id, req.body);
+			const organization = await org.writeOrg(req.authGroup.id, req.body, req.authGroup.aliasDnsOIDC);
 			const adminDomain = {
 				name: `${req.authGroup.name} - ${organization.name} - Administrative Domain`,
 				description: `Use this domain to enable user and permissions management of ${organization.name}. Do not delete as system access will be compromised.`,
