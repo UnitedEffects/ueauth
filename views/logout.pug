@@ -21,7 +21,10 @@ block content
                                 button.btn.btn-outline-dark(type="submit" form=formId style="visibility: hidden;") Cancel
                             else
                                 button.btn.btn-outline-dark.m-r-5(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
-                                button.btn.btn-outline-dark(type="submit" form=formId id='cancel') Cancel
+                                if onCancel
+                                    a.btn.btn-outline-dark(type="button" href=onCancel id='onCancel') Cancel
+                                else
+                                    button.btn.btn-outline-dark(type="submit" form=formId id='cancel') Cancel
                         .m-t-10
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]

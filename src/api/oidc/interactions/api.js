@@ -506,7 +506,9 @@ export default {
 				basedir: 'path/for/pug/extends',
 			});
 			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, skipPrompt);
-
+			if (ctx.req.query && ctx.req.query.onCancel) {
+				options.onCancel = ctx.req.query.onCancel;
+			}
 			if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
 				// enable REST response
 				ctx.type='json';
