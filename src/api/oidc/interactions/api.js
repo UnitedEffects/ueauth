@@ -522,7 +522,7 @@ export default {
 				if(config.CUSTOM_FONTS_URL) {
 					options.customFonts = config.CUSTOM_FONTS_URL;
 				}
-				ctx.body = await pug.render('logout', options);
+				ctx.body = await pug.render('logout', { ...options, nonce: ctx.res.locals.cspNonce });
 			}
 		} catch (error) {
 			throw new OIDCProviderError(error.message);

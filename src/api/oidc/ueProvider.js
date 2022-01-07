@@ -48,6 +48,7 @@ class UEProvider {
 				directives: {
 					...helmet.contentSecurityPolicy.getDefaultDirectives(),
 					'script-src': [`'self'`, (req, res) => `'nonce-${res.locals.cspNonce}'`],
+					'img-src': ['*']
 				},
 			},
 		}));
