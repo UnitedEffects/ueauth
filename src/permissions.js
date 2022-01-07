@@ -130,22 +130,22 @@ export default {
 				}
 				if(accessObject['x-access-organizations']) req.permissions.organizations = accessObject['x-access-organizations'].split(' ');
 				if(accessObject['x-access-domains']) {
-					if(req.permissions.organizations.includes(context) && accessObject['x-access-domains'][context]) {
+					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-domains'][context]) {
 						req.permissions.domains = accessObject['x-access-domains'][context].split(' ');
 					}
 					if(mergePrimary) {
-						if(req.permissions.organizations.includes(primary) && accessObject['x-access-domains'][primary]) {
+						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-domains'][primary]) {
 							if(!req.permissions.domains) req.permissions.domains = [];
 							req.permissions.domains = req.permissions.domains.concat(accessObject['x-access-domains'][primary].split(' '));
 						}
 					}
 				}
 				if(accessObject['x-access-products']) {
-					if(req.permissions.organizations.includes(context) && accessObject['x-access-products'][context]) {
+					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-products'][context]) {
 						req.permissions.products = accessObject['x-access-products'][context].split(' ');
 					}
 					if(mergePrimary) {
-						if(req.permissions.organizations.includes(primary) && accessObject['x-access-products'][primary]) {
+						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-products'][primary]) {
 							if(!req.permissions.products) req.permissions.products = [];
 							req.permissions.products = req.permissions.products.concat(accessObject['x-access-products'][primary].split(' '));
 						}
@@ -160,22 +160,22 @@ export default {
 					}
 				}
 				if(accessObject['x-access-roles']) {
-					if(req.permissions.organizations.includes(context) && accessObject['x-access-roles'][context]) {
+					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-roles'][context]) {
 						req.permissions.roles = accessObject['x-access-roles'][context].split(' ');
 					}
 					if(mergePrimary) {
-						if(req.permissions.organizations.includes(primary) && accessObject['x-access-roles'][primary]) {
+						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-roles'][primary]) {
 							if(!req.permissions.roles) req.permissions.roles = [];
 							req.permissions.roles = req.permissions.roles.concat(accessObject['x-access-roles'][primary].split(' '));
 						}
 					}
 				}
 				if(accessObject['x-access-permissions']) {
-					if(req.permissions.organizations.includes(context) && accessObject['x-access-permissions'][context]) {
+					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-permissions'][context]) {
 						req.permissions.permissions = accessObject['x-access-permissions'][context].split(' ');
 					}
 					if(mergePrimary) {
-						if(req.permissions.organizations.includes(primary) && accessObject['x-access-permissions'][primary]) {
+						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-permissions'][primary]) {
 							if(!req.permissions.permissions) req.permissions.permissions = [];
 							req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'][primary].split(' '));
 						}

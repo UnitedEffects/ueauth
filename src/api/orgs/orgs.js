@@ -10,12 +10,17 @@ import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 
+const config = require('../../config');
+
 export default {
 	async writeOrg(agId, data) {
 		data.authGroup = agId;
 		const product = await prod.getCoreProduct(agId, 'orgAdmin');
 		if(!data.associatedProducts) data.associatedProducts = [];
 		data.associatedProducts.push(product._id);
+		if(data.sso) {
+			if(Object.keys(data.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
+		}
 		const output = await dal.writeOrg(data);
 		ueEvents.emit(data.authGroup, 'ue.organization.create', output);
 		return output;
@@ -27,7 +32,7 @@ export default {
 	},
 
 	async getOrg(authGroupId, id) {
-		return dal.getOrg(authGroupId, id);
+		return await dal.getOrg(authGroupId, id);
 	},
 
 	async getTheseOrgs(authGroupId, idArray) {
@@ -74,6 +79,7 @@ export default {
 			throw Boom.badRequest('You are attempting to remove a product from this organization that is referenced in domains. Remove from the domains first', domains);
 		}
 		patched.modifiedBy = modifiedBy;
+
 		if(limited === true) {
 			await restrictedPatchValidation(org, patched);
 		} else await standardPatchValidation(org, patched);
@@ -107,6 +113,9 @@ async function standardPatchValidation(original, patched) {
 	if(original.core === true) {
 		definition.name = Joi.string().valid(original.name).required();
 	}
+	if(patched.sso) {
+		if(Object.keys(patched.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
+	}
 	const orgSchema = Joi.object().keys(definition);
 	const result = await orgSchema.validateAsync(patched, {
 		allowUnknown: true
@@ -136,6 +145,9 @@ async function restrictedPatchValidation(o, p) {
 	};
 	if(original.core === true) {
 		definition.name = Joi.string().valid(original.name).required();
+	}
+	if(patched.sso) {
+		if(Object.keys(patched.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
 	}
 	const orgSchema = Joi.object().keys(definition);
 	const result = await orgSchema.validateAsync(patched, {

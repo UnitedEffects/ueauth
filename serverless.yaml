@@ -14,7 +14,7 @@ custom:
       - 'image/png'
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   region: us-east-1
   timeout: 30
   lambdaHashingVersion: 20201221

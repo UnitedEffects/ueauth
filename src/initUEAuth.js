@@ -74,7 +74,7 @@ export default {
 			permissionsAdmin = await perm.bulkWrite(authGroup.id, bulkPermWrite);
 			permissionsOrg = await perm.bulkWrite(authGroup.id, bulkPermOrgWrite);
 			const defaultOrg = {
-				name: `${authGroup.name} - Organization`,
+				name: `${authGroup.name} - Global`,
 				description: `Primary organization of authGroup '${authGroup.name}'. Do not delete as system access will be compromised.`,
 				type: 'internal',
 				createdBy: creator.id,

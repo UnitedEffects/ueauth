@@ -124,7 +124,8 @@ const api = {
 				await permissions.enforceRoot(req.permissions);
 			}
 			result = await group.write(req.body);
-			const output = await group.completeGroupSignup(result, req.globalSettings, req.body.owner);
+			let output = await group.completeGroupSignup(result, req.globalSettings, req.body.owner);
+			output = includeSSORedirectUris(output);
 			return res.respond(say.created(output, RESOURCE));
 		} catch (error) {
 			if (result && result.id) {
@@ -151,10 +152,11 @@ const api = {
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			const result = await group.getOne(req.params.id);
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
-			const output = JSON.parse(JSON.stringify(result));
+			let output = JSON.parse(JSON.stringify(result));
 			if(output.config) {
 				if(await permissions.canAccessGroupKeys(req.permissions) === false) delete output.config.keys;
 			}
+			output = includeSSORedirectUris(output);
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -165,8 +167,9 @@ const api = {
 			const grp = await group.getOne(req.params.id);
 			if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
 			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM');
-			const output = JSON.parse(JSON.stringify(result));
+			let output = JSON.parse(JSON.stringify(result));
 			if(output.config) delete output.config.keys;
+			output = includeSSORedirectUris(output);
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);
@@ -255,5 +258,18 @@ const api = {
 		}
 	}
 };
+
+function includeSSORedirectUris(output) {
+	if(output.config && output.config.federate && output.config.federate.oidc.length) {
+		output.config.federate.oidc.map((connect, index) => {
+			output.config.federate.oidc[index].redirectUris = [];
+			output.config.federate.oidc[index].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${output._id||output.id}/interaction/callback/oidc/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+			if(output.aliasDnsOIDC) {
+				output.config.federate.oidc[index].redirectUris.push(`${config.PROTOCOL}://${output.aliasDnsOIDC}/${output._id||output.id}/interaction/callback/oidc/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+			}
+		});
+	}
+	return output;
+}
 
 export default api;

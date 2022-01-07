@@ -82,7 +82,7 @@ const agp = {
 
 	// @notTested
 	async getOne(id) {
-		return dal.getOneByEither(id, false);
+		return await dal.getOneByEither(id, false);
 	},
 
 	// @notTested
@@ -261,6 +261,7 @@ async function standardPatchValidation(original, patched) {
 	if(patched.aliasDnsOIDC || original.aliasDnsOIDC) {
 		definition.aliasDnsOIDC = Joi.string().valid(original.aliasDnsOIDC);
 	}
+
 	const groupSchema = Joi.object().keys(definition);
 	const main = await groupSchema.validateAsync(patched, {
 		allowUnknown: true

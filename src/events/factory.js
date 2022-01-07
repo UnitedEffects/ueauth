@@ -218,6 +218,7 @@ function cleanArgs(args) {
 }
 
 function cleanObject(obj, name) {
+	if(name === 'TypeError') return obj;
 	let temp = JSON.parse(JSON.stringify(obj));
 	switch (name) {
 	case 'Session':

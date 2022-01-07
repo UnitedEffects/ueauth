@@ -1,3 +1,5 @@
+import dal from './dal';
+
 const config = require('../../../config');
 const { strict: assert } = require('assert');
 export default {
@@ -23,11 +25,29 @@ export default {
 		return data;
 	},
 	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
+		const loginOptions = [];
+		// designing for OIDC only for now, we will incorporate others as they are added
+		if(authGroup.config.federate && authGroup.config.federate.oidc) {
+			authGroup.config.federate.oidc.map((connect) => {
+				loginOptions.push({
+					code: `oidc.${connect.provider}.${connect.name.replace(/ /g, '_')}`.toLowerCase(),
+					upstream: connect.provider,
+					button: connect.buttonType,
+					text: connect.buttonText
+				});
+			});
+		}
+		const loginButtons = loginOptions.filter((option) => {
+			return (client.client_federation_options.join(' | ').toLowerCase().includes(option.code));
+		});
+		const altLogin = (params.passwordLess === true || loginButtons.length > 0);
 		return {
 			client,
+			altLogin,
+			loginButtons,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
-			authGroup: authGroup._id,
+			authGroup: authGroup._id || authGroup.id,
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			splashImage: client.logoUrl || authGroup.config.ui.skin.splashImage || config.DEFAULT_UI_SKIN_SPLASH || undefined,
 			locked: authGroup.locked,
@@ -153,8 +173,8 @@ export default {
 
 		const consent = {};
 
-		// example had this as a condition on intDetails, but that created an intermittent bug where consent hung
-		consent.grantId = grantId;
+		// todo bring this conditional back to see if error returns
+		if(!intDetails.grantId) consent.grantId = grantId;
 
 		return { consent };
 	},
@@ -201,5 +221,11 @@ export default {
 				primaryDomain: authGroup.primaryDomain
 			}
 		};
+	},
+	async savePKCESession(data) {
+		return dal.savePKCESession(data);
+	},
+	async getPKCESession(ag, state) {
+		return dal.getPKCESession(ag, state);
 	}
 };

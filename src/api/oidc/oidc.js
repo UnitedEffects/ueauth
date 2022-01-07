@@ -1,17 +1,16 @@
 import { v4 as uuid } from 'uuid';
+import { camelCase } from 'lodash';
 import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
 import orgs from '../orgs/orgs';
 import clientAccess from '../oidc/client/access';
-import middle from '../../oidcMiddleware';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
 import UEProvider from './ueProvider';
-const bodyParser = require('koa-bodyparser');
 const config = require('../../config');
 const MongoAdapter = require('./dal');
-const cors = require('koa2-cors');
+
 
 const coreScopes = config.CORE_SCOPES();
 const ueP = new UEProvider();
@@ -35,6 +34,36 @@ const BASE_SCOPES = [
 
 async function introspectionAllowedPolicy(ctx, client, token) {
 	return !(client.introspectionEndpointAuthMethod === 'none' && token.clientId !== ctx.oidc.client.clientId);
+}
+
+async function compareJSON (obj1, obj2) {
+	const ret = {};
+	Object.keys(obj2).map((key) => {
+		if(obj1[key] === undefined) {
+			ret[key] = obj2[key];
+		} else if (obj1[key] !== obj2[key]) {
+			if (typeof obj1[key] === typeof obj2[key]) {
+				if(Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {
+					let diff = false;
+					obj2[key].map((item) => {
+						if(!obj1[key].includes(item)) diff = true;
+					});
+					if(diff === true) ret[key] = obj2[key];
+				} else {
+					ret[key] = obj2[key];
+				}
+			} else ret[key] = obj2[key];
+		}
+	});
+	return ret;
+}
+
+async function objectCamel (obj) {
+	const ret = {};
+	Object.keys(obj).map((key) => {
+		ret[camelCase(key)] = obj[key];
+	});
+	return ret;
 }
 
 function oidcConfig(g, aliasDns = undefined) {
@@ -75,10 +104,15 @@ function oidcConfig(g, aliasDns = undefined) {
 		},
 		scopes: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes),
 		interactions: {
-			url(ctx, interaction) {
+			async url(ctx, interaction) {
+				if(ctx.request && ctx.request.query && ctx.request.query.org) {
+					interaction.params.org = ctx.request.query.org;
+					await interaction.save(g.config.ttl.interaction);
+				}
 				return `/${ctx.authGroup._id}/interaction/${interaction.uid}`;
 			},
 		},
+		acrValues: g.config.acrValues || [],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -105,7 +139,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				policies: {
 					'auth_group': async function (ctx, properties) {
 						try {
-							// setting defaul Auth Group
+							// setting default Auth Group
 							if (!('auth_group' in properties)) {
 								if (ctx && ctx.authGroup) {
 									properties.auth_group = ctx.authGroup.id || ctx.authGroup._id;
@@ -128,8 +162,21 @@ function oidcConfig(g, aliasDns = undefined) {
 							} else {
 								const id = ctx.authGroup._id || ctx.authGroup.id;
 								if(ctx.authGroup.associatedClient === ctx.oidc.entities.Client.clientId){
-									console.error('attempted to update client associated to auth-group');
-									throw new AccessDenied();
+									// we are going to let federation updates to happen regardless
+									const altered = await objectCamel(JSON.parse(JSON.stringify(properties)));
+									altered.auth_group = altered.authGroup;
+									delete altered.authGroup;
+									const changes = await compareJSON(JSON.parse(JSON.stringify(ctx.oidc.entities.Client)), altered);
+									let error = false;
+									Object.keys(changes).map((key) => {
+										if(key !== 'clientAllowOrgFederation' && key !== 'clientFederationOptions') {
+											error = true;
+										}
+									});
+									if(error) {
+										console.error('attempted to update client associated to auth-group');
+										throw new AccessDenied();
+									}
 								}
 								if (id !== ctx.oidc.entities.Client.auth_group) {
 									console.error('mismatch of request authGroup and client authGroup');
@@ -182,7 +229,16 @@ function oidcConfig(g, aliasDns = undefined) {
 			}
 		},
 		extraClientMetadata: {
-			properties: ['auth_group', 'client_name', 'client_skip_consent', 'register_url', 'client_optional_skip_logout_prompt', 'associated_product'],
+			properties: [
+				'auth_group',
+				'client_name',
+				'client_skip_consent',
+				'register_url',
+				'client_optional_skip_logout_prompt',
+				'associated_product',
+				'client_federation_options',
+				'client_allow_org_federation'
+			],
 			validator(key, value, metadata) {
 				if (key === 'auth_group') {
 					try {
@@ -218,6 +274,24 @@ function oidcConfig(g, aliasDns = undefined) {
 					try {
 						if (value === undefined || value === null) value = false;
 						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'client_allow_org_federation') {
+					try {
+						if (value === undefined || value === null) value = false;
+						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'client_federation_options') {
+					try {
+						if (value === undefined || value === null) value = [];
+						if (!Array.isArray(value)) throw new InvalidClientMetadata(`${key} must be an array`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						throw new InvalidClientMetadata(error.message);
@@ -412,33 +486,13 @@ function oidcConfig(g, aliasDns = undefined) {
 	return oidcOptions;
 }
 
-const corsOptions = {
-	origin: function(ctx) {
-		//can get more restrictive later
-		return '*';
-	},
-	allowMethods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
-};
-
 function oidcWrapper(tenant, aliasDns = undefined) {
 	const options = oidcConfig(tenant, aliasDns);
 	if(!(tenant._id || tenant.id)) {
 		throw new Error('OIDC Provider requires an Auth Group with ID');
 	}
 	const issuer = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${tenant._id||tenant.id}`;
-	const oidc = ueP.find(tenant, issuer, options);
-	oidc.proxy = true;
-	oidc.use(bodyParser());
-	oidc.use(cors(corsOptions));
-	oidc.use(middle.parseKoaOIDC);
-	oidc.use(async (ctx, next) => {
-		ctx.authGroup = tenant;
-		return next();
-	});
-	oidc.use(middle.validateAuthGroup);
-	oidc.use(middle.uniqueClientRegCheck);
-	oidc.use(middle.noDeleteOnPrimaryClient);
-	return oidc;
+	return ueP.find(tenant, issuer, options);
 }
 
 export default oidcWrapper;

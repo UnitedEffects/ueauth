@@ -1,13 +1,17 @@
 import oidc from '../oidc';
+import { generators } from 'openid-client';
 import Account from '../../accounts/accountOidcInterface';
 import {say} from '../../../say';
 import acc from '../../accounts/account';
+import org from '../../orgs/orgs';
+import log from '../../logging/logs';
 import iat from '../initialAccess/iat';
 import interactions from './interactions';
 import n from '../../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
+import crypto from 'crypto';
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -33,6 +37,8 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
+			const authGroup = JSON.parse(JSON.stringify(req.authGroup));
+			authGroup._id = req.authGroup.id;
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
@@ -42,20 +48,45 @@ export default {
 					req.authGroup.config.passwordLessSupport === true);
 			}
 
-			const client = await provider.Client.find(params.client_id);
+			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
+
+			if(params.org && client.client_allow_org_federation===true && req.authGroup) {
+				try {
+					const organization = await org.getOrg(req.authGroup, params.org);
+					if(!organization) throw 'no org';
+					// doing this for just oidc now and will make more robust later
+					if(organization.sso && organization.sso.oidc) {
+						const orgSSO = JSON.parse(JSON.stringify(organization.sso.oidc));
+						orgSSO.provider = `org:${params.org}`;
+						const code = `oidc.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
+						if(!client.client_federation_options || organization.ssoLimit === true) {
+							client.client_federation_options = [];
+						}
+						if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
+						if(!authGroup.config.federate) {
+							authGroup.config.federate = {
+								oidc: []
+							};
+						}
+						authGroup.config.federate.oidc.push(orgSSO);
+					}
+				} catch(error) {
+					log.notify('Issue with org SSO');
+				}
+			}
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			switch (prompt.name) {
 			case 'login': {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
 			}
 			case 'consent': {
 				if(client.client_skip_consent === true) {
-					const result = await interactions.confirmAuthorization(provider, intDetails, req.authGroup);
+					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				return res.render('interaction', interactions.consentLogin(req.authGroup, client, debug, session, prompt, uid, params));
+				return res.render('interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
 				return undefined;
@@ -139,7 +170,132 @@ export default {
 			next(err);
 		}
 	},
+	async callbackLogin(req, res, next) {
+		try {
+			// note: organization sso callbacks should be /callback/{spec}/org:org_id/${name}
+			const nonce = res.locals.cspNonce;
+			const spec = req.params.spec;
+			const provider = req.params.provider;
+			const name = req.params.name;
+			//validate AG
+			return res.render('repost', { layout: false, upstream: `${spec}.${provider}.${name}`, nonce, authGroup: req.authGroup.id });
+		} catch (error) {
+			next (error);
+		}
+	},
+	async oidcFederationClient(req, res, next) {
+		try {
+			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
+			if (req.authIssuer) return next();
+			if(req.body.upstream) {
+				const upstream = req.body.upstream.split('.');
+				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
+				if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+				if(myConfig.PKCE === false && !myConfig.client_secret) {
+					throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+				}
+				const redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
+				const openid = require('openid-client');
+				const issuer = await openid.Issuer.discover(myConfig.discovery_url);
+				const clientOptions = {
+					client_id: myConfig.client_id,
+					response_types: [myConfig.response_type],
+					redirect_uris: [redirectUri],
+					grant_types: [myConfig.grant_type]
+				};
+				if(myConfig.PKCE === false) {
+					clientOptions.client_secret = myConfig.client_secret;
+				} else {
+					clientOptions.token_endpoint_auth_method = 'none';
+				}
 
+				const client = new issuer.Client(clientOptions);
+				req.provider.app.context.google = client;
+				req.authIssuer = issuer;
+				req.authClient = client;
+				req.authSpec = spec;
+				req.fedConfig = myConfig;
+			}
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
+	async federated(req, res, next) {
+		try {
+			const provider = req.provider;
+			const { prompt: { name } } = await provider.interactionDetails(req, res);
+			assert.equal(name, 'login');
+			const path = `/${req.authGroup.id}/interaction/${req.params.uid}/federated`;
+			switch (req.authSpec.toLowerCase()) {
+			case 'oidc': {
+				const callbackParams = req.authClient.callbackParams(req);
+				const myConfig = req.fedConfig;
+				const callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
+				if (!Object.keys(callbackParams).length) {
+					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
+					const nonce = crypto.randomBytes(32).toString('hex');
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, nonce, { path, sameSite: 'strict' });
+					res.status = 303;
+					const authUrlOptions = {
+						state,
+						nonce,
+						scope: `openid email ${myConfig.scopes.join(' ')}`.trim()
+					};
+					if(myConfig.PKCE === true) {
+						const code_verifier = generators.codeVerifier();
+						const code_challenge = generators.codeChallenge(code_verifier);
+						await interactions.savePKCESession({
+							payload: {
+								state,
+								auth_group: req.authGroup.id,
+								code_challenge,
+								code_verifier
+							}
+						});
+						authUrlOptions.code_challenge = code_challenge;
+						authUrlOptions.code_challenge_method = 'S256';
+					}
+
+					return res.redirect(req.authClient.authorizationUrl(authUrlOptions));
+				}
+				// callback
+				const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
+				const nonce = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`];
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, { path });
+				const callbackOptions = {
+					state,
+					nonce,
+					response_type: myConfig.response_type
+				};
+				if(myConfig.PKCE === true) {
+					const session = await interactions.getPKCESession(req.authGroup.id, state);
+					if(!session) throw Boom.badRequest('PKCE Session not found');
+					callbackOptions.code_verifier = session.payload.code_verifier;
+				}
+				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
+				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
+				const account = await Account.findByFederated(req.authGroup,
+					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+					profile);
+				const result = {
+					login: {
+						accountId: account.accountId,
+					},
+				};
+				return provider.interactionFinished(req, res, result, {
+					mergeWithLastSubmission: false,
+				});
+			}
+			default:
+				throw Boom.badRequest('Unknown Federation Specification');
+			}
+		} catch (err) {
+			next(err);
+		}
+	},
 	async login(req, res, next) {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
@@ -254,7 +410,7 @@ export default {
 		}
 	},
 	async forgot (req, res, next) {
-	    try {
+		try {
 			const newPassword = req.body.password;
 			const update = [
 				{
@@ -271,7 +427,7 @@ export default {
 			await acc.patchAccount(req.authGroup, req.user.sub, update, req.user.sub, true);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
-	    	next (err);
+			next (err);
 		}
 	},
 
@@ -330,6 +486,7 @@ export default {
 			next (err);
 		}
 	},
+	// Koa controllers or OIDC library
 	async logoutSource(ctx, form) {
 		try {
 			const action = ctx.oidc.urlFor('end_session_confirm');
@@ -395,6 +552,7 @@ export default {
 		ctx.body = await pug.render('logoutSuccess', options);
 	},
 	async renderError(ctx, out, error) {
+		console.error(error);
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../../views'),
 			basedir: 'path/for/pug/extends',
@@ -408,3 +566,44 @@ export default {
 		ctx.body = await pug.render('error', options);
 	}
 };
+
+async function checkProvider(upstream, ag) {
+	if (upstream.length !== 3) throw Boom.badData(`Unknown upstream: ${upstream}`);
+	const authGroup = JSON.parse(JSON.stringify(ag));
+	const spec = upstream[0];
+	const provider = upstream[1];
+	const name = upstream[2].replace(/_/g, ' ');
+	let organization = undefined;
+	if(provider.includes('org:')) {
+		const orgId = provider.split(':')[1];
+		organization = JSON.parse(JSON.stringify(await org.getOrg(authGroup.id, orgId)));
+		if(!authGroup.config.federate) {
+			authGroup.config.federate = {};
+		}
+		if(!authGroup.config.federate[spec]) {
+			authGroup.config.federate[spec] = [];
+		}
+		if(organization.sso && organization.sso[spec]){
+			organization.sso[spec].provider = provider;
+			authGroup.config.federate[spec].push(organization.sso[spec]);
+		}
+	}
+	let agSpecs = [];
+	if(authGroup.config && authGroup.config.federate) {
+		Object.keys(authGroup.config.federate).map((key) => {
+			if(key.toLowerCase() === spec.toLowerCase()) {
+				agSpecs = authGroup.config.federate[key];
+			}
+		});
+	}
+
+	if(agSpecs.length === 0) {
+		throw Boom.badData(`Unsupported spec ${spec} or provider ${provider}`);
+	}
+
+	const option = agSpecs.filter((config) => {
+		return (config.provider.toLowerCase() === provider.toLowerCase() && config.name.toLowerCase() === name.toLowerCase());
+	});
+	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${name}`);
+	return { spec, provider, name, myConfig: option[0]};
+}

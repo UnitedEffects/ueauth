@@ -13,13 +13,13 @@ import helper from '../helper';
 
 const config = require('../config');
 
-async function getUser(authGroup, decoded, token) {
+async function getUser(authGroup, decoded, token, aliasDns = undefined) {
 	/**
      * We look up the user from the DB directly rather than going through an OIDC http request since this is an internal
      * lookup and this is the system of record. Additionally, since this is to authorize access to this service itself, we
      * don't worry about scopes - we can access that data at anytime anyway.
      */
-	const userRecord = await oidc(authGroup).Account.findAccount({authGroup}, decoded.sub, token);
+	const userRecord = await oidc(authGroup, aliasDns).Account.findAccount({authGroup}, decoded.sub, token);
 	if(!userRecord) return undefined;
 	return await userRecord.claims();
 }
@@ -69,7 +69,7 @@ async function introspect(token, authGroup, aliasDns = undefined) {
 	return result;
 }
 
-async function runDecodedChecks(token, issuer, decoded, authGroup, externalValidation = false) {
+async function runDecodedChecks(token, issuer, decoded, authGroup, externalValidation = false, customDomain = undefined) {
 	if(decoded.nonce) {
 		// check its not id-token
 		throw Boom.unauthorized('ID Tokens can not be used for API Access');
@@ -126,7 +126,7 @@ async function runDecodedChecks(token, issuer, decoded, authGroup, externalValid
 	}
 	//check sub if present
 	if(decoded.sub && decoded.client_id !== decoded.sub) {
-		const user = await getUser(authGroup, decoded, token);
+		const user = await getUser(authGroup, decoded, token, customDomain);
 		if(!user) throw Boom.unauthorized('User not recognized');
 		// Check auth group
 		if (!user.group && user.group !== decoded.group) {
@@ -275,7 +275,7 @@ async (req, token, next) => {
 				}
 				if(decoded) {
 					try {
-						const result = await runDecodedChecks(token, issuer, decoded, subAG);
+						const result = await runDecodedChecks(token, issuer, decoded, subAG, req.customDomain);
 						return next(null, result, { token });
 					} catch (error) {
 						console.error(error);
@@ -307,7 +307,7 @@ async (req, token, next) => {
 					}
 					issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 				}
-				const result = await runDecodedChecks(token, issuer, inspect, subAG);
+				const result = await runDecodedChecks(token, issuer, inspect, subAG,false,req.customDomain);
 				if(!req.authGroup) req.authGroup = subAG;
 				return next(null, result, { token });
 			} catch (error) {
@@ -368,7 +368,7 @@ async (req, token, next) => {
 				}
 				if(decoded) {
 					try {
-						const result = await runDecodedChecks(token, issuer, decoded, subAG, true);
+						const result = await runDecodedChecks(token, issuer, decoded, subAG, true, req.customDomain);
 						return next(null, result, { token });
 					} catch (error) {
 						console.error(error);
@@ -400,7 +400,7 @@ async (req, token, next) => {
 					}
 					issuer = issuerArray(oidc(subAG, req.customDomain), JSON.parse(JSON.stringify(subAG)));
 				}
-				const result = await runDecodedChecks(token, issuer, inspect, subAG, true);
+				const result = await runDecodedChecks(token, issuer, inspect, subAG, true, req.customDomain);
 				if(!req.authGroup) req.authGroup = subAG;
 				return next(null, result, { token });
 			} catch (error) {

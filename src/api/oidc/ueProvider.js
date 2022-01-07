@@ -1,5 +1,19 @@
 import {Provider} from 'oidc-provider';
+const bodyParser = require('koa-bodyparser');
+const cors = require('koa2-cors');
 import events from '../../events/events';
+import middle from '../../oidcMiddleware';
+import {promisify} from 'util';
+import helmet from 'helmet';
+import crypto from 'crypto';
+
+const corsOptions = {
+	origin: function(ctx) {
+		//can get more restrictive later
+		return '*';
+	},
+	allowMethods: ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+};
 
 class UEProvider {
 	constructor() {
@@ -8,6 +22,9 @@ class UEProvider {
 	get(agId) {
 		return this.providerList[agId];
 	}
+	getAll() {
+		return this.providerList;
+	}
 	define(group, issuer, options) {
 		const agId = group.id || group._id;
 		// Do not let this get bigger than 100 instances, you can always reinitialize
@@ -15,7 +32,33 @@ class UEProvider {
 			const oldStream = Object.keys(this.providerList)[0];
 			this.delete(oldStream);
 		}
-		this.providerList[agId] = new Provider(issuer, options);
+		const newProvider = new Provider(issuer, options);
+		newProvider.proxy = true;
+		newProvider.use(bodyParser());
+		newProvider.use(cors(corsOptions));
+		newProvider.use(async (ctx, next) => {
+			ctx.authGroup = group;
+			return next();
+		});
+		newProvider.use(middle.validateAuthGroup);
+		newProvider.use(middle.uniqueClientRegCheck);
+		newProvider.use(middle.noDeleteOnPrimaryClient);
+		const pHelmet = promisify(helmet({
+			contentSecurityPolicy: {
+				directives: {
+					...helmet.contentSecurityPolicy.getDefaultDirectives(),
+					'script-src': [`'self'`, (req, res) => `'nonce-${res.locals.cspNonce}'`],
+				},
+			},
+		}));
+		newProvider.use(async (ctx, next) => {
+			ctx.res.locals || (ctx.res.locals = {});
+			ctx.res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+			await pHelmet(ctx.req, ctx.res);
+			return next();
+		});
+		newProvider.use(middle.parseKoaOIDC);
+		this.providerList[agId] = newProvider;
 		//async event emitter
 		events.providerEventEmitter(this.providerList[agId], group);
 		return this.providerList[agId];
