@@ -47,9 +47,6 @@ const agp = {
 				}
 			}
 		}
-		if(data.config && data.config.federate && data.config.federate.OIDC && data.config.federate.OIDC.PKCE === false) {
-			if(!data.config.federate.client_secret) throw Boom.badData('When PKCE is false, you must provide a client_secret');
-		}
 		const output = await dal.write(data);
 		ueEvents.emit(output._id || output.id, 'ue.group.create', output);
 		return output;
@@ -263,13 +260,6 @@ async function standardPatchValidation(original, patched) {
 	}
 	if(patched.aliasDnsOIDC || original.aliasDnsOIDC) {
 		definition.aliasDnsOIDC = Joi.string().valid(original.aliasDnsOIDC);
-	}
-
-	if(patched.config.federate && patched.config.federate.OIDC.length > 0) {
-		await Promise.all(patched.config.federate.OIDC.map((oidc) => {
-			if(oidc.PKCE === false && !oidc.client_secret) throw Boom.badData(`When PKCE is false, you must provide a client_secret. Check your configuration for ${oidc.name} with provider ${oidc.provider}`);
-			return oidc;
-		}));
 	}
 
 	const groupSchema = Joi.object().keys(definition);

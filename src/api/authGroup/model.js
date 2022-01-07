@@ -30,10 +30,7 @@ const federatedOIDC = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
-	client_id: {
-		type: String,
-		required: true
-	},
+	client_id: String,
 	client_secret: String,
 	response_type: {
 		type: String,
@@ -240,7 +237,7 @@ authGroup.index({ aliasDnsOIDC: 1 }, {
 	}
 });
 
-authGroup.index({ _id: 1, 'config.federate.OIDC.name': 1, 'config.federate.OIDC.provider': 1 }, { unique: true });
+authGroup.index({ _id: 1, 'config.federate.oidc.name': 1, 'config.federate.oidc.provider': 1 }, { unique: true });
 
 // Execute before each user.save() call
 authGroup.pre('save', async function(next) {

@@ -21,10 +21,7 @@ const federatedOIDC = new mongoose.Schema({
 		type: Boolean,
 		default: false
 	},
-	client_id: {
-		type: String,
-		required: true
-	},
+	client_id: String,
 	client_secret: String,
 	response_type: {
 		type: String,

@@ -190,6 +190,10 @@ export default {
 			if(req.body.upstream) {
 				const upstream = req.body.upstream.split('.');
 				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
+				if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+				if(myConfig.PKCE === false && !myConfig.client_secret) {
+					throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+				}
 				const redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
 				const openid = require('openid-client');
 				const google = await openid.Issuer.discover(myConfig.discovery_url);
