@@ -47,7 +47,7 @@ function onListening() {
     console.error(`Listening on ${bind}`);
 }
 
-console.info(`Connection string: ${mongoConnect}`);
+if(process.env.NODE_ENV === 'dev') console.info(`Connection string: ${mongoConnect}`);
 connection.create(mongoConnect, config.REPLICA);
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);

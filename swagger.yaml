@@ -1912,7 +1912,7 @@ paths:
                     type: object
                     properties:
                       sub:
-                        tyep: string
+                        type: string
                         format: uuid
                       organizations:
                         type: array
@@ -1961,7 +1961,7 @@ paths:
                     type: object
                     properties:
                       sub:
-                        tyep: string
+                        type: string
                         format: uuid
                       notifications:
                         type: array
@@ -5193,7 +5193,7 @@ paths:
             type: string
         - name: org
           in: path
-          descrition: Organization context
+          description: Organization context
           required: true
           schema:
             type: string

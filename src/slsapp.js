@@ -10,7 +10,7 @@ if (!mongoConnect) {
 	process.exit(1);
 }
 
-console.info(`Connection string: ${mongoConnect}`);
+if(process.env.NODE_ENV === 'dev') console.info(`Connection string: ${mongoConnect}`);
 connection.create(mongoConnect, config.REPLICA);
 
 function normalizePort(val) {
