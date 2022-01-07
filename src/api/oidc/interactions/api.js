@@ -38,7 +38,7 @@ export default {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
 			const authGroup = JSON.parse(JSON.stringify(req.authGroup));
-			authGroup._id = req.authGroup;
+			authGroup._id = req.authGroup.id;
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
 			if (req.authGroup.pluginOptions.notification.enabled === true &&
