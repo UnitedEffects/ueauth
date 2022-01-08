@@ -122,6 +122,7 @@ const authGroup = new mongoose.Schema({
 				type: Boolean,
 				default: false
 			},
+			meta: Object,
 			// these customize the Login and Authorization screens and set background color gradients everywhere
 			skin: {
 				// background image is useful for a potential UI backdrop but is not directly implemented by this library
@@ -130,6 +131,7 @@ const authGroup = new mongoose.Schema({
 					type: String,
 					default: config.DEFAULT_UI_SKIN_SPLASH
 				},
+				logo: String,
 				bgGradientLow: {
 					type: String,
 					default: config.DEFAULT_UI_SKIN_GRADIENT_LOW
@@ -137,8 +139,7 @@ const authGroup = new mongoose.Schema({
 				bgGradientHigh: {
 					type: String,
 					default: config.DEFAULT_UI_SKIN_GRADIENT_HIGH
-				},
-				meta: Object
+				}
 			}
 		},
 		acrValues: [String],

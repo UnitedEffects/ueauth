@@ -6497,9 +6497,9 @@ components:
         ui:
           type: object
           properties:
-            #fullCustom:
-            #  type: boolean
-            #  description: if this is selected, we attempt to load a custom UI. NOT YET IMPLEMENTED
+            meta:
+              type: object
+              description: this object can be used to define customization of any specific UI implementation
             skin:
               type: object
               properties:
@@ -6511,15 +6511,16 @@ components:
                   type: string
                   description: this is the splash image used on login and authorization screens. there is a system default
                   format: uri
+                logo:
+                  type: string
+                  description: a logo for the top of the login and authorize screens. best at 40x40 pixels
+                  format: uri
                 bgGradientLow:
                   type: string
                   description: this is the background color lower end gradient color
                 bgGradientHigh:
                   type: string
                   description: this is the background color higher end gradient color
-                meta:
-                  type: object
-                  description: this object can be used to define customization of any specific UI implementation
 
     authGroup:
       type: object
