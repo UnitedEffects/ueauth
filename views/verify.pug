@@ -2,12 +2,12 @@ extends layout
 
 block content
     body
-        script(type="text/javascript").
+        script(nonce=nonce, type="text/javascript").
             const url = '#{url}';
             const iat = '#{iat}';
             const redirect = '#{redirect}'
             const retryUrl = '#{retryUrl}'
-        script
+        script(nonce=nonce)
             include forgotSend.js
         section#head.section
             .row

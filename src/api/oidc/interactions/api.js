@@ -506,7 +506,9 @@ export default {
 				basedir: 'path/for/pug/extends',
 			});
 			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, skipPrompt);
-
+			if (ctx.req.query && ctx.req.query.onCancel) {
+				options.onCancel = ctx.req.query.onCancel;
+			}
 			if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
 				// enable REST response
 				ctx.type='json';
@@ -522,7 +524,7 @@ export default {
 				if(config.CUSTOM_FONTS_URL) {
 					options.customFonts = config.CUSTOM_FONTS_URL;
 				}
-				ctx.body = await pug.render('logout', options);
+				ctx.body = await pug.render('logout', { ...options, nonce: ctx.res.locals.cspNonce });
 			}
 		} catch (error) {
 			throw new OIDCProviderError(error.message);
@@ -549,7 +551,7 @@ export default {
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('logoutSuccess', options);
+		ctx.body = await pug.render('logoutSuccess', { ...options, nonce: ctx.res.locals.cspNonce });
 	},
 	async renderError(ctx, out, error) {
 		console.error(error);
@@ -563,7 +565,7 @@ export default {
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('error', options);
+		ctx.body = await pug.render('error', { ...options, nonce: ctx.res.locals.cspNonce });
 	}
 };
 
