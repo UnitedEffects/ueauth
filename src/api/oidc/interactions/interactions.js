@@ -156,6 +156,7 @@ export default {
 				authGroup: authGroup.id
 			});
 		}
+
 		if (details && details.missingOIDCScope) {
 			grant.addOIDCScope(details.missingOIDCScope.join(' '));
 		}
@@ -169,14 +170,7 @@ export default {
 			}
 		}
 
-		grantId = await grant.save();
-
-		const consent = {};
-
-		// todo bring this conditional back to see if error returns
-		if(!intDetails.grantId) consent.grantId = grantId;
-
-		return { consent };
+		return { consent: { grantId: await grant.save() } };
 	},
 	async oidcRenderErrorOptions(authGroup, out) {
 		return {
