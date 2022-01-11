@@ -15,7 +15,7 @@ const federatedOIDC = new mongoose.Schema({
 	provider: {
 		type: String,
 		required: true,
-		enum: ['google', 'custom'] //as we add more standards, add them here...
+		enum: ['google', 'linkedin', 'twitter', 'github', 'facebook', 'apple', 'custom']
 	},
 	buttonType: {
 		type: String,
