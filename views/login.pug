@@ -72,7 +72,7 @@ block content
                                                     button.btn.btn-outline-dark.m-b-10(type='submit', style='width:100%')
                                                         img(width="20px" style="margin-bottom:3px; margin-right:5px" alt="Google sign-in" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png")
                                                         span.google-button__text=val.text
-                                                if val.button === 'linkedin'
+                                                else if val.button === 'linkedin'
                                                     button.btn.btn-block(style="width: 100%; background-color: #0e76a8; color: white")
                                                         i.fab.fa-linkedin
                                                         span.p-l-10=val.text

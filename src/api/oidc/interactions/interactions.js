@@ -26,6 +26,9 @@ export default {
 	},
 	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
 		const loginOptions = [];
+		console.info('start');
+		console.info(loginOptions);
+		console.info(authGroup.config.federate.oidc);
 		// designing for OIDC only for now, we will incorporate others as they are added
 		if(authGroup.config.federate && authGroup.config.federate.oidc) {
 			authGroup.config.federate.oidc.map((connect) => {
