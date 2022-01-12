@@ -47,13 +47,8 @@ class UEProvider {
 		newProvider.use(middle.noDeleteOnPrimaryClient);
 		const security = {
 			...helmet.contentSecurityPolicy.getDefaultDirectives(),
-			'script-src': [`'self'`, (req, res) => `'nonce-${res.locals.cspNonce}'`],
-			'img-src': ['*'],
-			'frame-ancestors': ['*.unitedeffects.com']
+			...config.SECURITY_POLICY
 		};
-		if(config.ENV !== 'production') {
-			security['frame-ancestors'].push('localhost');
-		}
 		const pHelmet = promisify(helmet({
 			contentSecurityPolicy: {
 				directives: security

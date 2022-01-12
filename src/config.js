@@ -127,6 +127,15 @@ const config = {
 		role: true,
 		permission: true,
 		orgProfile: true
+	},
+	SECURITY_POLICY: {
+		// eslint-disable-next-line quotes
+		'script-src': [`'self'`, (req, res) => `'nonce-${res.locals.cspNonce}'`],
+		'img-src': ['*'],
+		'frame-ancestors': (process.env.SECURITY_FRAME_ANCESTORS) ?
+			process.env.SECURITY_FRAME_ANCESTORS.split(',') :
+			// eslint-disable-next-line quotes
+			(envVars.SECURITY_FRAME_ANCESTORS) ? envVars.SECURITY_FRAME_ANCESTORS.split(',') : [`'self'`]
 	}
 };
 
