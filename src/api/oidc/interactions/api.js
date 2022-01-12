@@ -351,7 +351,7 @@ export default {
 					console.info('******************');
 					console.info(tokenset.data);
 					console.info(tokenset.accessToken);
-					const profile = await axios({
+					const profResp = await axios({
 						method: 'get',
 						url: myConfig.profileUri,
 						headers: {
@@ -359,12 +359,35 @@ export default {
 						}
 					});
 					console.info('PROFILE');
+					if(!profResp.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
+					console.info(profResp.data);
+					const profile = JSON.parse(JSON.stringify(profResp.data));
+					if(myConfig.provider === 'linkedin') {
+						const emailResp = await axios({
+							method: 'get',
+							url: 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))',
+							headers: {
+								'Authorization': `Bearer ${tokenset.accessToken}`
+							}
+						});
+						if(emailResp && emailResp.data && emailResp.data.elements && emailResp.data.elements.length) {
+							const data = emailResp.data.elements[0];
+							if(data['handle~'] && data['handle~'].emailAddress) {
+								profile.email = data['handle~'].emailAddress;
+							}
+						}
+					}
+					if(!profile.email) {
+						throw Boom.badRequest('Provider did not respond with an email address. Check your scopes');
+					}
+					if(profile.id && !profile.sub) {
+						profile.sub = profile.id;
+					}
+					console.info('FINAL PROFILE');
 					console.info(profile);
-					if(!profile.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
-					console.info(profile.data);
 					const account = await Account.findByFederated(req.authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-						profile.data);
+						profile);
 					const result = {
 						login: {
 							accountId: account.accountId,
