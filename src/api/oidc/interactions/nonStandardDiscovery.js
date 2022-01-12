@@ -1,6 +1,10 @@
 export default {
 	// this should be maintained...
 	linkedin: {
+		/**
+		 * These are a mix of endpoints from their documentation and some assumptions
+		 * https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow
+		 */
 		'authorization_endpoint': 'https://www.linkedin.com/oauth/v2/authorization',
 		'claims_parameter_supported': false,
 		'claims_supported': [

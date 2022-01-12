@@ -291,21 +291,31 @@ export default {
 					if(!session) throw Boom.badRequest('PKCE Session not found');
 					callbackOptions.code_verifier = session.payload.code_verifier;
 				}
-				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
-				console.info(tokenSet);
-				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
-				console.info(profile);
-				const account = await Account.findByFederated(req.authGroup,
-					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-					profile);
-				const result = {
-					login: {
-						accountId: account.accountId,
-					},
-				};
-				return provider.interactionFinished(req, res, result, {
-					mergeWithLastSubmission: false,
-				});
+				try {
+					console.info('getting tokenset');
+					const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
+					console.info(tokenSet);
+					console.info('getting profile....');
+					const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
+					console.info(profile);
+					console.info('figuring out local account');
+					const account = await Account.findByFederated(req.authGroup,
+						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+						profile);
+					const result = {
+						login: {
+							accountId: account.accountId,
+						},
+					};
+					return provider.interactionFinished(req, res, result, {
+						mergeWithLastSubmission: false,
+					});
+				} catch (error) {
+					console.info('******************************');
+					console.info(error);
+					throw error;
+				}
+
 			}
 			default:
 				throw Boom.badRequest('Unknown Federation Specification');
