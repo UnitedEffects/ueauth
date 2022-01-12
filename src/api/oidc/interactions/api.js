@@ -325,12 +325,16 @@ export default {
 				if(req.body && !req.body.code) {
 					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-					issuer = new ClientOAuth2({
+					const options = {
 						...req.authIssuer,
 						redirectUri: callbackUrl,
 						state
-					});
+					}
+					console.info('Auth request with options');
+					console.info(options);
+					issuer = new ClientOAuth2(options);
 					console.info('REDIRECTING');
+					console.info(issuer.code.getUri());
 					return res.redirect(issuer.code.getUri());
 				} else {
 					console.info('AFTER CALLBACK');
@@ -345,12 +349,13 @@ export default {
 					console.info(getCodeURL);
 					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
 					console.info('******************');
-					console.info(tokenset);
+					console.info(tokenset.data);
+					console.info(tokenset.accessToken);
 					const profile = await axios({
 						method: 'get',
 						url: myConfig.profileUri,
 						headers: {
-							'authorization': `bearer ${tokenset.accessToken}`
+							'Authorization': `Bearer ${tokenset.accessToken}`
 						}
 					});
 					console.info('PROFILE');
