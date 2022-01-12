@@ -57,21 +57,27 @@ export default {
 				try {
 					const organization = await org.getOrg(req.authGroup, params.org);
 					if(!organization) throw 'no org';
-					// doing this for just oidc now and will make more robust later
-					if(organization.sso && organization.sso.oidc) {
-						const orgSSO = JSON.parse(JSON.stringify(organization.sso.oidc));
-						orgSSO.provider = `org:${params.org}`;
-						const code = `oidc.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
-						if(!client.client_federation_options || organization.ssoLimit === true) {
-							client.client_federation_options = [];
-						}
-						if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
-						if(!authGroup.config.federate) {
-							authGroup.config.federate = {
-								oidc: []
-							};
-						}
-						authGroup.config.federate.oidc.push(orgSSO);
+					if(organization.sso) {
+						Object.keys(organization.sso).map((key) => {
+							if(organization.sso[key]) {
+								const orgSSO = JSON.parse(JSON.stringify(organization.sso[key]));
+								orgSSO.provider = `org:${params.org}`;
+								const code = `${key}.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
+								if(!client.client_federation_options || organization.ssoLimit === true) {
+									client.client_federation_options = [];
+								}
+								if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
+								if(!authGroup.config.federate) {
+									authGroup.config.federate = {
+										oidc: []
+									};
+								}
+								if(!authGroup.config.federate[key]) {
+									authGroup.config.federate[key] = [];
+								}
+								authGroup.config.federate[key].push(orgSSO);
+							}
+						});
 					}
 				} catch(error) {
 					log.notify('Issue with org SSO');
@@ -316,8 +322,6 @@ export default {
 			}
 			case 'oauth2':
 				// we are only supporting authorization_code for oauth2 for now
-				console.info('CHECKING THIS');
-				console.info(req.body);
 				const myConfig = req.fedConfig;
 				let state;
 				let issuer;
@@ -325,19 +329,13 @@ export default {
 				if(req.body && !req.body.code) {
 					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-					const options = {
+					issuer = new ClientOAuth2({
 						...req.authIssuer,
 						redirectUri: callbackUrl,
 						state
-					}
-					console.info('Auth request with options');
-					console.info(options);
-					issuer = new ClientOAuth2(options);
-					console.info('REDIRECTING');
-					console.info(issuer.code.getUri());
+					});
 					return res.redirect(issuer.code.getUri());
 				} else {
-					console.info('AFTER CALLBACK');
 					state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
 					issuer = new ClientOAuth2({
@@ -345,12 +343,7 @@ export default {
 						redirectUri: callbackUrl,
 						state
 					});
-					const getCodeURL = `${callbackUrl}?code=${req.body.code}&state=${req.body.state}`;
-					console.info(getCodeURL);
 					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
-					console.info('******************');
-					console.info(tokenset.data);
-					console.info(tokenset.accessToken);
 					const profResp = await axios({
 						method: 'get',
 						url: myConfig.profileUri,
@@ -358,9 +351,7 @@ export default {
 							'Authorization': `Bearer ${tokenset.accessToken}`
 						}
 					});
-					console.info('PROFILE');
 					if(!profResp.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
-					console.info(profResp.data);
 					const profile = JSON.parse(JSON.stringify(profResp.data));
 					if(myConfig.provider === 'linkedin') {
 						const emailResp = await axios({
@@ -380,11 +371,6 @@ export default {
 					if(!profile.email) {
 						throw Boom.badRequest('Provider did not respond with an email address. Check your scopes');
 					}
-					if(profile.id && !profile.sub) {
-						profile.sub = profile.id;
-					}
-					console.info('FINAL PROFILE');
-					console.info(profile);
 					const account = await Account.findByFederated(req.authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 						profile);
