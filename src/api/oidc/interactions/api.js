@@ -12,6 +12,7 @@ import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
 import crypto from 'crypto';
+import nsD from './nonStandardDiscovery';
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -196,7 +197,16 @@ export default {
 				}
 				const redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
 				const openid = require('openid-client');
-				const issuer = await openid.Issuer.discover(myConfig.discovery_url);
+				let issuer;
+				switch (myConfig.discovery_url) {
+				case 'linkedin':
+					issuer = await new openid.Issuer({
+						...nsD.linkedin
+					});
+					break;
+				default:
+					issuer = await openid.Issuer.discover(myConfig.discovery_url);
+				}
 				const clientOptions = {
 					client_id: myConfig.client_id,
 					response_types: [myConfig.response_type],
@@ -276,7 +286,9 @@ export default {
 					callbackOptions.code_verifier = session.payload.code_verifier;
 				}
 				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
+				console.info(tokenSet);
 				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
+				console.info(profile);
 				const account = await Account.findByFederated(req.authGroup,
 					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 					profile);

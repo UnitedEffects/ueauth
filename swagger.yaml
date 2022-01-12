@@ -7430,14 +7430,25 @@ components:
           type: string
           example: authorization_code
         discovery_url:
-          type: string
-          format: url
-          description: this is the discovery oidc .well-known url usually ending in "/.well-known/openid-configuration"
+          oneOf:
+            - $ref: '#/components/schemas/discoveryUrl'
+            - $ref: '#/components/schemas/discoveryString'
         scopes:
           type: array
           description: UE Auth will automatically request openid and email scopes. You can specificy additional scopes here if required for security
           items:
             type: string
+
+    discoveryUrl:
+      type: string
+      format: url
+      description: this is the discovery oidc .well-known url usually ending in "/.well-known/openid-configuration"
+
+    discoveryString:
+      type: string
+      enum:
+        - linkedin
+      description: this is an internal reference to an OIDC spec that has not published their wellknown. Currently limited to 'linkedin'
 
     federatedOIDC:
       type: object
