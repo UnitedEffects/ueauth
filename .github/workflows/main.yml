@@ -80,3 +80,4 @@ jobs:
           DEFAULT_UI_SKIN_GRADIENT_HIGH: "#1D2035"
           EVENT_EMITTER_CLEAN_SENSITIVE: true
           ACCESS_OBJECT_SIZE_LIMIT: 8000
+          SECURITY_FRAME_ANCESTORS: "*.unitedeffects.com"

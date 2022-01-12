@@ -107,19 +107,23 @@ const api = {
 
 function includeSSORedirectURIs(data, aliasDns) {
 	const output = JSON.parse(JSON.stringify(data));
-	if(output.sso && output.sso.oidc) {
-		const connect = output.sso.oidc;
-		output.sso.redirectUris = [];
-		output.sso.redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/oidc/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
-		if(output.externalId) {
-			output.sso.redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/oidc/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
-		}
-		if(aliasDns) {
-			output.sso.redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/oidc/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
-			if(output.externalId) {
-				output.sso.redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/oidc/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+	if(output.sso) {
+		Object.keys(output.sso).map((key) => {
+			if(output.sso[key]) {
+				const connect = output.sso[key];
+				output.sso[key].redirectUris = [];
+				output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+				if(output.externalId) {
+					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+				}
+				if(aliasDns) {
+					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					if(output.externalId) {
+						output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					}
+				}
 			}
-		}
+		});
 	}
 	return output;
 }

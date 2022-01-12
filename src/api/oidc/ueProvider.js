@@ -7,6 +7,8 @@ import {promisify} from 'util';
 import helmet from 'helmet';
 import crypto from 'crypto';
 
+const config = require('../../config');
+
 const corsOptions = {
 	origin: function(ctx) {
 		//can get more restrictive later
@@ -43,13 +45,13 @@ class UEProvider {
 		newProvider.use(middle.validateAuthGroup);
 		newProvider.use(middle.uniqueClientRegCheck);
 		newProvider.use(middle.noDeleteOnPrimaryClient);
+		const security = {
+			...helmet.contentSecurityPolicy.getDefaultDirectives(),
+			...config.SECURITY_POLICY
+		};
 		const pHelmet = promisify(helmet({
 			contentSecurityPolicy: {
-				directives: {
-					...helmet.contentSecurityPolicy.getDefaultDirectives(),
-					'script-src': [`'self'`, (req, res) => `'nonce-${res.locals.cspNonce}'`],
-					'img-src': ['*']
-				},
+				directives: security
 			},
 		}));
 		newProvider.use(async (ctx, next) => {

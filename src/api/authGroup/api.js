@@ -260,12 +260,16 @@ const api = {
 };
 
 function includeSSORedirectUris(output) {
-	if(output.config && output.config.federate && output.config.federate.oidc.length) {
-		output.config.federate.oidc.map((connect, index) => {
-			output.config.federate.oidc[index].redirectUris = [];
-			output.config.federate.oidc[index].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${output._id||output.id}/interaction/callback/oidc/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
-			if(output.aliasDnsOIDC) {
-				output.config.federate.oidc[index].redirectUris.push(`${config.PROTOCOL}://${output.aliasDnsOIDC}/${output._id||output.id}/interaction/callback/oidc/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+	if(output.config && output.config.federate) {
+		Object.keys(output.config.federate).map((key) => {
+			if(output.config.federate[key] && output.config.federate[key].length) {
+				output.config.federate[key].map((connect, index) => {
+					output.config.federate[key][index].redirectUris = [];
+					output.config.federate[key][index].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${output._id||output.id}/interaction/callback/${key}/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					if(output.aliasDnsOIDC) {
+						output.config.federate[key][index].redirectUris.push(`${config.PROTOCOL}://${output.aliasDnsOIDC}/${output._id||output.id}/interaction/callback/${key}/${connect.provider.toLowerCase()}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					}
+				});
 			}
 		});
 	}

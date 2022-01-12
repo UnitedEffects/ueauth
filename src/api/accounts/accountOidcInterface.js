@@ -64,6 +64,9 @@ class Account {
 
 	static async findByFederated(authGroup, provider, claims) {
 		if(!claims.email) throw new Error('Email is a required scope for federation');
+		if(claims.id && !claims.sub) {
+			claims.sub = claims.id;
+		}
 		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
 		const profile = cleanProfile(JSON.parse(JSON.stringify(claims)));
 		if(!account && authGroup.locked === true) {

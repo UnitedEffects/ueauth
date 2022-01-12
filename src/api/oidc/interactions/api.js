@@ -1,5 +1,6 @@
 import oidc from '../oidc';
 import { generators } from 'openid-client';
+import axios from 'axios';
 import Account from '../../accounts/accountOidcInterface';
 import {say} from '../../../say';
 import acc from '../../accounts/account';
@@ -17,6 +18,8 @@ const querystring = require('querystring');
 const { inspect } = require('util');
 const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
+
+const ClientOAuth2 = require('client-oauth2');
 
 const {
 	errors: { OIDCProviderError },
@@ -54,21 +57,27 @@ export default {
 				try {
 					const organization = await org.getOrg(req.authGroup, params.org);
 					if(!organization) throw 'no org';
-					// doing this for just oidc now and will make more robust later
-					if(organization.sso && organization.sso.oidc) {
-						const orgSSO = JSON.parse(JSON.stringify(organization.sso.oidc));
-						orgSSO.provider = `org:${params.org}`;
-						const code = `oidc.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
-						if(!client.client_federation_options || organization.ssoLimit === true) {
-							client.client_federation_options = [];
-						}
-						if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
-						if(!authGroup.config.federate) {
-							authGroup.config.federate = {
-								oidc: []
-							};
-						}
-						authGroup.config.federate.oidc.push(orgSSO);
+					if(organization.sso) {
+						Object.keys(organization.sso).map((key) => {
+							if(organization.sso[key]) {
+								const orgSSO = JSON.parse(JSON.stringify(organization.sso[key]));
+								orgSSO.provider = `org:${params.org}`;
+								const code = `${key}.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
+								if(!client.client_federation_options || organization.ssoLimit === true) {
+									client.client_federation_options = [];
+								}
+								if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
+								if(!authGroup.config.federate) {
+									authGroup.config.federate = {
+										oidc: []
+									};
+								}
+								if(!authGroup.config.federate[key]) {
+									authGroup.config.federate[key] = [];
+								}
+								authGroup.config.federate[key].push(orgSSO);
+							}
+						});
 					}
 				} catch(error) {
 					log.notify('Issue with org SSO');
@@ -187,36 +196,57 @@ export default {
 		try {
 			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
 			if (req.authIssuer) return next();
+			let redirectUri;
+			let issuer;
+			let clientOptions;
+			let client;
 			if(req.body.upstream) {
 				const upstream = req.body.upstream.split('.');
 				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
-				if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
-				if(myConfig.PKCE === false && !myConfig.client_secret) {
-					throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
-				}
-				const redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
-				const openid = require('openid-client');
-				const issuer = await openid.Issuer.discover(myConfig.discovery_url);
-				const clientOptions = {
-					client_id: myConfig.client_id,
-					response_types: [myConfig.response_type],
-					redirect_uris: [redirectUri],
-					grant_types: [myConfig.grant_type]
-				};
-				if(myConfig.PKCE === false) {
-					clientOptions.client_secret = myConfig.client_secret;
-				} else {
-					clientOptions.token_endpoint_auth_method = 'none';
-				}
+				switch (spec.toLowerCase()) {
+				case 'oidc':
+					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+					if(myConfig.PKCE === false && !myConfig.client_secret) {
+						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+					}
+					redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
+					const openid = require('openid-client');
+					issuer = await openid.Issuer.discover(myConfig.discovery_url);
+					clientOptions = {
+						client_id: myConfig.client_id,
+						response_types: [myConfig.response_type],
+						redirect_uris: [redirectUri],
+						grant_types: [myConfig.grant_type]
+					};
+					if(myConfig.PKCE === false) {
+						clientOptions.client_secret = myConfig.client_secret;
+					} else {
+						clientOptions.token_endpoint_auth_method = 'none';
+					}
 
-				const client = new issuer.Client(clientOptions);
-				req.provider.app.context.google = client;
-				req.authIssuer = issuer;
-				req.authClient = client;
-				req.authSpec = spec;
-				req.fedConfig = myConfig;
+					client = new issuer.Client(clientOptions);
+					req.authIssuer = issuer;
+					req.authClient = client;
+					req.authSpec = spec;
+					req.fedConfig = myConfig;
+					return next();
+				case 'oauth2':
+					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+					req.authIssuer = {
+						clientId: myConfig.client_id,
+						clientSecret: myConfig.client_secret,
+						accessTokenUri: myConfig.accessTokenUri,
+						authorizationUri: myConfig.authorizationUri,
+						scopes: myConfig.scopes
+					};
+					req.authSpec = spec;
+					req.fedConfig = myConfig;
+					return next();
+				default:
+					throw Boom.badRequest('unknown specification for SSO requested');
+				}
 			}
-			return next();
+			//return next();
 		} catch (error) {
 			next(error);
 		}
@@ -227,11 +257,12 @@ export default {
 			const { prompt: { name } } = await provider.interactionDetails(req, res);
 			assert.equal(name, 'login');
 			const path = `/${req.authGroup.id}/interaction/${req.params.uid}/federated`;
+			let callbackUrl;
 			switch (req.authSpec.toLowerCase()) {
 			case 'oidc': {
 				const callbackParams = req.authClient.callbackParams(req);
 				const myConfig = req.fedConfig;
-				const callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
+				callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if (!Object.keys(callbackParams).length) {
 					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					const nonce = crypto.randomBytes(32).toString('hex');
@@ -289,6 +320,72 @@ export default {
 					mergeWithLastSubmission: false,
 				});
 			}
+			case 'oauth2':
+				// we are only supporting authorization_code for oauth2 for now
+				const myConfig = req.fedConfig;
+				let state;
+				let issuer;
+				callbackUrl = `${req.provider.issuer}/interaction/callback/${req.authSpec.toLowerCase()}/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
+				if(req.body && !req.body.code) {
+					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
+					issuer = new ClientOAuth2({
+						...req.authIssuer,
+						redirectUri: callbackUrl,
+						state
+					});
+					return res.redirect(issuer.code.getUri());
+				} else {
+					state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
+					issuer = new ClientOAuth2({
+						...req.authIssuer,
+						redirectUri: callbackUrl,
+						state
+					});
+					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
+					const profResp = await axios({
+						method: 'get',
+						url: myConfig.profileUri,
+						headers: {
+							'Authorization': `Bearer ${tokenset.accessToken}`
+						}
+					});
+					if(!profResp.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
+					const profile = JSON.parse(JSON.stringify(profResp.data));
+					if(myConfig.provider === 'linkedin') {
+						const emailResp = await axios({
+							method: 'get',
+							url: 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))',
+							headers: {
+								'Authorization': `Bearer ${tokenset.accessToken}`
+							}
+						});
+						if(emailResp && emailResp.data && emailResp.data.elements && emailResp.data.elements.length) {
+							const data = emailResp.data.elements[0];
+							if(data['handle~'] && data['handle~'].emailAddress) {
+								profile.email = data['handle~'].emailAddress;
+							}
+						}
+					}
+					if(!profile.email) {
+						throw Boom.badRequest('Provider did not respond with an email address. Check your scopes', profile);
+					}
+					if(!profile.id && !profile.sub) {
+						throw Boom.badData('Identities require an ID or Sub property and neither were provided by the provider profile', profile);
+					}
+					const account = await Account.findByFederated(req.authGroup,
+						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+						profile);
+					const result = {
+						login: {
+							accountId: account.accountId,
+						},
+					};
+					return provider.interactionFinished(req, res, result, {
+						mergeWithLastSubmission: false,
+					});
+				}
 			default:
 				throw Boom.badRequest('Unknown Federation Specification');
 			}
