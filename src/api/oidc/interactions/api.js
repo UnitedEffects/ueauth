@@ -316,11 +316,13 @@ export default {
 			}
 			case 'oauth2':
 				// we are only supporting authorization_code for oauth2 for now
+				console.info('CHECKING THIS');
+				console.info(req.body);
 				const myConfig = req.fedConfig;
 				let state;
 				let issuer;
 				callbackUrl = `${req.provider.issuer}/interaction/callback/${req.authSpec.toLowerCase()}/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
-				if(!req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`]) {
+				if(req.body && !req.body.code) {
 					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
 					issuer = new ClientOAuth2({
@@ -333,12 +335,15 @@ export default {
 				} else {
 					console.info('AFTER CALLBACK');
 					state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
 					issuer = new ClientOAuth2({
 						...req.authIssuer,
 						redirectUri: callbackUrl,
 						state
 					});
-					const tokenset = await issuer.code.getToken(callbackUrl);
+					const getCodeURL = `${callbackUrl}?code=${req.body.code}&state=${req.body.state}`;
+					console.info(getCodeURL);
+					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
 					console.info('******************');
 					console.info(tokenset);
 					const profile = await axios({
