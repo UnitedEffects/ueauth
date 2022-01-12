@@ -355,9 +355,11 @@ export default {
 					});
 					console.info('PROFILE');
 					console.info(profile);
+					if(!profile.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
+					console.info(profile.data);
 					const account = await Account.findByFederated(req.authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-						profile);
+						profile.data);
 					const result = {
 						login: {
 							accountId: account.accountId,
