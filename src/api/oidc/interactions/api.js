@@ -250,9 +250,15 @@ export default {
 					res.status = 303;
 					const authUrlOptions = {
 						state,
-						nonce,
-						scope: `openid email ${myConfig.scopes.join(' ')}`.trim()
+						nonce
 					};
+					switch (myConfig.discovery_url) {
+					case 'linkedin':
+						authUrlOptions.scope = myConfig.scopes.join(' ').trim();
+						break;
+					default:
+						authUrlOptions.scope = `openid email ${myConfig.scopes.join(' ')}`.trim();
+					}
 					if(myConfig.PKCE === true) {
 						const code_verifier = generators.codeVerifier();
 						const code_challenge = generators.codeChallenge(code_verifier);
