@@ -350,7 +350,7 @@ export default {
 						method: 'get',
 						url: myConfig.profileUri,
 						headers: {
-							'authorization': `bearer ${tokenset.access_token}`
+							'authorization': `bearer ${tokenset.accessToken}`
 						}
 					});
 					console.info('PROFILE');
