@@ -369,7 +369,10 @@ export default {
 						}
 					}
 					if(!profile.email) {
-						throw Boom.badRequest('Provider did not respond with an email address. Check your scopes');
+						throw Boom.badRequest('Provider did not respond with an email address. Check your scopes', profile);
+					}
+					if(!profile.id && !profile.sub) {
+						throw Boom.badData('Identities require an ID or Sub property and neither were provided by the provider profile', profile);
 					}
 					const account = await Account.findByFederated(req.authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
