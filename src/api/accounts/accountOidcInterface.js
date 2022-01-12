@@ -81,7 +81,7 @@ class Account {
 				modifiedBy: provider,
 				verified: true,
 				identities: [{
-					id: claims.sub,
+					id: claims.sub || claims.id,
 					provider,
 					profile
 				}]
