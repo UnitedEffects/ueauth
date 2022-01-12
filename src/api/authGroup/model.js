@@ -7,6 +7,43 @@ const config = require('../../config');
 
 mongoose.set('useCreateIndex', true);
 
+const federatedOauth2 = new mongoose.Schema({
+	name: {
+		type: String,
+		required: true
+	},
+	provider: {
+		type: String,
+		required: true,
+		enum: ['linkedin', 'custom']
+	},
+	buttonType: {
+		type: String,
+		default: 'standard',
+		enum: ['linkedin', 'standard']
+	},
+	buttonText: {
+		type: String,
+		default: 'Federated Sign-in'
+	},
+	client_id: String,
+	client_secret: String,
+	response_type: {
+		type: String,
+		default: 'code',
+		enum: ['code']
+	},
+	grant_type: {
+		type: String,
+		default: 'authorization_code',
+		enum: ['authorization_code']
+	},
+	scopes: [String],
+	accessTokenUri: String,
+	authorizationUri: String,
+	profileUri: String
+}, { _id: false, strict: false });
+
 const federatedOIDC = new mongoose.Schema({
 	name: {
 		type: String,
@@ -15,7 +52,7 @@ const federatedOIDC = new mongoose.Schema({
 	provider: {
 		type: String,
 		required: true,
-		enum: ['google', 'linkedin', 'twitter', 'github', 'facebook', 'apple', 'custom']
+		enum: ['google', 'twitter', 'github', 'facebook', 'apple', 'custom']
 	},
 	buttonType: {
 		type: String,
@@ -183,6 +220,7 @@ const authGroup = new mongoose.Schema({
 		},
 		federate: {
 			oidc: [federatedOIDC],
+			oauth2: [federatedOauth2],
 			saml: [Object]
 		}
 	},

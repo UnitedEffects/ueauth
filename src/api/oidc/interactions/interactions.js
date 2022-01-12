@@ -27,14 +27,18 @@ export default {
 	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
 		const loginOptions = [];
 		// designing for OIDC only for now, we will incorporate others as they are added
-		if(authGroup.config.federate && authGroup.config.federate.oidc) {
-			authGroup.config.federate.oidc.map((connect) => {
-				loginOptions.push({
-					code: `oidc.${connect.provider}.${connect.name.replace(/ /g, '_')}`.toLowerCase(),
-					upstream: connect.provider,
-					button: connect.buttonType,
-					text: connect.buttonText
-				});
+		if(authGroup.config.federate) {
+			Object.keys(authGroup.config.federate).map((key) => {
+				if(authGroup.config.federate[key]) {
+					authGroup.config.federate[key].map((connect) => {
+						loginOptions.push({
+							code: `${key}.${connect.provider}.${connect.name.replace(/ /g, '_')}`.toLowerCase(),
+							upstream: connect.provider,
+							button: connect.buttonType,
+							text: connect.buttonText
+						});
+					});
+				}
 			});
 		}
 		const loginButtons = loginOptions.filter((option) => {

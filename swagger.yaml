@@ -6494,6 +6494,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/federatedOIDC'
+            oauth2:
+              type: array
+              items:
+                $ref: '#/components/schemas/federatedOAuth2'
         ui:
           type: object
           properties:
@@ -7247,6 +7251,8 @@ components:
           properties:
             oidc:
               $ref: '#/components/schemas/ssoOidcSpec'
+            oauth2:
+              $ref: '#/components/schemas/ssoOAuth2Spec'
         meta:
           type: string
           description: additional custom structured information
@@ -7430,25 +7436,83 @@ components:
           type: string
           example: authorization_code
         discovery_url:
-          oneOf:
-            - $ref: '#/components/schemas/discoveryUrl'
-            - $ref: '#/components/schemas/discoveryString'
+          type: string
+          format: url
+          description: this is the discovery oidc .well-known url usually ending in "/.well-known/openid-configuration"
         scopes:
           type: array
           description: UE Auth will automatically request openid and email scopes. You can specificy additional scopes here if required for security
           items:
             type: string
 
-    discoveryUrl:
-      type: string
-      format: url
-      description: this is the discovery oidc .well-known url usually ending in "/.well-known/openid-configuration"
-
-    discoveryString:
-      type: string
-      enum:
+    federatedOAuth2:
+      type: object
+      required:
+        - name
+        - provider
+        - client_id
+        - client_secret
+        - accessTokenUri
+        - authorizationUri
+        - profileUri
+        - provider
+      allOf:
+        - $ref: '#/components/schemas/ssoOAuth2Spec'
+      provider:
+        type: string
+        enum:
         - linkedin
-      description: this is an internal reference to an OIDC spec that has not published their wellknown. Currently limited to 'linkedin'
+        - custom
+      buttonType:
+        type: string
+        enum:
+          - linkedin
+          - standard
+
+    ssoOAuth2Spec:
+      type: object
+      required:
+        - name
+        - provider
+        - client_id
+        - client_secret
+        - accessTokenUri
+        - authorizationUri
+        - profileUri
+      properties:
+        name:
+          type: string
+        buttonText:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        response_type:
+          type: string
+          default: code
+          enum:
+          - code
+          description: only authorization code is supported at this time
+        grant_type:
+          type: string
+          default: authorization_code
+          enum:
+          - authorization_code
+          description: only authorization code is supported at this time
+        scopes:
+          type: array
+          items:
+            type: string
+        accessTokenUri:
+          type: string
+          format: uri
+        authorizationUri:
+          type: string
+          format: uri
+        profileUri:
+          type: string
+          format: uri
 
     federatedOIDC:
       type: object
