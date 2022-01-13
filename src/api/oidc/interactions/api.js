@@ -351,9 +351,10 @@ export default {
 								code_verifier
 							}
 						});
-						oauthOptions.query = {};
-						oauthOptions.query.code_challenge = code_challenge;
-						oauthOptions.query.code_challenge_method = 'S256';
+						oauthOptions.query = {
+							code_challenge,
+							code_challenge_method: 'S256'
+						};
 					}
 					issuer = new ClientOAuth2(oauthOptions);
 					return res.redirect(issuer.code.getUri());
@@ -368,7 +369,9 @@ export default {
 					if(myConfig.PKCE === true) {
 						const session = await interactions.getPKCESession(req.authGroup.id, state);
 						if(!session) throw Boom.badRequest('PKCE Session not found');
-						oauthCallback.body.code_verifier = session.payload.code_verifier;
+						oauthCallback.body = {
+							code_verifier: session.payload.code_verifier
+						};
 					}
 					issuer = new ClientOAuth2(oauthCallback);
 					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);

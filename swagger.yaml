@@ -7451,31 +7451,28 @@ components:
         - name
         - provider
         - client_id
-        - client_secret
         - accessTokenUri
         - authorizationUri
         - profileUri
-        - provider
       allOf:
         - $ref: '#/components/schemas/ssoOAuth2Spec'
-      provider:
-        type: string
-        enum:
-        - linkedin
-        - custom
-      buttonType:
-        type: string
-        enum:
+      properties:
+        provider:
+          type: string
+          enum:
           - linkedin
-          - standard
+          - custom
+        buttonType:
+          type: string
+          enum:
+            - linkedin
+            - standard
 
     ssoOAuth2Spec:
       type: object
       required:
         - name
-        - provider
         - client_id
-        - client_secret
         - accessTokenUri
         - authorizationUri
         - profileUri
