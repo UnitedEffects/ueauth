@@ -13,6 +13,23 @@ block content
             .fullWidth {
                 width: 100%;
             }
+            #github {
+                background-color: #212529;
+                color: white;
+            }
+            #github:hover {
+                background-color: white;
+                color: #212529;
+            }
+            #email {
+                background-color: #1D2035;
+                color: white;
+            }
+
+            #email:hover {
+                background-color: white;
+                color: #1D2035;
+            }
         section#head.section
             .limiter
                 .container-login100
@@ -72,8 +89,9 @@ block content
                                         | or sign in using
                                 if params.passwordless
                                     .container-login100-form-btn.m-b-10
-                                        a.btn.login100-form-btn(href='/' + authGroup + '/interaction/' + uid + '/passwordless-request')
-                                            | Email Magic Link
+                                        a.btn.btn-outline-dark.fullWidth(href='/' + authGroup + '/interaction/' + uid + '/passwordless-request', id='email')
+                                            i.fas.fa-paper-plane
+                                            span.p-l-10 Email Magic Link
                                 if loginButtons.length > 0
                                     each val in loginButtons
                                         form.validate-form(autocomplete='off', action='/' + authGroup + '/interaction/' + uid + '/federated', method='post')
@@ -90,6 +108,10 @@ block content
                                                 else if val.button === 'microsoft'
                                                     button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='microsoft')
                                                         i.fab.fa-windows
+                                                        span.p-l-10=val.text
+                                                else if val.button === 'github'
+                                                    button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='github')
+                                                        i.fab.fa-github
                                                         span.p-l-10=val.text
                                                 else
                                                     button.login100-form-btn.m-b-10(type='submit')
