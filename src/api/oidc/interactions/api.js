@@ -232,6 +232,9 @@ export default {
 					return next();
 				case 'oauth2':
 					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+					if(myConfig.PKCE === false && !myConfig.client_secret) {
+						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+					}
 					req.authIssuer = {
 						clientId: myConfig.client_id,
 						clientSecret: myConfig.client_secret,
@@ -239,6 +242,9 @@ export default {
 						authorizationUri: myConfig.authorizationUri,
 						scopes: myConfig.scopes
 					};
+					if(myConfig.PKCE === false) {
+						req.authIssuer.clientSecret = myConfig.client_secret;
+					}
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
 					return next();
@@ -329,20 +335,42 @@ export default {
 				if(req.body && !req.body.code) {
 					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-					issuer = new ClientOAuth2({
+					const oauthOptions = {
 						...req.authIssuer,
 						redirectUri: callbackUrl,
 						state
-					});
+					};
+					if(myConfig.PKCE === true) {
+						const code_verifier = generators.codeVerifier();
+						const code_challenge = generators.codeChallenge(code_verifier);
+						await interactions.savePKCESession({
+							payload: {
+								state,
+								auth_group: req.authGroup.id,
+								code_challenge,
+								code_verifier
+							}
+						});
+						oauthOptions.query = {};
+						oauthOptions.query.code_challenge = code_challenge;
+						oauthOptions.query.code_challenge_method = 'S256';
+					}
+					issuer = new ClientOAuth2(oauthOptions);
 					return res.redirect(issuer.code.getUri());
 				} else {
 					state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
-					issuer = new ClientOAuth2({
+					const oauthCallback = {
 						...req.authIssuer,
 						redirectUri: callbackUrl,
 						state
-					});
+					};
+					if(myConfig.PKCE === true) {
+						const session = await interactions.getPKCESession(req.authGroup.id, state);
+						if(!session) throw Boom.badRequest('PKCE Session not found');
+						oauthCallback.body.code_verifier = session.payload.code_verifier;
+					}
+					issuer = new ClientOAuth2(oauthCallback);
 					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
 					const profResp = await axios({
 						method: 'get',

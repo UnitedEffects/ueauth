@@ -7484,6 +7484,9 @@ components:
           type: string
         buttonText:
           type: string
+        PKCE:
+          type: boolean
+          default: false
         client_id:
           type: string
         client_secret:

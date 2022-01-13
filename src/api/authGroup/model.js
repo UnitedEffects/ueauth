@@ -26,6 +26,10 @@ const federatedOauth2 = new mongoose.Schema({
 		type: String,
 		default: 'Federated Sign-in'
 	},
+	PKCE: {
+		type: Boolean,
+		default: false
+	},
 	client_id: String,
 	client_secret: String,
 	response_type: {
