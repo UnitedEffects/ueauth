@@ -25,7 +25,6 @@ block content
                 background-color: #1D2035;
                 color: white;
             }
-
             #email:hover {
                 background-color: white;
                 color: #1D2035;
@@ -37,7 +36,13 @@ block content
             #twitter:hover {
                 background-color: #177cc0;
             }
-
+            #apple {
+                background-color: black;
+                color: white;
+            }
+            #apple:hover {
+                background-color: #212529;
+            }
         section#head.section
             .limiter
                 .container-login100
@@ -125,10 +130,14 @@ block content
                                                     button.btn.btn-block.fullWidth.m-b-10(type='submit', id='twitter')
                                                         i.fab.fa-twitter
                                                         span.p-l-10=val.text
+                                                else if val.button === 'apple'
+                                                    button.btn.btn-block.fullWidth.m-b-10(type='submit', id='apple')
+                                                        i.fab.fa-apple
+                                                        span.p-l-10=val.text
                                                 else
                                                     button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit')
                                                         i.fas.fa-arrow-circle-right
-                                                        span.p-1-10=val.text
+                                                        span.p-l-10=val.text
                             .login-help.p-t-10
                                 a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
                                 if (client.tosUri || tos)

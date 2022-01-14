@@ -31,6 +31,9 @@ function cleanProfile(profile) {
 	if(profile.iat) delete profile.iat;
 	if(profile.exp) delete profile.exp;
 	if(profile.jti) delete profile.jti;
+	if(profile.nonce_supported) delete profile.nonce_supported;
+	if(profile.c_hash) delete profile.c_hash;
+	if(profile.auth_time) delete profile.auth_time;
 	return profile;
 }
 

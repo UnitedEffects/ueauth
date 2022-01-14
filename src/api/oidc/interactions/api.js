@@ -13,6 +13,7 @@ import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
 import crypto from 'crypto';
+import jwt from "jsonwebtoken";
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -20,6 +21,7 @@ const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
 
 const ClientOAuth2 = require('client-oauth2');
+const url = require('url');
 
 const {
 	errors: { OIDCProviderError },
@@ -200,8 +202,15 @@ export default {
 			let issuer;
 			let clientOptions;
 			let client;
-			if(req.body.upstream) {
-				const upstream = req.body.upstream.split('.');
+			let upstreamBody = req.body.upstream;
+			if(!upstreamBody) {
+				const spec = req.params.spec;
+				const provider = req.params.provider;
+				const name = req.params.name;
+				upstreamBody = `${spec}.${provider}.${name}`;
+			}
+			if(upstreamBody) {
+				const upstream = upstreamBody.split('.');
 				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
 				switch (spec.toLowerCase()) {
 				case 'oidc':
@@ -223,7 +232,6 @@ export default {
 					} else {
 						clientOptions.token_endpoint_auth_method = 'none';
 					}
-
 					client = new issuer.Client(clientOptions);
 					req.authIssuer = issuer;
 					req.authClient = client;
@@ -252,7 +260,18 @@ export default {
 					throw Boom.badRequest('unknown specification for SSO requested');
 				}
 			}
-			//return next();
+			throw Boom.badRequest('upstream data is missing');
+		} catch (error) {
+			next(error);
+		}
+	},
+	async postCallBackLogin(req, res, next) {
+		try {
+			let path = `${req.path}?`;
+			Object.keys(req.body).map((key) => {
+				path = `${path}${key}=${req.body[key]}&`;
+			});
+			return res.redirect(path);
 		} catch (error) {
 			next(error);
 		}
@@ -278,7 +297,7 @@ export default {
 					const authUrlOptions = {
 						state,
 						nonce,
-						scope: `openid email ${myConfig.scopes.join(' ')}`.trim()
+						scope: `openid ${myConfig.scopes.join(' ')}`.trim()
 					};
 					if(myConfig.PKCE === true) {
 						const code_verifier = generators.codeVerifier();
@@ -295,6 +314,9 @@ export default {
 						authUrlOptions.code_challenge_method = 'S256';
 					}
 
+					//because apple is apple
+					if(myConfig.provider === 'apple') authUrlOptions.response_mode = 'form_post';
+
 					return res.redirect(req.authClient.authorizationUrl(authUrlOptions));
 				}
 				// callback
@@ -302,6 +324,29 @@ export default {
 				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
 				const nonce = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`];
 				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, { path });
+
+				if(myConfig.provider.toLowerCase() === 'apple') {
+					if(req.body.state !== state) throw Boom.badRequest(`State mismatch. Expected ${state} and received ${req.body.state}`);
+					const id_token = req.body.id_token;
+					if(id_token) {
+						const claims = jwt.decode(id_token, {complete: true});
+						const profile = JSON.parse(JSON.stringify(claims.payload));
+						if(profile.nonce !== nonce) throw Boom.badRequest(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
+						const account = await Account.findByFederated(req.authGroup,
+							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+							profile);
+						const result = {
+							login: {
+								accountId: account.accountId,
+							},
+						};
+						return provider.interactionFinished(req, res, result, {
+							mergeWithLastSubmission: false,
+						});
+					}
+					throw Boom.badRequest('Currently, OIDC with Apple requires an id_token response on authorize');
+				}
+
 				const callbackOptions = {
 					state,
 					nonce,
