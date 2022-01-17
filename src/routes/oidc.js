@@ -55,6 +55,13 @@ router.get('/:group/interaction/callback/:spec/:provider/:name', [
 	m.setNoCache,
 	m.validateAuthGroup,
 ], interactions.callbackLogin);
+// this post is primarily used by apple oauth
+router.post('/:group/interaction/callback/:spec/:provider/:name', [
+	jsonParser,
+	urlParser,
+	m.setNoCache,
+	m.validateAuthGroup
+], interactions.postCallBackLogin);
 // confirm / consent interaction
 router.post('/:group/interaction/:uid/confirm', [
 	jsonParser,

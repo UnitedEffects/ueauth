@@ -13,6 +13,7 @@ import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -200,8 +201,15 @@ export default {
 			let issuer;
 			let clientOptions;
 			let client;
-			if(req.body.upstream) {
-				const upstream = req.body.upstream.split('.');
+			let upstreamBody = req.body.upstream;
+			if(!upstreamBody) {
+				const spec = req.params.spec;
+				const provider = req.params.provider;
+				const name = req.params.name;
+				upstreamBody = `${spec}.${provider}.${name}`;
+			}
+			if(upstreamBody) {
+				const upstream = upstreamBody.split('.');
 				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
 				switch (spec.toLowerCase()) {
 				case 'oidc':
@@ -223,7 +231,6 @@ export default {
 					} else {
 						clientOptions.token_endpoint_auth_method = 'none';
 					}
-
 					client = new issuer.Client(clientOptions);
 					req.authIssuer = issuer;
 					req.authClient = client;
@@ -232,13 +239,20 @@ export default {
 					return next();
 				case 'oauth2':
 					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+					if(myConfig.PKCE === false && !myConfig.client_secret) {
+						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+					}
 					req.authIssuer = {
 						clientId: myConfig.client_id,
-						clientSecret: myConfig.client_secret,
 						accessTokenUri: myConfig.accessTokenUri,
 						authorizationUri: myConfig.authorizationUri,
 						scopes: myConfig.scopes
 					};
+					if(myConfig.PKCE === false) {
+						req.authIssuer.clientSecret = myConfig.client_secret;
+					} else {
+						req.authIssuer.token_endpoint_auth_method = 'none';
+					}
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
 					return next();
@@ -246,7 +260,18 @@ export default {
 					throw Boom.badRequest('unknown specification for SSO requested');
 				}
 			}
-			//return next();
+			throw Boom.badRequest('upstream data is missing');
+		} catch (error) {
+			next(error);
+		}
+	},
+	async postCallBackLogin(req, res, next) {
+		try {
+			let path = `${req.path}?`;
+			Object.keys(req.body).map((key) => {
+				path = `${path}${key}=${req.body[key]}&`;
+			});
+			return res.redirect(path);
 		} catch (error) {
 			next(error);
 		}
@@ -272,7 +297,7 @@ export default {
 					const authUrlOptions = {
 						state,
 						nonce,
-						scope: `openid email ${myConfig.scopes.join(' ')}`.trim()
+						scope: `openid ${myConfig.scopes.join(' ')}`.trim()
 					};
 					if(myConfig.PKCE === true) {
 						const code_verifier = generators.codeVerifier();
@@ -289,6 +314,9 @@ export default {
 						authUrlOptions.code_challenge_method = 'S256';
 					}
 
+					//because apple is apple
+					if(myConfig.provider === 'apple') authUrlOptions.response_mode = 'form_post';
+
 					return res.redirect(req.authClient.authorizationUrl(authUrlOptions));
 				}
 				// callback
@@ -296,6 +324,29 @@ export default {
 				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
 				const nonce = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`];
 				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, { path });
+
+				if(myConfig.provider.toLowerCase() === 'apple') {
+					if(req.body.state !== state) throw Boom.badRequest(`State mismatch. Expected ${state} and received ${req.body.state}`);
+					const id_token = req.body.id_token;
+					if(id_token) {
+						const claims = jwt.decode(id_token, {complete: true});
+						const profile = JSON.parse(JSON.stringify(claims.payload));
+						if(profile.nonce !== nonce) throw Boom.badRequest(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
+						const account = await Account.findByFederated(req.authGroup,
+							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+							profile);
+						const result = {
+							login: {
+								accountId: account.accountId,
+							},
+						};
+						return provider.interactionFinished(req, res, result, {
+							mergeWithLastSubmission: false,
+						});
+					}
+					throw Boom.badRequest('Currently, OIDC with Apple requires an id_token response on authorize');
+				}
+
 				const callbackOptions = {
 					state,
 					nonce,
@@ -325,67 +376,98 @@ export default {
 				const myConfig = req.fedConfig;
 				let state;
 				let issuer;
+				let profile;
 				callbackUrl = `${req.provider.issuer}/interaction/callback/${req.authSpec.toLowerCase()}/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if(req.body && !req.body.code) {
 					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-					issuer = new ClientOAuth2({
+					const oauthOptions = {
 						...req.authIssuer,
 						redirectUri: callbackUrl,
 						state
-					});
+					};
+					if(myConfig.PKCE === true) {
+						const code_verifier = generators.codeVerifier();
+						const code_challenge = generators.codeChallenge(code_verifier);
+						await interactions.savePKCESession({
+							payload: {
+								state,
+								auth_group: req.authGroup.id,
+								code_challenge,
+								code_verifier
+							}
+						});
+						oauthOptions.query = {
+							code_challenge,
+							code_challenge_method: 'S256'
+						};
+					}
+					issuer = new ClientOAuth2(oauthOptions);
 					return res.redirect(issuer.code.getUri());
-				} else {
-					state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
-					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
-					issuer = new ClientOAuth2({
-						...req.authIssuer,
-						redirectUri: callbackUrl,
-						state
-					});
-					const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
-					const profResp = await axios({
+				}
+
+				state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, {path});
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, {path});
+				const oauthCallback = {
+					...req.authIssuer,
+					redirectUri: callbackUrl,
+					state
+				};
+				if (myConfig.PKCE === true) {
+					const session = await interactions.getPKCESession(req.authGroup.id, state);
+					if (!session) throw Boom.badRequest('PKCE Session not found');
+					oauthCallback.body = {
+						code_verifier: session.payload.code_verifier
+					};
+				}
+				issuer = new ClientOAuth2(oauthCallback);
+				const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
+				const profResp = await axios({
+					method: 'get',
+					url: myConfig.profileUri,
+					headers: {
+						'Authorization': `Bearer ${tokenset.accessToken}`
+					}
+				});
+				if (!profResp.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
+				profile = JSON.parse(JSON.stringify(profResp.data));
+				if (myConfig.provider === 'linkedin') {
+					//todo - make this nicer...
+					const emailResp = await axios({
 						method: 'get',
-						url: myConfig.profileUri,
+						url: 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))',
 						headers: {
 							'Authorization': `Bearer ${tokenset.accessToken}`
 						}
 					});
-					if(!profResp.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
-					const profile = JSON.parse(JSON.stringify(profResp.data));
-					if(myConfig.provider === 'linkedin') {
-						const emailResp = await axios({
-							method: 'get',
-							url: 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))',
-							headers: {
-								'Authorization': `Bearer ${tokenset.accessToken}`
-							}
-						});
-						if(emailResp && emailResp.data && emailResp.data.elements && emailResp.data.elements.length) {
-							const data = emailResp.data.elements[0];
-							if(data['handle~'] && data['handle~'].emailAddress) {
-								profile.email = data['handle~'].emailAddress;
-							}
+					if (emailResp && emailResp.data && emailResp.data.elements && emailResp.data.elements.length) {
+						const data = emailResp.data.elements[0];
+						if (data['handle~'] && data['handle~'].emailAddress) {
+							profile.email = data['handle~'].emailAddress;
 						}
 					}
-					if(!profile.email) {
-						throw Boom.badRequest('Provider did not respond with an email address. Check your scopes', profile);
-					}
-					if(!profile.id && !profile.sub) {
-						throw Boom.badData('Identities require an ID or Sub property and neither were provided by the provider profile', profile);
-					}
-					const account = await Account.findByFederated(req.authGroup,
-						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-						profile);
-					const result = {
-						login: {
-							accountId: account.accountId,
-						},
-					};
-					return provider.interactionFinished(req, res, result, {
-						mergeWithLastSubmission: false,
-					});
 				}
+				if (profile && profile.data && profile.data.id) {
+					profile = profile.data;
+				}
+				if (!profile.id && !profile.sub) {
+					throw Boom.badData('Identities require an ID or Sub property and neither were provided by the provider profile', profile);
+				}
+				if (!profile.email) {
+					throw Boom.badData('We apologize but this provider did not return an email address. Unqiue email is required for all auth');
+				}
+				const account = await Account.findByFederated(req.authGroup,
+					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+					profile);
+				const result = {
+					login: {
+						accountId: account.accountId,
+					},
+				};
+				return provider.interactionFinished(req, res, result, {
+					mergeWithLastSubmission: false,
+				});
 			default:
 				throw Boom.badRequest('Unknown Federation Specification');
 			}

@@ -1,8 +1,57 @@
-extends layout
+doctype html
+html
+    head
+        meta(charset='utf-8')
+        meta(name='viewport' content='width=device-width, initial-scale=1')
+        meta(http-equiv='x-ua-compatible' content='ie=edge')
+        title loading...
+        link(rel='stylesheet' type='text/css' href=assets + 'template/main.css')
+    if (bgGradientLow && bgGradientHigh)
+        style(type='text/css').
+            body {
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(279.3deg, #{bgGradientLow} 4.36%, #{bgGradientHigh} 96.71%);
+            }
+    else
+        style(type='text/css').
+            body {
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(279.3deg, #131525 4.36%, #1D2035 96.71%);
+            }
+    style(type='text/css').
+        p {
+            color: whitesmoke;
+            margin: 40px;
+        }
 
-block content
+        #loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            -webkit-animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @-webkit-keyframes spin {
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
     body
-        p= 'One moment please...'
+        center
+            p= 'One moment please...'
+            div(id='loading')
         script(nonce=nonce).
             function parseQuery(queryString) {
                 var query = {};
