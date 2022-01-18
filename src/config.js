@@ -102,7 +102,7 @@ const config = {
 	// The Event Emitter writes out a lot of information with regards to the objects of the system. Some of that information could contain sensative information such as passwords or secrets. When this setting is true, sensitive data is sanitized before display.
 	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
 	// You can decide which events are actually emitted below. This is the only configuration that requires hardcoded updates.
-	EVENT_EMITTER: {
+	EVENT_EMITTER: (envVars && envVars.DISABLE_STREAMS === true) ? {} :{
 		general: true,
 		accessToken: true,
 		authorization: true,

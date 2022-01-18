@@ -6482,6 +6482,13 @@ components:
           description: these are scopes that will be availabl to all clients within your authgroup oidc provider
           items:
             type: string
+        acrValues:
+          type: array
+          items:
+            type: string
+        deviceFlow:
+          type: boolean
+          description: activates device flow for devices without browsers. EXPERIENCE NOT FULLY IMPLEMENTED
         pkceRequired:
           type: boolean
           description: when this is true, only pkce logins are possible

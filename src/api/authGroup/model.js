@@ -184,6 +184,10 @@ const authGroup = new mongoose.Schema({
 			}
 		},
 		acrValues: [String],
+		deviceFlow: {
+			type: Boolean,
+			default: false
+		},
 		ttl: {
 			accessToken: {
 				type: Number,

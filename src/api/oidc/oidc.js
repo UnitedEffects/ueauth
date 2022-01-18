@@ -132,6 +132,10 @@ function oidcConfig(g, aliasDns = undefined) {
 				postLogoutSuccessSource: intApi.postLogoutSuccessSource
 			},
 			encryption: { enabled: true },
+			deviceFlow: {
+				//todo customize
+				enabled: g.config.deviceFlow
+			},
 			registration: {
 				enabled: true,
 				idFactory: uuid,
