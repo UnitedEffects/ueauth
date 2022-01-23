@@ -93,7 +93,6 @@
     "qs": "^6.10.1",
     "serverless-http": "^2.3.2",
     "uuid": "^8.3.2",
-    "ws": "^8.4.2",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
