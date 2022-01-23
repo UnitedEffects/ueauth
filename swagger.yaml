@@ -578,6 +578,38 @@ paths:
         description: Setting for notification desired
         required: true
 
+  /api/plugins/global/mfa-challenge:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global Mfa Challenge Plugin as Service Owner
+      description: Configure Global Mfa Challenge Plugins as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mfaChallengeObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeMfaChallenge'
+        description: Setting for mfa challenge desired
+        required: true
+
   # Account APIs
   /api/{group}/account:
     post:
@@ -6138,6 +6170,14 @@ components:
           type: boolean
           default: false
           description: only use this for first-party clients (those you control directly)
+        client_optional_skip_logout_prompt:
+          type: boolean
+          default: false
+          description: this will skip the logout prompt and immediately logout
+        associated_product:
+          type: string
+          format: uuid
+          description: the Product associated to this Client
         register_url:
           type: string
           format: uri
@@ -6146,7 +6186,16 @@ components:
           type: string
         policy_url:
           type: string
-
+        client_federation_options:
+          type: array
+          items:
+            type: string
+            example: 'oidc.google.my_google_connection'
+            description: a representation of the AuthGroup federation option as specification.provider.name
+        client_allow_org_federation:
+          type: boolean
+          default: false
+          description: when enabled, this allows an organization to issue their own custom SSO to login
 
     clientObject:
       type: object
@@ -6628,6 +6677,39 @@ components:
               description: the url of your service to which we post
             registeredClientId:
               type: string
+        mfaChallenge:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            providers:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    enum:
+                      - http-proxy
+                      - privakey
+                  proxyClientId:
+                    type: string
+                    format: uuid
+                    description: this is only present if the configuration is http-proxy
+                  api:
+                    type: object
+                    description: endpoints for the interface functions
+                    properties:
+                      challenge:
+                        type: string
+                        format: uri
+                        description: This is the endpoint used to send the mfa challenge to the end user
+                        example: "https://yourproviderendpoint.com/challenge/path"
+                      validate:
+                        type: string
+                        format: uri
+                        description: This is an endpoint used to validate callback requests from the provider
+                        example: "https://yourproviderendpoint.com/validate/path"
 
     notification:
       type: object
@@ -7545,3 +7627,64 @@ components:
           enum:
             - google
             - standard
+
+# MFA CHALLENGE
+    writeMfaChallenge:
+      type: object
+      required:
+        - type
+      properties:
+        enabled:
+          type: boolean
+        currentVersion:
+          type: number
+        type:
+          type: string
+          description: must be either 'http-proxy' or 'privakey'. Other options will be added when they are supported.
+          enum:
+            - http-proxy
+            - privakey
+        api:
+          type: object
+          description: required for the proxy configuration. Do not include for privakey configuration.
+          properties:
+            challenge:
+              type: string
+              format: uri
+              description: This is the endpoint used to send the mfa challenge to the end user
+              example: "https://yourproxyendpoint.com/challenge/path"
+            validate:
+              type: string
+              format: uri
+              description: This is an endpoint used to validate callback requests from the provider
+              example: "https://yourproxyendpoint.com/validate/path"
+
+    mfaChallengeObject:
+      type: object
+      oneOf:
+        - type: object
+          properties:
+            enabled:
+              type: boolean
+            type:
+              type: string
+              enum: [ 'http-proxy' ]
+            mfaProxyClientId:
+              type: string
+            mfaProxyClientSecret:
+              type: string
+            mfaProxyClientName:
+              type: string
+            endpoints:
+              type: object
+              description: the endpoints entered for the proxy
+        - type: object
+          properties:
+            enabled:
+              type: boolean
+            type:
+              type: string
+              enum: [ 'privakey' ]
+            endpoints:
+              type: object
+              description: The privakey endpoints being used for this configuration

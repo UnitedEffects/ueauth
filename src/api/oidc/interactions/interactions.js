@@ -24,7 +24,7 @@ export default {
 		}
 		return data;
 	},
-	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
+	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined, mfa = undefined) {
 		const loginOptions = [];
 		// designing for OIDC only for now, we will incorporate others as they are added
 		if(authGroup.config.federate) {
@@ -64,6 +64,7 @@ export default {
 			title: 'Sign-in',
 			session: session ? debug(session) : undefined,
 			flash,
+			mfa,
 			dbg: {
 				params: debug(params),
 				prompt: debug(prompt)

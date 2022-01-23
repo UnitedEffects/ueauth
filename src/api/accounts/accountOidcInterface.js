@@ -57,8 +57,9 @@ class Account {
 			}
 
 			if(await account.verifyPassword(password)) {
-				return account.id;
+				return { accountId: account.id, mfaEnabled: account.mfa.enabled };
 			}
+
 			throw undefined;
 		} catch (err) {
 			return undefined;

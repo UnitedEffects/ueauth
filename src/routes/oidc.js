@@ -41,6 +41,14 @@ router.post('/:group/interaction/:uid/login', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], interactions.login);
+// mfa validation
+router.post('/:group/interaction/:uid/confirm-mfa', [
+	jsonParser,
+	urlParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], interactions.login);
 // federated login
 router.post('/:group/interaction/:uid/federated', [
 	jsonParser,
@@ -49,6 +57,8 @@ router.post('/:group/interaction/:uid/federated', [
 	m.validateAuthGroup,
 	interactions.oidcFederationClient
 ], interactions.federated);
+
+// todo move these to callbacks....
 router.get('/:group/interaction/callback/:spec/:provider/:name', [
 	jsonParser,
 	urlParser,

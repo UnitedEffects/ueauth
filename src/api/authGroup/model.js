@@ -230,6 +230,17 @@ const authGroup = new mongoose.Schema({
 			oidc: [federatedOIDC],
 			oauth2: [federatedOauth2],
 			saml: [Object]
+		},
+		mfaChallenge: {
+			enable: {
+				type: Boolean,
+				default: false
+			},
+			type: {
+				type: String,
+				enum: ['http-proxy', 'privakey']
+			},
+			meta: Object //privakey client and secret go here...
 		}
 	},
 	pluginOptions: {

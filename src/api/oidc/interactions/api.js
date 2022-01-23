@@ -14,6 +14,8 @@ import Pug from 'koa-pug';
 import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import challenges from '../../plugins/challenge/challenge';
+
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -487,25 +489,54 @@ export default {
 					req.authGroup.config.passwordLessSupport === true);
 			}
 
-			// email will check against username as well... todo do we want to control that?
-			// in v7 this is referred to as findByLogin
-			const accountId = await Account.authenticate(req.authGroup, req.body.email, req.body.password);
-
+			let account = {};
+			if(req.body.providerKey && req.body.accountId) {
+				//this is a confirmation of mfa
+				const status = await challenges.status({
+					accountId: req.body.accountId,
+					uid,
+					authGroup: req.authGroup.id,
+					providerKey: req.body.providerKey
+				});
+				if(status?.state !== 'approved') account.accountId = undefined;
+				else account = {
+					accountId: status.accountId
+				};
+			} else{
+				// in v7 this is referred to as findByLogin
+				account = await Account.authenticate(req.authGroup, req.body.email, req.body.password);
+			}
 			// if there is a problem, go back to login...
-			if (!accountId) {
+			if (!account?.accountId) {
 				const client = await provider.Client.find(params.client_id);
 				if(client.auth_group !== req.authGroup.id) {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				return res.render('login',
+					interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid,
+						{
+							...params,
+							login_hint: req.body.email
+						}, 'Invalid email or password.'));
 			}
 
 			const result = {
 				login: {
-					accountId
+					accountId: account?.accountId
 				},
 			};
-
+			if(req.authGroup?.config?.mfaChallenge?.enable !== true &&
+				account?.mfaEnabled === true) {
+				await log.error(`Account ${account.accountId} has MFA enabled but the operating AuthGroup ${req.authGroup.id} does not. The user's expectation of security may be compromised`);
+			}
+			if(req.authGroup?.config?.mfaChallenge?.enable === true &&
+				account?.mfaEnabled === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true) {
+				const mfaResult = await challenges.sendChallenge(req.authGroup, req.globalSettings, account, uid);
+				if(!mfaResult) throw Boom.badRequest('There may be a configuration issue with MFA');
+				const client = await provider.Client.find(params.client_id);
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, providerKey: mfaResult.id }));
+			}
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);

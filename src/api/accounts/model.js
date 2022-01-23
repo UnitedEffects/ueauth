@@ -60,6 +60,9 @@ const accountSchema = new mongoose.Schema({
 		type: Boolean,
 		default: true
 	},
+	mfa: {
+		enabled: Boolean
+	},
 	// organization.domains.products.roles.permissions
 	// every entry is a flattened org.domain.role
 	access: [
