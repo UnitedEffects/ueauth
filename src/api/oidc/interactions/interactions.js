@@ -2,6 +2,7 @@ import dal from './dal';
 
 const config = require('../../../config');
 const { strict: assert } = require('assert');
+
 export default {
 	passwordLessOptions(authGroup, user, iAccessToken, formats = [], uid, aliasDns = undefined) {
 		const data = {

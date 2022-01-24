@@ -7,6 +7,13 @@ const config = require('../../config');
 
 mongoose.set('useCreateIndex', true);
 
+const mfaMeta = new mongoose.Schema({
+	// supporting privakey interface
+	privakeyClient: String,
+	privaKeySecret: String
+	// strict is false so this object can be used for any integration or additional data capture
+}, { _id: false, strict: false });
+
 const federatedOauth2 = new mongoose.Schema({
 	name: {
 		type: String,
@@ -240,7 +247,7 @@ const authGroup = new mongoose.Schema({
 				type: String,
 				enum: ['http-proxy', 'privakey']
 			},
-			meta: Object //privakey client and secret go here...
+			meta: mfaMeta
 		}
 	},
 	pluginOptions: {

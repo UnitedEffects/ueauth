@@ -36,6 +36,7 @@ const pluginConfig = new mongoose.Schema({
 			},
 			proxyClientId: String,
 			api: {
+				domain: String,
 				challenge: String,
 				validate: String
 			}

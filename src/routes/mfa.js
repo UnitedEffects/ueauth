@@ -8,7 +8,8 @@ const router = express.Router();
 
 // Generic Callback
 router.post('/:group/:function/callback', [
-	m.validateAuthGroup
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
 ], callback);
 
 // Polling for MFA Session

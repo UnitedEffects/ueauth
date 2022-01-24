@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: Boilerplate Service
-  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects LLC</a>. Copyright &#169; 2021, all rights reserved.<br><br>
+  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects LLC</a>. Copyright &#169; 2022, all rights reserved.<br><br>
   UE Auth is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management at far less cost, and provides all of the missing pieces enterprises typically end up having to develop on their own in a single package available to your organization through an <a href='https://github.com/UnitedEffects/ueauth/blob/master/LICENSE.md'>Apache 2.0 license</a>. You can find the project <a href='https://github.com/UnitedEffects/ueauth'>here</a>.<br><br>UE Auth can be thought of in three parts:<ul><li><strong>The OIDC Provider</strong> - Built on the only node.js <a href='https://github.com/panva/node-oidc-provider'>certified OIDC provider library</a> currently available by <a href='https://github.com/panva'>Filip Skokan (Panva)</a></li><li><strong>UE Auth General</strong> - Our implementation of Auth Groups as unique pools of users, accounts, notification plugins, and other operations, all documented in this API</li><li><strong>UE Auth Access</strong> - Our implementation of b2b models to organize customers or departments (Organizations), products, roles, permissions and the application of these concepts to users to define access</li></ul>This OpenAPI specification does not detail the entirety of the OIDC API. Instead, you can reference the official Open ID Connect documentation for the API (<a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>) or Panva's amazingly detailed documentation in <a href='https://github.com/panva/node-oidc-provider'>GitHub</a>. Within UE Auth, the OIDC endpoints are distinguished by being available directly from the root domain with the Auth Group context: e.g. <code>/{group}/token</code>. As a general reference, this provider implements the following OIDC endpoints, which you will find specific contract documentation for in the above mentioned <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>.<br><code><br>authorization: '/{group}/auth',<br>
   check_session: '/{group}/session/check',<br>
   code_verification: '/{group}/device',<br>
@@ -6700,16 +6700,19 @@ components:
                     type: object
                     description: endpoints for the interface functions
                     properties:
+                      domain:
+                        type: string
+                        format: uri
+                        description: This is the domain of your mfa provider proxy
+                        example: "https://yourproviderendpoint.com"
                       challenge:
                         type: string
-                        format: uri
-                        description: This is the endpoint used to send the mfa challenge to the end user
-                        example: "https://yourproviderendpoint.com/challenge/path"
+                        description: This is the endpoint path used to send the mfa challenge to the end user
+                        example: "/challenge/path"
                       validate:
                         type: string
-                        format: uri
-                        description: This is an endpoint used to validate callback requests from the provider
-                        example: "https://yourproviderendpoint.com/validate/path"
+                        description: This is an endpoint path used to validate callback requests from the provider
+                        example: "/validate/path"
 
     notification:
       type: object
@@ -7648,16 +7651,19 @@ components:
           type: object
           description: required for the proxy configuration. Do not include for privakey configuration.
           properties:
+            domain:
+              type: string
+              format: uri
+              description: This is the endpoint domain used for your mfa proxy
+              example: "https://yourproxyendpoint.com"
             challenge:
               type: string
-              format: uri
-              description: This is the endpoint used to send the mfa challenge to the end user
-              example: "https://yourproxyendpoint.com/challenge/path"
+              description: This is the endpoint path used to send the mfa challenge to the end user
+              example: "/challenge/path"
             validate:
               type: string
-              format: uri
-              description: This is an endpoint used to validate callback requests from the provider
-              example: "https://yourproxyendpoint.com/validate/path"
+              description: This is an endpoint path used to validate callback requests from the provider
+              example: "/validate/path"
 
     mfaChallengeObject:
       type: object

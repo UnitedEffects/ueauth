@@ -62,6 +62,12 @@ router.post('/plugins/global/notifications', [
 	m.isAuthenticated,
 	m.permissions,
 	m.access('plugins')], plugins.toggleGlobalNotifications);
+router.post('/plugins/global/mfa-challenge', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('plugins')], plugins.toggleGlobalMFASettings);
 router.get('/plugins/global', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

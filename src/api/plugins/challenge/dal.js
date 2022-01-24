@@ -9,8 +9,6 @@ export default {
 		const state = data.state;
 		const query = JSON.parse(JSON.stringify(data));
 		delete query.state;
-		console.info(query);
-		console.info(state);
 		return Challenge.findOneAndUpdate(query, { state }, {new: true});
 	},
 	async status(query) {
