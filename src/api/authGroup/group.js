@@ -81,6 +81,7 @@ const agp = {
 	async get(q) {
 		const query = await helper.parseOdataQuery(q);
 		query.projection['config.keys'] = 0;
+		query.projection['config.mfaChallenge.meta'] = 0;
 		return dal.get(query);
 	},
 
@@ -121,7 +122,7 @@ const agp = {
 				throw Boom.badRequest('Unable to enable MFA until the Admin provides this feature');
 			}
 			const check = globalSettings.mfaChallenge.providers.filter((p) => {
-				(p.type === patched.config.mfaChallenge.type);
+				return (p.type === patched.config.mfaChallenge.type);
 			});
 			if(check.length === 0) {
 				throw Boom.badRequest(`Unsupported MFA type requested ${patched.config.mfaChallenge.type}`);

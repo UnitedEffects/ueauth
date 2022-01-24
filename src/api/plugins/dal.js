@@ -24,7 +24,8 @@ export default {
 			createdBy: userId,
 			version,
 			notifications: record.notifications,
-			mfaChallenge: record.mfaChallenge
+			mfaChallenge: record.mfaChallenge,
+			resourceCreationLimiter: record.resourceCreationLimiter
 		});
 
 		return plugin.save();

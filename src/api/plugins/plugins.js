@@ -9,12 +9,12 @@ export default {
 	},
 	async toggleGlobalMFASettings(data, userId, root) {
 		let client;
-		const record = await dal.getLatestPlugins();
+		const record = await this.getLatestPluginOptions();
 		if(!record) throw Boom.internal('System may not have been initialized yet');
 		if(data?.currentVersion !== record?.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
-		const lastSaved = JSON.parse(JSON.stringify(record));
+		let lastSaved = JSON.parse(JSON.stringify(record));
 		if(data.enabled === false) {
 			if(lastSaved?.mfaChallenge?.providers?.length !== 0) {
 				await Promise.all(lastSaved.mfaChallenge.providers.map(async (p) => {
@@ -35,39 +35,19 @@ export default {
 		} else {
 			switch(data.type.toLowerCase()) {
 			case 'privakey':
-				if(!lastSaved.mfaChallenge) {
-					lastSaved.mfaChallenge = {
-						enabled: true,
-						providers: []
-					};
-				}
-				lastSaved.mfaChallenge.enabled = true;
-				// blow away previous privakey configuration
-				lastSaved.mfaChallenge.providers = lastSaved.mfaChallenge.providers.filter((p) => {
-					return (p.type !== 'privakey');
-				});
+				lastSaved = setupMFA(lastSaved, data.type.toLowerCase());
 				lastSaved.mfaChallenge.providers.push({
-					type: 'privakey'
+					type: data.type.toLowerCase()
 				});
 				break;
 			case 'http-proxy':
-				if(!lastSaved.mfaChallenge) {
-					lastSaved.mfaChallenge = {
-						enabled: true,
-						providers: []
-					};
-				}
-				lastSaved.mfaChallenge.enabled = true;
-				// blow away previous http-proxy configurations
-				lastSaved.mfaChallenge.providers = lastSaved.mfaChallenge.providers.filter((p) => {
-					return (p.type !== 'http-proxy');
-				});
+				lastSaved = setupMFA(lastSaved, data.type.toLowerCase());
 				if(!data.api || !data.api?.domain || !data.api?.challenge || !data.api?.validate ) {
 					throw Boom.badRequest('http-proxy requires domain, challenge and validate api endpoints');
 				}
 				client = await cl.generateRootServiceClient(root, 'global_mfa_proxy');
 				lastSaved.mfaChallenge.providers.push({
-					type: 'http-proxy',
+					type: data.type.toLowerCase(),
 					api: data.api,
 					proxyClientId: client.client_id
 				});
@@ -87,7 +67,7 @@ export default {
 		if(data.enabled === false) {
 			await cl.deleteNotificationsServiceClient(root);
 		}
-		const lastSaved = await dal.getLatestPlugins();
+		const lastSaved = await this.getLatestPluginOptions();
 		if(data.currentVersion !== lastSaved.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
@@ -115,3 +95,18 @@ export default {
 		return dal.auditPluginOptions();
 	}
 };
+
+function setupMFA(lastSaved, type) {
+	if(!lastSaved.mfaChallenge) {
+		lastSaved.mfaChallenge = {
+			enabled: true,
+			providers: []
+		};
+	}
+	lastSaved.mfaChallenge.enabled = true;
+	// blow away previous privakey configuration
+	lastSaved.mfaChallenge.providers = lastSaved.mfaChallenge.providers.filter((p) => {
+		return (p.type !== type);
+	});
+	return lastSaved;
+}

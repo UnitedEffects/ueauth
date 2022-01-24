@@ -7635,7 +7635,8 @@ components:
     writeMfaChallenge:
       type: object
       required:
-        - type
+        - enabled
+        - currentVersion
       properties:
         enabled:
           type: boolean
