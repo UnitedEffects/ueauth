@@ -35,7 +35,7 @@ const agp = {
 		}
 
 		// if notifications are off
-		if (!data.pluginOptions || !data.pluginOptions.notification || (data.pluginOptions && data.pluginOptions.notification && data.pluginOptions.notification.enabled !== true)){
+		if (!data?.pluginOptions?.notification || data?.pluginOptions?.notification?.enabled !== true){
 			// if no config was set, there is no issue
 			if (data.config) {
 				// can not have passwordless support without notifications
@@ -46,6 +46,10 @@ const agp = {
 					data.config.autoVerify = false;
 				}
 			}
+		}
+		if(data.config?.mfaChallenge?.enabled === true) {
+			// ensure this is off when first created
+			data.config.mfaChallenge.enabled = false;
 		}
 		const output = await dal.write(data);
 		ueEvents.emit(output._id || output.id, 'ue.group.create', output);
@@ -102,10 +106,28 @@ const agp = {
 		return dal.getOneByEither(q, onlyIncludeActive);
 	},
 
-	async patch(group, update, user) {
+	async patch(group, update, user, global) {
+		let globalSettings;
+		if(!global) {
+			globalSettings = await plugins.getLatestPluginOptions();
+		} else globalSettings = global;
 		const patched = jsonPatch.apply_patch(group.toObject(), update);
+		if(patched.config?.mfaChallenge?.enable === true) {
+			if(!patched.config?.mfaChallenge?.type) {
+				throw Boom.badRequest('MFA type is required');
+			}
+			if(globalSettings?.mfaChallenge?.enabled !== true ||
+				!globalSettings?.mfaChallenge?.providers) {
+				throw Boom.badRequest('Unable to enable MFA until the Admin provides this feature');
+			}
+			const check = globalSettings.mfaChallenge.providers.filter((p) => {
+				(p.type === patched.config.mfaChallenge.type);
+			});
+			if(check.length === 0) {
+				throw Boom.badRequest(`Unsupported MFA type requested ${patched.config.mfaChallenge.type}`);
+			}
+		}
 		if(patched.pluginOptions.notification.enabled === true && group.pluginOptions.notification.enabled === false) {
-			const globalSettings = await plugins.getLatestPluginOptions();
 			if (globalSettings.notifications.enabled !== true) {
 				throw Boom.methodNotAllowed('The Service Admin has not enabled Global Notifications. ' +
                     'This options is not currently possible for Auth Groups. Contact your admin to activate this feature.');

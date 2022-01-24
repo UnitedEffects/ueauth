@@ -38,6 +38,7 @@ router.get('/group/:id', [
 router.patch('/group/:id', [
 	m.schemaCheck,
 	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
 	m.isAuthenticated,
 	m.permissions,
 	m.access('group')], group.patch);
