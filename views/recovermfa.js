@@ -6,10 +6,6 @@ window.addEventListener( 'load', async function () {
 	let method;
 	let providerKey;
 
-	function close_window() {
-		close();
-	}
-
 	async function requestDone(event, pk = undefined, code=undefined) {
 		try {
 			// if email entered... method = email
