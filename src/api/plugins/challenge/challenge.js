@@ -5,6 +5,50 @@ import privakey from './privakey/interface';
 import httpProxy from './http-proxy/interface';
 
 export default {
+	async bindInstructions(ag, global, bindData) {
+		let settings;
+		if(!global) {
+			settings = await plugins.getLatestPluginOptions();
+		} else settings = JSON.parse(JSON.stringify(global));
+		if(ag?.config?.mfaChallenge?.enable === true &&
+			settings?.mfaChallenge?.enabled === true) {
+			const provider = settings.mfaChallenge.providers.filter((p) => {
+				return (p.type === ag.config.mfaChallenge.type);
+			});
+			if(!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
+			switch (provider[0].type.toLowerCase()) {
+			case 'http-proxy':
+				return httpProxy.bindInstructions(provider[0], bindData);
+			case 'privakey':
+				return privakey.bindInstructions(provider[0], bindData);
+			default:
+				throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
+			}
+		}
+		return undefined;
+	},
+	async bindUser(ag, global, account) {
+		let settings;
+		if(!global) {
+			settings = await plugins.getLatestPluginOptions();
+		} else settings = JSON.parse(JSON.stringify(global));
+		if(ag?.config?.mfaChallenge?.enable === true &&
+			settings?.mfaChallenge?.enabled === true) {
+			const provider = settings.mfaChallenge.providers.filter((p) => {
+				return (p.type === ag.config.mfaChallenge.type);
+			});
+			if(!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
+			switch (provider[0].type.toLowerCase()) {
+			case 'http-proxy':
+				return httpProxy.bindUser(provider[0], ag, account);
+			case 'privakey':
+				return privakey.bindUser(provider[0], ag, account);
+			default:
+				throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
+			}
+		}
+		return undefined;
+	},
 	async sendChallenge(ag, global, account, uid) {
 		let settings;
 		if(!global) {

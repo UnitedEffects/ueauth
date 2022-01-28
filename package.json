@@ -88,6 +88,7 @@
     "oidc-provider": "^7.5.1",
     "openid-client": "^5.1.1",
     "passport": "^0.4.1",
+    "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",
     "pug": "^3.0.1",
     "qs": "^6.10.1",

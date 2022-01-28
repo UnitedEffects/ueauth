@@ -243,6 +243,10 @@ const authGroup = new mongoose.Schema({
 				type: Boolean,
 				default: false
 			},
+			required: {
+				type: Boolean,
+				default: false
+			},
 			type: {
 				type: String,
 				enum: ['http-proxy', 'privakey']

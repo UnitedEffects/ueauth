@@ -35,10 +35,14 @@ const pluginConfig = new mongoose.Schema({
 				required: true
 			},
 			proxyClientId: String,
+			proxyEnableScreen: String,
+			proxyEnableInstructions: String,
+			proxyEnableScreenButtonText: String,
 			api: {
 				domain: String,
 				challenge: String,
-				validate: String
+				validate: String,
+				bind: String
 			}
 		}]
 	},

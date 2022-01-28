@@ -7,6 +7,25 @@ import client from '../../../oidc/client/clients';
 const config = require('../../../../config');
 
 const httpProxyApi = {
+	async bindInstructions(provider, bindData) {
+		const instructions = provider?.proxyEnableInstructions.replace(/</g, '&lt;').replace(/>/g, '&gt;').split('--');
+		const out = {
+			instructions,
+			setupScreen: `${provider.proxyEnableScreen}?`,
+			setupScreenButtonText: provider.proxyEnableScreenButtonText,
+			qrCode: false
+		};
+		const data = (Array.isArray(bindData)) ? bindData[0] : bindData;
+		if(typeof data === 'object') {
+			Object.keys(bindData).map((key) => {
+				out.setupScreen = `${out.setupScreen}${key}=${bindData[key]}&`;
+			});
+		}
+		if(typeof data === 'string') {
+			out.setupScreen = `${out.setupScreen}params=${data}`;
+		}
+		return out;
+	},
 	async findChallengeAndUpdate(provider, ag, data) {
 		if(!data.id) throw Boom.badRequest('No id provided');
 		if(!Object.keys(data).includes('action')) throw Boom.badRequest('No action indicated');
@@ -30,6 +49,25 @@ const httpProxyApi = {
 			state
 		};
 		return dal.findChallengeAndUpdate(update);
+	},
+	async bindUser(provider, authGroup, account) {
+		const token = await this.generateToken(provider);
+		const options = {
+			url: `${provider.api.domain}${provider.api.bind}`,
+			method: 'put',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			data: {
+				accountId: account.accountId
+			}
+		};
+		const result = await axios(options);
+		if(!result?.data?.id) {
+			throw Boom.failedDependency('Bind request unsuccessful');
+		}
+		return result.data;
 	},
 	async generateToken(provider) {
 		const ag = await group.getOneByEither('root', false);

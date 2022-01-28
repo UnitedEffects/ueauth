@@ -590,7 +590,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/mfaChallengeObject'
+                $ref: '#/components/schemas/globalPlugins'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -6543,6 +6543,27 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
+        mfaChallenge:
+          type: object
+          properties:
+            enable:
+              type: boolean
+              default: false
+              description: This enables MFA for the AuthGroup assuming it has been enabled for the Platform
+            required:
+              type: boolean
+              default: false
+              description: If this is true, all logins must have MFA enabled and will be onboarded at the first opportunity
+            type:
+              type: string
+              description: This is an indication of the MFA provider and must be the same as what is availble from global plugins
+              example: privakey
+              enum:
+                - http-proxy
+                - privakey
+            meta:
+              type: object
+              description: This is an area designated for metadata such as provider ids, secrets, etc. As an example, for the privakey integration, use meta to store 'privakeyClient' and 'privakeySecret'.
         federate:
           type: object
           properties:
@@ -6692,10 +6713,6 @@ components:
                     enum:
                       - http-proxy
                       - privakey
-                  proxyClientId:
-                    type: string
-                    format: uuid
-                    description: this is only present if the configuration is http-proxy
                   api:
                     type: object
                     description: endpoints for the interface functions
@@ -6713,6 +6730,25 @@ components:
                         type: string
                         description: This is an endpoint path used to validate callback requests from the provider
                         example: "/validate/path"
+                      bind:
+                        type: string
+                        description: This is an endpoint path used to map the account ID of the user to the MFA account/device
+                        example: "/bind/path"
+                  proxyClientId:
+                    type: string
+                    format: uuid
+                    description: this is only present if the configuration is http-proxy
+                  proxyEnableScreen:
+                    type: string
+                    format: uri
+                    description: If this is an http-proxy mfa setup, you will need to open a web page where you handle the device connection, through your proxy service. This is usually presented as instructions and a QR code. UE Auth will send the JSON results of the bind API call to this request via query parameters.
+                    example: 'https://example.com/complete/setup'
+                  proxyEnableScreenButtonText:
+                    type: string
+                    description: This is the text used on the button that links to the enablement screen
+                  proxyEnableInstructions:
+                    type: string
+                    description: UE Auth will display this text as instructions if desired. New lines can be represented with '--'
 
     notification:
       type: object
@@ -7665,33 +7701,18 @@ components:
               type: string
               description: This is an endpoint path used to validate callback requests from the provider
               example: "/validate/path"
-
-    mfaChallengeObject:
-      type: object
-      oneOf:
-        - type: object
-          properties:
-            enabled:
-              type: boolean
-            type:
+            bind:
               type: string
-              enum: [ 'http-proxy' ]
-            mfaProxyClientId:
-              type: string
-            mfaProxyClientSecret:
-              type: string
-            mfaProxyClientName:
-              type: string
-            endpoints:
-              type: object
-              description: the endpoints entered for the proxy
-        - type: object
-          properties:
-            enabled:
-              type: boolean
-            type:
-              type: string
-              enum: [ 'privakey' ]
-            endpoints:
-              type: object
-              description: The privakey endpoints being used for this configuration
+              description: This is an endpoint path used to map the account ID of the user to the MFA account/device
+              example: "/bind/path"
+        proxyEnableScreen:
+          type: string
+          format: uri
+          description: If this is an http-proxy mfa setup, you will need to open a web page where you handle the device connection, through your proxy service. This is usually presented as instructions and a QR code. UE Auth will send the JSON results of the bind API call to this request via query parameters.
+          example: 'https://example.com/complete/setup'
+        proxyEnableScreenButtonText:
+          type: string
+          description: This is the text used on the button that links to the enablement screen
+        proxyEnableInstructions:
+          type: string
+          description: UE Auth will display this text as instructions if desired. New lines can be represented with '--'

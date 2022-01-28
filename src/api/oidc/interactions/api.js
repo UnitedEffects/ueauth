@@ -91,7 +91,11 @@ export default {
 			}
 			switch (prompt.name) {
 			case 'login': {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
+				const options = {
+					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
+				};
+				if(req.query.flash) options.flash = req.query.flash;
+				return res.render('login', options);
 			}
 			case 'consent': {
 				if(client.client_skip_consent === true) {
@@ -490,6 +494,8 @@ export default {
 			}
 
 			let account = {};
+			console.info('ENTERING LOGIN');
+			console.info(req.body);
 			if(req.body.providerKey && req.body.accountId) {
 				//this is a confirmation of mfa
 				const status = await challenges.status({
@@ -500,7 +506,9 @@ export default {
 				});
 				if(status?.state !== 'approved') account.accountId = undefined;
 				else account = {
-					accountId: status.accountId
+					accountId: status.accountId,
+					mfaEnabled: true,
+					mfaProven: true
 				};
 			} else{
 				// in v7 this is referred to as findByLogin
@@ -531,11 +539,35 @@ export default {
 			}
 			if(req.authGroup?.config?.mfaChallenge?.enable === true &&
 				account?.mfaEnabled === true &&
+				account?.mfaProven !== true &&
 				req.globalSettings?.mfaChallenge?.enabled === true) {
-				const mfaResult = await challenges.sendChallenge(req.authGroup, req.globalSettings, account, uid);
-				if(!mfaResult) throw Boom.badRequest('There may be a configuration issue with MFA');
+				let mfaResult;
+				try {
+					mfaResult = await challenges.sendChallenge(req.authGroup, req.globalSettings, account, uid);
+				} catch (error) {
+					console.error(error);
+				}
+				if(!mfaResult) throw Boom.badRequest(`The ${req.authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, providerKey: mfaResult.id }));
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
+			}
+			if(req.authGroup?.config?.mfaChallenge?.enable === true &&
+				req.authGroup?.config?.mfaChallenge?.required === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true &&
+				account?.mfaEnabled !== true) {
+				let bindData;
+				let instructions;
+				try {
+					bindData = await challenges.bindUser(req.authGroup, req.globalSettings, account);
+					instructions = await challenges.bindInstructions(req.authGroup, req.globalSettings, bindData);
+				} catch (error) {
+					console.error(error);
+				}
+				if(!bindData || !instructions) throw Boom.badRequest(`The ${req.authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
+				const enableMFA = await acc.enableMFA(req.authGroup.id, account.accountId);
+				if(enableMFA !== true) throw Boom.badRequest(`The ${req.authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
+				const client = await provider.Client.find(params.client_id);
+				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
 			}
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {

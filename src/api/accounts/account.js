@@ -69,6 +69,11 @@ export default {
 		return result;
 	},
 
+	async enableMFA(authGroup, id) {
+		const account = await dal.enableMFA(authGroup, id);
+		return (account?.mfa?.enabled === true);
+	},
+
 	async updatePassword(authGroupId, id, password, modifiedBy) {
 		const update = {
 			modifiedBy,

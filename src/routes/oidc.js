@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import api from '../api/oidc/api';
 import m from '../middleware';
 import interactions from '../api/oidc/interactions/api';
+import chApi from '../api/plugins/challenge/api';
 
 const jsonParser = bodyParser.json();
 const urlParser = bodyParser.urlencoded({extended:true});
@@ -49,6 +50,7 @@ router.post('/:group/interaction/:uid/confirm-mfa', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], interactions.login);
+
 // federated login
 router.post('/:group/interaction/:uid/federated', [
 	jsonParser,
@@ -57,14 +59,13 @@ router.post('/:group/interaction/:uid/federated', [
 	m.validateAuthGroup,
 	interactions.oidcFederationClient
 ], interactions.federated);
-
-// todo move these to callbacks....
 router.get('/:group/interaction/callback/:spec/:provider/:name', [
 	jsonParser,
 	urlParser,
 	m.setNoCache,
 	m.validateAuthGroup,
 ], interactions.callbackLogin);
+
 // this post is primarily used by apple oauth
 router.post('/:group/interaction/callback/:spec/:provider/:name', [
 	jsonParser,
@@ -72,6 +73,7 @@ router.post('/:group/interaction/callback/:spec/:provider/:name', [
 	m.setNoCache,
 	m.validateAuthGroup
 ], interactions.postCallBackLogin);
+
 // confirm / consent interaction
 router.post('/:group/interaction/:uid/confirm', [
 	jsonParser,
@@ -123,6 +125,14 @@ router.get('/:group/verifyaccount', [
 	m.setNoCache,
 	m.validateAuthGroup
 ], interactions.verifyAccountScreen);
+
+// MFA Recovery
+router.get('/:group/recover-mfa', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], chApi.recover);
 
 //pass all other requests to the OP caller
 router.use('/:group', m.validateHostDomain, api.oidcCaller);

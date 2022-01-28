@@ -17,6 +17,20 @@ router.get('/:group/interaction/:uid/provider/:key/account/:account/status', [
 	m.validateAuthGroup
 ], challengeApi.status);
 
+// Safe Recovery when MFA is Enabled
+// todo swagger these....
+router.post('/:group/mfa/safe-recovery', [
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+	m.isSimpleIAT
+], challengeApi.safeRecoveryNotification);
+
+router.post('/:group/mfa/instructions', [
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+	m.isBasic
+], challengeApi.getMFAInstruction);
+
 async function callback(req, res, next) {
 	const func = req.params.function;
 	switch(func.toLowerCase()) {

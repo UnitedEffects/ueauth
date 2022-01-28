@@ -45,11 +45,17 @@ export default {
 				if(!data.api || !data.api?.domain || !data.api?.challenge || !data.api?.validate ) {
 					throw Boom.badRequest('http-proxy requires domain, challenge and validate api endpoints');
 				}
+				if(!data.proxyEnableScreen) {
+					throw Boom.badRequest('http-proxy requires you to specify a browser based screen to direct the user to where they can bind their mobile device to a your MFA provider.');
+				}
 				client = await cl.generateRootServiceClient(root, 'global_mfa_proxy');
 				lastSaved.mfaChallenge.providers.push({
 					type: data.type.toLowerCase(),
 					api: data.api,
-					proxyClientId: client.client_id
+					proxyClientId: client.client_id,
+					proxyEnableScreen: data.proxyEnableScreen,
+					proxyEnableInstructions: data.proxyEnableInstructions,
+					proxyEnableScreenButtonText: data.proxyEnableScreenButtonText
 				});
 				break;
 			default:

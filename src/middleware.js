@@ -328,6 +328,8 @@ const mid = {
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
 	isAuthenticated: authorizer.isAuthenticated,
 	isOIDCValid: authorizer.isOIDCValid,
+	isBasic: authorizer.isBasic,
+	isSimpleIAT: authorizer.isSimpleIAT,
 	isWhitelisted: authorizer.isWhitelisted
 };
 

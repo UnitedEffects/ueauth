@@ -39,7 +39,6 @@ window.addEventListener( 'load', async function () {
 
 	await checkStatus(url);
 	if(count === 0) {
-		console.info('display error message and offer to go back');
 		$('#loading').css('display', 'none');
 		$('#mfa-pending').text('Your Authorization Could Not Be Verified');
 		$('#mfa-try-again').css('visibility', 'inherit');

@@ -8,11 +8,29 @@ const config = require('../../../../config');
 const API = {
 	domain: 'https://cloud.privakey.com',
 	challenge: '/api/request/add',
-	validate: '/api/request/getRequest'
+	validate: '/api/request/getRequest',
+	bind: '/api/account/bind'
 };
 
-const privakeyApi = {
+const APP_LINKS = {
+	android: 'https://play.google.com/store/apps/details?id=com.privakey.authwallet',
+	ios: 'https://apps.apple.com/us/app/authwallet/id1552057206'
+};
+
+const pkApi = {
 	returnAPI: API,
+	async bindInstructions(provider, bindData) {
+		const instructions = [
+			`Download the AuthWallet app, available on <a target='_blank' href='${APP_LINKS.android}'>Google Play</a> and the <a target='_blank' href="${APP_LINKS.ios}">App Store.</a>`,
+			'Open the app on your device and select to Add Service.',
+			'Scan the QR code below using the app to bind your device to your user account.',
+			'Once you are sure you have successfully added the service, click the button below or follow the equivalent instruction.'
+		];
+		return {
+			instructions,
+			qrCode: `authwallet://st=${bindData.sessionToken}&appSpaceGuid=${bindData.appSpaceGuid}&appSpaceName=${bindData.appSpaceName}`
+		};
+	},
 	async findChallengeAndUpdate(provider, ag, data) {
 		//ignoring provider parameter for this implementation
 		if(!data.transactionId) throw Boom.badRequest('No transactionId');
@@ -30,7 +48,7 @@ const privakeyApi = {
 		const uid = interaction.uid;
 		const accountId = interaction.accountId;
 		// using the validateRequest provider parameter to keep the interface consistent
-		const validate = await privakeyApi.validateRequest({
+		const validate = await pkApi.validateRequest({
 			privakeyClient: ag.config.mfaChallenge.meta.privakeyClient,
 			privakeySecret: ag.config.mfaChallenge.meta.privakeySecret
 		}, data.guid);
@@ -47,6 +65,29 @@ const privakeyApi = {
 			state
 		};
 		return dal.findChallengeAndUpdate(update);
+	},
+	async bindUser(provider, authGroup, account) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.bind}`,
+			method: 'put',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.config.mfaChallenge.meta.privakeyClient,
+				password: authGroup.config.mfaChallenge.meta.privakeySecret
+			},
+			data: {
+				accountId: account.accountId
+			}
+		};
+		const pkey = await axios(options);
+		if(!pkey?.data?.sessionToken || !pkey?.data?.appSpaceGuid || !pkey?.data?.appSpaceName) {
+			console.error(pkey);
+			throw Boom.failedDependency('Bind request unsuccessful');
+		}
+		return pkey.data;
 	},
 	async sendChallenge(provider, authGroup, account, uid) {
 		//ignoring provider parameter for this implementation
@@ -135,4 +176,4 @@ const privakeyApi = {
 	}
 };
 
-export default privakeyApi;
+export default pkApi;
