@@ -42,8 +42,11 @@ const pluginConfig = new mongoose.Schema({
 				domain: String,
 				challenge: String,
 				validate: String,
-				bind: String
-			}
+				bind: String,
+				revoke: String,
+				devices: String
+			},
+			meta: Object
 		}]
 	},
 	resourceCreationLimiter: {

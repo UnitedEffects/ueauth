@@ -1,6 +1,7 @@
 import challenge from './challenge';
 import Boom from '@hapi/boom';
 import acc from '../../accounts/account';
+import logs from '../../logging/logs';
 import {say} from '../../../say';
 import iat from '../../oidc/initialAccess/iat';
 import crypto from 'crypto';
@@ -16,7 +17,7 @@ export default {
 			const providerKey = req.params.key;
 			const result = await challenge.status({ accountId, uid, authGroup, providerKey });
 			if(result?.state === 'approved') return res.respond(say.noContent());
-			throw Boom.notFound();
+			return res.respond(say.partial());
 		} catch (error) {
 			next();
 		}
@@ -32,12 +33,18 @@ export default {
 	},
 	async recover(req, res, next) {
 		try {
-			//if(req.authGroup?.config?.mfaChallenge?.enable === true &&
-			//	req.globalSettings?.mfaChallenge?.enabled === true) {
-				const state = crypto.randomBytes(32).toString('hex');
-				return res.render('mfaRecover', { authGroup: req.authGroup, state, title: 'MFA Recovery Wizard', message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app.', request: `${config.PROTOCOL}://${(req.authGroup.aliasDnsOIDC) ? req.authGroup.aliasDnsOIDC : config.SWAGGER}/api/${req.authGroup.id}/mfa/instructions` });
-			//}
-			//throw Boom.forbidden(`MFA recovery is not available on the ${req.authGroup.name} Platform`);
+			if(req.authGroup?.config?.mfaChallenge?.enable === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true) {
+				let state;
+				if(!req.query.state) {
+					state = crypto.randomBytes(32).toString('hex');
+					const path = req.path;
+					return res.redirect(`${path}?state=${state}`);
+				}
+				state = req.query.state;
+				return res.render('mfaRecover', { authGroup: req.authGroup, state, title: 'MFA Recovery Wizard', message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.', request: `${config.PROTOCOL}://${(req.authGroup.aliasDnsOIDC) ? req.authGroup.aliasDnsOIDC : config.SWAGGER}/api/${req.authGroup.id}/mfa/instructions` });
+			}
+			throw Boom.forbidden(`MFA recovery is not available on the ${req.authGroup.name} Platform`);
 		} catch (error) {
 			next(error);
 		}
@@ -53,8 +60,9 @@ export default {
 			let result;
 			switch (selection.toLowerCase()) {
 			case 'email':
-				//todo send an email with a new token
-				return res.respond(say.ok());
+				result = await challenge.emailVerify(req.authGroup, req.globalSettings, user, state);
+				if(!result) throw Boom.badRequest(`The ${req.authGroup.name} platform ran into an issue accessing the notification service. Please try again later and if the issue continues, contact the administrator.`);
+				return res.respond(say.ok({ sent: true }));
 			case 'device':
 				result = await challenge.sendChallenge(req.authGroup, req.globalSettings, { accountId: user, mfaEnabled: true }, uid);
 				if(!result) throw Boom.badRequest(`The ${req.authGroup.name} platform ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
@@ -71,14 +79,10 @@ export default {
 			//basic auth...
 			if(req.authGroup?.config?.mfaChallenge?.enable === true &&
 				req.globalSettings?.mfaChallenge?.enabled === true) {
-				console.info('INSIDE');
 				// find account
 				const account = await acc.getAccount(req.authGroup.id, req.user.sub || req.user.id);
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
-				console.info(account);
-				console.info(mfaAcc);
 				if(account.mfa.enabled === false) {
-					console.info('FALSE');
 					// if account is not mfaEnabled, enable and send instructions
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
 					return res.respond(say.ok(result, 'MFA RECOVERY'));
@@ -87,15 +91,17 @@ export default {
 				const code = req.body.code;
 				const state = req.body.state;
 				const method = req.body.method;
-				console.info('OPTIONS');
-				console.info(state);
-				console.info(code);
-				console.info(method);
 				let proceedWithInstructions = false;
 
 				if(method === 'email') {
-					const iToken = await iat.getOne(code, req.authGroup.id);
-					if(iToken?.payload?.uid === state) proceedWithInstructions = true;
+					const iToken = JSON.parse(JSON.stringify(
+						await iat.getOne(code, req.authGroup.id)
+					));
+					if(iToken?.payload?.uid === state &&
+						iToken?.payload?.sub === account.id &&
+						iToken?.payload?.email === account.email) {
+						proceedWithInstructions = true;
+					}
 				}
 
 				if(method === 'device') {
@@ -125,7 +131,8 @@ export default {
 					throw Boom.unauthorized();
 				}
 
-				// if not, create a onetime use access token and send with instructions to request email or device confirmation
+				// if not, create a onetime use access token and
+				// send with instructions to request email or device confirmation
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,
@@ -133,16 +140,11 @@ export default {
 				};
 				const token = await iat.generateIAT(360, ['auth_group'], req.authGroup, meta);
 				const uri = `${config.PROTOCOL}://${(req.authGroup.aliasDnsOIDC) ? req.authGroup.aliasDnsOIDC : config.SWAGGER}/api/${req.authGroup.id}/mfa/safe-recovery`;
-
-				console.info('SENDING TOKEN INFO');
-				console.info(token);
 				const output = {
 					token: token.jti,
 					uri,
 					requestInstructions: 'Send header authorization: bearer token along with body json including state and selection = "email" or "device" to the uri'
 				};
-				console.info('OUTPUT');
-				console.info(output);
 				return res.respond(say.accepted(output, 'MFA RECOVERY'));
 			}
 			throw Boom.forbidden(`MFA recovery is not available on the ${req.authGroup.name} Platform`);
@@ -154,7 +156,31 @@ export default {
 
 async function bindAndSendInstructions(req, mfaAcc, account) {
 	let bindData;
+	let devices;
+	const warnings = [];
 	try {
+		devices = await challenge.devices(req.authGroup, req.globalSettings, mfaAcc);
+		console.info('GOT DEVICES');
+		console.info(devices);
+		if(devices) {
+			await Promise.all(devices.map(async (device)=>{
+				console.info('loop...');
+				if(device?.id) {
+					console.info(`Killing ${device.id}`);
+					try {
+						await challenge.revoke(req.authGroup, req.globalSettings, device.id);
+					} catch (e) {
+						const details = {
+							device: device.id,
+							message: 'Unable to revoke this device'
+						};
+						await logs.detail('ERROR', `unable to revoke device ${device.id}`, details);
+						warnings.push(details);
+					}
+				} else console.info(device);
+				return device;
+			}));
+		}
 		bindData = await challenge.bindUser(req.authGroup, req.globalSettings, mfaAcc);
 	} catch (e) {
 		console.error(e);
@@ -165,5 +191,5 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 		throw Boom.failedDependency('Unable to set MFA for this account. Please try again later.');
 	}
 	const instructions = await challenge.bindInstructions(req.authGroup, req.globalSettings, bindData);
-	return { ...bindData, ...instructions };
+	return { ...bindData, ...instructions, warnings };
 }

@@ -6,6 +6,10 @@ block content
             .center {
                 text-align: center;
             }
+            .bolder {
+                font-size: 18px;
+                color: black;
+            }
             .fields {
                 width: 15vw;
                 border: lightgray;
@@ -26,8 +30,33 @@ block content
             .error {
                 color: coral;
             }
+            .hidden {
+                visibility: hidden;
+            }
+            #loading {
+                display: inline-block;
+                width: 50px;
+                height: 50px;
+                border: 3px solid rgba(255, 255, 255, .3);
+                border-radius: 50%;
+                border-top-color: grey;
+                animation: spin 1s ease-in-out infinite;
+                -webkit-animation: spin 1s ease-in-out infinite;
+            }
+
+            @keyframes spin {
+                to {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+
+            @-webkit-keyframes spin {
+                to {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
         script(nonce=nonce, type="text/javascript").
-            const state = '#{state}';
+            let state = '#{state}';
             const authGroup = '#{authGroup}';
             const url = '#{request}';
         script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
@@ -52,7 +81,9 @@ block content
                             div(id='notify-ready')
                         //hide this....
                         div(id="resetting")
-                        .m-t-10
+                        center.m-t-5
+                            .hidden(id='loading')
+                        .m-t-10.center
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
                             if (policyUri || (authGroup && authGroup.primaryPrivacyPolicy))

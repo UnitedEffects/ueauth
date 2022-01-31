@@ -6734,6 +6734,14 @@ components:
                         type: string
                         description: This is an endpoint path used to map the account ID of the user to the MFA account/device
                         example: "/bind/path"
+                      devices:
+                        type: string
+                        description: This is an endpoint path used to return all registered devices of the MFA account
+                        example: "/devices/path"
+                      revoke:
+                        type: string
+                        description: This is an endpoint path used to revoke a device identified by ID of the MFA account
+                        example: "/revoke/path"
                   proxyClientId:
                     type: string
                     format: uuid
@@ -7705,6 +7713,14 @@ components:
               type: string
               description: This is an endpoint path used to map the account ID of the user to the MFA account/device
               example: "/bind/path"
+            devices:
+              type: string
+              description: This is an endpoint path used to return all registered devices of the MFA account
+              example: "/devices/path"
+            revoke:
+              type: string
+              description: This is an endpoint path used to revoke a device identified by ID of the MFA account
+              example: "/revoke/path"
         proxyEnableScreen:
           type: string
           format: uri

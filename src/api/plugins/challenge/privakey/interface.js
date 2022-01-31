@@ -9,7 +9,9 @@ const API = {
 	domain: 'https://cloud.privakey.com',
 	challenge: '/api/request/add',
 	validate: '/api/request/getRequest',
-	bind: '/api/account/bind'
+	bind: '/api/account/bind',
+	devices: '/api/device/getAll',
+	revoke: '/api/device/revoke'
 };
 
 const APP_LINKS = {
@@ -28,7 +30,13 @@ const pkApi = {
 		];
 		return {
 			instructions,
-			qrCode: `authwallet://st=${bindData.sessionToken}&appSpaceGuid=${bindData.appSpaceGuid}&appSpaceName=${bindData.appSpaceName}`
+			qrCode: `authwallet://st=${
+				bindData.sessionToken
+			}&appSpaceGuid=${
+				bindData.appSpaceGuid
+			}&appSpaceName=${
+				bindData.appSpaceName
+			}`
 		};
 	},
 	async findChallengeAndUpdate(provider, ag, data) {
@@ -172,6 +180,54 @@ const pkApi = {
 			},
 			params: {requestGuid: id}
 		};
+		return axios(options);
+	},
+	async devices(provider, authGroup, account) {
+		const options = {
+			url: `${API.domain}${API.devices}`,
+			method: 'get',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			auth: {
+				username: authGroup.config.mfaChallenge.meta.privakeyClient,
+				password: authGroup.config.mfaChallenge.meta.privakeySecret
+			},
+			params: {accountId: account.accountId}
+		};
+		console.info('DEVICES');
+		console.info(options);
+		const result = await axios(options);
+		if(!result) throw Boom.failedDependency();
+		console.info(result.data);
+		const output = [];
+		// ensuring there is an id...
+		result.data?.map((r) => {
+			output.push({
+				id: r.guid,
+				...r
+			});
+		});
+		console.info(output);
+		return output;
+	},
+	async revoke (provider, authGroup, device) {
+		const options = {
+			url: `${API.domain}${API.revoke}`,
+			method: 'patch',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.config.mfaChallenge.meta.privakeyClient,
+				password: authGroup.config.mfaChallenge.meta.privakeySecret
+			},
+			data: {
+				deviceGuid: device
+			}
+		};
+		console.info('REVOKE');
+		console.info(options);
 		return axios(options);
 	}
 };

@@ -5,6 +5,18 @@ window.addEventListener( 'load', async function () {
 	let password;
 	let method;
 	let providerKey;
+	const params = new Proxy(new URLSearchParams(window.location.search), {
+		get: (searchParams, prop) => searchParams.get(prop),
+	});
+	if(!state) {
+		state = params.state;
+	}
+	function showSpinner() {
+		$('#loading').css({ visibility: 'visible' });
+	}
+	function hideSpinner() {
+		$('#loading').css({ visibility: 'hidden' });
+	}
 
 	async function requestDone(event, pk = undefined, code=undefined) {
 		try {
@@ -17,6 +29,7 @@ window.addEventListener( 'load', async function () {
 			if(pk) data.providerKey = pk;
 			return basicRequest(data, event);
 		} catch(error) {
+			hideSpinner();
 			console.error(error);
 			$('#notify-device').prop('disabled', false);
 			$('#notify-email').prop('disabled', false);
@@ -33,7 +46,6 @@ window.addEventListener( 'load', async function () {
 		try {
 			method = type;
 			$('#flash').append('');
-			console.info('INSIDE REQ SELECT');
 			event.preventDefault();
 			$('#notify-device').prop('disabled', true);
 			$('#notify-email').prop('disabled', true);
@@ -49,35 +61,40 @@ window.addEventListener( 'load', async function () {
 				}
 			};
 
-			console.info(options);
+			showSpinner()
 			const result = await axios(options);
+			hideSpinner()
+			const jnReady = $('#notify-ready');
 			if(result.status === 200) {
-				console.info(result);
 				$('#notify-buttons').css({ display: 'none' });
 				$('#notify-message').css({ display: 'none' });
 				switch(type) {
 				case 'device':
 					providerKey = result?.data?.data?.id;
-					const jnReady = $('#notify-ready');
 					jnReady.css({ display: 'inherit' });
-					jnReady.append('<p id="notify-ready-message">We have sent you a request on your device. After you approve, click the button below</p><button id="notify-done" class="btn btn-outline-dark m-3">Ready to Proceed</button>');
+					jnReady.append('<p id="notify-ready-message">We have sent you a request on your device. After you approve, click the button below. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><button id="notify-done" class="btn btn-outline-dark m-3">Ready to Proceed</button>');
 
 					$('#notify-done').on('click', async (event) => {
-						console.info('DONE CLICKED');
 						return requestDone(event, providerKey, undefined);
 					});
 					break;
 				case 'email':
+					jnReady.css({ display: 'inherit' });
+					jnReady.append('<p id="notify-ready-message">We have sent you a code via email. Please check your inbox, copy/paste the code in the field below, and click the button below when ready. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><input class="fields" id="code" name="code" type="text" aria-describedby="code" placeholder="code..."></input><button id="notify-done" class="btn btn-outline-dark m-3">Ready to Proceed</button>');
+					$('#notify-done').on('click', async (event) => {
+						const code = $('#code').val();
+						return requestDone(event, undefined, code);
+					});
 					break;
 				default:
 					throw new Error('unknown state');
 				}
 			} else throw result;
 		} catch (error) {
+			hideSpinner();
 			console.error(error);
 			$('#notify-device').prop('disabled', false);
 			$('#notify-email').prop('disabled', false);
-			// start over???
 			$('#flash').append('<h5 class="error">There was an error. Please try again later.</h5>');
 			$('#getInfo').css({ display: 'inherit' });
 			$('#resetting').css({ display: 'none' });
@@ -115,28 +132,38 @@ window.addEventListener( 'load', async function () {
 				},
 				data
 			};
-			console.info(options);
+			showSpinner()
 			const result = await axios(options);
-			console.info(result);
-			if(result.status === 200) {
+			hideSpinner()
+			if(result?.status === 200) {
 				//instructions
 				jBasicInfo.css({ display: 'none' });
 				jResetting.css({ display: 'inherit' });
-				console.info('INSTRUCTIONS!');
-				console.info(result);
-				let instruct = '<p id="reset-instructions"><strong>You are ready to roll.</strong> Follow the instructions below. When you finish, click the button to close this window and go back to your login screen.</p><ol class="m-t-20 list-group list-group-flush list-group-numbered">';
-				result.data.data.instructions.map((i) => {
+				let instruct = '<p id="reset-instructions"><span class="bolder">You are ready to roll.</span> Follow the instructions below. When you finish, click the button to close this window and go back to your login screen.</p><ol class="m-t-20 list-group list-group-flush list-group-numbered">';
+				result.data?.data?.instructions.map((i) => {
 					instruct = `${instruct}<li class="list-group-item">${i}</li>`;
 				});
-				instruct = `${instruct}</ol><div class="canvas"><canvas class="canvas-width" id="qrcode"></canvas></div><h5>If you have finished, you may close this window.</h5>`;
+				if(result.data?.data?.qrCode) {
+					instruct = `${instruct}</ol><div class="canvas"><canvas class="canvas-width" id="qrcode"></canvas></div>`;
+				} else instruct = `${instruct}</ol>`;
+
+				if(result.data?.data?.proxyEnableScreen){
+					instruct = `${instruct}<div class="m-t-20 m-b-20 center"><a href="${result.data?.data?.proxyEnableScreen}" type="button" class="canvas-width btn btn-outline-dark">${(result.data?.data?.proxyEnableScreenButtonText) ? result.data?.data?.proxyEnableScreenButtonText : 'Click Here for Setup'}</a></div>`;
+				}
+
+				if(result.data?.data?.warnings) {
+					console.error(result.data.data.warnings);
+					instruct = `${instruct}<h4 class="center m-t-20" style="color: coral">WARNING: This action was unable to revoke your previous devices. We are allowing you to setup your current device so as not to block you but we encourage you to change your password, attempt a recovery again soon, and if you see this message then, please contact your admin.</h4>`
+				}
+
+				instruct = `${instruct}<div class="center m-t-20"><h3>If you have finished, you may close this window.</h3></div>`;
+
 				jResetting.append(instruct);
 				await createQR(result.data.data.qrCode);
 			} else if(result.status === 202) {
 				//selection
 				token = result?.data?.data?.token;
 				notifyUrl = result?.data?.data?.uri;
-				console.info(token);
-				console.info(notifyUrl);
 				jBasicInfo.css({ display: 'none' });
 				jNotify.css({ display: 'inherit'});
 				const notify = '<p id="notify-message"> It looks like you already have MFA enabled. This action would override your current settings so we need to make sure its you. You can verify your identity using your existing device or email. Please click the corresponding button.</p><div id="notify-buttons"><button class="btn btn-block btn-outline-dark m-3" id="notify-email">By Email...</button><button class="btn btn-block btn-outline-dark m-3" id="notify-device">By Device...</button></div>';
@@ -152,8 +179,8 @@ window.addEventListener( 'load', async function () {
 			} else throw result;
 		} catch (error) {
 			// do something
-			console.info('Basic Auth Error');
 			console.info(error);
+			hideSpinner();
 			this.disabled=false;
 			$('#getInfo').css({ display: 'inherit' });
 			$('#resetting').css({ display: 'none' });
@@ -168,8 +195,6 @@ window.addEventListener( 'load', async function () {
 	}
 
 	async function createQR (qrCode) {
-		console.info('Inside QR');
-		console.info(qrCode);
 		if(qrCode) {
 			var qr = new QRious({
 				element: document.getElementById('qrcode'),

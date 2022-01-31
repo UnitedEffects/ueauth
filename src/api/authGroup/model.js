@@ -180,6 +180,11 @@ const authGroup = new mongoose.Schema({
 					default: config.DEFAULT_UI_SKIN_SPLASH
 				},
 				logo: String,
+				loginOrientation: {
+					type: String,
+					enum: ['left', 'middle', 'right'],
+					default: 'right'
+				},
 				bgGradientLow: {
 					type: String,
 					default: config.DEFAULT_UI_SKIN_GRADIENT_LOW

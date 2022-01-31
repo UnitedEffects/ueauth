@@ -139,6 +139,36 @@ const httpProxyApi = {
 		};
 		return axios(options);
 	},
+	async devices(provider, authGroup, account) {
+		const token = await this.generateToken(provider);
+		const options = {
+			url: `${provider.api.domain}${provider.api.devices}`,
+			method: 'get',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			params: {accountId: account.accountId}
+		};
+		const result = await axios(options);
+		if(!result?.data) throw Boom.failedDependency();
+		return result.data;
+	},
+	async revoke (provider, authGroup, device) {
+		const token = await this.generateToken(provider);
+		const options = {
+			url: `${provider.api.domain}${provider.api.revoke}`,
+			method: 'post',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			data: {
+				deviceId: device
+			}
+		};
+		return axios(options);
+	}
 };
 
 export default httpProxyApi;

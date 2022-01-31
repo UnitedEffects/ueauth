@@ -236,6 +236,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			properties: [
 				'auth_group',
 				'client_name',
+				'client_label',
 				'client_skip_consent',
 				'register_url',
 				'client_optional_skip_logout_prompt',
@@ -260,6 +261,16 @@ function oidcConfig(g, aliasDns = undefined) {
 				if (key === 'client_name') {
 					try {
 						if (value === undefined || value === null) throw new InvalidClientMetadata(`${key} is required`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'client_label') {
+					try {
+						if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string value`);
+						const validLabels = ['login', 'api', 'app', 'custom'];
+						if(!validLabels.includes(value)) throw new InvalidClientMetadata(`${key} be one of: ${validLabels.join(' ')}`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						throw new InvalidClientMetadata(error.message);
