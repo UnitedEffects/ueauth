@@ -151,7 +151,7 @@ window.addEventListener( 'load', async function () {
 					instruct = `${instruct}<div class="m-t-20 m-b-20 center"><a href="${result.data?.data?.proxyEnableScreen}" type="button" class="canvas-width btn btn-outline-dark">${(result.data?.data?.proxyEnableScreenButtonText) ? result.data?.data?.proxyEnableScreenButtonText : 'Click Here for Setup'}</a></div>`;
 				}
 
-				if(result.data?.data?.warnings) {
+				if(result.data?.data?.warnings && result.data?.data?.warnings.length !== 0) {
 					console.error(result.data.data.warnings);
 					instruct = `${instruct}<h4 class="center m-t-20" style="color: coral">WARNING: This action was unable to revoke your previous devices. We are allowing you to setup your current device so as not to block you but we encourage you to change your password, attempt a recovery again soon, and if you see this message then, please contact your admin.</h4>`
 				}

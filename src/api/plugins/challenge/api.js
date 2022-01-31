@@ -156,12 +156,19 @@ export default {
 
 async function bindAndSendInstructions(req, mfaAcc, account) {
 	let bindData;
-	let devices;
+	let devices = [];
 	const warnings = [];
 	try {
-		devices = await challenge.devices(req.authGroup, req.globalSettings, mfaAcc);
-		console.info('GOT DEVICES');
-		console.info(devices);
+		try {
+			devices = await challenge.devices(req.authGroup, req.globalSettings, mfaAcc);
+		} catch (e) {
+			if(e.response?.status !== 404) {
+				await logs.detail('ERROR', `Unable to retrieve device list for ${mfaAcc.accountId}`, e);
+				warnings.push({
+					message: `Unable to retrieve device list for ${mfaAcc.accountId}`
+				});
+			}
+		}
 		if(devices) {
 			await Promise.all(devices.map(async (device)=>{
 				console.info('loop...');

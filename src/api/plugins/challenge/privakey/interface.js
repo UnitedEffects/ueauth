@@ -195,11 +195,8 @@ const pkApi = {
 			},
 			params: {accountId: account.accountId}
 		};
-		console.info('DEVICES');
-		console.info(options);
 		const result = await axios(options);
 		if(!result) throw Boom.failedDependency();
-		console.info(result.data);
 		const output = [];
 		// ensuring there is an id...
 		result.data?.map((r) => {
@@ -208,7 +205,6 @@ const pkApi = {
 				...r
 			});
 		});
-		console.info(output);
 		return output;
 	},
 	async revoke (provider, authGroup, device) {
@@ -226,8 +222,6 @@ const pkApi = {
 				deviceGuid: device
 			}
 		};
-		console.info('REVOKE');
-		console.info(options);
 		return axios(options);
 	}
 };
