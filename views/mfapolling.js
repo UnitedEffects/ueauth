@@ -1,5 +1,5 @@
 window.addEventListener( 'load', async function () {
-	const url = `/api/${authGroup}/interaction/${uid}/provider/${providerKey}/account/${accountId}/status`;
+	const url = `/api/${authGroup}/mfa/${providerKey}/account/${accountId}/interaction/${uid}/status`;
 	const complete = `/${authGroup}/interaction/${uid}/confirm-mfa`;
 	let count = 8;
 	function formPost(url, fields) {

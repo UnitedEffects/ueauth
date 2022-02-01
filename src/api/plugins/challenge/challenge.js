@@ -66,12 +66,12 @@ export default {
 			});
 			if (!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
 			switch (provider[0].type.toLowerCase()) {
-				case 'http-proxy':
-					return httpProxy.revoke(provider[0], ag, device);
-				case 'privakey':
-					return privakey.revoke(provider[0], ag, device);
-				default:
-					throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
+			case 'http-proxy':
+				return httpProxy.revoke(provider[0], ag, device);
+			case 'privakey':
+				return privakey.revoke(provider[0], ag, device);
+			default:
+				throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
 			}
 		}
 		return undefined;

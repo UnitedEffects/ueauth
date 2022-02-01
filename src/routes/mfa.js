@@ -13,12 +13,11 @@ router.post('/:group/:function/callback', [
 ], callback);
 
 // Polling for MFA Session
-router.get('/:group/interaction/:uid/provider/:key/account/:account/status', [
+router.get('/:group/mfa/:key/account/:account/interaction/:uid/status', [
 	m.validateAuthGroup
 ], challengeApi.status);
 
 // Safe Recovery when MFA is Enabled
-// todo swagger these....
 router.post('/:group/mfa/safe-recovery', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings,
@@ -30,6 +29,21 @@ router.post('/:group/mfa/instructions', [
 	m.getGlobalPluginSettings,
 	m.isBasic
 ], challengeApi.getMFAInstruction);
+
+
+/** things to expose/document
+ * status - for polling
+ * /api/:group/mfa/:key/account/:account/interaction/:uid/status
+ * callback
+ * /api/:group/mfa/callback
+ * instructions: getMFAInstruction
+ * /api/:group/mfa/instructions
+ * safe-recovery: safeRecoveryNotification
+ * /api/:group/mfa/safe-recovery
+ * ----------------------------
+ * challenge (new)
+ * revoke (new)
+ */
 
 async function callback(req, res, next) {
 	const func = req.params.function;

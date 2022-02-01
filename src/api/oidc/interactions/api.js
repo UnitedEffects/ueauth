@@ -48,14 +48,12 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
-			const { safeAG, authGroup } = await safeAuthGroup(req.authGroup);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
-			if (req.authGroup.pluginOptions.notification.enabled === true &&
+			if (authGroup?.pluginOptions?.notification.enabled === true &&
 			req.globalSettings.notifications.enabled === true) {
-				params.passwordless = (req.authGroup &&
-					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport === true);
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
@@ -74,12 +72,13 @@ export default {
 									client.client_federation_options = [];
 								}
 								if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
-								if(!authGroup.config.federate) {
+								if(!authGroup?.config?.federate) {
+									if(!authGroup?.config) throw Boom.badImplementation('Missing configuration for AuthGroup');
 									authGroup.config.federate = {
 										oidc: []
 									};
 								}
-								if(!authGroup.config.federate[key]) {
+								if(!authGroup?.config?.federate[key]) {
 									authGroup.config.federate[key] = [];
 								}
 								authGroup.config.federate[key].push(orgSSO);
@@ -96,7 +95,7 @@ export default {
 			switch (prompt.name) {
 			case 'login': {
 				const options = {
-					...interactions.standardLogin(safeAG, client, debug, prompt, session, uid, params)
+					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
 				};
 				if(req.query.flash) options.flash = req.query.flash;
 				return res.render('login', options);
@@ -106,7 +105,7 @@ export default {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				return res.render('interaction', interactions.consentLogin(safeAG, client, debug, session, prompt, uid, params));
+				return res.render('interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
 				return undefined;
@@ -120,7 +119,7 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
-			const { safeAG, authGroup } = await safeAuthGroup(req.authGroup);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const client = await provider.Client.find(params.client_id);
 			if(client.auth_group !== authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
@@ -134,9 +133,9 @@ export default {
 			if (params.passwordless === false ||
 				authGroup?.pluginOptions?.notification?.enabled === false ||
 				req.globalSettings?.notifications?.enabled === false) {
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
 			}
-			return res.render('passwordless', interactions.pwdlessLogin(safeAG, client, debug, prompt, session, uid, params));
+			return res.render('passwordless', interactions.pwdlessLogin(authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
 			return next(err);
 		}
@@ -148,7 +147,7 @@ export default {
 			const id = req.query.sub;
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
-			const { safeAG, authGroup } = await safeAuthGroup(req.authGroup);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const client = await provider.Client.find(params.client_id);
 			if(client.auth_group !== authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
@@ -172,7 +171,7 @@ export default {
 				token.payload.sub !== id ||
 				token.payload.email !== account.email ||
 				token.payload.uid !== uid) {
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
 			}
 
 			// clean up
@@ -490,7 +489,7 @@ export default {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
-			const { safeAG, authGroup } = await safeAuthGroup(req.authGroup);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
@@ -522,7 +521,7 @@ export default {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
 				return res.render('login',
-					interactions.standardLogin(safeAG, client, debug, prompt, session, uid,
+					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
 						{
 							...params,
 							login_hint: req.body.email
@@ -550,7 +549,7 @@ export default {
 				}
 				if(!mfaResult) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
 			}
 			if(authGroup?.config?.mfaChallenge?.enable === true &&
 				authGroup?.config?.mfaChallenge?.required === true &&
@@ -568,7 +567,7 @@ export default {
 				const enableMFA = await acc.enableMFA(authGroup.id, account.accountId);
 				if(enableMFA !== true) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
 			}
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
@@ -583,7 +582,7 @@ export default {
 		let _params;
 		let _session;
 		let _prompt;
-		const { safeAG, authGroup } = await safeAuthGroup(req.authGroup);
+		const { authGroup } = await safeAuthGroup(req.authGroup);
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
@@ -600,11 +599,11 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			} else {
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
 			}
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 			if (!account) {
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
 			const meta = {
 				auth_group: authGroup.id,
@@ -624,7 +623,7 @@ export default {
 				await iat.deleteOne(iAccessToken.jti, authGroup.id);
 			}
 			if (_uid && client && _params) {
-				return res.render('login', interactions.standardLogin(safeAG, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
 			}
 			return next(err);
 		}
@@ -676,7 +675,7 @@ export default {
 
 	async verifyAccountScreen (req, res, next) {
 		try {
-			const { safeAG } = await safeAuthGroup(req.authGroup);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			if(!req.query.code) {
 				if(req.query.email) {
 					return res.render('error', {
@@ -692,7 +691,7 @@ export default {
 				});
 
 			}
-			return res.render('verify', interactions.verifyScreen(safeAG, req.query, req.customDomain, req.customDomainUI));
+			return res.render('verify', interactions.verifyScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (err) {
 			next (err);
 		}
@@ -700,7 +699,7 @@ export default {
 
 	async forgotPasswordScreen (req, res, next) {
 		try {
-			const { safeAG, authGroup } = await safeAuthGroup(req.authGroup);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			if(!req.query.code) {
 				if(req.query.email) {
 					return res.render('error', {
@@ -726,7 +725,7 @@ export default {
 				}
 
 			}
-			return res.render('forgot', interactions.forgotScreen(safeAG, req.query, req.customDomain, req.customDomainUI));
+			return res.render('forgot', interactions.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (err) {
 			next (err);
 		}
