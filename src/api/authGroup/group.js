@@ -265,6 +265,18 @@ const agp = {
 			}
 		};
 	},
+	async safeAuthGroup(ag) {
+		const authGroup = JSON.parse(JSON.stringify(ag));
+		authGroup._id = ag.id;
+		const safeAG = JSON.parse(JSON.stringify(ag));
+		safeAG._id = ag.id;
+		delete safeAG.config;
+		delete safeAG.pluginOptions;
+		delete safeAG.associatedClient;
+		delete safeAG.owner;
+		delete safeAG.metadata;
+		return { safeAG, authGroup };
+	}
 };
 
 async function standardPatchValidation(original, patched) {

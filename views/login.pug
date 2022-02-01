@@ -211,8 +211,7 @@ block content
                                     a(href=(client.tosUri || tos)) [ Terms of Service ]
                                 if (client.policyUri || policy)
                                     a(href=(client.policyUri || policy)) [ Privacy Policy ]
-                                if (mfa && mfa.accountId)
-                                    a(href='/' + authGroup + '/recover-mfa') [ Restore MFA ]
+                                a(href='/' + authGroup + '/recover-mfa') [ Restore MFA ]
                         if (splashImage)
                             .login100-more(style="background-image: url('" + splashImage + "');")
                         else
