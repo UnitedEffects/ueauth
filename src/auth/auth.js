@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import njwk from 'node-jwk';
 import Boom from '@hapi/boom';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
+import { BasicStrategy } from 'passport-http';
 import iat from '../api/oidc/initialAccess/iat';
 import account from '../api/accounts/account';
 import oidc from '../api/oidc/oidc';
@@ -166,6 +167,48 @@ passport.deserializeUser(function(user, done) {
 	done(null, user);
 });
 
+passport.use('basic', new BasicStrategy({
+	passReqToCallback: true
+},async (req, email, password, done) => {
+	try {
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		const authGroup = req.authGroup;
+		if(authGroup.active !== true) return done(null, false);
+		const user = await account.getAccountByEmailOrUsername(authGroup.id, email);
+		if(authGroup && authGroup.config && authGroup.config.requireVerified === true) {
+			if (user.verified === false) {
+				return done(null, false);
+			}
+		}
+
+		if(await user.verifyPassword(password)) {
+			return done(null, user);
+		}
+		
+		done(null, false);
+	} catch (error) {
+		done(null, false);
+	}
+}));
+
+passport.use('simple-iat', new BearerStrategy({
+	passReqToCallback: true
+},
+async (req, token, next) => {
+	try {
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		if (req.authGroup.active !== true) return next(null, false);
+		const authGroupId = req.authGroup._id;
+		const access = await iat.getOne(token, authGroupId);
+		if(!access) {
+			return next(null, false);
+		}
+		return next(null, access.payload);
+	} catch (error) {
+		return next(error);
+	}
+}));
+
 passport.use('iat-group-create', new BearerStrategy({
 	passReqToCallback: true
 },
@@ -184,8 +227,7 @@ async (req, token, next) => {
 	} catch (error) {
 		return next(error);
 	}
-}
-));
+}));
 
 passport.use('user-iat-password', new BearerStrategy({
 	passReqToCallback: true
@@ -432,11 +474,16 @@ async function whitelist(req, res, next) {
 }
 
 export default {
-	isIatAuthenticatedForGroupActivation: passport.authenticate('iat-group-create', { session: false }),
-	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], { session: false }),
-	//isLockedGroupIatAuth: passport.authenticate('iat-group-register', { session: false }),
+	isIatAuthenticatedForGroupActivation: passport.authenticate('iat-group-create', {
+		session: false
+	}),
+	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], {
+		session: false 
+	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
 	isOIDCValid: passport.authenticate('oidc-token-validation', { session: false }),
+	isBasic: passport.authenticate('basic', { session: false }),
+	isSimpleIAT: passport.authenticate('simple-iat', { session: false }),
 	isWhitelisted: whitelist,
 	getUser, // for testing
 	getClient, // for testing

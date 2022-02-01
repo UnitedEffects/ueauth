@@ -166,7 +166,7 @@ const api = {
 		try {
 			const grp = await group.getOne(req.params.id);
 			if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
-			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM');
+			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM', req.globalSettings);
 			let output = JSON.parse(JSON.stringify(result));
 			if(output.config) delete output.config.keys;
 			output = includeSSORedirectUris(output);

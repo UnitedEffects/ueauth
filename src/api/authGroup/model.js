@@ -7,6 +7,13 @@ const config = require('../../config');
 
 mongoose.set('useCreateIndex', true);
 
+const mfaMeta = new mongoose.Schema({
+	// supporting privakey interface
+	privakeyClient: String,
+	privaKeySecret: String
+	// strict is false so this object can be used for any integration or additional data capture
+}, { _id: false, strict: false });
+
 const federatedOauth2 = new mongoose.Schema({
 	name: {
 		type: String,
@@ -173,6 +180,11 @@ const authGroup = new mongoose.Schema({
 					default: config.DEFAULT_UI_SKIN_SPLASH
 				},
 				logo: String,
+				loginOrientation: {
+					type: String,
+					enum: ['left', 'middle', 'right'],
+					default: 'right'
+				},
 				bgGradientLow: {
 					type: String,
 					default: config.DEFAULT_UI_SKIN_GRADIENT_LOW
@@ -230,6 +242,21 @@ const authGroup = new mongoose.Schema({
 			oidc: [federatedOIDC],
 			oauth2: [federatedOauth2],
 			saml: [Object]
+		},
+		mfaChallenge: {
+			enable: {
+				type: Boolean,
+				default: false
+			},
+			required: {
+				type: Boolean,
+				default: false
+			},
+			type: {
+				type: String,
+				enum: ['http-proxy', 'privakey']
+			},
+			meta: mfaMeta
 		}
 	},
 	pluginOptions: {

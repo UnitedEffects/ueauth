@@ -75,6 +75,29 @@ export default {
 		return null;
 	},
 
+	// @notTested
+	async generateRootServiceClient(authGroup, name) {
+		const check = await dal.getOneByName(authGroup,
+			`${authGroup.id}_${name.toLowerCase().replace(/ /g, '_')}`);
+		if(check) await dal.deleteOne(authGroup, check._id);
+		const client = new (oidc(authGroup).Client)({
+			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),
+			'client_secret_expires_at': 0,
+			'client_id_issued_at': Date.now(),
+			'client_id': uuid(),
+			'client_name': `${authGroup.id}_${name.toLowerCase().replace(/ /g, '_')}`,
+			'grant_types': ['client_credentials'],
+			'response_types': [],
+			'redirect_uris': [`https://${config.UI_URL}`],
+			'auth_group': authGroup.id,
+			'scope': 'api:read api:write'
+		});
+		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
+		const add = new Adapter('client');
+		await add.upsert(client.clientId, fixed);
+		return fixed;
+	},
+
 	async generateNotificationServiceClient(authGroup) {
 		const check = await dal.getOneByName(authGroup, `${authGroup.id}_Global_Notification_Service`);
 		if(check) await dal.deleteOne(authGroup, check._id);

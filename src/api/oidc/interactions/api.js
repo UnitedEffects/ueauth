@@ -4,6 +4,7 @@ import axios from 'axios';
 import Account from '../../accounts/accountOidcInterface';
 import {say} from '../../../say';
 import acc from '../../accounts/account';
+import group from '../../authGroup/group';
 import org from '../../orgs/orgs';
 import log from '../../logging/logs';
 import iat from '../initialAccess/iat';
@@ -14,6 +15,9 @@ import Pug from 'koa-pug';
 import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import challenges from '../../plugins/challenge/challenge';
+import challenge from "../../plugins/challenge/challenge";
+
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
@@ -36,27 +40,28 @@ const debug = (obj) => querystring.stringify(Object.entries(obj).reduce((acc, [k
 	encodeURIComponent(value) { return keys.has(value) ? `<strong>${value}</strong>` : value; },
 });
 
+async function safeAuthGroup(ag) {
+	return group.safeAuthGroup(ag);
+}
+
 export default {
 	async getInt(req, res, next) {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
-			const authGroup = JSON.parse(JSON.stringify(req.authGroup));
-			authGroup._id = req.authGroup.id;
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
-			if (req.authGroup.pluginOptions.notification.enabled === true &&
+			if (authGroup?.pluginOptions?.notification.enabled === true &&
 			req.globalSettings.notifications.enabled === true) {
-				params.passwordless = (req.authGroup &&
-					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport === true);
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
 
-			if(params.org && client.client_allow_org_federation===true && req.authGroup) {
+			if(params.org && client.client_allow_org_federation===true && authGroup) {
 				try {
-					const organization = await org.getOrg(req.authGroup, params.org);
+					const organization = await org.getOrg(authGroup, params.org);
 					if(!organization) throw 'no org';
 					if(organization.sso) {
 						Object.keys(organization.sso).map((key) => {
@@ -68,12 +73,13 @@ export default {
 									client.client_federation_options = [];
 								}
 								if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
-								if(!authGroup.config.federate) {
+								if(!authGroup?.config?.federate) {
+									if(!authGroup?.config) throw Boom.badImplementation('Missing configuration for AuthGroup');
 									authGroup.config.federate = {
 										oidc: []
 									};
 								}
-								if(!authGroup.config.federate[key]) {
+								if(!authGroup?.config?.federate[key]) {
 									authGroup.config.federate[key] = [];
 								}
 								authGroup.config.federate[key].push(orgSSO);
@@ -89,7 +95,11 @@ export default {
 			}
 			switch (prompt.name) {
 			case 'login': {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
+				const options = {
+					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
+				};
+				if(req.query.flash) options.flash = req.query.flash;
+				return res.render('login', options);
 			}
 			case 'consent': {
 				if(client.client_skip_consent === true) {
@@ -110,24 +120,23 @@ export default {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const client = await provider.Client.find(params.client_id);
-			if(client.auth_group !== req.authGroup.id) {
+			if(client.auth_group !== authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			params.passwordless = false;
-			if (req.authGroup.pluginOptions.notification.enabled === true &&
-				req.globalSettings.notifications.enabled === true) {
-				params.passwordless = (req.authGroup &&
-					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport === true);
+			if (authGroup?.pluginOptions?.notification?.enabled === true &&
+				req.globalSettings?.notifications?.enabled === true) {
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
 
 			if (params.passwordless === false ||
-				req.authGroup.pluginOptions.notification.enabled === false ||
-				req.globalSettings.notifications.enabled === false) {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
+				authGroup?.pluginOptions?.notification?.enabled === false ||
+				req.globalSettings?.notifications?.enabled === false) {
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
 			}
-			return res.render('passwordless', interactions.pwdlessLogin(req.authGroup, client, debug, prompt, session, uid, params));
+			return res.render('passwordless', interactions.pwdlessLogin(authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
 			return next(err);
 		}
@@ -139,36 +148,35 @@ export default {
 			const id = req.query.sub;
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const client = await provider.Client.find(params.client_id);
-			if(client.auth_group !== req.authGroup.id) {
+			if(client.auth_group !== authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			params.passwordless = false;
-			if (req.authGroup.pluginOptions.notification.enabled === true &&
+			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
-				params.passwordless = (req.authGroup &&
-					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport === true);
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
-			const account = await acc.getAccount(req.authGroup.id, id);
-			const tok = await iat.getOne(iAccessToken, req.authGroup.id);
+			const account = await acc.getAccount(authGroup.id, id);
+			const tok = await iat.getOne(iAccessToken, authGroup.id);
 			let token;
 			if (tok) {
 				token = JSON.parse(JSON.stringify(tok));
 			}
 
 			if (!account ||
-				account.authGroup !== req.authGroup.id ||
+				account.authGroup !== authGroup.id ||
 				!token ||
 				!token.payload ||
 				token.payload.sub !== id ||
 				token.payload.email !== account.email ||
 				token.payload.uid !== uid) {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
 			}
 
 			// clean up
-			await iat.deleteOne(iAccessToken, req.authGroup.id);
+			await iat.deleteOne(iAccessToken, authGroup.id);
 
 			const result = {
 				login: {
@@ -197,6 +205,7 @@ export default {
 		try {
 			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
 			if (req.authIssuer) return next();
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			let redirectUri;
 			let issuer;
 			let clientOptions;
@@ -210,7 +219,7 @@ export default {
 			}
 			if(upstreamBody) {
 				const upstream = upstreamBody.split('.');
-				const {spec, provider, name, myConfig} = await checkProvider(upstream, req.authGroup);
+				const {spec, provider, name, myConfig} = await checkProvider(upstream, authGroup);
 				switch (spec.toLowerCase()) {
 				case 'oidc':
 					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
@@ -281,7 +290,8 @@ export default {
 			const provider = req.provider;
 			const { prompt: { name } } = await provider.interactionDetails(req, res);
 			assert.equal(name, 'login');
-			const path = `/${req.authGroup.id}/interaction/${req.params.uid}/federated`;
+			const { authGroup } = await safeAuthGroup(req.authGroup);
+			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
 			switch (req.authSpec.toLowerCase()) {
 			case 'oidc': {
@@ -332,7 +342,7 @@ export default {
 						const claims = jwt.decode(id_token, {complete: true});
 						const profile = JSON.parse(JSON.stringify(claims.payload));
 						if(profile.nonce !== nonce) throw Boom.badRequest(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
-						const account = await Account.findByFederated(req.authGroup,
+						const account = await Account.findByFederated(authGroup,
 							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 							profile);
 						const result = {
@@ -353,13 +363,13 @@ export default {
 					response_type: myConfig.response_type
 				};
 				if(myConfig.PKCE === true) {
-					const session = await interactions.getPKCESession(req.authGroup.id, state);
+					const session = await interactions.getPKCESession(authGroup.id, state);
 					if(!session) throw Boom.badRequest('PKCE Session not found');
 					callbackOptions.code_verifier = session.payload.code_verifier;
 				}
 				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
 				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
-				const account = await Account.findByFederated(req.authGroup,
+				const account = await Account.findByFederated(authGroup,
 					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 					profile);
 				const result = {
@@ -392,7 +402,7 @@ export default {
 						await interactions.savePKCESession({
 							payload: {
 								state,
-								auth_group: req.authGroup.id,
+								auth_group: authGroup.id,
 								code_challenge,
 								code_verifier
 							}
@@ -415,7 +425,7 @@ export default {
 					state
 				};
 				if (myConfig.PKCE === true) {
-					const session = await interactions.getPKCESession(req.authGroup.id, state);
+					const session = await interactions.getPKCESession(authGroup.id, state);
 					if (!session) throw Boom.badRequest('PKCE Session not found');
 					oauthCallback.body = {
 						code_verifier: session.payload.code_verifier
@@ -457,7 +467,7 @@ export default {
 				if (!profile.email) {
 					throw Boom.badData('We apologize but this provider did not return an email address. Unqiue email is required for all auth');
 				}
-				const account = await Account.findByFederated(req.authGroup,
+				const account = await Account.findByFederated(authGroup,
 					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 					profile);
 				const result = {
@@ -480,32 +490,87 @@ export default {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
-			if (req.authGroup.pluginOptions.notification.enabled === true &&
+			const { authGroup } = await safeAuthGroup(req.authGroup);
+			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
-				params.passwordless = (req.authGroup &&
-					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport === true);
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
 
-			// email will check against username as well... todo do we want to control that?
-			// in v7 this is referred to as findByLogin
-			const accountId = await Account.authenticate(req.authGroup, req.body.email, req.body.password);
-
+			let account = {};
+			if(req.body.providerKey && req.body.accountId) {
+				//this is a confirmation of mfa
+				const status = await challenges.status({
+					accountId: req.body.accountId,
+					uid,
+					authGroup: authGroup.id,
+					providerKey: req.body.providerKey
+				});
+				if(status?.state !== 'approved') account.accountId = undefined;
+				else account = {
+					accountId: status.accountId,
+					mfaEnabled: true,
+					mfaProven: true
+				};
+			} else{
+				// in v7 this is referred to as findByLogin
+				account = await Account.authenticate(authGroup, req.body.email, req.body.password);
+			}
 			// if there is a problem, go back to login...
-			if (!accountId) {
+			if (!account?.accountId) {
 				const client = await provider.Client.find(params.client_id);
-				if(client.auth_group !== req.authGroup.id) {
+				if(client.auth_group !== authGroup.id) {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				return res.render('login',
+					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
+						{
+							...params,
+							login_hint: req.body.email
+						}, 'Invalid email or password.'));
 			}
 
 			const result = {
 				login: {
-					accountId
+					accountId: account?.accountId
 				},
 			};
-
+			if(authGroup?.config?.mfaChallenge?.enable !== true &&
+				account?.mfaEnabled === true) {
+				await log.error(`Account ${account.accountId} has MFA enabled but the operating AuthGroup ${authGroup.id} does not. The user's expectation of security may be compromised`);
+			}
+			if(authGroup?.config?.mfaChallenge?.enable === true &&
+				account?.mfaEnabled === true &&
+				account?.mfaProven !== true &&
+				req.globalSettings?.mfaChallenge?.enabled === true) {
+				let mfaResult;
+				try {
+					mfaResult = await challenges.sendChallenge(authGroup, req.globalSettings, account, uid);
+				} catch (error) {
+					console.error(error);
+				}
+				if(!mfaResult) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
+				const client = await provider.Client.find(params.client_id);
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
+			}
+			if(authGroup?.config?.mfaChallenge?.enable === true &&
+				authGroup?.config?.mfaChallenge?.required === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true &&
+				account?.mfaEnabled !== true) {
+				let bindData;
+				let instructions;
+				try {
+					await challenges.revokeAllDevices(authGroup, req.globalSettings, account);
+					bindData = await challenges.bindUser(authGroup, req.globalSettings, account);
+					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData);
+				} catch (error) {
+					console.error(error);
+				}
+				if(!bindData || !instructions) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
+				const enableMFA = await acc.enableMFA(authGroup.id, account.accountId);
+				if(enableMFA !== true) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
+				const client = await provider.Client.find(params.client_id);
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
+			}
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);
@@ -519,6 +584,7 @@ export default {
 		let _params;
 		let _session;
 		let _prompt;
+		const { authGroup } = await safeAuthGroup(req.authGroup);
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
@@ -531,26 +597,24 @@ export default {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			params.passwordless = false;
-			if (req.authGroup.pluginOptions.notification.enabled === true &&
+			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
-				params.passwordless = (req.authGroup &&
-					req.authGroup.config &&
-					req.authGroup.config.passwordLessSupport === true);
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			} else {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
 			}
-			const account = await acc.getAccountByEmailOrUsername(req.authGroup.id, req.body.email);
+			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 			if (!account) {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
 			const meta = {
-				auth_group: req.authGroup.id,
+				auth_group: authGroup.id,
 				sub: account.id,
 				email: account.email,
 				uid
 			};
-			iAccessToken = await iat.generateIAT(900, ['auth_group'], req.authGroup, meta);
-			const notificationData = interactions.passwordLessOptions(req.authGroup, account, iAccessToken, [], uid, req.customDomain);
+			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
+			const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
 			await n.notify(req.globalSettings, notificationData, req.authGroup);
 			return res.render('success', {
 				title: 'SUCCESS!',
@@ -558,10 +622,10 @@ export default {
 			});
 		} catch (err) {
 			if(iAccessToken) {
-				await iat.deleteOne(iAccessToken.jti, req.authGroup.id);
+				await iat.deleteOne(iAccessToken.jti, authGroup.id);
 			}
 			if (_uid && client && _params) {
-				return res.render('login', interactions.standardLogin(req.authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
+				return res.render('login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
 			}
 			return next(err);
 		}
@@ -591,6 +655,7 @@ export default {
 	async forgot (req, res, next) {
 		try {
 			const newPassword = req.body.password;
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const update = [
 				{
 					op: 'replace',
@@ -603,7 +668,7 @@ export default {
 					value: true
 				}
 			];
-			await acc.patchAccount(req.authGroup, req.user.sub, update, req.user.sub, true);
+			await acc.patchAccount(authGroup, req.user.sub, update, req.user.sub, true);
 			return res.respond(say.noContent('Password Reset'));
 		} catch (err) {
 			next (err);
@@ -612,6 +677,7 @@ export default {
 
 	async verifyAccountScreen (req, res, next) {
 		try {
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			if(!req.query.code) {
 				if(req.query.email) {
 					return res.render('error', {
@@ -627,7 +693,7 @@ export default {
 				});
 
 			}
-			return res.render('verify', interactions.verifyScreen(req.authGroup, req.query, req.customDomain, req.customDomainUI));
+			return res.render('verify', interactions.verifyScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (err) {
 			next (err);
 		}
@@ -635,6 +701,7 @@ export default {
 
 	async forgotPasswordScreen (req, res, next) {
 		try {
+			const { authGroup } = await safeAuthGroup(req.authGroup);
 			if(!req.query.code) {
 				if(req.query.email) {
 					return res.render('error', {
@@ -643,7 +710,7 @@ export default {
 						details: 'Check your email or mobile device.'
 					});
 				}
-				if(!req.globalSettings || !req.globalSettings.notifications || req.globalSettings.notifications.enabled !== true)
+				if(req.globalSettings?.notifications?.enabled !== true)
 				{
 					return res.render('error', {
 						title: 'Forgot Password Not Enabled by the OP Admin',
@@ -651,7 +718,7 @@ export default {
 						details: 'Please contact your UE Auth Admin.'
 					});
 				}
-				if(!req.authGroup || !req.authGroup.pluginOptions || !req.authGroup.pluginOptions.notification || req.authGroup.pluginOptions.notification.enabled !== true || !req.authGroup.config || req.authGroup.config.centralPasswordReset !== true) {
+				if(authGroup?.pluginOptions?.notification?.enabled !== true || authGroup?.config?.centralPasswordReset !== true) {
 					return res.render('error', {
 						title: `Forgot Password Not Enabled for ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name}`,
 						message: 'This Auth Group has either not enabled notifications or has disabled centralized password reset.',
@@ -660,7 +727,7 @@ export default {
 				}
 
 			}
-			return res.render('forgot', interactions.forgotScreen(req.authGroup, req.query, req.customDomain, req.customDomainUI));
+			return res.render('forgot', interactions.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (err) {
 			next (err);
 		}
@@ -710,6 +777,7 @@ export default {
 		}
 	},
 	async postLogoutSuccessSource(ctx) {
+		const { authGroup } = await safeAuthGroup(ctx.authGroup);
 		const {
 			clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
 		} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
@@ -719,7 +787,7 @@ export default {
 			basedir: 'path/for/pug/extends',
 		});
 		const message = (!ctx.oidc.client) ? `Logout action ${name ? `with ${name}`: ''} was successful` : 'You are still logged in';
-		const options = await interactions.oidcPostLogoutSourceOptions(ctx.authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
+		const options = await interactions.oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
 		ctx.type = 'html';
 		ctx.set('json-data', JSON.stringify({
 			title: options.title,
@@ -734,12 +802,13 @@ export default {
 	},
 	async renderError(ctx, out, error) {
 		console.error(error);
+		const { authGroup } = await safeAuthGroup(ctx.authGroup);
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../../views'),
 			basedir: 'path/for/pug/extends',
 		});
 		ctx.type = 'html';
-		const options = await interactions.oidcRenderErrorOptions(ctx.authGroup, out);
+		const options = await interactions.oidcRenderErrorOptions(authGroup, out);
 		options.assets = config.STATIC_ASSETS;
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;

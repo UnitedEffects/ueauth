@@ -23,6 +23,39 @@ const pluginConfig = new mongoose.Schema({
 		notificationServiceUri: String,
 		registeredClientId: String
 	},
+	mfaChallenge: {
+		enabled: {
+			type: Boolean,
+			default: false
+		},
+		providers: [{
+			type: {
+				type: String,
+				enum: ['http-proxy', 'privakey'],
+				required: true
+			},
+			proxyClientId: String,
+			proxyEnableScreen: String,
+			proxyEnableInstructions: String,
+			proxyEnableScreenButtonText: String,
+			api: {
+				domain: String,
+				challenge: String,
+				validate: String,
+				bind: String,
+				revoke: String,
+				devices: String
+			},
+			meta: Object
+		}]
+	},
+	resourceCreationLimiter: {
+		enabled: {
+			type: Boolean,
+			default: false
+		},
+		thresholds: Object
+	},
 	_id: {
 		type: String,
 		default: uuid

@@ -43,107 +43,175 @@ block content
             #apple:hover {
                 background-color: #212529;
             }
+        style(type='text/css').
+            p {
+                margin: 40px;
+            }
+
+            #loading {
+                display: inline-block;
+                width: 50px;
+                height: 50px;
+                border: 3px solid rgba(255, 255, 255, .3);
+                border-radius: 50%;
+                border-top-color: grey;
+                animation: spin 1s ease-in-out infinite;
+                -webkit-animation: spin 1s ease-in-out infinite;
+            }
+
+            @keyframes spin {
+                to {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+
+            @-webkit-keyframes spin {
+                to {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
         section#head.section
             .limiter
                 .container-login100
                     .wrap-login100
-                        .login100-form
-                            form.validate-form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
-                                //span.login100-form-title.p-b-43=title
-                                if (client)
-                                    span.login100-form-title.p-b-10=client.clientName
-                                    if (authGroupName !== client.clientName)
-                                        h3.login100-form-title.p-b-5=authGroupName
-                                else
-                                    span.login100-form-title.p-b-10=authGroupName
-                                if (flash)
-                                    h5.flash.m-b-20= flash
-                                .wrap-input100.validate-input(data-validate='Valid email is required: ex@abc.xyz')
-                                    if !params.login_hint
-                                        input.input100(type='email' name='email' autofocus='on' autocomplete='username')
-                                        span.focus-input100
-                                        span.label-input100 Email
-                                    else
-                                        input.input100(type='email' name='email' value=params.login_hint autocomplete='username')
-                                        span.focus-input100
-                                        span.label-input100 Email
-                                .wrap-input100.validate-input(data-validate='Password is required')
-                                    if params.login_hint
-                                        input.input100(type='password' name='password' autofocus='on' autocomplete='current-password')
-                                        span.focus-input100
-                                        span.label-input100 Password
-                                    else
-                                        input.input100(type='password' name='password' autocomplete='current-password')
-                                        span.focus-input100
-                                        span.label-input100 Password
-                                .flex-sb-m.w-full.p-t-3.p-b-32
-                                    //.contact100-form-checkbox
-                                        input#ckb1.input-checkbox100(type='checkbox' name='remember-me')
-                                        label.label-checkbox100(for='ckb1')
-                                            | Remember me
-                                    div
-                                        a.txt1(href='/'+authGroup+'/forgotpassword')
-                                            | Forgot Password?
-                                    if (locked === false && registerUrl)
+                        div(id='main').login100-form
+                            if (client)
+                                span.login100-form-title.p-b-10=client.clientName
+                                if (authGroupName !== client.clientName)
+                                    h3.login100-form-title.p-b-5=authGroupName
+                            else
+                                span.login100-form-title.p-b-10=authGroupName
+                            if (flash)
+                                h5.flash.m-b-20= flash
+                            if (!mfa || mfa.pending !== true)
+                                form.validate-form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
+
+                                    .wrap-input100.validate-input(data-validate='Valid email is required: ex@abc.xyz')
+                                        if !params.login_hint
+                                            input.input100(type='email' name='email' autofocus='on' autocomplete='username')
+                                            span.focus-input100
+                                            span.label-input100 Email
+                                        else
+                                            input.input100(type='email' name='email' value=params.login_hint autocomplete='username')
+                                            span.focus-input100
+                                            span.label-input100 Email
+                                    .wrap-input100.validate-input(data-validate='Password is required')
+                                        if params.login_hint
+                                            input.input100(type='password' name='password' autofocus='on' autocomplete='current-password')
+                                            span.focus-input100
+                                            span.label-input100 Password
+                                        else
+                                            input.input100(type='password' name='password' autocomplete='current-password')
+                                            span.focus-input100
+                                            span.label-input100 Password
+                                    .flex-sb-m.w-full.p-t-3.p-b-32
                                         div
-                                            a.txt1(href=registerUrl)
-                                                | Register
-                                .container-login100-form-btn
-                                    button.login100-form-btn(type='submit')
-                                        | Login
-                                //.login100-form-social.flex-c-m
-                                    a.login100-form-social-item.flex-c-m.bg1.m-r-5(href='#')
-                                        i.fa.fa-facebook-f(aria-hidden='true')
-                                    a.login100-form-social-item.flex-c-m.bg2.m-r-5(href='#')
-                                        i.fa.fa-twitter(aria-hidden='true')
-                            if altLogin
-                                .text-center.p-t-20.p-b-20
-                                    span.txt2
-                                        | or sign in using
-                                if params.passwordless
-                                    .container-login100-form-btn.m-b-10
-                                        a.btn.btn-outline-dark.fullWidth(href='/' + authGroup + '/interaction/' + uid + '/passwordless-request', id='email')
-                                            i.fas.fa-paper-plane
-                                            span.p-l-10 Email Magic Link
-                                if loginButtons.length > 0
-                                    each val in loginButtons
-                                        form.validate-form(autocomplete='off', action='/' + authGroup + '/interaction/' + uid + '/federated', method='post')
-                                            input(type="hidden" name="upstream" value=val.code)
-                                            .container-login100-form-btn
-                                                if val.button === 'google'
-                                                    button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='google')
-                                                        img(width="20px" style="margin-bottom:3px; margin-right:5px" alt="Google sign-in" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png")
-                                                        span.google-button__text=val.text
-                                                else if val.button === 'linkedin'
-                                                    button.btn.btn-block.fullWidth.m-b-10(type='submit', id='linkedin')
-                                                        i.fab.fa-linkedin
-                                                        span.p-l-10=val.text
-                                                else if val.button === 'microsoft'
-                                                    button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='microsoft')
-                                                        i.fab.fa-windows
-                                                        span.p-l-10=val.text
-                                                else if val.button === 'github'
-                                                    button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='github')
-                                                        i.fab.fa-github
-                                                        span.p-l-10=val.text
-                                                else if val.button === 'twitter'
-                                                    button.btn.btn-block.fullWidth.m-b-10(type='submit', id='twitter')
-                                                        i.fab.fa-twitter
-                                                        span.p-l-10=val.text
-                                                else if val.button === 'apple'
-                                                    button.btn.btn-block.fullWidth.m-b-10(type='submit', id='apple')
-                                                        i.fab.fa-apple
-                                                        span.p-l-10=val.text
-                                                else
-                                                    button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit')
-                                                        i.fas.fa-arrow-circle-right
-                                                        span.p-l-10=val.text
+                                            a.txt1(href='/'+authGroup+'/forgotpassword')
+                                                | Forgot Password?
+                                        if (locked === false && registerUrl)
+                                            div
+                                                a.txt1(href=registerUrl)
+                                                    | Register
+                                    .container-login100-form-btn
+                                        button.login100-form-btn(type='submit')
+                                            | Login
+                                if altLogin
+                                    .text-center.p-t-20.p-b-20
+                                        span.txt2
+                                            | or sign in using
+                                    if params.passwordless
+                                        .container-login100-form-btn.m-b-10
+                                            a.btn.btn-outline-dark.fullWidth(href='/' + authGroup + '/interaction/' + uid + '/passwordless-request', id='email')
+                                                i.fas.fa-paper-plane
+                                                span.p-l-10 Email Magic Link
+                                    if loginButtons.length > 0
+                                        each val in loginButtons
+                                            form.validate-form(autocomplete='off', action='/' + authGroup + '/interaction/' + uid + '/federated', method='post')
+                                                input(type="hidden" name="upstream" value=val.code)
+                                                .container-login100-form-btn
+                                                    if val.button === 'google'
+                                                        button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='google')
+                                                            img(width="20px" style="margin-bottom:3px; margin-right:5px" alt="Google sign-in" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png")
+                                                            span.google-button__text=val.text
+                                                    else if val.button === 'linkedin'
+                                                        button.btn.btn-block.fullWidth.m-b-10(type='submit', id='linkedin')
+                                                            i.fab.fa-linkedin
+                                                            span.p-l-10=val.text
+                                                    else if val.button === 'microsoft'
+                                                        button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='microsoft')
+                                                            i.fab.fa-windows
+                                                            span.p-l-10=val.text
+                                                    else if val.button === 'github'
+                                                        button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit', id='github')
+                                                            i.fab.fa-github
+                                                            span.p-l-10=val.text
+                                                    else if val.button === 'twitter'
+                                                        button.btn.btn-block.fullWidth.m-b-10(type='submit', id='twitter')
+                                                            i.fab.fa-twitter
+                                                            span.p-l-10=val.text
+                                                    else if val.button === 'apple'
+                                                        button.btn.btn-block.fullWidth.m-b-10(type='submit', id='apple')
+                                                            i.fab.fa-apple
+                                                            span.p-l-10=val.text
+                                                    else
+                                                        button.btn.btn-outline-dark.fullWidth.m-b-10(type='submit')
+                                                            i.fas.fa-arrow-circle-right
+                                                            span.p-l-10=val.text
+                            else if (mfa.bindUser === true)
+                                script(type="text/javascript").
+                                    const authGroup = '#{authGroup}';
+                                    const uid = '#{uid}';
+                                    const accountId = '#{mfa.accountId}'
+                                    const qrCode ='#{mfa.instructions.qrCode}'
+                                script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
+                                script(nonce=nonce, src="https://code.jquery.com/jquery-3.6.0.slim.min.js", crossorigin="anonymous")
+                                script(nonce=nonce)
+                                    include qrcode.js
+                                span(style="font-size: 20px;", id="mfa-pending").login100-form-title.p-b-10 The Platform is now requiring MFA. Please follow the instructions below.
+                                ol(style='text-align: center; width: 90%; margin:auto;').m-t-20.list-group.list-group-flush.list-group-numbered
+                                    each i in mfa.instructions.instructions
+                                        li.list-group-item !{i}
+                                div.m-t-10(style='text-align: center')
+                                    canvas(id='qrcode', style='width: 75%')
+                                if(mfa && mfa.setupScreen)
+                                    if(mfa.setupScreenButtonText)
+                                        a.btn.btn-outline-dark.fullWidth.m-t-20.m-b-10(href=mfa.setupScreen)
+                                            i.far.fa-list-alt
+                                            span.p-l-10=mfa.setupScreenButtonText
+                                    else
+                                        a.btn.btn-outline-dark.fullWidth.m-t-20.m-b-10(href=mfa.setupScreen)
+                                            i.far.fa-list-alt
+                                            span.p-l-10 Go To Setup
+                                a.btn.btn-outline-dark.fullWidth.m-t-20(href='/' + authGroup + '/interaction/' + uid + '?flash=Please enter your username and password again now that you have activated MFA')
+                                    i.fas.fa-check-circle
+                                    span.p-l-10 Ready To Login
+
+                            else
+                                script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
+                                script(nonce=nonce, src="https://code.jquery.com/jquery-3.6.0.slim.min.js", crossorigin="anonymous")
+                                script(type="text/javascript").
+                                    const authGroup = '#{authGroup}';
+                                    const uid = '#{uid}';
+                                    const accountId = '#{mfa.accountId}'
+                                    const providerKey = '#{mfa.providerKey}'
+                                script(nonce=nonce)
+                                    include mfapolling.js
+                                span(style="font-size: 20px;", id="mfa-pending").login100-form-title.p-b-10 Check your device for Multi Factor Authorization
+                                center
+                                    div(id='loading')
+                                div(id="mfa")
+                                div(id='mfa-try-again', style='visibility: hidden')
+                                    span(style="font-size: 20px;", id="mfa-pending").login100-form-title.p-b-10 If you need to reconnect your device to your account, use the 'Restore MFA' link below. Otherwise click to retry login.
+                                    a.btn.btn-outline-dark.fullWidth.p-t-10(href='/' + authGroup + '/interaction/' + uid)
+                                        i.fas.fa-undo
+                                        span.p-l-10 Try Again
                             .login-help.p-t-10
                                 a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
                                 if (client.tosUri || tos)
                                     a(href=(client.tosUri || tos)) [ Terms of Service ]
                                 if (client.policyUri || policy)
                                     a(href=(client.policyUri || policy)) [ Privacy Policy ]
+                                a(href='/' + authGroup + '/recover-mfa' target='_blank') [ Restore MFA ]
                         if (splashImage)
                             .login100-more(style="background-image: url('" + splashImage + "');")
                         else

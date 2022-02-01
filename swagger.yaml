@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: Boilerplate Service
-  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects LLC</a>. Copyright &#169; 2021, all rights reserved.<br><br>
+  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects LLC</a>. Copyright &#169; 2022, all rights reserved.<br><br>
   UE Auth is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management at far less cost, and provides all of the missing pieces enterprises typically end up having to develop on their own in a single package available to your organization through an <a href='https://github.com/UnitedEffects/ueauth/blob/master/LICENSE.md'>Apache 2.0 license</a>. You can find the project <a href='https://github.com/UnitedEffects/ueauth'>here</a>.<br><br>UE Auth can be thought of in three parts:<ul><li><strong>The OIDC Provider</strong> - Built on the only node.js <a href='https://github.com/panva/node-oidc-provider'>certified OIDC provider library</a> currently available by <a href='https://github.com/panva'>Filip Skokan (Panva)</a></li><li><strong>UE Auth General</strong> - Our implementation of Auth Groups as unique pools of users, accounts, notification plugins, and other operations, all documented in this API</li><li><strong>UE Auth Access</strong> - Our implementation of b2b models to organize customers or departments (Organizations), products, roles, permissions and the application of these concepts to users to define access</li></ul>This OpenAPI specification does not detail the entirety of the OIDC API. Instead, you can reference the official Open ID Connect documentation for the API (<a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>) or Panva's amazingly detailed documentation in <a href='https://github.com/panva/node-oidc-provider'>GitHub</a>. Within UE Auth, the OIDC endpoints are distinguished by being available directly from the root domain with the Auth Group context: e.g. <code>/{group}/token</code>. As a general reference, this provider implements the following OIDC endpoints, which you will find specific contract documentation for in the above mentioned <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>.<br><code><br>authorization: '/{group}/auth',<br>
   check_session: '/{group}/session/check',<br>
   code_verification: '/{group}/device',<br>
@@ -45,6 +45,8 @@ tags:
     description: Manage Permissinos for one Product at a time.
   - name: Notification
     description: Manage notifications sent to the http notification plugin. Requires the plugin to be enabled.
+  - name: MFA Challenge
+    description: Manage MFA interactions when the plugin is enabled
   - name: Operations
     description: Commands for Artifact or Security Updates
   - name: Plugins
@@ -576,6 +578,177 @@ paths:
                   type: number
                   description: the current global plugin version. this will autoincrement if successful
         description: Setting for notification desired
+        required: true
+
+  /api/plugins/global/mfa-challenge:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global Mfa Challenge Plugin as Service Owner
+      description: Configure Global Mfa Challenge Plugins as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeMfaChallenge'
+        description: Setting for mfa challenge desired
+        required: true
+
+  /api/{group}/mfa/callback:
+    post:
+      tags:
+        - MFA Challenge
+      summary: Callback used by provider to communicate user approval or denial of challenge
+      description: When configuring an MFA provider, you will likely need to provide a callback uri.
+      operationId: mfaCallback
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: callback accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/callbackRequest'
+
+  /api/{group}/mfa/{key}/account/{account}/interaction/{uid}/status:
+    get:
+      tags:
+        - MFA Challenge
+      summary: Poll UE Auth for a response to a challenge.
+      description: You can poll UE Auth for the response to a challenge sent to a user.
+      operationId: mfaStatus
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: key
+          in: path
+          description: the providerKey (id) returned by the challenge request
+          schema:
+            type: string
+          required: true
+        - name: account
+          in: path
+          description: the account Id being challenged
+          schema:
+            type: string
+          required: true
+        - name: uid
+          in: path
+          description: the interaction Id or state used to ensure secure interaction
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: approved
+        '206':
+          description: not yet approved
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/{group}/mfa/instructions:
+    post:
+      tags:
+        - MFA Challenge
+      summary: Request an account be bound and instructions for device setup be provided
+      description: This API is multi-purpose, responding to a request based on which properties have been provided. See request object for details.
+      operationId: mfaInstructions
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mfaInstructions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - basic: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/mfaRequestBind'
+        required: true
+
+  /api/{group}/mfa/safe-recovery:
+    post:
+      tags:
+        - MFA Challenge
+      summary: Request to verify your identity via email or an existing MFA device
+      description: This API allows a user to validate who they are through email or a challenge. This is used as part of MFA recovery when the user wants to bind to a new device. Security on this is an initial access token as provided by the instructions endpoint.
+      operationId: mfaSafeRecovery
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mfaSafeRecovery'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sendMfaSafeRecovery'
         required: true
 
   # Account APIs
@@ -3246,7 +3419,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/registerClient'
+              $ref: '#/components/schemas/writeClientObject'
         required: true
 
   /{group}/reg/{id}:
@@ -5853,6 +6026,10 @@ components:
             $ref: '#/components/schemas/defaultError'
 
   securitySchemes:
+    basic:
+      type: http
+      description: email/username and password of the account
+      scheme: basic
     bearer:
       type: http
       scheme: bearer
@@ -5998,28 +6175,6 @@ components:
         token_type:
           type: string
 
-    registerClient:
-      properties:
-        client_name:
-          type: string
-          description: A recognizable name identifying what this client represents
-        grant_types:
-          type: array
-          items:
-            type: string
-            description: type of grant to enable - i.e. client_credentials, authorization_code or implicit
-        response_types:
-          type: array
-          items:
-            type: string
-            description: type of responses to enable - i.e. 'id_token code' or 'id_token'. restrictions to combinations apply, see official oidc docs
-        redirect_uris:
-          type: array
-          items:
-            type: string
-            format: uri
-            description: urls that are valid for redirection upon authorization
-
     getAccounts:
       properties:
         type:
@@ -6128,6 +6283,13 @@ components:
         client_name:
           type: string
           description: A name for the client that is unique within the authGroup
+        client_label:
+          type: string
+          enum:
+            - login
+            - api
+            - app
+            - custom
         redirect_uris:
           type: array
           default: []
@@ -6138,6 +6300,14 @@ components:
           type: boolean
           default: false
           description: only use this for first-party clients (those you control directly)
+        client_optional_skip_logout_prompt:
+          type: boolean
+          default: false
+          description: this will skip the logout prompt and immediately logout
+        associated_product:
+          type: string
+          format: uuid
+          description: the Product associated to this Client
         register_url:
           type: string
           format: uri
@@ -6146,7 +6316,16 @@ components:
           type: string
         policy_url:
           type: string
-
+        client_federation_options:
+          type: array
+          items:
+            type: string
+            example: 'oidc.google.my_google_connection'
+            description: a representation of the AuthGroup federation option as specification.provider.name
+        client_allow_org_federation:
+          type: boolean
+          default: false
+          description: when enabled, this allows an organization to issue their own custom SSO to login
 
     clientObject:
       type: object
@@ -6494,6 +6673,27 @@ components:
           description: when this is true, only pkce logins are possible
           example: false
           default: false
+        mfaChallenge:
+          type: object
+          properties:
+            enable:
+              type: boolean
+              default: false
+              description: This enables MFA for the AuthGroup assuming it has been enabled for the Platform
+            required:
+              type: boolean
+              default: false
+              description: If this is true, all logins must have MFA enabled and will be onboarded at the first opportunity
+            type:
+              type: string
+              description: This is an indication of the MFA provider and must be the same as what is availble from global plugins
+              example: privakey
+              enum:
+                - http-proxy
+                - privakey
+            meta:
+              type: object
+              description: This is an area designated for metadata such as provider ids, secrets, etc. As an example, for the privakey integration, use meta to store 'privakeyClient' and 'privakeySecret'.
         federate:
           type: object
           properties:
@@ -6526,6 +6726,13 @@ components:
                   type: string
                   description: a logo for the top of the login and authorize screens. best at 40x40 pixels
                   format: uri
+                loginOrientation:
+                  type: string
+                  enum:
+                    - right
+                    - left
+                    - center
+                  descrioption: choose which way the screen inputs are oriented
                 bgGradientLow:
                   type: string
                   description: this is the background color lower end gradient color
@@ -6628,6 +6835,65 @@ components:
               description: the url of your service to which we post
             registeredClientId:
               type: string
+        mfaChallenge:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            providers:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    enum:
+                      - http-proxy
+                      - privakey
+                  api:
+                    type: object
+                    description: endpoints for the interface functions
+                    properties:
+                      domain:
+                        type: string
+                        format: uri
+                        description: This is the domain of your mfa provider proxy
+                        example: "https://yourproviderendpoint.com"
+                      challenge:
+                        type: string
+                        description: This is the endpoint path used to send the mfa challenge to the end user
+                        example: "/challenge/path"
+                      validate:
+                        type: string
+                        description: This is an endpoint path used to validate callback requests from the provider
+                        example: "/validate/path"
+                      bind:
+                        type: string
+                        description: This is an endpoint path used to map the account ID of the user to the MFA account/device
+                        example: "/bind/path"
+                      devices:
+                        type: string
+                        description: This is an endpoint path used to return all registered devices of the MFA account
+                        example: "/devices/path"
+                      revoke:
+                        type: string
+                        description: This is an endpoint path used to revoke a device identified by ID of the MFA account
+                        example: "/revoke/path"
+                  proxyClientId:
+                    type: string
+                    format: uuid
+                    description: this is only present if the configuration is http-proxy
+                  proxyEnableScreen:
+                    type: string
+                    format: uri
+                    description: If this is an http-proxy mfa setup, you will need to open a web page where you handle the device connection, through your proxy service. This is usually presented as instructions and a QR code. UE Auth will send the JSON results of the bind API call to this request via query parameters.
+                    example: 'https://example.com/complete/setup'
+                  proxyEnableScreenButtonText:
+                    type: string
+                    description: This is the text used on the button that links to the enablement screen
+                  proxyEnableInstructions:
+                    type: string
+                    description: UE Auth will display this text as instructions if desired. New lines can be represented with '--'
 
     notification:
       type: object
@@ -7545,3 +7811,202 @@ components:
           enum:
             - google
             - standard
+
+# MFA CHALLENGE
+    writeMfaChallenge:
+      type: object
+      required:
+        - enabled
+        - currentVersion
+      properties:
+        enabled:
+          type: boolean
+        currentVersion:
+          type: number
+        type:
+          type: string
+          description: must be either 'http-proxy' or 'privakey'. Other options will be added when they are supported.
+          enum:
+            - http-proxy
+            - privakey
+        api:
+          type: object
+          description: required for the proxy configuration. Do not include for privakey configuration.
+          properties:
+            domain:
+              type: string
+              format: uri
+              description: This is the endpoint domain used for your mfa proxy
+              example: "https://yourproxyendpoint.com"
+            challenge:
+              type: string
+              description: This is the endpoint path used to send the mfa challenge to the end user
+              example: "/challenge/path"
+            validate:
+              type: string
+              description: This is an endpoint path used to validate callback requests from the provider
+              example: "/validate/path"
+            bind:
+              type: string
+              description: This is an endpoint path used to map the account ID of the user to the MFA account/device
+              example: "/bind/path"
+            devices:
+              type: string
+              description: This is an endpoint path used to return all registered devices of the MFA account
+              example: "/devices/path"
+            revoke:
+              type: string
+              description: This is an endpoint path used to revoke a device identified by ID of the MFA account
+              example: "/revoke/path"
+        proxyEnableScreen:
+          type: string
+          format: uri
+          description: If this is an http-proxy mfa setup, you will need to open a web page where you handle the device connection, through your proxy service. This is usually presented as instructions and a QR code. UE Auth will send the JSON results of the bind API call to this request via query parameters.
+          example: 'https://example.com/complete/setup'
+        proxyEnableScreenButtonText:
+          type: string
+          description: This is the text used on the button that links to the enablement screen
+        proxyEnableInstructions:
+          type: string
+          description: UE Auth will display this text as instructions if desired. New lines can be represented with '--'
+
+    mfaSafeRecovery:
+      oneOf:
+        - type: object
+          properties:
+            selection:
+              type: string
+              enum:
+                - email
+              example: email
+            sent:
+              type: boolean
+        - type: object
+          properties:
+            selection:
+              type: string
+              enum:
+                - device
+              example: device
+            id:
+              type: string
+              format: uuid
+              description: the provider key returned by the MFA provider
+            provider:
+              type: string
+              description: i.e. privakey, http-proxy, etc.
+            response:
+              type: object
+              description: response from the provider
+
+    sendMfaSafeRecovery:
+      type: object
+      additionalProperties: false
+      properties:
+        selection:
+          type: string
+          description: selection determines where the notification will be sent to validate identity
+          enum:
+            - email
+            - device
+        state:
+          type: string
+          description: must match the state encoded in the access token
+
+    mfaRequestBind:
+      type: object
+      additionalProperties: false
+      description: This API is multi purpose and will usually be requested at least twice in an MFA recovery workflow. The first time you would just send state to initiate the process using basic auth or a logged in bearer token. This will respond with an Initial Access Token that can be used to request a device for validation of idenity (assuming it is required to validate identity). You would then call this API again with the results of the identity validation request to rebind the user and see instructions for MFA setup on a device. If on the first call of this API it is determined that the user is not currently MFA enabled, the system will do a protective revoke of all possible devices and immediately bind the user and respond with instructions.
+      properties:
+        state:
+          type: string
+          description: This is used to bind together a series of transactions. When beginning a recovery flow, you must send a unique and url safe generated string. All other requests pertaining to this recovery will need to include this state. When the user is recoverying MFA via the UI wizard, this state is auto generated by the server.
+        code:
+          type: string
+          description: Initial access token used when the mechanism for identity validation is email. Do not include if initiating the flow or if validating user with device rather than email.
+        method:
+          type: string
+          enum:
+            - device
+            - email
+          description: This would be used on a second call where identity has already been validated either by email or device challenge. On the second call you must explicitly state which method you used to validate identity so that this can be verified on the backend before rebinding the user.
+
+    mfaInstructions:
+      oneOf:
+        - type: object
+          description: This response happens in the flow when the user is mfaEnabled but a reset is being requested. It allows the user to validate their identity and then make the request again.
+          additionalProperties: false
+          properties:
+            token:
+              type: string
+              description: an initial access token to be used for safe-recovery identity verification
+            uri:
+              type: string
+              format: uri
+              description: the API endpoint to send an identity validation request
+            requestInstructions:
+              type: string
+              description: brief instructions on what to do
+        - type: object
+          description: This response happens when the user identity is valid or the user was not perviously mfaEnabled.
+          additionalProperties: false
+          properties:
+            instructions:
+              type: array
+              items:
+                type: string
+                descriptions: each line of a set of instructions to be displayed in a numbered list
+            qrCode:
+              type: string
+              description: if included, the uri to be encoded as a QR code on a UI. otherwise false is returned.
+            setupScreen:
+              type: string
+              description: if included, this is a url to an external UI page where setup instructions are provided
+            setupScreenButtonText:
+              type: string
+              description: if included, this is the button text that should be used for the external setupScreen UI page link
+            warnings:
+              type: array
+              items:
+                type: object
+                descriptions: Any errors that prevented the system from revoking previous devices or similar
+
+    callbackRequest:
+      oneOf:
+        - type: object
+          description: for http-proxy callbacks, this would be the expected data.
+          properties:
+            id:
+              type: string
+              description: provider id for the challenge request
+            interactionDetails:
+              type: object
+              properties:
+                uid:
+                  type: string
+                  description: the interaction id provided by UE Auth - can be interchanged for a generated state as well
+                accountId:
+                  type: string
+                  description: the account being challenged
+            action:
+              type: number
+              description: Any number other than zero is approved
+        - type: object
+          description: For the privakey custom plugin, the following is the minimum equivalent data expected
+          properties:
+            guid:
+              type: string
+              description: privakey plugin specific - provider id for the challenge request
+            tranactionId:
+              type: object
+              description: privakey plugin specific. NOTE - this is stringified object containing the following
+              properties:
+                uid:
+                  type: string
+                  description: the interaction id provided by UE Auth - can be interchanged for a generated state as well
+                accountId:
+                  type: string
+                  description: the account being challenged
+            buttonSelected:
+              type: number
+              description: privakey plugin specific - Any number other than zero is approved

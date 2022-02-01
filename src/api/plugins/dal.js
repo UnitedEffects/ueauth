@@ -18,7 +18,25 @@ export default {
 	async auditPluginOptions() {
 		return Plugins.find({}, {}, {sort: { 'createdAt': -1, 'version': -1 }});
 	},
-	async toggleNotifications(version, data, userId) {
+	async updatePlugins(version, record, userId) {
+		let plugin;
+		plugin = new Plugins({
+			createdBy: userId,
+			version,
+			notifications: record.notifications,
+			mfaChallenge: record.mfaChallenge,
+			resourceCreationLimiter: record.resourceCreationLimiter
+		});
+
+		return plugin.save();
+	},
+	/**
+	 * DEPRECATING
+	 * @param version
+	 * @param data
+	 * @param userId
+	 * @returns {Promise<Document<any, any, any>>}
+	 async toggleNotifications(version, data, userId) {
 		let plugin;
 		plugin = new Plugins({
 			// As new configs are added, we can preserve them here
@@ -28,5 +46,6 @@ export default {
 		});
 
 		return plugin.save();
-	}
+	},
+	 */
 };

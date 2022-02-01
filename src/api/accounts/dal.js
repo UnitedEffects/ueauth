@@ -55,6 +55,14 @@ export default {
 		const options = { new: true, overwrite: true };
 		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);
 	},
+	async enableMFA(authGroup, id) {
+		const update = {
+			modifiedAt: Date.now(),
+			modifiedBy: id,
+			'mfa.enabled': true
+		};
+		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
+	},
 	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false, hideAccess = true) {
 		const query = { authGroup, blocked: false, active: true, $or: [
 			{ email },
