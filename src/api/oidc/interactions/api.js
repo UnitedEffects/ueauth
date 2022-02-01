@@ -16,6 +16,7 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
+import challenge from "../../plugins/challenge/challenge";
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -558,6 +559,7 @@ export default {
 				let bindData;
 				let instructions;
 				try {
+					await challenges.revokeAllDevices(authGroup, req.globalSettings, account);
 					bindData = await challenges.bindUser(authGroup, req.globalSettings, account);
 					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData);
 				} catch (error) {

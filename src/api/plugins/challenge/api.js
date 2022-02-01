@@ -66,11 +66,11 @@ export default {
 			case 'email':
 				result = await challenge.emailVerify(authGroup, req.globalSettings, user, state);
 				if(!result) throw Boom.badRequest(`The ${authGroup.name} platform ran into an issue accessing the notification service. Please try again later and if the issue continues, contact the administrator.`);
-				return res.respond(say.ok({ sent: true }));
+				return res.respond(say.ok({ selection: 'email', sent: true }));
 			case 'device':
 				result = await challenge.sendChallenge(authGroup, req.globalSettings, { accountId: user, mfaEnabled: true }, uid);
 				if(!result) throw Boom.badRequest(`The ${authGroup.name} platform ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
-				return res.respond(say.ok(result));
+				return res.respond(say.ok({ selection: 'device', ...result }));
 			default:
 				throw Boom.badRequest('Unsupported');
 			}
@@ -163,37 +163,9 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 	const { authGroup } = await group.safeAuthGroup(req.authGroup);
 	let bindData;
 	let devices = [];
-	const warnings = [];
+	let warnings = [];
 	try {
-		try {
-			devices = await challenge.devices(authGroup, req.globalSettings, mfaAcc);
-		} catch (e) {
-			if(e.response?.status !== 404) {
-				console.error(e);
-				await logs.detail('ERROR', `Unable to retrieve device list for ${mfaAcc.accountId}`, e);
-				warnings.push({
-					message: `Unable to retrieve device list for ${mfaAcc.accountId}`
-				});
-			}
-		}
-		if(devices) {
-			await Promise.all(devices.map(async (device)=>{
-				if(device?.id) {
-					try {
-						await challenge.revoke(authGroup, req.globalSettings, device.id);
-					} catch (e) {
-						console.error(e);
-						const details = {
-							device: device.id,
-							message: 'Unable to revoke this device'
-						};
-						await logs.detail('ERROR', `unable to revoke device ${device.id}`, details);
-						warnings.push(details);
-					}
-				}
-				return device;
-			}));
-		}
+		warnings = await challenge.revokeAllDevices(authGroup, req.globalSettings, mfaAcc);
 		bindData = await challenge.bindUser(authGroup, req.globalSettings, mfaAcc);
 	} catch (e) {
 		console.error(e);
@@ -204,5 +176,5 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 		throw Boom.failedDependency('Unable to set MFA for this account. Please try again later.');
 	}
 	const instructions = await challenge.bindInstructions(authGroup, req.globalSettings, bindData);
-	return { ...bindData, ...instructions, warnings };
+	return { ...instructions, warnings };
 }

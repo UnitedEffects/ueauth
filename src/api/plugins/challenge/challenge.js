@@ -6,10 +6,11 @@ import privakey from './privakey/interface';
 import httpProxy from './http-proxy/interface';
 import iat from '../../oidc/initialAccess/iat';
 import notify from '../notifications/notifications';
+import logs from "../../logging/logs";
 
 const config = require('../../../config');
 
-export default {
+const chApi = {
 	async bindInstructions(ag, global, bindData) {
 		let settings;
 		if(!global) {
@@ -173,5 +174,41 @@ export default {
 		};
 
 		return notify.notify(global, notifyOptions, authGroup);
+	},
+	async revokeAllDevices(authGroup, global, mfaAcc) {
+		let devices;
+		const warnings = [];
+		try {
+			devices = await chApi.devices(authGroup, global, mfaAcc);
+		} catch (e) {
+			if (e.response?.status !== 404) {
+				console.error(e);
+				await logs.detail('ERROR', `Unable to retrieve device list for ${mfaAcc.accountId}`, e);
+				warnings.push({
+					message: `Unable to retrieve device list for ${mfaAcc.accountId}`
+				});
+			}
+		}
+		if (devices) {
+			await Promise.all(devices.map(async (device) => {
+				if (device?.id) {
+					try {
+						await chApi.revoke(authGroup, global, device.id);
+					} catch (e) {
+						console.error(e);
+						const details = {
+							device: device.id,
+							message: 'Unable to revoke this device'
+						};
+						await logs.detail('ERROR', `unable to revoke device ${device.id}`, details);
+						warnings.push(details);
+					}
+				}
+				return device;
+			}));
+		}
+		return warnings;
 	}
 };
+
+export default chApi;

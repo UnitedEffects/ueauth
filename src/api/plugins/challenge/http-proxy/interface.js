@@ -13,7 +13,7 @@ const httpProxyApi = {
 			instructions,
 			setupScreen: `${provider.proxyEnableScreen}?`,
 			setupScreenButtonText: provider.proxyEnableScreenButtonText,
-			qrCode: false
+			qrCode: bindData.qrCode || false
 		};
 		const data = (Array.isArray(bindData)) ? bindData[0] : bindData;
 		if(typeof data === 'object') {

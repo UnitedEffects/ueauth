@@ -13,6 +13,7 @@ router.post('/:group/:function/callback', [
 ], callback);
 
 // Polling for MFA Session
+// todo whitelist host
 router.get('/:group/mfa/:key/account/:account/interaction/:uid/status', [
 	m.validateAuthGroup
 ], challengeApi.status);
@@ -24,27 +25,15 @@ router.post('/:group/mfa/safe-recovery', [
 	m.isSimpleIAT
 ], challengeApi.safeRecoveryNotification);
 
+// Bind user and get instructions
+// todo allow both basic and bearer
 router.post('/:group/mfa/instructions', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings,
 	m.isBasic
 ], challengeApi.getMFAInstruction);
 
-
-/** things to expose/document
- * status - for polling
- * /api/:group/mfa/:key/account/:account/interaction/:uid/status
- * callback
- * /api/:group/mfa/callback
- * instructions: getMFAInstruction
- * /api/:group/mfa/instructions
- * safe-recovery: safeRecoveryNotification
- * /api/:group/mfa/safe-recovery
- * ----------------------------
- * challenge (new)
- * revoke (new)
- */
-
+// In case we design something else for the callback system later
 async function callback(req, res, next) {
 	const func = req.params.function;
 	switch(func.toLowerCase()) {
