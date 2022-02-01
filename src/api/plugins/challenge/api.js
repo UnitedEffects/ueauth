@@ -25,7 +25,7 @@ export default {
 	async callback(req, res, next) {
 		try {
 			if(!req.authGroup) throw Boom.badRequest('Auth Group missing');
-			await challenge.callback(req.authGroup, req.globalSettings, req.body);
+			await challenge.callback(JSON.parse(JSON.stringify(req.authGroup)), req.globalSettings, req.body);
 			return res.respond(say.noContent());
 		} catch (error) {
 			next(error);
@@ -42,7 +42,9 @@ export default {
 					return res.redirect(`${path}?state=${state}`);
 				}
 				state = req.query.state;
-				return res.render('mfaRecover', { authGroup: req.authGroup, state, title: 'MFA Recovery Wizard', message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.', request: `${config.PROTOCOL}://${(req.authGroup.aliasDnsOIDC) ? req.authGroup.aliasDnsOIDC : config.SWAGGER}/api/${req.authGroup.id}/mfa/instructions` });
+				const authGroup = JSON.parse(JSON.stringify(req.authGroup));
+				delete authGroup.config;
+				return res.render('mfaRecover', { authGroup, state, title: 'MFA Recovery Wizard', message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.', request: `${config.PROTOCOL}://${(req.authGroup.aliasDnsOIDC) ? req.authGroup.aliasDnsOIDC : config.SWAGGER}/api/${req.authGroup.id}/mfa/instructions` });
 			}
 			throw Boom.forbidden(`MFA recovery is not available on the ${req.authGroup.name} Platform`);
 		} catch (error) {
@@ -163,6 +165,7 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 			devices = await challenge.devices(req.authGroup, req.globalSettings, mfaAcc);
 		} catch (e) {
 			if(e.response?.status !== 404) {
+				console.error(e);
 				await logs.detail('ERROR', `Unable to retrieve device list for ${mfaAcc.accountId}`, e);
 				warnings.push({
 					message: `Unable to retrieve device list for ${mfaAcc.accountId}`
@@ -171,12 +174,11 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 		}
 		if(devices) {
 			await Promise.all(devices.map(async (device)=>{
-				console.info('loop...');
 				if(device?.id) {
-					console.info(`Killing ${device.id}`);
 					try {
 						await challenge.revoke(req.authGroup, req.globalSettings, device.id);
 					} catch (e) {
+						console.error(e);
 						const details = {
 							device: device.id,
 							message: 'Unable to revoke this device'
@@ -184,7 +186,7 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 						await logs.detail('ERROR', `unable to revoke device ${device.id}`, details);
 						warnings.push(details);
 					}
-				} else console.info(device);
+				}
 				return device;
 			}));
 		}

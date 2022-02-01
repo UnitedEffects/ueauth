@@ -494,8 +494,6 @@ export default {
 			}
 
 			let account = {};
-			console.info('ENTERING LOGIN');
-			console.info(req.body);
 			if(req.body.providerKey && req.body.accountId) {
 				//this is a confirmation of mfa
 				const status = await challenges.status({
@@ -543,7 +541,7 @@ export default {
 				req.globalSettings?.mfaChallenge?.enabled === true) {
 				let mfaResult;
 				try {
-					mfaResult = await challenges.sendChallenge(req.authGroup, req.globalSettings, account, uid);
+					mfaResult = await challenges.sendChallenge(JSON.parse(JSON.stringify(req.authGroup)), req.globalSettings, account, uid);
 				} catch (error) {
 					console.error(error);
 				}
@@ -558,8 +556,8 @@ export default {
 				let bindData;
 				let instructions;
 				try {
-					bindData = await challenges.bindUser(req.authGroup, req.globalSettings, account);
-					instructions = await challenges.bindInstructions(req.authGroup, req.globalSettings, bindData);
+					bindData = await challenges.bindUser(JSON.parse(JSON.stringify(req.authGroup)), req.globalSettings, account);
+					instructions = await challenges.bindInstructions(JSON.parse(JSON.stringify(req.authGroup)), req.globalSettings, bindData);
 				} catch (error) {
 					console.error(error);
 				}
