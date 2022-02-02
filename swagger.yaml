@@ -7930,6 +7930,9 @@ components:
             - device
             - email
           description: This would be used on a second call where identity has already been validated either by email or device challenge. On the second call you must explicitly state which method you used to validate identity so that this can be verified on the backend before rebinding the user.
+        providerKey:
+          type: string
+          description: This would be used on a second call where the identity has already been validated by a device. When creating the challenge, the provider should return an id for the transaction. This is the providerKey.
 
     mfaInstructions:
       oneOf:
