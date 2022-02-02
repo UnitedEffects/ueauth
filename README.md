@@ -71,4 +71,4 @@ Please note, documentation is still a work in progress. If you can't find someth
 
 UE Auth is a Patent Pending Technology. Please read the License before use.
 
-Copyright (c) 2021 [United Effects LLC](https://unitedeffects.com), all rights reserved.
+Copyright (c) 2022 [United Effects LLC](https://unitedeffects.com), all rights reserved.

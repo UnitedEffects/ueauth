@@ -109,7 +109,7 @@
     "mockingoose": "^2.15.2",
     "nodemon": "^2.0.12",
     "regenerator-runtime": "^0.13.3",
-    "serverless": "^2.69.1",
+    "serverless": "^3.1.1",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-domain-manager": "^5.1.5",
     "supertest": "^4.0.2",
