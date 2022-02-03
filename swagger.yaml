@@ -7495,6 +7495,9 @@ components:
         contactEmail:
           type: string
           format: email
+        restrictEmailDomains:
+          type: boolean
+          description: toggle restrictions on email domains in emailDomain list
         emailDomains:
           type: array
           items:
@@ -7518,6 +7521,12 @@ components:
           type: boolean
           description: When this is set to true, any Organization User Profile creation or update events result in a notification to the associated Account (user)
           default: false
+        ssoLimit:
+          type: boolean
+          description: when true, all other login options are removed from the screen in favor of the sso option provided
+        ssoAddAccountToOrg:
+          type: boolean
+          description: when true, a user logging in to a product with org specified is automatically added to the organization, assuming email domain restrictions do not prevent the add
         sso:
           type: object
           description: while the API may define multiple options, you can only ever have one of these at a time on an organization

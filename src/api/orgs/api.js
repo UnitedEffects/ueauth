@@ -112,12 +112,12 @@ function includeSSORedirectURIs(data, aliasDns) {
 			if(output.sso[key]) {
 				const connect = output.sso[key];
 				output.sso[key].redirectUris = [];
-				output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+				output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output.id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
 				if(output.externalId) {
 					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
 				}
 				if(aliasDns) {
-					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output._id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output.id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
 					if(output.externalId) {
 						output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
 					}
