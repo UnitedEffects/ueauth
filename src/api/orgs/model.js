@@ -160,6 +160,10 @@ const orgSchema = new mongoose.Schema({
 		oauth2: federatedOauth2,
 		saml: Object
 	},
+	ssoAddAccountToOrg: {
+		type: Boolean,
+		default: false
+	},
 	_id: {
 		type: String,
 		default: uuid

@@ -1,7 +1,26 @@
 import acct from './account';
 import Boom from '@hapi/boom';
+import orgs from '../orgs/orgs';
 
 const cryptoRandomString = require('crypto-random-string');
+
+function createAccessObject(organization) {
+	const orgAccess = {
+		organization: {
+			id: organization.id
+		}
+	};
+	if (organization.access?.required === true) {
+		orgAccess.organization.terms = {
+			required: true,
+			accepted: false,
+			termsDeliveredOn: Date.now(),
+			termsOfAccess: organization.access.terms,
+			termsVersion: organization.access.termsVersion
+		};
+	}
+	return orgAccess;
+}
 
 function accountWithClaims(id, account) {
 	return {
@@ -66,7 +85,7 @@ class Account {
 		}
 	}
 
-	static async findByFederated(authGroup, provider, claims) {
+	static async findByFederated(authGroup, provider, claims, orgSSO = undefined) {
 		if(!claims.email) throw new Error('Email is a required scope for federation');
 		if(claims.id && !claims.sub) {
 			claims.sub = claims.id;
@@ -77,9 +96,28 @@ class Account {
 			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
 		}
 
+		// was there an org id specified via orgSSO?
+		let organization;
+		if(orgSSO) {
+			try {
+				organization = await orgs.getOrg(authGroup.id, orgSSO);
+			} catch (e) {
+				console.error(e);
+				throw Boom.badRequest(`An org was specified for this federated login but could not be resolved: ${orgSSO}`);
+			}
+
+			// if the organization intends to add the federated account, ensure there is not an email domain issue
+			if(organization && organization.ssoAddAccountToOrg === true && organization.restrictEmailDomains === true) {
+				const domainCheck = profile.email.toLowerCase().split('@')[1];
+				if(!organization.emailDomains.includes(domainCheck)) {
+					throw Boom.forbidden('Email domain is not whitelisted for the organization');
+				}
+			}
+		}
+
 		if(!account) {
 			// write a new account with an identity...
-			account = await acct.writeAccount({
+			const accData = {
 				authGroup: authGroup.id,
 				email: profile.email,
 				username: profile.username || profile.email,
@@ -92,7 +130,17 @@ class Account {
 					provider,
 					profile
 				}]
-			});
+			};
+
+			// if we are here and an org is specified witha addAccount true, write the data
+			if(organization && organization.ssoAddAccountToOrg) {
+				accData.access = [];
+				const orgAccess = createAccessObject(organization);
+				accData.access.push(orgAccess);
+
+			}
+
+			account = await acct.writeAccount(accData);
 		} else {
 			let ident = [];
 			ident = account.identities.filter((identity) => {
@@ -104,15 +152,27 @@ class Account {
 					provider,
 					profile
 				});
-				await account.save();
 			} else if (!ident[0].profile || Object.keys(ident[0].profile).length !== Object.keys(profile).length) {
 				account.identities.map((identity) => {
 					if(identity.id === claims.sub) {
 						identity.profile = profile;
 					}
 				});
-				await account.save();
 			}
+
+			// if we are here and an organization has been specified with addAccount true, we can do so
+			if(organization && organization.ssoAddAccountToOrg) {
+				const orgAccess = createAccessObject(organization);
+				if(!account.access) account.access = [];
+				let access = [];
+				access = account.access.filter((a) => {
+					return (a.organization.id === organization.id);
+				});
+				if(access.length === 0) {
+					account.access.push(orgAccess);
+				}
+			}
+			await account.save();
 		}
 		return accountWithClaims(account.id, account);
 	}
