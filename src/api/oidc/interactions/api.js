@@ -220,6 +220,12 @@ export default {
 			if(upstreamBody) {
 				const upstream = upstreamBody.split('.');
 				const {spec, provider, name, myConfig} = await checkProvider(upstream, authGroup);
+				if(provider?.toLowerCase().includes('org:')) {
+					const org = provider.toLowerCase().split(':');
+					if(org.length === 2) {
+						req.providerOrg = org[1];
+					}
+				}
 				switch (spec.toLowerCase()) {
 				case 'oidc':
 					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
@@ -344,7 +350,7 @@ export default {
 						if(profile.nonce !== nonce) throw Boom.badRequest(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
 						const account = await Account.findByFederated(authGroup,
 							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-							profile);
+							profile, req.providerOrg);
 						const result = {
 							login: {
 								accountId: account.accountId,
@@ -371,7 +377,7 @@ export default {
 				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
 				const account = await Account.findByFederated(authGroup,
 					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-					profile);
+					profile, req.providerOrg);
 				const result = {
 					login: {
 						accountId: account.accountId,
@@ -469,7 +475,7 @@ export default {
 				}
 				const account = await Account.findByFederated(authGroup,
 					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-					profile);
+					profile, req.providerOrg);
 				const result = {
 					login: {
 						accountId: account.accountId,
