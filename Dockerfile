@@ -1,4 +1,4 @@
-FROM mhart/alpine-node
+FROM node:16-alpine
 LABEL author="borzou@theboeffect.com"
 RUN mkdir /app
 
