@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       - name: Build image
         run: docker build . --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
