@@ -43,7 +43,7 @@ export default {
 			});
 		}
 		const loginButtons = loginOptions.filter((option) => {
-			return (client.client_federation_options.join(' | ').toLowerCase().includes(option.code));
+			return (client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
 		});
 		const altLogin = (params.passwordLess === true || loginButtons.length > 0);
 		return {
