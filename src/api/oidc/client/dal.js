@@ -1,7 +1,7 @@
 import Client from '../models/client';
 
 export default {
-	async get(authGroup, query) {
+	async get(authGroup, query, search = undefined) {
 		if(query.query) {
 			Object.keys(query.query).forEach((key) => {
 				query.query[`payload.${key}`] = query.query[key];
@@ -9,6 +9,9 @@ export default {
 			});
 		}
 		query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
+		if(search) {
+			query.query['$text'] = { $search : search };
+		}
 		if(query.projection) {
 			if(Object.keys(query.projection).length === 0) {
 				query.projection['payload'] = 1;

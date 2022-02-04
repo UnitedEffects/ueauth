@@ -30,6 +30,7 @@ const client = new mongoose.Schema({
 },{ _id: false, strict: false, collection: 'client' });
 
 client.index({ 'payload.client_name': 1, 'payload.auth_group': 1}, { unique: true });
+client.index( { 'payload.client_name': 'text', _id: 'text' });
 
 client.pre('save', callback => {
 	//console.log('session saved');
