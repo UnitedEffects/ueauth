@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - master
+      - docker
     tags:
       - *
-  pull_request:
-    branches:
-      - docker
 
 env:
   REGISTRY: ghcr.io
