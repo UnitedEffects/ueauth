@@ -1,4 +1,4 @@
-FROM node:current-alpine
+FROM node:16-alpine
 LABEL author="borzou@theboeffect.com"
 RUN mkdir /app
 
