@@ -10,8 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  VERSION: ''
+  IMAGE_NAME: ueauth
 
 jobs:
   build:
