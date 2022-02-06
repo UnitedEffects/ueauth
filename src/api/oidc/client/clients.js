@@ -141,9 +141,9 @@ export default {
 		return axios(options);
 	},
 	// @notTested
-	async get(authGroup, q) {
+	async get(authGroup, q, search) {
 		const query = await helper.parseOdataQuery(q);
-		return dal.get(authGroup, query);
+		return dal.get(authGroup, query, search);
 	},
 	// @notTested
 	async getOne(authGroup, id) {

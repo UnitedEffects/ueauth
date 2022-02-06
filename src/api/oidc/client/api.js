@@ -14,7 +14,12 @@ const api = {
 	async get(req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide Auth Group');
-			const result = await client.get(req.authGroup, req.query);
+			let search;
+			if(req.query.search) {
+				search = req.query.search;
+				delete req.query.search;
+			}
+			const result = await client.get(req.authGroup, req.query, search);
 			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

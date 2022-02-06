@@ -2379,6 +2379,12 @@ paths:
           schema:
             type: string
           required: true
+        - name: search
+          in: query
+          description: additional search key - not part of oData
+          required: false
+          schema:
+            type: string
         - name: $filter
           in: query
           description: oData filter Query
