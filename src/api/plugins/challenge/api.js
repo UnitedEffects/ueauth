@@ -68,7 +68,16 @@ export default {
 				if(!result) throw Boom.badRequest(`The ${authGroup.name} platform ran into an issue accessing the notification service. Please try again later and if the issue continues, contact the administrator.`);
 				return res.respond(say.ok({ selection: 'email', sent: true }));
 			case 'device':
-				result = await challenge.sendChallenge(authGroup, req.globalSettings, { accountId: user, mfaEnabled: true }, uid);
+				result = await challenge.sendChallenge(
+					authGroup,
+					req.globalSettings, { accountId: user, mfaEnabled: true }, uid, {
+						content: {
+							title: 'Identity Verification',
+							header: `Your ${authGroup.name} Identity Needs Validation`,
+							body: 'If you initiated this verification, Approve below. Otherwise click Decline and change your password.'
+						}
+					}
+				);
 				if(!result) throw Boom.badRequest(`The ${authGroup.name} platform ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
 				return res.respond(say.ok({ selection: 'device', ...result }));
 			default:

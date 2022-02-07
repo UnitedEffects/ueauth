@@ -79,8 +79,13 @@ const httpProxyApi = {
 		if(token?.data?.access_token) return token.data.access_token;
 		throw Boom.failedDependency('Could not generate a token for the global mfa provider');
 	},
-	async sendChallenge(provider, authGroup, account, uid) {
+	async sendChallenge(provider, authGroup, account, uid, display) {
 		const token = await this.generateToken(provider);
+		const content = display?.content || {
+			title: 'Validation Requested',
+			header: `${authGroup.name} Platform`,
+			body: 'If you initiated the action that requires this validation, Approve below. Otherwise click Decline and change your password.'
+		};
 		const options = {
 			url: `${provider.api.domain}${provider.api.challenge}`,
 			method: 'post',
@@ -94,12 +99,21 @@ const httpProxyApi = {
 				interactionDetails: { uid, accountId: account.accountId },
 				callback: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? 
 					authGroup.aliasDnsOIDC : config.SWAGGER}/api/mfa/callback`,
-				title: 'Authorization Request',
-				content: {
-					key: `${authGroup.name} Platform`,
-					value: 'If you initiated this login, approve below. Otherwise click Decline and change your password.'
-				},
-				options: ['Approve', 'Decline']
+				content,
+				options: display?.buttons || [
+					{
+						title: 'Approve',
+						color: 'green'
+					},
+					{
+						title: 'Decline',
+						color: 'red'
+					}
+				],
+				notification: display?.notification || {
+					title: content.title,
+					message: content.title
+				}
 			}
 		};
 		const result = await axios(options);

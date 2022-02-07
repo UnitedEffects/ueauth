@@ -549,8 +549,15 @@ export default {
 				account?.mfaProven !== true &&
 				req.globalSettings?.mfaChallenge?.enabled === true) {
 				let mfaResult;
+				const meta = {
+					content: {
+						title: 'Authorization Request',
+						header: `${authGroup.name} Platform`,
+						body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
+					}
+				};
 				try {
-					mfaResult = await challenges.sendChallenge(authGroup, req.globalSettings, account, uid);
+					mfaResult = await challenges.sendChallenge(authGroup, req.globalSettings, account, uid, meta);
 				} catch (error) {
 					console.error(error);
 				}
