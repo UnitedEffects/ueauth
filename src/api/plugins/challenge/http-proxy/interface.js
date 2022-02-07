@@ -79,7 +79,8 @@ const httpProxyApi = {
 		if(token?.data?.access_token) return token.data.access_token;
 		throw Boom.failedDependency('Could not generate a token for the global mfa provider');
 	},
-	async sendChallenge(provider, authGroup, account, uid) {
+	async sendChallenge(provider, authGroup, account, uid, meta) {
+
 		const token = await this.generateToken(provider);
 		const options = {
 			url: `${provider.api.domain}${provider.api.challenge}`,
@@ -99,6 +100,7 @@ const httpProxyApi = {
 					key: `${authGroup.name} Platform`,
 					value: 'If you initiated this login, approve below. Otherwise click Decline and change your password.'
 				},
+				meta,
 				options: ['Approve', 'Decline']
 			}
 		};

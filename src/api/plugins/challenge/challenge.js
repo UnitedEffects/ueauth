@@ -54,9 +54,9 @@ const chApi = {
 		if(pInterface) return pInterface.bindUser(provider, ag, account);
 		return undefined;
 	},
-	async sendChallenge(ag, global, account, uid) {
+	async sendChallenge(ag, global, account, uid, meta) {
 		const { pInterface, provider } = await interfaceSelector(ag, global);
-		if(pInterface) return pInterface.sendChallenge(provider, ag, account, uid);
+		if(pInterface) return pInterface.sendChallenge(provider, ag, account, uid, meta);
 		return undefined;
 	},
 	async saveChallenge(data) {

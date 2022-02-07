@@ -97,8 +97,44 @@ const pkApi = {
 		}
 		return pkey.data;
 	},
-	async sendChallenge(provider, authGroup, account, uid) {
+	async sendChallenge(provider, authGroup, account, uid, meta) {
 		//ignoring provider parameter for this implementation
+		const content = (meta?.content) ? {
+			title: meta.content.title,
+			keys: [{
+				key: meta.content.header,
+				value: meta.content.body
+			}]
+		} : {
+			title: 'Validation Requested',
+			keys: [{
+				key: `${authGroup.name} Platform`,
+				value: 'If you initiated the action that requires this validation, Approve below. Otherwise click Decline and change your password.'
+			}]
+		};
+		let buttons = [];
+		if(!meta?.buttons?.length) {
+			buttons = [
+				{
+					title: 'Approve',
+					strongAuth: true,
+					style: '{"color":"green"}'
+				},
+				{
+					title: 'Decline',
+					strongAuth: false,
+					style: '{"color":"red"}'
+				}
+			];
+		} else {
+			meta.buttons.map((b) => {
+				buttons.push({
+					title: b.title,
+					strongAuth: true,
+					style: `{"color":"${b.color}"}`
+				});
+			});
+		}
 		const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
 		const options = {
 			url: `${API.domain}${API.challenge}`,
@@ -113,30 +149,13 @@ const pkApi = {
 			data: qs.stringify({
 				accountId: account.accountId,
 				duration: '5m',
-				additionalInfo: {"template":"true"},
+				additionalInfo: {'template':'true'},
 				transactionId: JSON.stringify({ uid, accountId: account.accountId }),
 				callback,
 				showCode: true,
 				showNotification: true,
-				content: {
-					title: 'Authorization Request',
-					keys: [{
-						key: `${authGroup.name} Platform`,
-						value: 'If you initiated this login, approve below. Otherwise click Decline and change your password.'
-					}]
-				},
-				buttons: [
-					{
-						title: 'Approve',
-						strongAuth: true,
-						style: "{\"color\":\"green\"}"
-					},
-					{
-						title: 'Decline',
-						strongAuth: false,
-						style: "{\"color\":\"#FF0000\"}"
-					}
-				],
+				content,
+				buttons
 			})
 		};
 		const pkey = await axios(options);
