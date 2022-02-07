@@ -243,7 +243,7 @@ export default {
 			});
 			if(req.user.client_credential !== true) {
 				// ensure member permissions are preserved
-				const temp = req.permissions.permissions.filter((p) => {
+				const temp = req.permissions?.permissions?.filter((p) => {
 					return (p.includes(`${req.authGroup.id}-member:::`));
 				});
 				permFilter = permFilter.concat(temp);
