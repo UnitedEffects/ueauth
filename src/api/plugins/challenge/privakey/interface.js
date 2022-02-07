@@ -99,6 +99,7 @@ const pkApi = {
 	},
 	async sendChallenge(provider, authGroup, account, uid, meta) {
 		//ignoring provider parameter for this implementation
+
 		const content = (meta?.content) ? {
 			title: meta.content.title,
 			keys: [{
@@ -136,6 +137,19 @@ const pkApi = {
 			});
 		}
 		const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
+		const data = {
+			accountId: account.accountId,
+			duration: '5m',
+			additionalInfo: {'template':'true'},
+			transactionId: JSON.stringify({ uid, accountId: account.accountId }),
+			notificationTitle: meta?.notification?.title || content.title,
+			notificationBody: meta?.notification?.message || content.title,
+			callback,
+			showCode: true,
+			showNotification: true,
+			content,
+			buttons
+		};
 		const options = {
 			url: `${API.domain}${API.challenge}`,
 			method: 'post',
@@ -146,17 +160,7 @@ const pkApi = {
 				username: authGroup.config.mfaChallenge.meta.privakeyClient,
 				password: authGroup.config.mfaChallenge.meta.privakeySecret
 			},
-			data: qs.stringify({
-				accountId: account.accountId,
-				duration: '5m',
-				additionalInfo: {'template':'true'},
-				transactionId: JSON.stringify({ uid, accountId: account.accountId }),
-				callback,
-				showCode: true,
-				showNotification: true,
-				content,
-				buttons
-			})
+			data: qs.stringify(data)
 		};
 		const pkey = await axios(options);
 		if(!pkey?.data?.transactionId) throw Boom.failedDependency('Privakey issue...');
