@@ -74,10 +74,12 @@ describe('API tests', () => {
 	it('should parse and returns swagger as json with authgroup specified', async () => {
 		try {
 			mockingoose(Group).toReturn(authGroupMock, 'findOne');
+			console.info(authGroupMock);
 			let swag = JSON.parse(JSON.stringify(swagger));
 			swag.info.version = pJson.version;
 			swag.info.title = pJson.name;
-			swag.info['x-logo'].url = pJson.logo;
+			// this is only the splash image because we have not defined a logo in the mock and ui.skin.splashImge defaults to this
+			swag.info['x-logo'].url = config.DEFAULT_UI_SKIN_SPLASH || pJson.logo;
 			if (config.SWAGGER) swag.servers = [{url: `${config.PROTOCOL}://${config.SWAGGER}`}];
 			swag.components.securitySchemes.openId.openIdConnectUrl = `${config.PROTOCOL}://${config.SWAGGER}/X2lgt285uWdzq5kKOdAOj/.well-known/openid-configuration`;
 			let temp = JSON.stringify(swag);
