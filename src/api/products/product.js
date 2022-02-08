@@ -60,11 +60,7 @@ export default {
 
 	async getMyProducts(authGroup, pIds) {
 		const b2c = await dal.getB2cProducts(authGroup);
-		console.info('b2c');
-		console.info(b2c);
 		const b2b = await dal.getMyProducts(authGroup, pIds);
-		console.info('b2b');
-		console.info(b2b);
 		return { authGroup, b2c, b2b };
 	},
 
