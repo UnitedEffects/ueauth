@@ -253,7 +253,7 @@ const api = {
 	async getMyProducts(req, res, next) {
 		try {
 			const org = req.params.org;
-			const products = req.user?.decoded?.['x-access-products']?.[org].split(' ');
+			const products = req.user?.decoded?.['x-access-products']?.[org]?.split(' ');
 			const pIds = [];
 			products?.map((p) => {
 				const t = p.split(',');
