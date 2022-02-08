@@ -16,6 +16,14 @@ export default {
 		return Product.find({ _id: { $in: idArray}, authGroup })
 			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1 });
 	},
+	async getB2cProducts(authGroup) {
+		return Product.find({ authGroup, b2c: true, core: { $ne: true }})
+			.select({ _id: 1, codedId: 1, name: 1, description: 1, url: 1});
+	},
+	async getMyProducts(authGroup, idArray) {
+		return Product.find({ _id: { $in: idArray}, authGroup, b2c: { $ne: true }, core: { $ne: true }})
+			.select({ _id: 1, codedId: 1, name: 1, description: 1, url: 1 });
+	},
 	async getProduct(authGroup, id) {
 		return Product.findOne( { authGroup, $or: [{ _id: id }, { codedId: id }] });
 	},

@@ -249,6 +249,21 @@ const api = {
 		} catch (error) {
 			next(error);
 		}
+	},
+	async getMyProducts(req, res, next) {
+		try {
+			const org = req.params.org;
+			const products = req.user?.decoded?.['x-access-products']?.[org]?.split(' ') || [];
+			const pIds = [];
+			products?.map((p) => {
+				const t = p?.split(',');
+				if(t.length !== 0) pIds.push(t[0].trim());
+			});
+			const result = await prod.getMyProducts(req.authGroup.id, pIds);
+			return res.respond(say.ok({ sub: req.user.sub, ...result }, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
 	}
 };
 
