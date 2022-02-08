@@ -252,7 +252,6 @@ const api = {
 	},
 	async getMyProducts(req, res, next) {
 		try {
-			console.info(JSON.stringify(req.user, null, 2));
 			const org = req.params.org;
 			const products = req.user?.decoded?.['x-access-products']?.[org].split(' ');
 			const pIds = [];
@@ -260,7 +259,6 @@ const api = {
 				const t = p.split(',');
 				pIds.push(t[0].trim());
 			});
-			console.info(pIds);
 			const result = await prod.getMyProducts(req.authGroup.id, pIds);
 			return res.respond(say.ok({ sub: req.user.sub, ...result }, RESOURCE));
 		} catch (error) {
