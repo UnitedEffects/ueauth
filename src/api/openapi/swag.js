@@ -3,7 +3,6 @@ const pJson = require('../../../package.json');
 
 export default {
 	updateSwag(swag, authGroup, params, cd = undefined) {
-		console.info(authGroup);
 		swag.info.version = pJson.version;
 		swag.info.title = pJson.name;
 		swag.info['x-logo'].url = (authGroup?.config?.ui?.skin?.logo) ?

@@ -46,6 +46,11 @@ const productSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	url: String,
+	b2c: {
+		type: Boolean,
+		default: false
+	},
 	// indicates if this is a protected resource created as part of initialization
 	core: {
 		type: Boolean,

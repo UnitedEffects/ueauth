@@ -2057,6 +2057,68 @@ paths:
                     - 'accept'
                     - 'decline'
         required: true
+
+  /api/{group}/access/my/organizations/{org}/products:
+    get:
+      tags:
+        - User Access
+      summary: Allows a user to view all products within the context of one org to which they have access and can be linked
+      description: This will return an object array of all the b2c products the Auth Group has and all of the b2b products within the context of the organization. The data is derived from the token only.
+      operationId: getMyProducts
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: Organization context
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    type: object
+                    properties:
+                      sub:
+                        type: string
+                        format: uuid
+                      authGroup:
+                        type: string
+                      b2c:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/myProducts'
+                      b2b:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/myProducts'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
   /api/{group}/access/my/organizations:
     get:
       tags:
@@ -7342,6 +7404,13 @@ components:
             type: string
             format: uuid
           description: array of OIDC client Ids that may be associated to this business definition of a product
+        b2c:
+          type: boolean
+          description: if this is true, the product is concidered b2c and it will show up on all user "my products" lists
+        url:
+          type: string
+          format: uri
+          description: the url of this product
         type:
           type: string
           description: optional categorization of the product
@@ -7353,6 +7422,24 @@ components:
             - domain
             - entity
             - other
+
+    myProducts:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        codedId:
+          type: string
+        name:
+          type: string
+          description: the name of the product
+        description:
+          type: string
+          description: an overview of the product, if provided
+        url:
+          type: string
+          description: the url of the product
 
     product:
       type: object

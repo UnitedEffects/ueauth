@@ -55,6 +55,13 @@ router.get('/:group/access/my/organizations', [
 	m.permissions,
 	m.access('accounts')
 ], org.getMyOrgs);
+router.get('/:group/access/my/organizations/:org/products', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts')
+], prod.getMyProducts);
 router.get('/:group/access/my/notifications', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
