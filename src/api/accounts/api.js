@@ -280,9 +280,9 @@ const api = {
 					}
 				};
 				await challenge.sendChallenge(ag, req.globalSettings, { accountId: user.id, mfaEnabled: true}, uid, meta);
-				return res.respond(say.noContent(RESOURCE));
+			} else {
+				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, req.body.formats, undefined, true, req.customDomain);
 			}
-			result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, req.body.formats, undefined, true, req.customDomain);
 			return res.respond(say.noContent(RESOURCE));
 		} catch (error) {
 			if(result) {
