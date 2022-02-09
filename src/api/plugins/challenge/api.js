@@ -2,7 +2,6 @@ import challenge from './challenge';
 import Boom from '@hapi/boom';
 import acc from '../../accounts/account';
 import group from '../../authGroup/group';
-import logs from '../../logging/logs';
 import {say} from '../../../say';
 import iat from '../../oidc/initialAccess/iat';
 import crypto from 'crypto';
@@ -171,7 +170,6 @@ export default {
 async function bindAndSendInstructions(req, mfaAcc, account) {
 	const { authGroup } = await group.safeAuthGroup(req.authGroup);
 	let bindData;
-	let devices = [];
 	let warnings = [];
 	try {
 		warnings = await challenge.revokeAllDevices(authGroup, req.globalSettings, mfaAcc);

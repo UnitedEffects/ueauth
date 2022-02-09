@@ -2,6 +2,7 @@ import axios from 'axios';
 import qs from 'qs';
 import Boom from '@hapi/boom';
 import dal from '../dal';
+import acc from '../../../accounts/account';
 
 const config = require('../../../../config');
 
@@ -72,7 +73,19 @@ const pkApi = {
 			authGroup: ag.id,
 			state
 		};
-		return dal.findChallengeAndUpdate(update);
+		const result = await dal.findChallengeAndUpdate(update);
+		// if there is an event in the message, we process
+		if(interaction.event) {
+			switch(interaction.event.toUpperCase()) {
+			case 'PASSWORD_RESET':
+				if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
+				break;
+			default:
+				// ignored
+				break;
+			}
+		}
+		return result;
 	},
 	async bindUser(provider, authGroup, account) {
 		//ignoring provider parameter for this implementation
@@ -137,11 +150,13 @@ const pkApi = {
 			});
 		}
 		const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
+		const transactionId = { uid, accountId: account.accountId };
+		if(meta?.event) transactionId.event = meta.event;
 		const data = {
 			accountId: account.accountId,
 			duration: '5m',
 			additionalInfo: {'template':'true'},
-			transactionId: JSON.stringify({ uid, accountId: account.accountId }),
+			transactionId: JSON.stringify(transactionId),
 			notificationTitle: meta?.notification?.title || content.title,
 			notificationBody: meta?.notification?.message || content.title,
 			callback,
