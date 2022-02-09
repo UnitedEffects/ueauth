@@ -75,16 +75,21 @@ const pkApi = {
 		};
 		const result = await dal.findChallengeAndUpdate(update);
 		// if there is an event in the message, we process
-		if(interaction.event) {
-			switch(interaction.event.toUpperCase()) {
-			case 'PASSWORD_RESET':
-				if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
-				break;
-			default:
-				// ignored
-				break;
+		try {
+			if(interaction.event) {
+				switch(interaction.event.toUpperCase()) {
+				case 'PASSWORD_RESET':
+					if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
+					break;
+				default:
+					// ignored
+					break;
+				}
 			}
+		} catch (error) {
+			console.error(error);
 		}
+
 		return result;
 	},
 	async bindUser(provider, authGroup, account) {

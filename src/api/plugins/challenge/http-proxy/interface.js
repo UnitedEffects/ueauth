@@ -50,17 +50,21 @@ const httpProxyApi = {
 			state
 		};
 		const result = await dal.findChallengeAndUpdate(update);
-
-		if(data.interactionDetails?.event) {
-			switch(data.interactionDetails.event.toUpperCase()) {
-			case 'PASSWORD_RESET':
-				if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
-				break;
-			default:
-				// ignored
-				break;
+		try {
+			if(data.interactionDetails?.event) {
+				switch(data.interactionDetails.event.toUpperCase()) {
+				case 'PASSWORD_RESET':
+					if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
+					break;
+				default:
+					// ignored
+					break;
+				}
 			}
+		} catch (error) {
+			console.error(error);
 		}
+
 		return result;
 	},
 	async bindUser(provider, authGroup, account) {
