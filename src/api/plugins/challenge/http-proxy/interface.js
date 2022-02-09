@@ -3,6 +3,7 @@ import Boom from '@hapi/boom';
 import dal from '../dal';
 import group from '../../../authGroup/group';
 import client from '../../../oidc/client/clients';
+import acc from '../../../accounts/account';
 
 const config = require('../../../../config');
 
@@ -48,7 +49,19 @@ const httpProxyApi = {
 			authGroup: ag.id,
 			state
 		};
-		return dal.findChallengeAndUpdate(update);
+		const result = await dal.findChallengeAndUpdate(update);
+
+		if(data.interactionDetails?.event) {
+			switch(data.interactionDetails.event.toUpperCase()) {
+			case 'PASSWORD_RESET':
+				if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
+				break;
+			default:
+				// ignored
+				break;
+			}
+		}
+		return result;
 	},
 	async bindUser(provider, authGroup, account) {
 		const token = await this.generateToken(provider);
