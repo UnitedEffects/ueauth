@@ -103,7 +103,7 @@ export default {
 		} else settings = JSON.parse(JSON.stringify(global));
 		const user = await this.getAccount(authGroup.id, accountId);
 		const aliasDns = authGroup.aliasDnsOIDC || undefined;
-		await this.resetOrVerify(authGroup, settings, user, ['email'], undefined, true, aliasDns);
+		return this.resetOrVerify(authGroup, settings, user, ['email'], undefined, true, aliasDns);
 	},
 	// @notTested
 	async resetOrVerify(authGroup, globalSettings, user, formats = [], activeUser = undefined, reset=true, aliasDns = undefined) {
