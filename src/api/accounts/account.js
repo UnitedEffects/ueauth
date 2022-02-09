@@ -7,6 +7,7 @@ import n from '../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
+import plugins from "../plugins/plugins";
 
 const config = require('../../config');
 
@@ -95,6 +96,15 @@ export default {
 		return dal.getAccountByEmailOrUsername(authGroupId, email, false, false);
 	},
 
+	async passwordResetNotify(authGroup, accountId, global = undefined) {
+		let settings;
+		if(!global) {
+			settings = await plugins.getLatestPluginOptions();
+		} else settings = JSON.parse(JSON.stringify(global));
+		const user = await this.getAccount(authGroup.id, accountId);
+		const aliasDns = authGroup.aliasDnsOIDC || undefined;
+		return this.resetOrVerify(authGroup, settings, user, ['email'], undefined, true, aliasDns);
+	},
 	// @notTested
 	async resetOrVerify(authGroup, globalSettings, user, formats = [], activeUser = undefined, reset=true, aliasDns = undefined) {
 		let iAccessToken;

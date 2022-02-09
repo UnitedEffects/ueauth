@@ -3,12 +3,14 @@ import { say } from '../../say';
 import acct from './account';
 import access from './access';
 import group from '../authGroup/group';
+import challenge from '../plugins/challenge/challenge';
 import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
 import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
+import crypto from "crypto";
 const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');
@@ -265,7 +267,22 @@ const api = {
 			if(req.authGroup.pluginOptions.notification.enabled === false) throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
 			const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email, req.authGroup.config.requireVerified);
 			if(!user) throw Boom.notFound('This email address is not registered with our system');
-			result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, req.body.formats, undefined, true, req.customDomain);
+			// todo send emergency lock notification
+			if(user.mfa?.enabled === true) {
+				const ag = JSON.parse(JSON.stringify(req.authGroup));
+				const uid = crypto.randomBytes(32).toString('hex');
+				const meta = {
+					event: 'PASSWORD_RESET',
+					content: {
+						title: 'Password Reset',
+						header: `${ag.name} Platform Identity`,
+						body: 'Do you want to initiate a password reset? If so, click "Approve" below. Otherwise, click "Decline" or ignore this notification.'
+					}
+				};
+				await challenge.sendChallenge(ag, req.globalSettings, { accountId: user.id, mfaEnabled: true}, uid, meta);
+			} else {
+				result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, req.body.formats, undefined, true, req.customDomain);
+			}
 			return res.respond(say.noContent(RESOURCE));
 		} catch (error) {
 			if(result) {
