@@ -16,7 +16,6 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
-import challenge from "../../plugins/challenge/challenge";
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -759,7 +758,7 @@ export default {
 					}
 				}
 			}
-			const name = (ctx.oidc && ctx.oidc.client && ctx.oidc.client.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
+			const name = (ctx?.oidc?.client?.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../../views'),
 				basedir: 'path/for/pug/extends',
