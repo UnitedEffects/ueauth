@@ -15,7 +15,7 @@ block content
                             else
                                 span.login100-form-title.p-b-10=authGroupName
                             details.m-t-15(style="color: lightslategrey;")
-                                summary Click Here to Review Authorized Scopes and Claims
+                                summary.text-center Click Here to Review Authorized Scopes and Claims
                                 .m-t-15.authorize-details
                                     ul
                                     if (details && [details.missingOIDCScope, details.missingOIDCClaims, details.missingResourceScopes].filter(Boolean).length === 0)
@@ -23,7 +23,6 @@ block content
                                     if (details && details.missingOIDCScope)
                                         - var missingOIDCScope = new Set(details.missingOIDCScope); missingOIDCScope.delete('openid'); missingOIDCScope.delete('offline_access');
                                     if (missingOIDCScope && missingOIDCScope.size)
-                                        li these scopes are being requested...
                                         ul
                                             each scope in Array.from(missingOIDCScope)
                                                 li=scope
@@ -55,21 +54,22 @@ block content
                                     a(href=(client.tosUri || tos)) [ Terms of Service ]
                                 if ((client && client.policyUri) || policy)
                                     a(href=(client.policyUri || policy)) [ Privacy Policy ]
-                            .grant-debug.m-t-50
-                                details
-                                    summary(style="text-align: center;") (Click to expand) DEBUG information
-                                    div
-                                        strong uid: #{uid}
-                                    if (session)
+                            if(dbg)
+                                .grant-debug.m-t-50
+                                    details
+                                        summary(style="text-align: center;") (Click to expand) DEBUG information
+                                        div
+                                            strong uid: #{uid}
+                                        if (session)
+                                            div
+                                                br
+                                                #{session}
                                         div
                                             br
-                                            #{session}
-                                    div
-                                        br
-                                        #{dbg.params}
-                                    div
-                                        br
-                                        #{dbg.prompt}
+                                            #{dbg.params}
+                                        div
+                                            br
+                                            #{dbg.prompt}
                         if (splashImage)
                             .login100-more(style="background-image: url('" + splashImage + "');")
                         else

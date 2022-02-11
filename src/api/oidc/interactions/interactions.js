@@ -111,10 +111,10 @@ export default {
 			params,
 			title: 'Authorize',
 			session: session ? debug(session) : undefined,
-			dbg: {
+			dbg: (config.ENV !== 'production' || authGroup.name === 'root') ? {
 				params: debug(params),
 				prompt: debug(prompt)
-			}
+			} : undefined
 		};
 	},
 	verifyScreen(authGroup, query, aliasDns = undefined, aliasUi = undefined) {
