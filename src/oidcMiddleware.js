@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom';
 import clients from './api/oidc/client/clients';
+import product from './api/products/product';
 import IAT from './api/oidc/initialAccess/iat';
 import errHandler from './customErrorHandler';
 import helper from './helper';
@@ -56,6 +57,41 @@ const mid = {
 		}
 	},
 
+	async associatedClientProductCheck(ctx, next) {
+		try {
+			const checkMethods = ['PUT', 'POST', 'PATCH'];
+			if (ctx.request?.body && checkMethods.includes(ctx.method) && ctx.path.includes('/reg')) {
+				if(ctx.request?.body?.associated_product) {
+					if(typeof ctx.request?.body?.associated_product !== 'string') {
+						throw Boom.badRequest('Associated Product should be a string uuid');
+					}
+					const prod = await product.getProduct(ctx.authGroup.id, ctx.request.body.associated_product);
+					if(!prod) throw Boom.badRequest('Associated Product does not exist');
+					ctx.associatedProductAdded = ctx.request.body.associated_product;
+				}
+			}
+			return next();
+		} catch (error) {
+			return mid.koaErrorOut(ctx, error);
+		}
+	},
+
+	async postMiddleAssociatedProductAdd(ctx) {
+		const checkMethods = ['PUT', 'POST', 'PATCH'];
+		if (ctx.request?.body && checkMethods.includes(ctx.method) && ctx.path.includes('/reg')) {
+			if(ctx.associatedProductAdded) {
+				if(ctx.oidc?.entities?.Client?.clientId){
+					try {
+						await product.addAssociatedClient(ctx.authGroup.id, ctx.associatedProductAdded, ctx.oidc.entities.Client.clientId);
+					} catch (error) {
+						console.error('Could not associate client to product array');
+						console.error(error);
+					}
+				}
+			}
+		}
+	},
+
 	async koaErrorOut(ctx, error) {
 		let tE = error;
 		if (!Boom.isBoom(error)) tE = Boom.boomify(error);
@@ -100,8 +136,10 @@ const mid = {
 				return mid.koaErrorOut(ctx, Boom.notFound('auth group not found. try explicitly adding auth_group to the client reg request.'));
 			}
 
+			await mid.postMiddleAssociatedProductAdd(ctx);
+
 			if (config.SINGLE_USE_IAT === true) {
-				if (ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.InitialAccessToken) {
+				if (ctx.oidc?.entities?.Client && ctx.oidc?.entities?.InitialAccessToken) {
 					if (ctx.response.status === 201) {
 						await IAT.deleteOne(ctx.oidc.entities.InitialAccessToken.jti, ctx.authGroup._id);
 					}

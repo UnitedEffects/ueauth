@@ -7,7 +7,9 @@ import n from '../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
-import plugins from "../plugins/plugins";
+import plugins from '../plugins/plugins';
+import crypto from 'crypto';
+const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');
 
@@ -192,14 +194,14 @@ export default {
 				apiMethod: 'PATCH',
 				apiBody: [
 					{
-						"op": "replace",
-						"path": "/password",
-						"value": 'NEW-PASSWORD-HERE'
+						op: 'replace',
+						path: '/password',
+						value: 'NEW-PASSWORD-HERE'
 					},
 					{
-						"op": "replace",
-						"path": "/verified",
-						"value": true
+						op: 'replace',
+						path: '/verified',
+						value: true
 					}
 				]
 			}
@@ -213,6 +215,15 @@ export default {
 	},
 	async searchAccounts(authGroup, q) {
 		return dal.searchAccounts(authGroup, q);
+	},
+	async generateRecoveryCodes(authGroup, id) {
+		const codes = [];
+		for(let i=0; i<10; i++) {
+			codes.push(cryptoRandomString({length: 10, type: 'url-safe'}));
+		}
+		const account = await dal.setRecoveryCodes(authGroup, id, codes);
+		ueEvents.emit(authGroup, 'ue.account.edit', account);
+		return { account, codes };
 	}
 };
 
@@ -227,7 +238,8 @@ async function standardPatchValidation(original, patched, limit) {
 	if(limit === true) {
 		definition.verified = Joi.string().valid(original.verified).required();
 	}
-	if(original.access && original.access.length !== 0) {
+	// ensure access cannot be updated via Patch
+	if(original.access?.length !== 0) {
 		try {
 			assert.deepEqual(patched.access, JSON.parse(JSON.stringify(original.access)));
 		} catch(error) {
@@ -235,10 +247,21 @@ async function standardPatchValidation(original, patched, limit) {
 			throw Boom.forbidden('You can not set access through this API');
 		}
 	}
-	if(!original.access || !original.access.length) {
-		if(patched.access && patched.access.length !== 0) {
-			throw Boom.forbidden('You can not set access through this API');
+	if(!original.access?.length && patched.access?.length !== 0) {
+		throw Boom.forbidden('You can not set access through this API');
+	}
+
+	// ensure recoverCodes cannot be updated via Patch
+	if(original.recoverCodes?.length !== 0) {
+		try {
+			assert.deepEqual(patched.recoverCodes, JSON.parse(JSON.stringify(original.recoverCodes)));
+		} catch(error) {
+			console.error(error);
+			throw Boom.forbidden('You can not set recovery codes through this API');
 		}
+	}
+	if(!original.recoverCodes?.length && patched.recoverCodes?.length !== 0) {
+		throw Boom.forbidden('You can not set recovery codes through this API');
 	}
 	const accSchema = Joi.object().keys(definition);
 	const main = await accSchema.validateAsync(patched, {

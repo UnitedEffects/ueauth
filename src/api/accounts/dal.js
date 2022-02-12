@@ -126,4 +126,12 @@ export default {
 	async checkOneUserOrganizations(authGroup, organizations, id) {
 		return Account.findOne({ _id: id, authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
 	},
+	async setRecoveryCodes(authGroup, _id, codes) {
+		let recoverCodes = [];
+		await Promise.all(codes.map(async (code) => {
+			recoverCodes.push(await bcrypt.hash(code, await bcrypt.genSalt(10)));
+			return code;
+		}));
+		return Account.findOneAndUpdate({ _id, authGroup }, { recoverCodes }, { new: true });
+	}
 };

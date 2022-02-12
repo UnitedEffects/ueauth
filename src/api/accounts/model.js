@@ -63,8 +63,6 @@ const accountSchema = new mongoose.Schema({
 	mfa: {
 		enabled: Boolean
 	},
-	// organization.domains.products.roles.permissions
-	// every entry is a flattened org.domain.role
 	access: [
 		{
 			organization: {
@@ -90,6 +88,7 @@ const accountSchema = new mongoose.Schema({
 	],
 	metadata: Object,
 	identities: [identitySchema],
+	recoverCodes: [String],
 	_id: {
 		type: String,
 		default: uuid
@@ -101,29 +100,32 @@ accountSchema.index({ username: 1, authGroup: 1}, { unique: true });
 accountSchema.index( { authGroup: 1, _id: 1, 'identities.id' : 1 }, { unique: true });
 accountSchema.index( { email: 'text', username: 'text' });
 
-accountSchema.pre('save', function(callback) {
-	const account = this;
-	if (!account.isModified('password')) return callback();
-
-	// Password changed so we need to hash it
-	bcrypt.genSalt(10, (err, salt) => {
-		if (err) return callback(err);
-
-		bcrypt.hash(account.password, salt, (err, hash) => {
-			if (err) return callback(err);
-			account.password = hash;
-			callback();
-		});
-	});
+accountSchema.pre('save', async function (next) {
+	try {
+		const account = this;
+		if (!account.isModified('password') && !account.isModified('recoverCodes')) return next();
+		if(account.isModified('password')) {
+			account.password = await bcrypt.hash(account.password, await bcrypt.genSalt(10));
+		}
+		if(account.isModified('recoverCodes')) {
+			if (account?.recoverCodes?.length > 0) {
+				if(account.recoverCodes.length !== 10) throw new Error('Must have exactly 10 codes');
+				const codes = [];
+				await Promise.all(account.recoverCodes.map(async (code) => {
+					codes.push(await bcrypt.hash(code, await bcrypt.genSalt(12)));
+					return code;
+				}));
+				account.recoverCodes = codes;
+			}
+		}
+		return next();
+	} catch (error) {
+		return next(error);
+	}
 });
 
-accountSchema.methods.verifyPassword = function(password) {
-	return new Promise((resolve, reject) => {
-		bcrypt.compare(password, this.password, (err, isMatch) => {
-			if (err) return reject(err);
-			return resolve(isMatch);
-		});
-	});
+accountSchema.methods.verifyPassword = async function(password) {
+	return bcrypt.compare(password, this.password);
 };
 
 accountSchema.virtual('id').get(function(){
@@ -142,6 +144,7 @@ accountSchema.options.toJSON.transform = function (doc, ret, options) {
 	delete ret.phone;
 	delete ret.__v;
 	delete ret.identities;
+	delete ret.recoverCodes;
 };
 
 // Export the Mongoose model

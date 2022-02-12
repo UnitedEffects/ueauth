@@ -4,6 +4,7 @@ import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
 import orgs from '../orgs/orgs';
+import product from '../products/product';
 import clientAccess from '../oidc/client/access';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
@@ -244,7 +245,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				'client_federation_options',
 				'client_allow_org_federation'
 			],
-			validator(key, value, metadata) {
+			validator(ctx, key, value, metadata) {
 				if (key === 'auth_group') {
 					try {
 						if (value === undefined || value === null) {
@@ -255,6 +256,18 @@ function oidcConfig(g, aliasDns = undefined) {
 						}
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Auth Group`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'associated_product') {
+					try {
+						if(value) {
+							if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string uuid representing a product`);
+						}
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Associated Product`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -263,16 +276,19 @@ function oidcConfig(g, aliasDns = undefined) {
 						if (value === undefined || value === null) throw new InvalidClientMetadata(`${key} is required`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Name`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
 				if (key === 'client_label') {
 					try {
+						if(!value) value = 'login';
 						if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string value`);
 						const validLabels = ['login', 'api', 'app', 'custom'];
 						if(!validLabels.includes(value)) throw new InvalidClientMetadata(`${key} be one of: ${validLabels.join(' ')}`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Label`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -282,6 +298,7 @@ function oidcConfig(g, aliasDns = undefined) {
 						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Skip Consent`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -291,6 +308,7 @@ function oidcConfig(g, aliasDns = undefined) {
 						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Optional Skip Logout Prompt`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -300,6 +318,7 @@ function oidcConfig(g, aliasDns = undefined) {
 						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Allow Org Federation`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -309,6 +328,7 @@ function oidcConfig(g, aliasDns = undefined) {
 						if (!Array.isArray(value)) throw new InvalidClientMetadata(`${key} must be an array`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Federation Options`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
