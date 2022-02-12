@@ -62,11 +62,7 @@ export default {
 				options.post_logout_redirect_uris.push(agDom);
 			}
 		}
-		console.info('options');
-		console.info(options);
 		const client = new (oidc(authGroup).Client)(options);
-		console.info('here');
-		console.info(client);
 		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
 		const add = new Adapter('client');
 		await add.upsert(client.clientId, fixed);
