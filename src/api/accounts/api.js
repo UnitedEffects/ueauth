@@ -10,7 +10,7 @@ import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
-import crypto from "crypto";
+import crypto from 'crypto';
 const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');
@@ -28,8 +28,11 @@ const api = {
 			}
 			if (!req.body.password) throw Boom.preconditionRequired('password is required');
 			const password = req.body.password;
-			delete req.body.generatePassword; //clean up
+			//clean up
+			delete req.body.generatePassword;
 			if (req.user && req.user.sub) req.body.modifiedBy = req.user.sub;
+			// force recovery code creation as a second step
+			if (req.body.recoverCodes) delete req.body.recoverCodes;
 			const result = await acct.writeAccount(req.body);
 			try {
 				if (req.globalSettings.notifications.enabled === true &&
@@ -227,6 +230,7 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			const id = (req.params.id === 'me') ? req.user.sub : req.params.id;
 			let bpwd = false;
 			if(req.user && req.user.decoded && req.user.decoded.kind === 'InitialAccessToken') {
 				if (req.body) {
@@ -235,8 +239,8 @@ const api = {
 					}
 				}
 			}
-			await permissions.enforceOwn(req.permissions, req.params.id);
-			const result = await acct.patchAccount(req.authGroup, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd, req.permissions.enforceOwn);
+			await permissions.enforceOwn(req.permissions, id);
+			const result = await acct.patchAccount(req.authGroup, id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd, req.permissions.enforceOwn);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
@@ -476,6 +480,19 @@ const api = {
 				}
 			}
 			return res.respond(say.ok({ exact, like }, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async generateRecoveryCodes(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			const id = req.user.sub;
+			if(!id) throw Boom.forbidden();
+			const result = await acct.generateRecoveryCodes(req.authGroup.id, id);
+			if(!result?.account?.recoverCodes) throw Boom.notFound();
+			if(!result?.codes) throw Boom.internal('Something went wrong, please contact the admin');
+			return res.respond(say.ok(result.codes), RESOURCE);
 		} catch (error) {
 			next(error);
 		}

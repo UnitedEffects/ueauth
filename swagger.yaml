@@ -795,6 +795,50 @@ paths:
               $ref: '#/components/schemas/writeAccount'
         description: Account data to be written
         required: true
+  /api/{group}/account/codes:
+    put:
+      tags:
+        - Users
+      summary: Create Account Recovery Codes
+      description: Recovery codes are 10 hashed strings that are only ever displayed when the user generates them. In the event of an account lockout, they can be used to restore access and reset password should no other option be available. If lost, they must be reset. They cannot be updated and hitting this endpoint more than once will reset them.
+      operationId: writeRecoveryCodes
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: Accounts
+                  data:
+                    type: array
+                    items:
+                      type: string
+                      description: the codes
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
   /api/{group}/accounts/search:
     get:
       tags:
@@ -6800,7 +6844,7 @@ components:
                     - right
                     - left
                     - center
-                  descrioption: choose which way the screen inputs are oriented
+                  description: choose which way the screen inputs are oriented
                 bgGradientLow:
                   type: string
                   description: this is the background color lower end gradient color
@@ -8060,7 +8104,7 @@ components:
               type: array
               items:
                 type: string
-                descriptions: each line of a set of instructions to be displayed in a numbered list
+                description: each line of a set of instructions to be displayed in a numbered list
             qrCode:
               type: string
               description: if included, the uri to be encoded as a QR code on a UI. otherwise false is returned.
@@ -8074,7 +8118,7 @@ components:
               type: array
               items:
                 type: object
-                descriptions: Any errors that prevented the system from revoking previous devices or similar
+                description: Any errors that prevented the system from revoking previous devices or similar
 
     callbackRequest:
       oneOf:

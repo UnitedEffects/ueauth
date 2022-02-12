@@ -69,6 +69,7 @@ class Account {
 	static async authenticate(authGroup, email, password) {
 		try {
 			const account = await acct.getAccountByEmailOrUsername(authGroup.id, email);
+			if(account.active !== true || account.blocked === true) throw undefined;
 			if(authGroup && authGroup.config && authGroup.config.requireVerified === true) {
 				if (account.verified === false) {
 					throw undefined;

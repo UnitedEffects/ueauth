@@ -44,6 +44,7 @@ class UEProvider {
 		});
 		newProvider.use(middle.validateAuthGroup);
 		newProvider.use(middle.uniqueClientRegCheck);
+		newProvider.use(middle.associatedClientProductCheck);
 		newProvider.use(middle.noDeleteOnPrimaryClient);
 		const security = {
 			...helmet.contentSecurityPolicy.getDefaultDirectives(),

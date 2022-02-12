@@ -184,6 +184,13 @@ router.post('/:group/account', [
 	m.permissions,
 	m.access('accounts')
 ], account.writeAccount);
+router.put('/:group/account/codes', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('accounts'),
+], account.generateRecoveryCodes);
 router.get('/:group/accounts', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

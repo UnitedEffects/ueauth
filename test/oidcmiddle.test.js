@@ -711,7 +711,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			// you can toggle this config by changing your .env.test.SINGLE_USE_AT setting
 			if(config.SINGLE_USE_IAT === true) {
 				expect(IAT.deleteOne).toHaveBeenCalledWith(ctx.oidc.entities.InitialAccessToken.jti, ctx.authGroup._id);
-			}else {
+			} else {
 				expect(IAT.deleteOne).not.toHaveBeenCalled();
 			}
 			expect(spy).not.toHaveBeenCalled();
