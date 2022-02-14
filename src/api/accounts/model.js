@@ -87,6 +87,10 @@ const accountSchema = new mongoose.Schema({
 		}
 	],
 	metadata: Object,
+	userLocked: {
+		type: Boolean,
+		default: false
+	},
 	identities: [identitySchema],
 	recoverCodes: [String],
 	_id: {
@@ -126,6 +130,20 @@ accountSchema.pre('save', async function (next) {
 
 accountSchema.methods.verifyPassword = async function(password) {
 	return bcrypt.compare(password, this.password);
+};
+
+accountSchema.methods.verifyRecoverCode = async function(code) {
+	console.info(code);
+	let found = false;
+	await Promise.all(this.recoverCodes.map(async (c) => {
+		if(await bcrypt.compare(code, c)) {
+			console.info('found it here...');
+			console.info(c);
+			found = true;
+		}
+		return c;
+	}));
+	return found;
 };
 
 accountSchema.virtual('id').get(function(){

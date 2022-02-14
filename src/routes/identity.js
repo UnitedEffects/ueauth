@@ -184,13 +184,6 @@ router.post('/:group/account', [
 	m.permissions,
 	m.access('accounts')
 ], account.writeAccount);
-router.put('/:group/account/codes', [
-	m.validateAuthGroup,
-	m.isAuthenticated,
-	m.schemaCheck,
-	m.permissions,
-	m.access('accounts'),
-], account.generateRecoveryCodes);
 router.get('/:group/accounts', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
@@ -222,6 +215,30 @@ router.delete('/:group/account/:id', [
 	m.permissions,
 	m.access('accounts')
 ], account.deleteAccount);
+
+// Account Locking and Recovery
+router.put('/:group/account/codes', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('accounts'),
+], account.generateRecoveryCodes);
+router.post('/:group/account/start-recovery', [
+	m.validateAuthGroup,
+	m.isWhitelisted,
+	m.schemaCheck,
+], account.initiateRecovery);
+router.put('/:group/account/recover', [
+	m.validateAuthGroup,
+	m.isSimpleIAT,
+	m.schemaCheck,
+], account.recoverAccount);
+router.put('/:group/account/panic', [
+	m.validateAuthGroup,
+	m.isAccessOrSimpleIAT,
+	m.schemaCheck
+], account.lockAccount);
 
 // Organization Accounts
 router.put('/:group/organization/:org/account',[

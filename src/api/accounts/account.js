@@ -222,8 +222,36 @@ export default {
 			codes.push(cryptoRandomString({length: 10, type: 'url-safe'}));
 		}
 		const account = await dal.setRecoveryCodes(authGroup, id, codes);
+		if(!account) throw Boom.notFound(`Account ${id}`);
 		ueEvents.emit(authGroup, 'ue.account.edit', account);
 		return { account, codes };
+	},
+	async userSelfLock (authGroup, id) {
+		return dal.userLockAccount(authGroup, id);
+	},
+	async initiateRecovery(authGroup, email, codes, state) {
+		const account = await dal.getAccountByEmailOrUsername(authGroup.id, email);
+		if(!account) throw Boom.notFound();
+		if(account.userLocked !== true) throw Boom.forbidden();
+		let validCount = 0;
+		await Promise.all(codes.map(async (c) => {
+			if(await account.verifyRecoverCode(c)) {
+				validCount++;
+			}
+			return c;
+		}));
+		if(validCount < 7) throw Boom.forbidden('Codes did not match');
+		const meta = {
+			auth_group: authGroup.id,
+			sub: account.id,
+			email,
+			uid: state
+		};
+		const iToken = await iat.generateIAT(600, ['auth_group'] , authGroup, meta);
+		return { account, token: iToken.jti };
+	},
+	async unlockAccount(authGroup, id, email, password) {
+		return dal.unlockAccount(authGroup, id, email, password);
 	}
 };
 

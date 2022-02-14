@@ -795,49 +795,6 @@ paths:
               $ref: '#/components/schemas/writeAccount'
         description: Account data to be written
         required: true
-  /api/{group}/account/codes:
-    put:
-      tags:
-        - Users
-      summary: Create Account Recovery Codes
-      description: Recovery codes are 10 hashed strings that are only ever displayed when the user generates them. In the event of an account lockout, they can be used to restore access and reset password should no other option be available. If lost, they must be reset. They cannot be updated and hitting this endpoint more than once will reset them.
-      operationId: writeRecoveryCodes
-      parameters:
-        - name: group
-          in: path
-          description: the auth group ID associated to your business account
-          schema:
-            type: string
-          required: true
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  type:
-                    type: string
-                    example: Accounts
-                  data:
-                    type: array
-                    items:
-                      type: string
-                      description: the codes
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/InvalidInput'
-        '417':
-          $ref: '#/components/responses/ExpectationFailed'
-      security:
-        - bearer: []
-        - openId: []
 
   /api/{group}/accounts/search:
     get:
@@ -1079,6 +1036,161 @@ paths:
               $ref: '#/components/schemas/jsonPatch'
         description: JSON Patch specific to your account object
         required: true
+
+  /api/{group}/account/codes:
+    put:
+      tags:
+        - Users
+      summary: Create Account Recovery Codes
+      description: Recovery codes are 10 hashed strings that are only ever displayed when the user generates them. In the event of an account lockout, they can be used to restore access and reset password should no other option be available. If lost, they must be reset. They cannot be updated and hitting this endpoint more than once will reset them.
+      operationId: writeRecoveryCodes
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: Accounts
+                  data:
+                    type: array
+                    items:
+                      type: string
+                      description: the codes
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/account/panic:
+    put:
+      tags:
+        - Users
+      summary: Immediately Lock an Account
+      description: If a user notices unusual activity, they can immediately lock their account. This action requires recovery codes to undo. If the user has not generated recovery codes, they will need to contact an administrator for assistance. This action will also kill all active sessions for the user. PLEASE NOTE, if JWT tokens have been issued for the account, this will not disable them. Always ensure that Access Tokens have reasonable expiration times to avoid issues with locked accounts and live active JWT tokens.
+      operationId: lockMyAccount
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/account/start-recovery:
+    post:
+      tags:
+        - Users
+      summary: Initiate Recovery of Locked Account
+      description: This API will allow a user to recovery their account after locking using their recovery codes. If the request is successful, this API returns a bearer token to be used in the actual recovery. The API will also set a state cookie as part of the response to ensure the second recovery request is from the same device.
+      operationId: startRecovery
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/recoveryRequestObject'
+
+  /api/{group}/account/recover:
+    put:
+      tags:
+        - Users
+      summary: Unlock an Account and Reset Password
+      description: Using the token from "start-recovery", you can unlock the account and set a new password. Optionally, you can set a random strong password.
+      operationId: recoverAccount
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recoverAccountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/recoverAccountRequest'
 
   # Organization User Profiles
   /api/{group}/organization/{org}/profiles:
@@ -6310,6 +6422,15 @@ components:
         client:
           $ref: '#/components/schemas/clientObject'
 
+    recoverAccountResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['Account']
+        data:
+          $ref: '#/components/schemas/accountPlusCodes'
+
 
     getAccount:
       description: if the auth group is active, this is the response
@@ -6561,6 +6682,18 @@ components:
           $ref: '#/components/schemas/minimalAccountsInfo'
         like:
           $ref: '#/components/schemas/minimalAccountsInfo'
+
+    accountPlusCodes:
+      type: object
+      allOf:
+        $ref: '#/components/schemas/accountObject'
+      properties:
+        newCodes:
+          type: array
+          items:
+            type: string
+            description: these are your new recovery codes, do not lose them
+
 
     accountObject:
       type: object
@@ -7957,6 +8090,37 @@ components:
           enum:
             - google
             - standard
+
+# Account Recovery
+    recoveryRequestObject:
+      type: object
+      required:
+        - codes
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: your email address
+        codes:
+          type: array
+          minItems: 10
+          maxItems: 10
+          items:
+            type: string
+            description: these are the recovery codes. All 10 must be input. 7 out of 10 must match - there is some room for error
+
+    recoverAccountRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: your new password. If left off the request, one will be generated for you
 
 # MFA CHALLENGE
     writeMfaChallenge:

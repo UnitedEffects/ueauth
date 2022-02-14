@@ -479,7 +479,7 @@ describe('OIDC OP interface functions - Session', () => {
 			expect(ModelS.Query.prototype.deleteMany).toHaveBeenCalled();
 			const args = ModelS.Query.prototype.deleteMany.mock.calls[0];
 			expect(args[0]).toMatchObject({
-				'payload.account': accountId,
+				'payload.accountId': accountId,
 				'payload.kind': 'Session'
 			});
 		} catch (error) {

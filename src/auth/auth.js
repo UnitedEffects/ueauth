@@ -203,7 +203,7 @@ async (req, token, next) => {
 		if(!access) {
 			return next(null, false);
 		}
-		return next(null, access.payload);
+		return next(null, JSON.parse(JSON.stringify(access.payload)));
 	} catch (error) {
 		return next(error);
 	}
@@ -479,6 +479,9 @@ export default {
 	}),
 	isAuthenticatedOrIATUserUpdates: passport.authenticate(['oidc', 'user-iat-password'], {
 		session: false 
+	}),
+	isAccessOrSimpleIAT: passport.authenticate(['oidc', 'simple-iat'], {
+		session: false
 	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
 	isOIDCValid: passport.authenticate('oidc-token-validation', { session: false }),

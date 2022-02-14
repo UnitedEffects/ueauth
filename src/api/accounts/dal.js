@@ -81,6 +81,17 @@ export default {
 		}
 		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	},
+	async userLockAccount(authGroup, _id) {
+		return Account.findOneAndUpdate({ _id, authGroup }, { userLocked: true }, { new: true });
+	},
+	async unlockAccount(authGroup, _id, email, password) {
+		const update = {
+			userLocked: false
+		};
+		const salt = await bcrypt.genSalt(10);
+		update.password = await bcrypt.hash(password, salt);
+		return Account.findOneAndUpdate({ _id, authGroup, email }, update, { new: true });
+	},
 	async checkOrganizations(authGroup, organizations) {
 		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
 	},
@@ -132,6 +143,6 @@ export default {
 			recoverCodes.push(await bcrypt.hash(code, await bcrypt.genSalt(10)));
 			return code;
 		}));
-		return Account.findOneAndUpdate({ _id, authGroup }, { recoverCodes }, { new: true });
+		return Account.findOneAndUpdate({ _id, authGroup, userLocked: false }, { recoverCodes }, { new: true });
 	}
 };

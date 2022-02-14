@@ -10,6 +10,7 @@ import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
+import sessions from '../oidc/session/session';
 import crypto from 'crypto';
 const cryptoRandomString = require('crypto-random-string');
 
@@ -493,6 +494,77 @@ const api = {
 			if(!result?.account?.recoverCodes) throw Boom.notFound();
 			if(!result?.codes) throw Boom.internal('Something went wrong, please contact the admin');
 			return res.respond(say.ok(result.codes), RESOURCE);
+		} catch (error) {
+			next(error);
+		}
+	},
+	async initiateRecovery (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.body.email) throw Boom.preconditionRequired('Must provide an account email');
+			if(!req.body.codes) throw Boom.preconditionRequired('Must provide an recovery codes');
+			const email = req.body.email;
+			const codes = req.body.codes;
+			if(codes.length !== 10) throw Boom.preconditionRequired('All 10 recovery codes are required');
+			const state = crypto.randomBytes(32).toString('hex');
+			const { token, account } = await acct.initiateRecovery(authGroup, email, codes, state);
+			// set state cookie
+			res.cookie(`${authGroup.id}.${account.id}.recover-state`, state, { sameSite: 'strict' });
+			if(!token) throw Boom.forbidden();
+			return res.respond(say.ok({ token }), RESOURCE);
+		} catch (error) {
+			next(error);
+		}
+	},
+	async recoverAccount (req, res, next) {
+		let account;
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			if(!req.body.email) throw Boom.preconditionRequired('Must provide an account email');
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			const id = req.user?.sub;
+			if(!id) throw Boom.forbidden();
+			const email = req.body.email;
+			const password = req.body.password || crypto.randomBytes(16).toString('hex');
+			if(email !== req.user?.email) throw Boom.forbidden();
+			const state = req.cookies[`${authGroup.id}.${id}.recover-state`];
+			if(state !== req.user?.uid) throw Boom.notFound('State mismatch');
+			res.cookie(`${authGroup.id}.${id}.recover-state`, null, {});
+			account = await acct.unlockAccount(authGroup.id, id, email, password);
+			if(!account) throw Boom.notFound('Account');
+			const rC = await acct.generateRecoveryCodes(authGroup.id, id);
+			if(!rC?.account?.recoverCodes || !rC?.codes) {
+				throw Boom.internal('Something went wrong, please try again later or contact the admin');
+			}
+			try {
+				await iat.deleteOne(req.user?.jti, authGroup.id);
+			} catch(e) {
+				console.info('Issue with token cleanup');
+				console.error(e);
+			}
+			return res.respond(say.ok({ codes: rC.codes, password, ...JSON.parse(JSON.stringify(account)) }), RESOURCE);
+		} catch (error) {
+			if(account?.userLocked === false) {
+				await acct.userSelfLock(req.authGroup.id, account.id);
+			}
+			next(error);
+		}
+	},
+	async lockAccount (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			const id = req.user?.sub;
+			if(!id) throw Boom.forbidden();
+			const result = await acct.userSelfLock(req.authGroup.id, id);
+			if(!result) throw Boom.notFound();
+			try {
+				await sessions.removeSessionByAccountId(id);
+			} catch (e) {
+				console.error(e);
+				return res.respond(say.partial('Account Locked but unable to kill all sessions'), RESOURCE);
+			}
+			return res.respond(say.noContent());
 		} catch (error) {
 			next(error);
 		}
