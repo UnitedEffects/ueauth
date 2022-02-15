@@ -6688,7 +6688,7 @@ components:
       allOf:
         $ref: '#/components/schemas/accountObject'
       properties:
-        newCodes:
+        codes:
           type: array
           items:
             type: string

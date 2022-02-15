@@ -4,6 +4,7 @@ import api from '../api/oidc/api';
 import m from '../middleware';
 import interactions from '../api/oidc/interactions/api';
 import chApi from '../api/plugins/challenge/api';
+import account from "../api/accounts/api";
 
 const jsonParser = bodyParser.json();
 const urlParser = bodyParser.urlencoded({extended:true});
@@ -105,28 +106,34 @@ router.get('/:group/interaction/:uid/passwordless', [
 	m.getGlobalPluginSettings
 ], interactions.noPassLogin);
 
-/**
- * Password Reset and Account Verify
- */
+// Form POST for setting new password
 router.post('/:group/setpass', [
 	jsonParser,
 	m.setNoCache,
 	m.validateAuthGroup,
 	m.isAuthenticatedOrIAT
-], interactions.forgot);
+], account.forgot);
+
+/**
+ * Account Service Screens
+ */
 router.get('/:group/forgotpassword', [
 	jsonParser,
 	m.setNoCache,
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
-], interactions.forgotPasswordScreen);
+], account.forgotPasswordScreen);
 router.get('/:group/verifyaccount', [
 	jsonParser,
 	m.setNoCache,
 	m.validateAuthGroup
-], interactions.verifyAccountScreen);
-
-// MFA Recovery
+], account.verifyAccountScreen);
+router.get('/:group/recoveraccount', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], account.recoverFromPanic);
 router.get('/:group/recover-mfa', [
 	jsonParser,
 	m.setNoCache,

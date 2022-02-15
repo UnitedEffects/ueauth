@@ -236,6 +236,7 @@ router.put('/:group/account/recover', [
 ], account.recoverAccount);
 router.put('/:group/account/panic', [
 	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
 	m.isAccessOrSimpleIAT,
 	m.schemaCheck
 ], account.lockAccount);

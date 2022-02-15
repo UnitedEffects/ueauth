@@ -1,0 +1,138 @@
+extends ../layout
+
+block content
+    body
+        style.
+            .center {
+                text-align: center;
+            }
+            .m20 {
+                margin: 20px;
+            }
+            .m10 {
+                margin: 10px;
+            }
+            .code-fields {
+                border: lightgray;
+                border-style: solid;
+                border-width: thin;
+                padding: 5px;
+            }
+            .text-area {
+                width: 85%;
+                height: 10vh;
+            }
+            .fields {
+                width: 65%;
+                border: lightgray;
+                border-style: solid;
+                border-width: thin;
+                padding: 5px;
+            }
+            .field-button {
+                padding-bottom: 5px;
+                width: 50%;
+            }
+            .error {
+                background: coral;
+                width: 85%;
+                color: white;
+                height: 8vh;
+                border-radius: 15px;
+                margin: auto;
+                padding-top: 10px;
+            }
+            .notice {
+                color: coral;
+            }
+            .hidden {
+                visibility: hidden;
+                position: absolute;
+            }
+            #loading {
+                display: inline-block;
+                width: 50px;
+                height: 50px;
+                border: 3px solid rgba(255, 255, 255, .3);
+                border-radius: 50%;
+                border-top-color: grey;
+                animation: spin 1s ease-in-out infinite;
+                -webkit-animation: spin 1s ease-in-out infinite;
+            }
+
+            @keyframes spin {
+                to {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+
+            @-webkit-keyframes spin {
+                to {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+        //
+        script(nonce=nonce, type="text/javascript").
+            const authGroup = '#{authGroup}';
+            const start = '#{startRecoveryUri}';
+            const recover = '#{recoverUri}'
+        script(nonce=nonce, src="https://code.jquery.com/jquery-3.6.0.slim.min.js", crossorigin="anonymous")
+        script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
+        script
+            include panic.js
+        section#head.section
+            .row
+                .col-lg-12
+                    .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
+                        h2.center.m-b-10=title
+                        p.center.m-b-20=message
+                        div.center.hidden(id='fl')
+                            .error(id='flash')
+                        center.m-t-5
+                            .hidden(id='loading')
+                        .center(id="start")
+                            p.m20 To get started, type your email address and your 10 recovery codes, then click "Recover". This may take a minute.
+                            input.fields.m20(type="email" id="email" aria-describedby="emailHelp" placeholder="email...")
+                            i.fa.fa-envelope
+                            .m20
+                                input.code-fields.m20(type="text" id="code1" aria-describedby="code1" placeholder="recovery code 1")
+                                input.code-fields.m20(type="text" id="code2" aria-describedby="code2" placeholder="recovery code 2")
+                                input.code-fields.m20(type="text" id="code3" aria-describedby="code3" placeholder="recovery code 3")
+                                input.code-fields.m20(type="text" id="code4" aria-describedby="code4" placeholder="recovery code 4")
+                                input.code-fields.m20(type="text" id="code5" aria-describedby="code5" placeholder="recovery code 5")
+                                input.code-fields.m20(type="text" id="code6" aria-describedby="code6" placeholder="recovery code 6")
+                                input.code-fields.m20(type="text" id="code7" aria-describedby="code7" placeholder="recovery code 7")
+                                input.code-fields.m20(type="text" id="code8" aria-describedby="code8" placeholder="recovery code 8")
+                                input.code-fields.m20(type="text" id="code9" aria-describedby="code9" placeholder="recovery code 9")
+                                input.code-fields.m20(type="text" id="code10" aria-describedby="code10" placeholder="recovery code 10")
+                            div
+                                button.m20.field-button.btn.btn-block.btn-outline-dark(id='start-recovery') Recover Account
+                        .center.hidden(id="recover")
+                            p.m20 Great news! Your codes were recognized. Now please retype your email address and choose a new password. When you hit "Submit", your account will unlock, your password will be reset to the new one, and new recovery codes will be generated. Your new password and codes will be displayed on the screen. Please copy your new recovery codes and store them somewhere safe, you will never see them displayed again.
+                            input.fields.m10(type="email" id="email2" aria-describedby="email help" placeholder="email...")
+                            i.fa.fa-envelope-open
+                            p.notice If you leave both password fields blank, one will be generated for you.
+                            input.fields.m10(type="password" id="password" aria-describedby="password help" placeholder="password...")
+                            i.fa.fa-eye-slash(id="togglePassword1")
+                            input.fields.m10(type="password" id="reenter-password" aria-describedby="password help" placeholder="reenter password...")
+                            i.fa.fa-eye-slash(id="togglePassword2")
+                            div
+                                button.m20.field-button.btn.btn-block.btn-outline-dark(id='submit-recover') Submit
+                        .center.hidden(id="result")
+                            h5 Your New Password
+                            input.fields.m10(type="password" disabled id="showpass" aria-describedby="new password")
+                            i.fa.fa-eye-slash(id="togglePassword3")
+                            i.m-l-5.fa.fa-copy(id="copyPassword")
+                            h5.m-t-20 Your New Codes
+                                i.m-l-10.fa.fa-copy(id="copyCodes")
+                            textarea.text-area.m10(id="newCodes" disabled aria-describedby="new codes")
+
+
+                            h5.m20.center Your account is now unlocked. Copy your password and codes and store them somewhere safe. Any MFA devices you may have had are no longer enabled. You are strongly encouraged to change your email password and then re-enable MFA on your device by clicking the Restore MFA link below.
+                            h4.m10.center When ready, you may navigate to your login page and close this window.
+                        .m-t-10.center
+                            if (tosUri || (authGroup && authGroup.primaryTOS))
+                                a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
+                            if (policyUri || (authGroup && authGroup.primaryPrivacyPolicy))
+                                a(href=(policyUri || authGroup.primaryPrivacyPolicy) style="margin-left: 5px") [ Privacy Policy ]
+                            a(href='/' + authGroup + '/recover-mfa' target='_blank') [ Restore MFA ]

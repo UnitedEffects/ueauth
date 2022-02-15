@@ -82,7 +82,7 @@ export default {
 		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	},
 	async userLockAccount(authGroup, _id) {
-		return Account.findOneAndUpdate({ _id, authGroup }, { userLocked: true }, { new: true });
+		return Account.findOneAndUpdate({ _id, authGroup }, { userLocked: true, 'mfa.enabled': false }, { new: true });
 	},
 	async unlockAccount(authGroup, _id, email, password) {
 		const update = {

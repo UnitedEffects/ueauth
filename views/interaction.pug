@@ -50,10 +50,10 @@ block content
                                     | Continue
                             .login-help.p-t-10
                                 a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
-                                if ((client && client.tosUri) || tos)
-                                    a(href=(client.tosUri || tos)) [ Terms of Service ]
-                                if ((client && client.policyUri) || policy)
-                                    a(href=(client.policyUri || policy)) [ Privacy Policy ]
+                                if ((client && client.tosUri) || tosUri)
+                                    a(href=(client.tosUri || tosUri)) [ Terms of Service ]
+                                if ((client && client.policyUri) || policyUri)
+                                    a(href=(client.policyUri || policyUri)) [ Privacy Policy ]
                             if(dbg)
                                 .grant-debug.m-t-50
                                     details

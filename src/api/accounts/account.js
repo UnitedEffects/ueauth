@@ -8,7 +8,6 @@ import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import plugins from '../plugins/plugins';
-import crypto from 'crypto';
 const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');

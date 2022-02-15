@@ -207,10 +207,10 @@ block content
                                         span.p-l-10 Try Again
                             .login-help.p-t-10
                                 a(href='/' + authGroup + '/interaction/' + uid + '/abort') [ Cancel ]
-                                if (client.tosUri || tos)
-                                    a(href=(client.tosUri || tos)) [ Terms of Service ]
-                                if (client.policyUri || policy)
-                                    a(href=(client.policyUri || policy)) [ Privacy Policy ]
+                                if (client.tosUri || tosUri)
+                                    a(href=(client.tosUri || tosUri)) [ Terms of Service ]
+                                if (client.policyUri || policyUri)
+                                    a(href=(client.policyUri || policyUri)) [ Privacy Policy ]
                                 a(href='/' + authGroup + '/recover-mfa' target='_blank') [ Restore MFA ]
                         if (splashImage)
                             .login100-more(style="background-image: url('" + splashImage + "');")
