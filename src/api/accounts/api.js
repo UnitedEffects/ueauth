@@ -10,7 +10,9 @@ import permissions from '../../permissions';
 import n from '../plugins/notifications/notifications';
 import ueEvents from '../../events/ueEvents';
 import initAccess from '../../initUEAuth';
+import sessions from '../oidc/session/session';
 import crypto from 'crypto';
+import screens from './screens';
 const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');
@@ -267,11 +269,15 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.body.email) throw Boom.preconditionRequired('Must provide email address');
-			if(req.globalSettings.notifications.enabled === false) throw Boom.methodNotAllowed('There is no Global Notification Plugin enabled. You will need the admin to reset your password directly and inform you of the new password');
-			if(req.authGroup.pluginOptions.notification.enabled === false) throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+			if(req.globalSettings.notifications.enabled === false) {
+				throw Boom.methodNotAllowed('There is no Global Notification Plugin enabled. You will need the admin to reset your password directly and inform you of the new password');
+			}
+			if(req.authGroup.pluginOptions.notification.enabled === false) {
+				throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+			}
 			const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email, req.authGroup.config.requireVerified);
 			if(!user) throw Boom.notFound('This email address is not registered with our system');
-			// todo send emergency lock notification
+			await acct.sendAccountLockNotification(req.authGroup, user, req.globalSettings);
 			if(user.mfa?.enabled === true) {
 				const ag = JSON.parse(JSON.stringify(req.authGroup));
 				const uid = crypto.randomBytes(32).toString('hex');
@@ -489,14 +495,207 @@ const api = {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
 			const id = req.user.sub;
 			if(!id) throw Boom.forbidden();
+			if (req.globalSettings.notifications.enabled === true &&
+				req.authGroup.pluginOptions.notification.enabled === true) {
+				await acct.sendAccountLockNotification(req.authGroup, id, req.globalSettings);
+			}
 			const result = await acct.generateRecoveryCodes(req.authGroup.id, id);
 			if(!result?.account?.recoverCodes) throw Boom.notFound();
 			if(!result?.codes) throw Boom.internal('Something went wrong, please contact the admin');
-			return res.respond(say.ok(result.codes), RESOURCE);
+			return res.respond(say.ok(result.codes, RESOURCE));
 		} catch (error) {
 			next(error);
 		}
-	}
+	},
+	async initiateRecovery (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.body.email) throw Boom.preconditionRequired('Must provide an account email');
+			if(!req.body.codes) throw Boom.preconditionRequired('Must provide an recovery codes');
+			if(!Array.isArray(req.body.codes)) throw Boom.preconditionRequired('Must provide an recovery codes array');
+			const email = req.body.email;
+			const codes = [...new Set(req.body.codes)];
+			if(codes.length < 10) throw Boom.preconditionRequired('All 10 codes are required');
+			if(codes.length !== 10) throw Boom.preconditionRequired('All 10 recovery codes are required');
+			const state = crypto.randomBytes(32).toString('hex');
+			const { token, account } = await acct.initiateRecovery(authGroup, email, codes, state);
+			// set state cookie
+			res.cookie(`${authGroup.id}.${account.id}.recover-state`, state, { sameSite: 'strict' });
+			if(!token) throw Boom.forbidden();
+			return res.respond(say.ok({ token }, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async recoverAccount (req, res, next) {
+		let account;
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			if(!req.body.email) throw Boom.preconditionRequired('Must provide an account email');
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			const id = req.user?.sub;
+			if(!id) throw Boom.forbidden();
+			const email = req.body.email;
+			const password = req.body.password || crypto.randomBytes(16).toString('hex');
+			if(email !== req.user?.email) throw Boom.forbidden();
+			const state = req.cookies[`${authGroup.id}.${id}.recover-state`];
+			if(state !== req.user?.uid) throw Boom.notFound('State mismatch');
+			res.cookie(`${authGroup.id}.${id}.recover-state`, null, {});
+			account = await acct.unlockAccount(authGroup.id, id, email, password);
+			if(!account) throw Boom.notFound('Account');
+			const rC = await acct.generateRecoveryCodes(authGroup.id, id);
+			if(!rC?.account?.recoverCodes || !rC?.codes) {
+				throw Boom.internal('Something went wrong, please try again later or contact the admin');
+			}
+			try {
+				await iat.deleteOne(req.user?.jti, authGroup.id);
+			} catch(e) {
+				console.info('Issue with token cleanup');
+				console.error(e);
+			}
+			return res.respond(say.ok({ codes: rC.codes, password, ...JSON.parse(JSON.stringify(account)) }, RESOURCE));
+		} catch (error) {
+			if(account?.userLocked === false) {
+				await acct.userSelfLock(req.authGroup.id, account.id);
+			}
+			next(error);
+		}
+	},
+	async lockAccount (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			const email = req.body?.email;
+			if(!email) throw Boom.preconditionRequired('Must provide email to validate your intention');
+			const id = req.user?.sub;
+			if(!id) throw Boom.forbidden();
+			const user = await acct.getAccount(authGroup.id, id);
+			if (user.email !== email) throw Boom.forbidden();
+			if(!user) throw Boom.notFound();
+			try {
+				await sessions.removeSessionByAccountId(id);
+				if(user.mfa?.enabled === true) {
+					await challenge.revokeAllDevices(authGroup, req.globalSettings, { accountId: user.id, mfaEnabled: true});
+				}
+			} catch (e) {
+				console.error(e);
+				return res.respond(say.partial('Account Locked but unable to kill all sessions or purge MFA devices', RESOURCE));
+			}
+			await acct.userSelfLock(authGroup.id, id, user);
+			return res.respond(say.noContent());
+		} catch (error) {
+			next(error);
+		}
+	},
+	async recoverFromPanic(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+			return res.render('panic/dontPanic', screens.recoverFromPanic(authGroup, safeAG));
+		} catch(error) {
+			next(error);
+		}
+	},
+	async panicScreen(req, res, next) {
+		try {
+			if(!req.query?.code) throw Boom.unauthorized();
+			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+			const uid = req.params.uid;
+			const iToken = await iat.getOne(req.query.code, authGroup.id);
+			const user = JSON.parse(JSON.stringify(iToken.payload));
+			if(!user.sub) throw Boom.unauthorized();
+			if(!user.email) throw Boom.forbidden();
+			if(user.uid !== uid) throw Boom.forbidden();
+			const meta = {
+				sub: user.sub,
+				email: user.email,
+				auth_group: authGroup.id,
+			};
+			const token = await iat.generateIAT(600, ['auth_group'], authGroup, meta);
+			return res.render('panic/panic', screens.panic(authGroup, safeAG, token.jti));
+		} catch(error) {
+			next(error);
+		}
+	},
+	async verifyAccountScreen (req, res, next) {
+		try {
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.query.code) {
+				if(req.query.email) {
+					return res.render('error', {
+						title: 'Sent Password Reset',
+						message: 'Looks like successfully sent your password reset link.',
+						details: 'Check your email or mobile device.'
+					});
+				}
+				return res.render('error', {
+					title: 'Uh oh...',
+					message: 'Invalid Verify Account Request',
+					details: 'This page requires special access. Check your email or mobile device for the link.'
+				});
+
+			}
+			return res.render('verify', screens.verifyScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
+		} catch (error) {
+			next (error);
+		}
+	},
+	async forgotPasswordScreen (req, res, next) {
+		try {
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.query.code) {
+				if(req.query.email) {
+					return res.render('error', {
+						title: 'Resent Password Reset',
+						message: 'Looks like successfully resent your password reset link.',
+						details: 'Check your email or mobile device.'
+					});
+				}
+				if(req.globalSettings?.notifications?.enabled !== true)
+				{
+					return res.render('error', {
+						title: 'Forgot Password Not Enabled by the OP Admin',
+						message: 'This UE Auth instance has not activated the global notifications plugin. This is required before secure password resets are allowed through self service.',
+						details: 'Please contact your UE Auth Admin.'
+					});
+				}
+				if(authGroup?.pluginOptions?.notification?.enabled !== true || authGroup?.config?.centralPasswordReset !== true) {
+					return res.render('error', {
+						title: `Forgot Password Not Enabled for ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name}`,
+						message: 'This Auth Group has either not enabled notifications or has disabled centralized password reset.',
+						details: `Please contact the ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name} admin.`
+					});
+				}
+
+			}
+			return res.render('forgot', screens.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
+		} catch (error) {
+			next (error);
+		}
+	},
+	async forgot (req, res, next) {
+		try {
+			const newPassword = req.body.password;
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			const update = [
+				{
+					op: 'replace',
+					path: '/password',
+					value: newPassword
+				},
+				{
+					op: 'replace',
+					path: '/verified',
+					value: true
+				}
+			];
+			await acct.patchAccount(authGroup, req.user.sub, update, req.user.sub, true);
+			return res.respond(say.noContent('Password Reset'));
+		} catch (error) {
+			next (error);
+		}
+	},
 };
 
 async function userOperation(req, user, password) {

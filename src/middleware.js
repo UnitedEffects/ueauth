@@ -330,6 +330,7 @@ const mid = {
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,
 	isSimpleIAT: authorizer.isSimpleIAT,
+	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
 	isWhitelisted: authorizer.isWhitelisted
 };
 

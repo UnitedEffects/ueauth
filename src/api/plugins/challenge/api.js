@@ -5,6 +5,7 @@ import group from '../../authGroup/group';
 import {say} from '../../../say';
 import iat from '../../oidc/initialAccess/iat';
 import crypto from 'crypto';
+import acct from '../../accounts/account';
 
 const config = require('../../../config');
 
@@ -44,7 +45,7 @@ export default {
 					return res.redirect(`${path}?state=${state}`);
 				}
 				state = req.query.state;
-				return res.render('mfaRecover', { safeAG, state, title: 'MFA Recovery Wizard', message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.', request: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/instructions` });
+				return res.render('mfaRecover', { authGroup: safeAG, state, title: 'MFA Recovery Wizard', message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.', request: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/instructions` });
 			}
 			throw Boom.forbidden(`MFA recovery is not available on the ${authGroup.name} Platform`);
 		} catch (error) {
@@ -97,6 +98,7 @@ export default {
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
 				if(account.mfa.enabled === false) {
 					// if account is not mfaEnabled, enable and send instructions
+					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
 					return res.respond(say.ok(result, 'MFA RECOVERY'));
 				}
@@ -146,6 +148,7 @@ export default {
 
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
+				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,
