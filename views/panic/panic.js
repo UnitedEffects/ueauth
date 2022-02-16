@@ -31,6 +31,34 @@ window.addEventListener( 'load', async function () {
 		}
 	});
 
+	async function lockAccount(url, token, event) {
+		try {
+			event.preventDefault();
+			const options = {
+				url,
+				method: 'put',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `bearer ${token}`
+				},
+				data: {
+					email: $('#email').val()
+				}
+			};
+			showSpinner();
+			const result = await axios(options);
+			hideSpinner();
+			if(result?.status !== 204) throw result;
+			$('#start').css({ visibility: 'hidden', position: 'absolute' });
+			$('#result').css({ visibility: 'visible', position: 'inherit' });
+		} catch (error) {
+			hideSpinner();
+			console.error(error);
+			$('#fl').css({ visibility: 'visible', position: 'inherit' });
+			$('#flash').text('We seem to have run into a technical issue. Please try again later or contact your admin.');
+		}
+	}
+
 	async function startRecovery(url, event) {
 		try {
 			event.preventDefault();
@@ -120,6 +148,13 @@ window.addEventListener( 'load', async function () {
 			$('#flash').text('We seem to have run into a technical issue. Please try again later or contact your admin.');
 		}
 	}
+
+	$('#lockAccount').on('click', async (event) => {
+		console.info('locking...');
+		console.info(panicUrl);
+		console.info(lockToken);
+		return lockAccount(panicUrl, lockToken, event);
+	});
 
 	$('#start-recovery').on('click', async (event) => {
 		return startRecovery(startUrl, event);

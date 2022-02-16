@@ -269,11 +269,15 @@ const api = {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
 			if(!req.body.email) throw Boom.preconditionRequired('Must provide email address');
-			if(req.globalSettings.notifications.enabled === false) throw Boom.methodNotAllowed('There is no Global Notification Plugin enabled. You will need the admin to reset your password directly and inform you of the new password');
-			if(req.authGroup.pluginOptions.notification.enabled === false) throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+			if(req.globalSettings.notifications.enabled === false) {
+				throw Boom.methodNotAllowed('There is no Global Notification Plugin enabled. You will need the admin to reset your password directly and inform you of the new password');
+			}
+			if(req.authGroup.pluginOptions.notification.enabled === false) {
+				throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+			}
 			const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email, req.authGroup.config.requireVerified);
 			if(!user) throw Boom.notFound('This email address is not registered with our system');
-			// todo send emergency lock notification
+			await acct.sendAccountLockNotification(req.authGroup, user, req.globalSettings);
 			if(user.mfa?.enabled === true) {
 				const ag = JSON.parse(JSON.stringify(req.authGroup));
 				const uid = crypto.randomBytes(32).toString('hex');
@@ -491,6 +495,10 @@ const api = {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
 			const id = req.user.sub;
 			if(!id) throw Boom.forbidden();
+			if (req.globalSettings.notifications.enabled === true &&
+				req.authGroup.pluginOptions.notification.enabled === true) {
+				await acct.sendAccountLockNotification(req.authGroup, id, req.globalSettings);
+			}
 			const result = await acct.generateRecoveryCodes(req.authGroup.id, id);
 			if(!result?.account?.recoverCodes) throw Boom.notFound();
 			if(!result?.codes) throw Boom.internal('Something went wrong, please contact the admin');
@@ -556,22 +564,24 @@ const api = {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must provide an AuthGroup');
 			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			const email = req.body?.email;
+			if(!email) throw Boom.preconditionRequired('Must provide email to validate your intention');
 			const id = req.user?.sub;
 			if(!id) throw Boom.forbidden();
 			const user = await acct.getAccount(authGroup.id, id);
+			if (user.email !== email) throw Boom.forbidden();
 			if(!user) throw Boom.notFound();
-			let temp;
 			try {
 				await sessions.removeSessionByAccountId(id);
 				if(user.mfa?.enabled === true) {
-					temp = await challenge.revokeAllDevices(authGroup, req.globalSettings, { accountId: user.id, mfaEnabled: true});
+					await challenge.revokeAllDevices(authGroup, req.globalSettings, { accountId: user.id, mfaEnabled: true});
 				}
 			} catch (e) {
 				console.error(e);
 				return res.respond(say.partial('Account Locked but unable to kill all sessions or purge MFA devices', RESOURCE));
 			}
 			await acct.userSelfLock(authGroup.id, id, user);
-			return res.respond(say.ok(temp));
+			return res.respond(say.noContent());
 		} catch (error) {
 			next(error);
 		}
@@ -580,7 +590,28 @@ const api = {
 		try {
 			if(!req.authGroup) throw Boom.forbidden();
 			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
-			return res.render('panic/panic', screens.recoverFromPanic(authGroup, safeAG));
+			return res.render('panic/dontPanic', screens.recoverFromPanic(authGroup, safeAG));
+		} catch(error) {
+			next(error);
+		}
+	},
+	async panicScreen(req, res, next) {
+		try {
+			if(!req.query?.code) throw Boom.unauthorized();
+			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+			const uid = req.params.uid;
+			const iToken = await iat.getOne(req.query.code, authGroup.id);
+			const user = JSON.parse(JSON.stringify(iToken.payload));
+			if(!user.sub) throw Boom.unauthorized();
+			if(!user.email) throw Boom.forbidden();
+			if(user.uid !== uid) throw Boom.forbidden();
+			const meta = {
+				sub: user.sub,
+				email: user.email,
+				auth_group: authGroup.id,
+			};
+			const token = await iat.generateIAT(600, ['auth_group'], authGroup, meta);
+			return res.render('panic/panic', screens.panic(authGroup, safeAG, token.jti));
 		} catch(error) {
 			next(error);
 		}

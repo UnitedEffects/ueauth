@@ -220,6 +220,7 @@ router.delete('/:group/account/:id', [
 router.put('/:group/account/codes', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
+	m.getGlobalPluginSettings,
 	m.schemaCheck,
 	m.permissions,
 	m.access('accounts'),

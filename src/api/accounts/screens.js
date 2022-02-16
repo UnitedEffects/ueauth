@@ -1,6 +1,15 @@
 const config = require('../../config');
 
 export default {
+	panic(authGroup, safeAG, code) {
+		return {
+			title: 'Emergency Lock',
+			message: 'This wizard will allow you to lock your account if you believe you have been compromised. You have 10 minutes to click the button after arriving on this screen, otherwise you will need to refresh. Your general access to this screen, as provided by the notification you received, is limited to 2 hours.',
+			authGroup: safeAG,
+			code,
+			panicUrl: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/account/panic`,
+		};
+	},
 	recoverFromPanic(authGroup, safeAG) {
 		return {
 			title: 'Don\'t Panic',

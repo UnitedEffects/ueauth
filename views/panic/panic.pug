@@ -12,16 +12,6 @@ block content
             .m10 {
                 margin: 10px;
             }
-            .code-fields {
-                border: lightgray;
-                border-style: solid;
-                border-width: thin;
-                padding: 5px;
-            }
-            .text-area {
-                width: 85%;
-                height: 10vh;
-            }
             .fields {
                 width: 65%;
                 border: lightgray;
@@ -41,9 +31,6 @@ block content
                 border-radius: 15px;
                 margin: auto;
                 padding-top: 10px;
-            }
-            .notice {
-                color: coral;
             }
             .hidden {
                 visibility: hidden;
@@ -74,8 +61,8 @@ block content
         //
         script(nonce=nonce, type="text/javascript").
             const authGroup = '#{authGroup}';
-            const start = '#{startRecoveryUri}';
-            const recover = '#{recoverUri}'
+            const panicUrl = '#{panicUrl}';
+            const lockToken = '#{code}';
         script(nonce=nonce, src="https://code.jquery.com/jquery-3.6.0.slim.min.js", crossorigin="anonymous")
         script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
         script
@@ -91,45 +78,22 @@ block content
                         center.m-t-5
                             .hidden(id='loading')
                         .center(id="start")
-                            p.m20 To get started, type your email address and your 10 recovery codes, then click "Recover". This may take a minute.
+                            p.m20
+                                ul.list-group
+                                    li.list-group-item THIS IS AN EMERGENCY PROCEDURE.
+                                    li.list-group-item Please be aware, if you lock your account, you will logout of all devices, disable your ability to login anywhere, disable MFA on your account, and revoke your MFA settings on your device. It can only be undone by using your onetime recovery codes or by a system administrator.
+                                    li.list-group-item If you have MFA and it is not compromised, it may be sufficient to simply change your passwords - both your email and your system password. You can change your system password by clicking Change Password below.
+                                    li.list-group-item If your passwords are secure but your device is not, you can bind your account to a new device by clicking Restore MFA below.
+                                    li.list-group-item If after these considerations you wish to proceed, please confirm your intention by typing your email address and click "LOCK MY ACCOUNT NOW"
                             input.fields.m20(type="email" id="email" aria-describedby="emailHelp" placeholder="email...")
-                            i.fa.fa-envelope
-                            .m20
-                                input.code-fields.m20(type="text" id="code1" aria-describedby="code1" placeholder="recovery code 1")
-                                input.code-fields.m20(type="text" id="code2" aria-describedby="code2" placeholder="recovery code 2")
-                                input.code-fields.m20(type="text" id="code3" aria-describedby="code3" placeholder="recovery code 3")
-                                input.code-fields.m20(type="text" id="code4" aria-describedby="code4" placeholder="recovery code 4")
-                                input.code-fields.m20(type="text" id="code5" aria-describedby="code5" placeholder="recovery code 5")
-                                input.code-fields.m20(type="text" id="code6" aria-describedby="code6" placeholder="recovery code 6")
-                                input.code-fields.m20(type="text" id="code7" aria-describedby="code7" placeholder="recovery code 7")
-                                input.code-fields.m20(type="text" id="code8" aria-describedby="code8" placeholder="recovery code 8")
-                                input.code-fields.m20(type="text" id="code9" aria-describedby="code9" placeholder="recovery code 9")
-                                input.code-fields.m20(type="text" id="code10" aria-describedby="code10" placeholder="recovery code 10")
                             div
-                                button.m20.field-button.btn.btn-block.btn-outline-dark(id='start-recovery') Recover Account
-                        .center.hidden(id="recover")
-                            p.m20 Great news! Your codes were recognized. Now please retype your email address and choose a new password. When you hit "Submit", your account will unlock, your password will be reset to the new one, and new recovery codes will be generated. Your new password and codes will be displayed on the screen. Please copy your new recovery codes and store them somewhere safe, you will never see them displayed again.
-                            input.fields.m10(type="email" id="email2" aria-describedby="email help" placeholder="email...")
-                            i.fa.fa-envelope-open
-                            p.notice If you leave both password fields blank, one will be generated for you.
-                            input.fields.m10(type="password" id="password" aria-describedby="password help" placeholder="password...")
-                            i.fa.fa-eye-slash(id="togglePassword1")
-                            input.fields.m10(type="password" id="reenter-password" aria-describedby="password help" placeholder="reenter password...")
-                            i.fa.fa-eye-slash(id="togglePassword2")
-                            div
-                                button.m20.field-button.btn.btn-block.btn-outline-dark(id='submit-recover') Submit
+                                button.m20.field-button.btn.btn-block.btn-outline-dark(id='lockAccount') LOCK MY ACCOUNT NOW
                         .center.hidden(id="result")
-                            h5 Your New Password
-                            input.fields.m10(type="password" disabled id="showpass" aria-describedby="new password")
-                            i.fa.fa-eye-slash(id="togglePassword3")
-                            i.m-l-5.fa.fa-copy(id="copyPassword")
-                            h5.m-t-20 Your New Codes
-                                i.m-l-10.fa.fa-copy(id="copyCodes")
-                            textarea.text-area.m10(id="newCodes" disabled aria-describedby="new codes")
-
-
-                            h5.m20.center Your account is now unlocked. Copy your password and codes and store them somewhere safe. Any MFA devices you may have had are no longer enabled. You are strongly encouraged to change your email password and then re-enable MFA on your device by clicking the Restore MFA link below.
-                            h4.m10.center When ready, you may navigate to your login page and close this window.
+                            h5.m20.center Your account is now locked. Take some time and secure your email, passwords, and device. When you are ready, you can navigate to the recovery wizard to unlock your account and restore MFA. You will need your recovery codes to do this.
+                            m20.center
+                                a(href='/' + authGroup.id + '/recoveraccount' target='_blank') [ Recover Account ]
+                            h4.m10.center When ready, you may close this window.
+                        .center.hidden(id="recover")
                         .m-t-10.center
                             if (tosUri || (authGroup && authGroup.primaryTOS))
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
@@ -137,3 +101,5 @@ block content
                                 a(href=(policyUri || authGroup.primaryPrivacyPolicy) style="margin-left: 5px") [ Privacy Policy ]
                             if (authGroup)
                                 a(href='/' + authGroup.id + '/recover-mfa' target='_blank') [ Restore MFA ]
+                            if (authGroup)
+                                a(href='/' + authGroup.id + '/forgotpassword' target='_blank') [ Change Password ]

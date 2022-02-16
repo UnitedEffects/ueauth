@@ -134,6 +134,12 @@ router.get('/:group/recoveraccount', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], account.recoverFromPanic);
+router.get('/:group/interaction/:uid/lockaccount', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+], account.panicScreen);
 router.get('/:group/recover-mfa', [
 	jsonParser,
 	m.setNoCache,

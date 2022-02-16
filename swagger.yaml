@@ -1108,6 +1108,17 @@ paths:
           $ref: '#/components/responses/InvalidInput'
         '417':
           $ref: '#/components/responses/ExpectationFailed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
       security:
         - bearer: []
         - openId: []

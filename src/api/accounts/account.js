@@ -8,6 +8,7 @@ import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import plugins from '../plugins/plugins';
+import crypto from "crypto";
 const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');
@@ -251,6 +252,37 @@ export default {
 	},
 	async unlockAccount(authGroup, id, email, password) {
 		return dal.unlockAccount(authGroup, id, email, password);
+	},
+	async sendAccountLockNotification(authGroup, account, globalSettings) {
+		let user;
+		if(typeof account === 'string') {
+			user = await dal.getAccount(authGroup.id, account);
+		} else user = account;
+		if(!user.id) throw Boom.notFound();
+		const aliasDns = authGroup.aliasDnsOIDC;
+		const uid = crypto.randomBytes(10).toString('hex');
+		const meta = {
+			sub: user.id,
+			email: user.email,
+			auth_group: authGroup.id,
+			uid
+		};
+		const token = await iat.generateIAT(7200, ['auth_group'], authGroup, meta);
+		const data = {
+			iss: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}`,
+			createdBy: user.id,
+			type: 'general',
+			recipientUserId: user.id,
+			recipientEmail: user.email,
+			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
+			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/interaction/${uid}/lockaccount?code=${token.jti}`,
+			subject: `Unusual Account Activity Detected - ${authGroup.name}`,
+			message: `Someone is trying to reset a password, reset your recovery codes, or reset your MFA configuration. If it was you, please ignore this notice. If this was not you, do not panic, here are your options. First, change your passwords, both with ${authGroup.name} and your email provider. If you do not have MFA enabled, we strongly suggest you do so immediately. If your passwords are secure but your device is missing, you can click [Restore MFA] from any login page to bind to a new device. If you believe your email account, passwords, and even your MFA device have all been compromised, you can perform an emergency lock of your account by clicking the button below. This action will lock your account and disable all logins. It will also disable MFA and revoke any devices you have configured. You will then need to take steps to secure your passwords and device, and when ready, use your 10 recovery codes to re-enable your account. If you have not already configured recovery codes you will need to work with the system administrator to re-enable your account. If after consideration you feel there is a security breach, do not hesitate to click below. The button will be active for 2 hours.`
+		};
+		data.formats = [];
+		if(user.email) data.formats.push('email');
+		if(user.phone && user.phone.txt) data.formats.push('sms');
+		return n.notify(globalSettings, data, authGroup);
 	}
 };
 
