@@ -225,8 +225,8 @@ export default {
 		ueEvents.emit(authGroup, 'ue.account.edit', account);
 		return { account, codes };
 	},
-	async userSelfLock (authGroup, id) {
-		return dal.userLockAccount(authGroup, id);
+	async userSelfLock (authGroup, id, user) {
+		return dal.userLockAccount(authGroup, id, user);
 	},
 	async initiateRecovery(authGroup, email, codes, state) {
 		const account = await dal.getAccountByEmailOrUsername(authGroup.id, email);

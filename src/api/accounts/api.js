@@ -558,18 +558,20 @@ const api = {
 			const { authGroup } = await group.safeAuthGroup(req.authGroup);
 			const id = req.user?.sub;
 			if(!id) throw Boom.forbidden();
-			const result = await acct.userSelfLock(authGroup.id, id);
-			if(!result) throw Boom.notFound();
+			const user = await acct.getAccount(authGroup.id, id);
+			if(!user) throw Boom.notFound();
+			let temp;
 			try {
 				await sessions.removeSessionByAccountId(id);
-				if(result.mfa?.enabeld === true) {
-					await challenge.revokeAllDevices(authGroup, req.globalSettings, { accountId: result.id, mfaEnabled: true});
+				if(user.mfa?.enabled === true) {
+					temp = await challenge.revokeAllDevices(authGroup, req.globalSettings, { accountId: user.id, mfaEnabled: true});
 				}
 			} catch (e) {
 				console.error(e);
 				return res.respond(say.partial('Account Locked but unable to kill all sessions or purge MFA devices', RESOURCE));
 			}
-			return res.respond(say.noContent());
+			await acct.userSelfLock(authGroup.id, id, user);
+			return res.respond(say.ok(temp));
 		} catch (error) {
 			next(error);
 		}

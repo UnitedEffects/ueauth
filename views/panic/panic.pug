@@ -135,4 +135,5 @@ block content
                                 a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
                             if (policyUri || (authGroup && authGroup.primaryPrivacyPolicy))
                                 a(href=(policyUri || authGroup.primaryPrivacyPolicy) style="margin-left: 5px") [ Privacy Policy ]
-                            a(href='/' + authGroup + '/recover-mfa' target='_blank') [ Restore MFA ]
+                            if (authGroup)
+                                a(href='/' + authGroup.id + '/recover-mfa' target='_blank') [ Restore MFA ]
