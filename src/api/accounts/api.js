@@ -513,8 +513,10 @@ const api = {
 			const { authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(!req.body.email) throw Boom.preconditionRequired('Must provide an account email');
 			if(!req.body.codes) throw Boom.preconditionRequired('Must provide an recovery codes');
+			if(!Array.isArray(req.body.codes)) throw Boom.preconditionRequired('Must provide an recovery codes array');
 			const email = req.body.email;
-			const codes = req.body.codes;
+			const codes = [...new Set(req.body.codes)];
+			if(codes.length < 10) throw Boom.preconditionRequired('All 10 codes are required');
 			if(codes.length !== 10) throw Boom.preconditionRequired('All 10 recovery codes are required');
 			const state = crypto.randomBytes(32).toString('hex');
 			const { token, account } = await acct.initiateRecovery(authGroup, email, codes, state);
