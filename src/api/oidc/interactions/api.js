@@ -16,6 +16,7 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
+import challenge from "../../plugins/challenge/challenge";
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -619,18 +620,30 @@ export default {
 			if (!account) {
 				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
-			const meta = {
-				auth_group: authGroup.id,
-				sub: account.id,
-				email: account.email,
-				uid
-			};
-			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
-			const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
-			await n.notify(req.globalSettings, notificationData, req.authGroup);
+			if(account.mfa?.enabled === true) {
+				const metaChallenge = {
+					event: 'MAGIC_LINK',
+					content: {
+						title: 'No-Password Login Request',
+						header: `${authGroup.name} Platform`,
+						body: 'If you initiated this Magic Link Login, Approve below. Otherwise click Decline and change your password.'
+					}
+				};
+				await challenge.sendChallenge(authGroup, req.globalSettings, { accountId: account.id, mfaEnabled: true}, uid, metaChallenge);
+			} else {
+				const meta = {
+					auth_group: authGroup.id,
+					sub: account.id,
+					email: account.email,
+					uid
+				};
+				iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
+				const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
+				await n.notify(req.globalSettings, notificationData, req.authGroup);
+			}
 			return res.render('success', {
 				title: 'SUCCESS!',
-				message: 'You should have a password free login link in your email or text messages. You may close this window.'
+				message: 'You should have a password free login link in your email or text messages. If you have MFA enabled, you will need to approve the login first. You may close this window.'
 			});
 		} catch (err) {
 			if(iAccessToken) {
