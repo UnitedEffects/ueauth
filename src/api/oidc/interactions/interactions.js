@@ -1,9 +1,14 @@
+import Boom from '@hapi/boom';
 import dal from './dal';
+import acct from '../../accounts/account';
+import iat from "../initialAccess/iat";
+import n from "../../plugins/notifications/notifications";
+import plugins from "../../plugins/plugins";
 
 const config = require('../../../config');
 const { strict: assert } = require('assert');
 
-export default {
+const api = {
 	passwordLessOptions(authGroup, user, iAccessToken, formats = [], uid, aliasDns = undefined) {
 		const data = {
 			iss: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}`,
@@ -197,5 +202,37 @@ export default {
 	},
 	async getPKCESession(ag, state) {
 		return dal.getPKCESession(ag, state);
-	}
+	},
+	async sendMagicLink(authGroup, uid, customDomain, account, global) {
+		let iAccessToken;
+		try {
+			let user;
+			if(typeof account === 'string') {
+				user = await acct.getAccount(authGroup.id, account);
+			} else {
+				user = JSON.parse(JSON.stringify(account));
+			}
+			if(!user.id) throw Boom.notFound(account);
+			let settings;
+			if(!global) {
+				settings = await plugins.getLatestPluginOptions();
+			} else settings = JSON.parse(JSON.stringify(global));
+			const meta = {
+				auth_group: authGroup.id,
+				sub: user.id,
+				email: user.email,
+				uid
+			};
+			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
+			const notificationData = api.passwordLessOptions(authGroup, user, iAccessToken, [], uid, customDomain);
+			await n.notify(settings, notificationData, authGroup);
+		} catch (error) {
+			if(iAccessToken) {
+				await iat.deleteOne(iAccessToken.jti, authGroup.id);
+			}
+			throw error;
+		}
+	},
 };
+
+export default api;

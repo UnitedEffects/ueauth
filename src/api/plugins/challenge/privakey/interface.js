@@ -2,7 +2,9 @@ import axios from 'axios';
 import qs from 'qs';
 import Boom from '@hapi/boom';
 import dal from '../dal';
+import events from '../eventProcessor';
 import acc from '../../../accounts/account';
+import int from '../../../oidc/interactions/interactions';
 
 const config = require('../../../../config');
 
@@ -75,21 +77,7 @@ const pkApi = {
 		};
 		const result = await dal.findChallengeAndUpdate(update);
 		// if there is an event in the message, we process
-		try {
-			if(interaction.event) {
-				switch(interaction.event.toUpperCase()) {
-				case 'PASSWORD_RESET':
-					if(result?.state === 'approved') await acc.passwordResetNotify(ag, accountId);
-					break;
-				default:
-					// ignored
-					break;
-				}
-			}
-		} catch (error) {
-			console.error(error);
-		}
-
+		await events.processEvent(interaction?.event, ag, accountId, uid, result);
 		return result;
 	},
 	async bindUser(provider, authGroup, account) {
