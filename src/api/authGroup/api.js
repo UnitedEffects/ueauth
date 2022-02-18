@@ -250,6 +250,7 @@ const api = {
 			const out = {
 				searched: ag,
 				group: result.prettyName,
+				name: result.name,
 				id: result.associatedClient
 			};
 			return res.respond(say.ok(out, RESOURCE));
