@@ -99,14 +99,14 @@ export default {
 					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
 				};
 				if(req.query.flash) options.flash = req.query.flash;
-				return res.render('login', options);
+				return res.render('login/login', options);
 			}
 			case 'consent': {
 				if(client.client_skip_consent === true) {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				return res.render('interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
+				return res.render('interaction/interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
 				return undefined;
@@ -134,7 +134,7 @@ export default {
 			if (params.passwordless === false ||
 				authGroup?.pluginOptions?.notification?.enabled === false ||
 				req.globalSettings?.notifications?.enabled === false) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Magic Link authentication is not enabled, please use another method.'));
 			}
 			return res.render('passwordless', interactions.pwdlessLogin(authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
@@ -172,7 +172,7 @@ export default {
 				token.payload.sub !== id ||
 				token.payload.email !== account.email ||
 				token.payload.uid !== uid) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your Magic Link may have expired.'));
 			}
 
 			// clean up
@@ -527,7 +527,7 @@ export default {
 				if(client.auth_group !== authGroup.id) {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
-				return res.render('login',
+				return res.render('login/login',
 					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
 						{
 							...params,
@@ -563,7 +563,7 @@ export default {
 				}
 				if(!mfaResult) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
 			}
 			if(authGroup?.config?.mfaChallenge?.enable === true &&
 				authGroup?.config?.mfaChallenge?.required === true &&
@@ -582,7 +582,7 @@ export default {
 				const enableMFA = await acc.enableMFA(authGroup.id, account.accountId);
 				if(enableMFA !== true) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
 			}
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
@@ -614,11 +614,11 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			} else {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Magic Link login is not available at this time.'));
 			}
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 			if (!account) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
 			if(account.mfa?.enabled === true) {
 				const metaChallenge = {
@@ -650,7 +650,7 @@ export default {
 				await iat.deleteOne(iAccessToken.jti, authGroup.id);
 			}
 			if (_uid && client && _params) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Magic Link login is not available right now. You can try traditional login or come back later.'));
 			}
 			return next(err);
 		}

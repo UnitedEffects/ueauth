@@ -1,0 +1,8 @@
+block initiate
+    div#message
+    p#instruct.description
+        | If your email address exists within #{authGroupName}, you will receive an email to reset your password. Please note, if you have MFA enabled, you will need to validate your identity.
+    form#send.form-fields
+        input#t1(type='email' placeholder='Email' name='email' required='' autofocus='autofocus' onfocus='this.select()')
+        label(for='t1') Email
+        button#firstSend.m-t-20.btn-custom(type='submit') Send me my password reset email

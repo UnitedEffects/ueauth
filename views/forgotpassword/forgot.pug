@@ -1,0 +1,28 @@
+extends ../uelayout
+
+block content
+    script(type="text/javascript").
+        const url = '#{url}';
+        const iat = '#{iat}';
+        const redirect = '#{redirect}'
+        const retryUrl = '#{retryUrl}'
+    script
+        include forgotSend.js
+    body.bg.flex
+        .utility-panel
+            if (flash)
+                .flash-container
+                    p=flash
+            if (client && client.logo_uri)
+                img.logo(src=client.logo_uri alt='Product Logo')
+            else if (authGroupLogo)
+                img.logo(src=authGroupLogo alt='Platform Logo')
+            else
+                img.logo(src='https://assets.uecore.io/ueauth/20220221.1/logo.png' alt='United Effects Logo')
+            p.org-name=authGroupName
+            p#title.header Reset Password
+            if iat
+                include iat
+            else
+                include initiate
+            div#loading

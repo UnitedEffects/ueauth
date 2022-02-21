@@ -49,7 +49,6 @@ provider:
     STATIC_ASSETS: ${env:STATIC_ASSETS, file(./.env/env.${self:custom.local_env}.json):STATIC_ASSETS}
     CUSTOM_FONTS_URL: ${env:CUSTOM_FONTS_URL, file(./.env/env.${self:custom.local_env}.json):CUSTOM_FONTS_URL}
     ROOT_GROUP_REGISTRATION_UI_URL: ${env:ROOT_GROUP_REGISTRATION_UI_URL, file(./.env/env.${self:custom.local_env}.json):ROOT_GROUP_REGISTRATION_UI_URL}
-    DEFAULT_UI_SKIN_SPLASH: ${env:DEFAULT_UI_SKIN_SPLASH, file(./.env/env.${self:custom.local_env}.json):DEFAULT_UI_SKIN_SPLASH}
     DEFAULT_UI_SKIN_GRADIENT_LOW: ${env:DEFAULT_UI_SKIN_GRADIENT_LOW, file(./.env/env.${self:custom.local_env}.json):DEFAULT_UI_SKIN_GRADIENT_LOW}
     DEFAULT_UI_SKIN_GRADIENT_HIGH: ${env:DEFAULT_UI_SKIN_GRADIENT_HIGH, file(./.env/env.${self:custom.local_env}.json):DEFAULT_UI_SKIN_GRADIENT_HIGH}
     EVENT_EMITTER_CLEAN_SENSITIVE: ${env:EVENT_EMITTER_CLEAN_SENSITIVE, file(./.env/env.${self:custom.local_env}.json):EVENT_EMITTER_CLEAN_SENSITIVE}

@@ -669,7 +669,7 @@ const api = {
 				}
 
 			}
-			return res.render('forgot', screens.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
+			return res.render('forgotpassword/forgot', screens.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (error) {
 			next (error);
 		}

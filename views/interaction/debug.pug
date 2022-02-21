@@ -1,0 +1,17 @@
+block debug
+    if(dbg)
+        .m-t-50.detail-color
+            details.detail-color
+                summary.center Debug Information
+                div
+                    strong uid: #{uid}
+                if (session)
+                    div
+                        br
+                        #{session}
+                div
+                    br
+                    #{dbg.params}
+                div
+                    br
+                    #{dbg.prompt}
