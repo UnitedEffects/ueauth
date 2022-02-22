@@ -26,14 +26,15 @@ export default {
 	verifyScreen(authGroup, query, aliasDns = undefined, aliasUi = undefined) {
 		return {
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
+			title: 'Claim Account',
+			description: 'In order to claim your account, you must reset your password.',
+			actionButton: 'Claim my account',
 			tosUri: authGroup.primaryTOS,
 			policyUri: authGroup.primaryPrivacyPolicy,
-			title: 'Verify And Claim Your Account',
 			iat: query.code,
 			redirect: query.redirect ||
                 authGroup.primaryDomain ||
                 `https://${(aliasUi) ? aliasUi : config.UI_URL}/${authGroup.prettyName}` || undefined,
-			flash: 'Verification requires you to reset your password. Type the new one and confirm.',
 			url: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup._id}/setpass`,
 			retryUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns: config.SWAGGER}/api/${authGroup._id}/operations/user/reset-password`,
 			authGroupLogo: authGroup.config.ui.skin.logo || undefined,
@@ -45,7 +46,9 @@ export default {
 	forgotScreen(authGroup, query, aliasDns = undefined, aliasUi = undefined) {
 		return {
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
-			title: 'Forgot Password',
+			title: 'Reset Password',
+			description: 'In order to reset your password, type them below.',
+			actionButton: 'Save new password',
 			tosUri: authGroup.primaryTOS,
 			policyUri: authGroup.primaryPrivacyPolicy,
 			iat: query.code,

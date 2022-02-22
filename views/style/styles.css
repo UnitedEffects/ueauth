@@ -198,10 +198,10 @@ input:focus + label, input:not(:placeholder-shown) + label {
 .tandc {
 	transition: all 100ms ease-in;
 	margin: 12px auto 0 auto;
-	text-align: right;
+	text-align: center;
 	font-size: 12px;
 	font-weight: 700;
-	padding: 0 24px 50px 0;
+	/*padding: 0 24px 50px 0;*/
 }
 
 .tandc a {

@@ -17,7 +17,8 @@ window.addEventListener( 'load', function () {
 				form.remove();
 				document.getElementById('tryAgain').classList.remove('invisible');
 			} else {
-				document.getElementById('title').innerHTML = 'Successful Verification And Reset';
+				document.getElementById('title').innerHTML = 'Reset Successful';
+				document.getElementById('instruct').innerHTML = 'Your password was successfully reset.';
 				document.getElementById('message').classList.add('success');
 				if(redirect && redirect !== '') {
 					form.remove();

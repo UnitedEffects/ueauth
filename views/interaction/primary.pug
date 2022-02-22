@@ -1,0 +1,18 @@
+block primary
+    if (flash)
+        .flash-container
+            p=flash
+    if (client && client.logo_uri)
+        img.logo(src=client.logo_uri alt='Product Logo')
+    else if (authGroupLogo)
+        img.logo(src=authGroupLogo alt='Platform Logo')
+    p.org-name=authGroupName
+    include authorize
+    .tandc.p-b-20
+        a(href='/' + authGroup + '/interaction/' + uid + '/abort') Cancel
+        if (client.tosUri || tosUri)
+            a(href=(client.tosUri || tosUri)) Terms of Service
+        if (client.policyUri || policyUri)
+            a(href=(client.policyUri || policyUri)) Privacy Policy
+        a(href='/' + authGroup + '/recover-mfa' target='_blank') Restore MFA
+    include debug
