@@ -1,0 +1,29 @@
+block bindUser
+    script(type="text/javascript").
+        const authGroup = '#{authGroup}';
+        const uid = '#{uid}';
+        const accountId = '#{mfa.accountId}'
+        const qrCode = '#{mfa.instructions.qrCode}'
+    script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
+    script(nonce=nonce)
+        include qrcode.js
+    .credential-container
+        p.sign-in The Platform is now requiring MFA. Please follow the instructions below.
+        .credentials
+            ol.instructions.m-t-20.list-group.list-group-flush.list-group-numbered
+                each i in mfa.instructions.instructions
+                    li.list-group-item !{i}
+            div.m-t-20-imp.center.canvas-50
+                canvas#qrcode.login-canvas-view
+            if(mfa && mfa.setupScreen)
+                if(mfa.setupScreenButtonText)
+                    a.btn.btn-outline-dark.federated.m-t-20(href=mfa.setupScreen)
+                        i.far.fa-list-alt
+                        span.p-l-10=mfa.setupScreenButtonText
+                else
+                    a.btn.btn-outline-dark.federated.m-t-20(href=mfa.setupScreen)
+                        i.far.fa-list-alt
+                        span.p-l-10 Go To Setup
+            a.btn.btn-outline-dark.federated.m-t-20(href='/' + authGroup + '/interaction/' + uid + '?flash=Please enter your username and password again now that you have activated MFA')
+                i.fas.fa-check-circle
+                span.p-l-10 Ready To Login

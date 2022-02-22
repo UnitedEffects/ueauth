@@ -71,10 +71,27 @@ const mid = {
 			const error = await handleErrors.parse(err, req.requestId);
 			if(!req.path.includes('/api')) {
 				if(req.headers && req.headers.accept && !req.headers.accept.split(',').includes('application/json')) {
-					if(error.statusCode === 404) {
-						return res.render('error', { title: 'Not sure what you\'re looking for...', message: 'But, it looks like you may have gone to a bad URL', details: Object.entries(error).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('') });
+					let data = {};
+					if(req.authGroup) {
+						const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+						data.authGroup = safeAG;
+						data.authGroupLogo = authGroup.config?.ui?.skin?.logo;
 					}
-					return res.render('error', { title: 'oops! something went wrong', message: error.message, details: error.error });
+					if(error.statusCode === 404) {
+						data = {
+							...data,
+							title: 'Not sure what you\'re looking for...',
+							message: 'But, it looks like you may have gone to a bad URL',
+							details: Object.entries(error).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
+						};
+						return res.render('response/response', data);
+					}
+					data = {
+						...data,
+						title: 'oops! something went wrong',
+						message: error.message, details: error.error
+					};
+					return res.render('response/response', data);
 				}
 			}
 			return res.respond(error);

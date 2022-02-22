@@ -2,7 +2,6 @@ import oidc from '../oidc';
 import { generators } from 'openid-client';
 import axios from 'axios';
 import Account from '../../accounts/accountOidcInterface';
-import {say} from '../../../say';
 import acc from '../../accounts/account';
 import group from '../../authGroup/group';
 import org from '../../orgs/orgs';
@@ -16,7 +15,6 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
-import challenge from "../../plugins/challenge/challenge";
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -27,7 +25,7 @@ const { strict: assert } = require('assert');
 const ClientOAuth2 = require('client-oauth2');
 
 const {
-	errors: { OIDCProviderError },
+	errors: { CustomOIDCProviderError },
 } = require('oidc-provider');
 
 const keys = new Set();
@@ -99,14 +97,14 @@ export default {
 					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
 				};
 				if(req.query.flash) options.flash = req.query.flash;
-				return res.render('login', options);
+				return res.render('login/login', options);
 			}
 			case 'consent': {
 				if(client.client_skip_consent === true) {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				return res.render('interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
+				return res.render('interaction/interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
 				return undefined;
@@ -134,9 +132,9 @@ export default {
 			if (params.passwordless === false ||
 				authGroup?.pluginOptions?.notification?.enabled === false ||
 				req.globalSettings?.notifications?.enabled === false) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Passwordless authentication is not enabled, please use another method.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Magic Link authentication is not enabled, please use another method.'));
 			}
-			return res.render('passwordless', interactions.pwdlessLogin(authGroup, client, debug, prompt, session, uid, params));
+			return res.render('login/passwordless', interactions.pwdlessLogin(authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
 			return next(err);
 		}
@@ -172,7 +170,7 @@ export default {
 				token.payload.sub !== id ||
 				token.payload.email !== account.email ||
 				token.payload.uid !== uid) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your password free link may have expired.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your Magic Link may have expired.'));
 			}
 
 			// clean up
@@ -527,7 +525,7 @@ export default {
 				if(client.auth_group !== authGroup.id) {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
-				return res.render('login',
+				return res.render('login/login',
 					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
 						{
 							...params,
@@ -563,7 +561,7 @@ export default {
 				}
 				if(!mfaResult) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
 			}
 			if(authGroup?.config?.mfaChallenge?.enable === true &&
 				authGroup?.config?.mfaChallenge?.required === true &&
@@ -582,7 +580,7 @@ export default {
 				const enableMFA = await acc.enableMFA(authGroup.id, account.accountId);
 				if(enableMFA !== true) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
 			}
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
@@ -614,11 +612,11 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			} else {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Password free login is not available at this time.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Magic Link login is not available at this time.'));
 			}
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 			if (!account) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
 			}
 			if(account.mfa?.enabled === true) {
 				const metaChallenge = {
@@ -629,7 +627,7 @@ export default {
 						body: 'If you initiated this Magic Link Login, Approve below. Otherwise click Decline and change your password.'
 					}
 				};
-				await challenge.sendChallenge(authGroup, req.globalSettings, { accountId: account.id, mfaEnabled: true}, uid, metaChallenge);
+				await challenges.sendChallenge(authGroup, req.globalSettings, { accountId: account.id, mfaEnabled: true}, uid, metaChallenge);
 			} else {
 				const meta = {
 					auth_group: authGroup.id,
@@ -641,7 +639,7 @@ export default {
 				const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
 				await n.notify(req.globalSettings, notificationData, req.authGroup);
 			}
-			return res.render('success', {
+			return res.render('response/response', {
 				title: 'SUCCESS!',
 				message: 'You should have a password free login link in your email or text messages. If you have MFA enabled, you will need to approve the login first. You may close this window.'
 			});
@@ -650,7 +648,7 @@ export default {
 				await iat.deleteOne(iAccessToken.jti, authGroup.id);
 			}
 			if (_uid && client && _params) {
-				return res.render('login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Password free login is not available right now. You can try traditional login or come back later.'));
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Magic Link login is not available right now. You can try traditional login or come back later.'));
 			}
 			return next(err);
 		}
@@ -692,11 +690,15 @@ export default {
 				}
 			}
 			const name = (ctx?.oidc?.client?.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
+			let client;
+			if(ctx?.oidc?.client) {
+				client = JSON.parse(JSON.stringify(ctx.oidc.client));
+			}
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../../views'),
 				basedir: 'path/for/pug/extends',
 			});
-			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, skipPrompt);
+			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, client, skipPrompt);
 			if (ctx.req.query && ctx.req.query.onCancel) {
 				options.onCancel = ctx.req.query.onCancel;
 			}
@@ -715,50 +717,57 @@ export default {
 				if(config.CUSTOM_FONTS_URL) {
 					options.customFonts = config.CUSTOM_FONTS_URL;
 				}
-				ctx.body = await pug.render('logout', { ...options, nonce: ctx.res.locals.cspNonce });
+				ctx.body = await pug.render('logout/logout', { ...options, nonce: ctx.res.locals.cspNonce });
 			}
 		} catch (error) {
-			throw new OIDCProviderError(error.message);
+			throw new CustomOIDCProviderError(error.message);
 		}
 	},
 	async postLogoutSuccessSource(ctx) {
-		const { authGroup } = await safeAuthGroup(ctx.authGroup);
-		const {
-			clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri,
-		} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
-		const name = (clientName) ? clientName : ctx.authGroup.name;
-		const pug = new Pug({
-			viewPath: path.resolve(__dirname, '../../../../views'),
-			basedir: 'path/for/pug/extends',
-		});
-		const message = (!ctx.oidc.client) ? `Logout action ${name ? `with ${name}`: ''} was successful` : 'You are still logged in';
-		const options = await interactions.oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
-		ctx.type = 'html';
-		ctx.set('json-data', JSON.stringify({
-			title: options.title,
-			message: options.message,
-			authGroup: options.authGroup
-		}));
-		options.assets = config.STATIC_ASSETS;
-		if(config.CUSTOM_FONTS_URL) {
-			options.customFonts = config.CUSTOM_FONTS_URL;
+		try {
+			const { authGroup } = await safeAuthGroup(ctx.authGroup);
+			let {
+				clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientId
+			} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+			if(authGroup.associatedClient === clientId) {
+				clientUri = `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}`;
+			}
+			const name = (clientName) ? clientName : ctx.authGroup.name;
+			const pug = new Pug({
+				viewPath: path.resolve(__dirname, '../../../../views'),
+				basedir: 'path/for/pug/extends',
+			});
+			const message = (clientName) ? `You are still logged into ${name}` : undefined;
+			const options = await interactions.oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
+			ctx.type = 'html';
+			ctx.set('json-data', JSON.stringify({
+				title: options.title,
+				message: options.message,
+				authGroup: options.authGroup
+			}));
+			options.assets = config.STATIC_ASSETS;
+			if(config.CUSTOM_FONTS_URL) {
+				options.customFonts = config.CUSTOM_FONTS_URL;
+			}
+			ctx.body = await pug.render('logout/confirm', { ...options, nonce: ctx.res.locals.cspNonce });
+		} catch (error) {
+			throw new CustomOIDCProviderError(error.message);
 		}
-		ctx.body = await pug.render('logoutSuccess', { ...options, nonce: ctx.res.locals.cspNonce });
 	},
 	async renderError(ctx, out, error) {
 		console.error(error);
-		const { authGroup } = await safeAuthGroup(ctx.authGroup);
+		const { authGroup, safeAG } = await safeAuthGroup(ctx.authGroup);
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../../views'),
 			basedir: 'path/for/pug/extends',
 		});
 		ctx.type = 'html';
-		const options = await interactions.oidcRenderErrorOptions(authGroup, out);
+		const options = await interactions.oidcRenderErrorOptions(authGroup, out, safeAG);
 		options.assets = config.STATIC_ASSETS;
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('error', { ...options, nonce: ctx.res.locals.cspNonce });
+		ctx.body = await pug.render('response/response', { ...options, nonce: ctx.res.locals.cspNonce });
 	}
 };
 

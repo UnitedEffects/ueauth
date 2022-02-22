@@ -1,0 +1,18 @@
+extends ../uelayout
+
+block content
+    body.bg.flex
+        if(align === 'middle')
+            style.
+                .credential-container {
+                    width: auto;
+                }
+
+                .utility-panel {
+                    width: auto;
+                }
+            .utility-panel
+                include primary
+        else
+            .panel
+                include primary

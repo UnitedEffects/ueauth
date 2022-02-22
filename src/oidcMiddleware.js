@@ -125,7 +125,6 @@ const mid = {
 			if(ctx.req.requestId) error['_id'] = ctx.req.requestId;
 			ctx.response.body = await errHandler.oidcLogger(error);
 		}
-
 		if (ctx.oidc){
 			if(ctx.oidc.entities && ctx.oidc.entities.Client && ctx.oidc.entities.Client.auth_group !== ctx.req.params.group) {
 				// returning a 404 rather than indicating that the auth group may exist but is not theirs
@@ -137,7 +136,6 @@ const mid = {
 			}
 
 			await mid.postMiddleAssociatedProductAdd(ctx);
-
 			if (config.SINGLE_USE_IAT === true) {
 				if (ctx.oidc?.entities?.Client && ctx.oidc?.entities?.InitialAccessToken) {
 					if (ctx.response.status === 201) {

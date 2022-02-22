@@ -79,7 +79,7 @@ describe('API tests', () => {
 			swag.info.version = pJson.version;
 			swag.info.title = pJson.name;
 			// this is only the splash image because we have not defined a logo in the mock and ui.skin.splashImge defaults to this
-			swag.info['x-logo'].url = config.DEFAULT_UI_SKIN_SPLASH || pJson.logo;
+			swag.info['x-logo'].url = pJson.logo;
 			if (config.SWAGGER) swag.servers = [{url: `${config.PROTOCOL}://${config.SWAGGER}`}];
 			swag.components.securitySchemes.openId.openIdConnectUrl = `${config.PROTOCOL}://${config.SWAGGER}/X2lgt285uWdzq5kKOdAOj/.well-known/openid-configuration`;
 			let temp = JSON.stringify(swag);

@@ -1,0 +1,393 @@
+/* Global */
+
+body, html {
+	height: 100%;
+	margin: 0;
+	font-family: 'freightsans_prolight', 'Lato', sans-serif;
+	color: #353434;
+  }
+
+.flex {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+.bg {
+	background: url("https://assets.uecore.io/ueauth/20220221.1/background.jpg") no-repeat center center fixed;
+  	height: 100%;
+	background-size: cover;
+}
+
+.logo {
+	display: block;
+	width: 40px;
+	margin: 0 auto 4px auto;
+}
+
+button .federated {
+	transition: all 100ms ease-in;
+	box-sizing: border-box;
+	display: block;
+	margin: 0 auto 0 auto;
+	padding: 0 40px;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 44px;
+	border-radius: 4px;
+	border: none;
+}
+
+.btn-custom {
+	transition: all 100ms ease-in;
+	box-sizing: border-box;
+	display: block;
+	margin: 0 auto 0 auto;
+	padding: 0 40px;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 44px;
+	background-color: #004A8F;
+	border-radius: 4px;
+	color: #fff;
+	border: none;
+}
+
+button:hover {
+	cursor: pointer;
+	background-color: #00386d;
+	box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+button:active {
+	background-color: #002446;
+}
+
+label, input {
+	display: block;
+	text-align: left;
+	margin: 0 auto;
+	touch-action: manipulation;
+}
+
+label {
+	margin-bottom: 4px;
+}
+
+input {
+	transition: all 100ms ease-in;
+	box-sizing: border-box;
+	padding: 0 12px;
+	font-size: 16px;
+	border-radius: 4px;
+	height: 44px;
+	border: 1px solid #B8BFBD;
+}
+
+  /* Floating Labels */
+
+  input {
+	background: transparent;
+}
+
+label {
+	transition: all 100ms ease-in;
+	position: absolute;
+	display: block;
+	background-color: #fff;
+	margin: -33px 0 0 13px;
+	color: #626568;
+}
+
+input::placeholder {
+	visibility: hidden;
+}
+
+input:focus + label, input:not(:placeholder-shown) + label {
+	padding: 2px 4px;
+	font-size: 12px;
+	font-weight: 700;
+	margin: -53px 0 0 10px;
+}
+
+/* Sign In */
+
+.panel {
+	transition: padding 100ms ease-in;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	width: 40vw;
+	min-width: 600px;
+	background-color: #fff;
+	/* background-color: rgba(255, 255, 255, .95);
+	backdrop-filter: blur(16px); */
+	text-align: center;
+	padding-top: max(8vw, 140px);
+}
+
+.login-canvas-view {
+	width: 75%;
+}
+
+.product-name {
+	font-size: 24px;
+	font-weight: 300;
+	margin: 0;
+}
+
+.org-name {
+	font-size: 16px;
+	font-weight: 700;
+	margin: 0 0 4px 0;
+}
+
+.credential-container {
+	margin: 24px auto 0 auto;
+	border: 1px solid #B8BFBD;
+	border-radius: 8px;
+	padding: 32px 40px 80px 40px;
+	box-sizing: border-box;
+}
+
+.credential-container, .tandc {
+	transition: all 100ms ease-in;
+	width: 440px;
+}
+
+.credentials input, .fpsw, .panel button {
+	width: 100%;
+}
+
+.credentials div:first-of-type {
+	margin-bottom: 20px;
+}
+
+.sign-in {
+	font-size: 32px;
+	font-weight: 300;
+	margin: 0 0 24px 0;
+}
+
+.fpsw {
+	display: block;
+	text-align: left;
+	margin: 8px auto 40px auto;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.fpsw a {
+	color: #353434;
+}
+
+.fpsw-reg {
+	float: right;
+}
+
+.orsi {
+	display: block;
+	margin: 24px 0 8px 0;
+	font-size: 16px;
+}
+
+.tandc {
+	transition: all 100ms ease-in;
+	margin: 12px auto 0 auto;
+	text-align: center;
+	font-size: 12px;
+	font-weight: 700;
+	/*padding: 0 24px 50px 0;*/
+}
+
+.tandc a {
+	color: #565856;
+}
+
+.tandc a {
+	padding: 0 12px 0 0;
+}
+
+/* Forgot Password */
+
+.utility-panel {
+	background-color: #fff;
+	margin: 120px auto;
+	width: 480px;
+	border-radius: 8px;
+	box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+	text-align: center;
+	box-sizing: border-box;
+	padding: 40px 60px 60px 60px;
+}
+
+.header {
+	font-size: 32px;
+	font-weight: 300;
+	margin: 20px 0 32px 0;
+}
+
+.description {
+	text-align: left;
+	font-size: 14px;
+}
+
+.utility-panel button {
+	width: 100%;
+}
+
+.form-fields {
+	margin: 0 0 20px 0;
+}
+
+.form-fields input {
+	text-align: left;
+	width: 100%;
+
+}
+
+.form-fields div:first-of-type {
+	margin-bottom: 20px;
+}
+
+.form-fields label:nth-of-type(2) {
+	margin-top: 12px;
+}
+
+.form-fields label.psw-match::after {
+	transition: all 100ms ease-in;
+	transition-delay: 100ms;
+	content: "matches ✓";
+	font-size: 10px;
+	text-transform: uppercase;
+	background-color: #d9dce9;
+	color: #bfc3cf;
+	letter-spacing: .1em;
+	font-weight: 800;
+	padding: 2px 6px 3px 6px;
+	border-radius: 4px;
+	margin: 0 0 0 6px;
+	position: relative;
+	opacity: 0;
+}
+
+.form-fields.matches label.psw-match::after {
+	background-color: #00FFD1;
+	color: #5B8475;
+}
+
+.form-fields input:focus + label.psw-match::after, input:not(:placeholder-shown) + label.psw-match::after {
+	top: 0;
+	opacity: 1;
+}
+
+/* Dark Mork */
+
+body.dark {
+	color: #e2e2e2;
+	background-color: #14151a;
+}
+
+.dark .panel, .dark .utility-panel {
+	background-color: #14151a;
+}
+
+.dark a {
+	color: #e2e2e2;
+}
+
+.dark .credential-container {
+	border: 1px solid #747b80;
+}
+
+.dark input {
+	border: 1px solid #747b80;
+	background-color: #14151a;
+	color: #e2e2e2;
+}
+
+.dark label {
+	background-color: #14151a;
+	color: #e2e2e2;
+}
+
+.dark button:hover {
+	cursor: pointer;
+	background-color: #0054a3;
+	box-shadow: rgba(0, 0, 0, 0.9) 0px 1px 4px;
+}
+
+.dark button:active {
+	background-color: #0061bd;
+}
+
+.dark .form-fields label.psw-match::after {
+	background-color: #585b68;
+	color: #14151a;
+}
+
+/* Authorize */
+
+.detail-color {
+	color: #505D6E;
+}
+.detail-background {
+	background-color: #faf9f7;
+}
+details > summary {
+	list-style: none;
+}
+details summary::-webkit-details-marker {
+	display:none;
+}
+
+/* Media Queries */
+
+@media only screen and (max-width: 600px) {
+	
+	body, html {
+		display: initial;
+	}
+
+	.bg {
+	  background-image: none;
+	}
+
+	.panel {
+		width: 100%;
+		min-width: auto;
+		padding-top: max(4vw, 60px);
+	}
+
+	.credential-container {
+		border: none;
+		width: 100%;
+		padding-bottom: 32px;
+	}
+
+	.dark .credential-container {
+		border: none;
+	}
+
+
+	.credential-container, .tandc {
+		width: 100%;
+		box-sizing: border-box;
+		padding-left: 60px;
+		padding-right: 60px;
+	}
+
+	button {
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	input, .fpsw {
+		width: 100%;
+	}
+
+	.utility-panel {
+		box-shadow: none;
+	}
+
+  }

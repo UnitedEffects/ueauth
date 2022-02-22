@@ -1,0 +1,33 @@
+block details
+    .container
+        details.detail-color.m-t-20
+            summary.detail-color.center Authorized Scopes
+            .m-t-20.authorize-details.detail-color
+                ol.list-group.list-group-flush
+                if (details && [details.missingOIDCScope, details.missingOIDCClaims, details.missingResourceScopes].filter(Boolean).length === 0)
+                    li.list-group-item.detail-color.detail-background the client is asking you to confirm a previously given authorization
+                if (details && details.missingOIDCScope)
+                    - var missingOIDCScope = new Set(details.missingOIDCScope); missingOIDCScope.delete('openid'); missingOIDCScope.delete('offline_access');
+                if (missingOIDCScope && missingOIDCScope.size)
+                    ol.list-group.list-group-flush
+                        each scope in Array.from(missingOIDCScope)
+                            li.list-group-item.detail-color.detail-background=scope
+                if (details && details.missingOIDCClaims)
+                    - var missingOIDCClaims = new Set(details.missingOIDCClaims); ['sub', 'sid', 'auth_time', 'acr', 'amr', 'iss'].forEach(Set.prototype.delete.bind(missingOIDCClaims));
+                if (missingOIDCClaims && missingOIDCClaims.size)
+                    li.list-group-item.detail-color.detail-background these claims are being requested...
+                    ol.list-group.list-group-flush
+                        each claim in Array.from(missingOIDCClaims)
+                            li.list-group-item.detail-color.detail-background=claim
+                if (details && details.missingResourceScopes)
+                    - var missingResourceScopes = details.missingResourceScopes;
+                if (missingResourceScopes)
+                    each obj in Array.from(missingResourceScopes)
+                        li.list-group-item.detail-color.detail-background=obj.indicator
+                        ol.list-group.list-group-flush
+                            each scope in Array.from(obj.scopes)
+                                li.list-group-item.detail-color.detail-background=scope
+                if (params && params.scope && params.scope.includes('offline_access'))
+                    li.list-group-item.detail-color.detail-background the client is asking to have offline access to this authorization
+                        if (!detail || (details && !details.missingOIDCScope) || (details && !details.missingOIDCScope.includes('offline_access')))
+                            | which you've previously granted

@@ -175,10 +175,7 @@ const authGroup = new mongoose.Schema({
 			skin: {
 				// background image is useful for a potential UI backdrop but is not directly implemented by this library
 				backgroundImage: String,
-				splashImage: {
-					type: String,
-					default: config.DEFAULT_UI_SKIN_SPLASH
-				},
+				splashImage: String,
 				logo: String,
 				loginOrientation: {
 					type: String,

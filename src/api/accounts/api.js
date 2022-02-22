@@ -634,9 +634,8 @@ const api = {
 					message: 'Invalid Verify Account Request',
 					details: 'This page requires special access. Check your email or mobile device for the link.'
 				});
-
 			}
-			return res.render('verify', screens.verifyScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
+			return res.render('forgotpassword/forgot', screens.verifyScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (error) {
 			next (error);
 		}
@@ -669,7 +668,7 @@ const api = {
 				}
 
 			}
-			return res.render('forgot', screens.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
+			return res.render('forgotpassword/forgot', screens.forgotScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
 		} catch (error) {
 			next (error);
 		}

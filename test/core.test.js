@@ -113,7 +113,7 @@ describe('Middleware tests', () => {
 				message: 'This is a test',
 				details: 'Bad Request'
 			};
-			expect(res.render).toHaveBeenCalledWith('error', expected);
+			expect(res.render).toHaveBeenCalledWith('response/response', expected);
 		} catch (error) {
 			t.fail(error);
 		}
@@ -128,7 +128,7 @@ describe('Middleware tests', () => {
 				message: 'But, it looks like you may have gone to a bad URL',
 				details: expect.any(String)
 			};
-			expect(res.render).toHaveBeenCalledWith('error', expected);
+			expect(res.render).toHaveBeenCalledWith('response/response', expected);
 		} catch (error) {
 			t.fail(error);
 		}

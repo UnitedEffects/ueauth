@@ -92,7 +92,6 @@ const config = {
 	// CUSTOM_FONTS_URL allows you to change the overall fonts of the system
 	CUSTOM_FONTS_URL: process.env.CUSTOM_FONTS_URL || envVars.CUSTOM_FONTS_URL || undefined,
 	// DEFAULT_UI_SKIN settings defines how UE AUth typically looks by default before being customized by an AuthGroup
-	DEFAULT_UI_SKIN_SPLASH: process.env.DEFAULT_UI_SKIN_SPLASH || envVars.DEFAULT_UI_SKIN_SPLASH || "https://assets.uecore.io/ueauth/img/default-splash-test.png",
 	DEFAULT_UI_SKIN_GRADIENT_LOW: process.env.DEFAULT_UI_SKIN_GRADIENT_LOW || envVars.DEFAULT_UI_SKIN_GRADIENT_LOW || "#131525",
 	DEFAULT_UI_SKIN_GRADIENT_HIGH: process.env.DEFAULT_UI_SKIN_GRADIENT_HIGH || envVars.DEFAULT_UI_SKIN_GRADIENT_HIGH || "#1D2035",
 	// When the access scope is used as part of an OIDC or oAuth2 flow, the user's organizations, domains, products, roles, and permissions are returned. If the user has access to a large number of products and no filtering was requested, this could be a lot of information when a JWT token is request (not applicable to opaque). ACCESS_OBJECT_SIZE_LIMIT sets a threshold in KB of how much is acceptable. If the amount of information exceeds this threshold, the JWT token does not populate with all of the access claims, but rather a single 'x-access-url' claim that tells any consumer of the token where to get the permissions.

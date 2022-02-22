@@ -1,0 +1,21 @@
+block iat
+    div#message
+    p#instruct.description=description
+    form#forgot.m-t-10.form-fields
+        div
+            input.hidden-accessible(type='text', name='username', autocomplete='username')
+            input#password(type='password' placeholder='Password' name='password' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='new-password')
+            label(for='password') New Password
+        div
+            input#confirm-password(type='password' placeholder='Password' name='confirm-password' required='' autocomplete='new-password')
+            label.psw-match(for='confirm-password') Confirm Password
+        if(actionButton)
+            button.m-t-20.btn-custom(type='submit')=actionButton
+        else
+            button.m-t-20.btn-custom(type='submit') Save New Password
+    if redirect
+        a#gotoSite.invisible.btn.btn-custom.m-t-20(href=redirect) Go To Site
+    form#tryAgain.invisible.form-fields(autocomplete='off')
+        input#t3.form-control(required='', placeholder='Email' name='email' autofocus='autofocus' onfocus='this.select()')
+        label(for='t3') Email
+        button#retry.m-t-20.btn-custom(type='submit') Resend Password Reset

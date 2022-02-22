@@ -1,7 +1,15 @@
 window.addEventListener( 'load', function () {
+	function showSpinner() {
+		$('#loading').css({ visibility: 'visible', position: 'inherit' });
+	}
+	function hideSpinner() {
+		$('#loading').css({ visibility: 'hidden', position: 'absolute' });
+	}
+	hideSpinner();
 	function sendData(FD) {
 		const XHR = new XMLHttpRequest();
 		XHR.addEventListener( 'load', function(event) {
+			hideSpinner();
 			if (event.target.status !== 204) {
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
@@ -9,7 +17,8 @@ window.addEventListener( 'load', function () {
 				form.remove();
 				document.getElementById('tryAgain').classList.remove('invisible');
 			} else {
-				document.getElementById('title').innerHTML = 'Successful Verification And Reset';
+				document.getElementById('title').innerHTML = 'Reset Successful';
+				document.getElementById('instruct').innerHTML = 'Your password was successfully reset.';
 				document.getElementById('message').classList.add('success');
 				if(redirect && redirect !== '') {
 					form.remove();
@@ -23,6 +32,7 @@ window.addEventListener( 'load', function () {
 			}
 		} );
 		XHR.addEventListener( 'error', function( event ) {
+			hideSpinner();
 			document.getElementById('message').classList.add('error');
 			document.getElementById('title').innerHTML = 'Uh oh...';
 			document.getElementById('message').innerHTML = 'Verification or reset was not successful. Try again in a bit or contact the admin';
@@ -30,12 +40,14 @@ window.addEventListener( 'load', function () {
 		XHR.open( 'POST', url);
 		XHR.setRequestHeader('authorization', `bearer ${iat}`);
 		XHR.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+		showSpinner();
 		XHR.send( JSON.stringify({ 'password': `${FD.get('password')}` }) );
 	}
 	function resend(FD) {
 		const XHR = new XMLHttpRequest();
 
 		XHR.addEventListener( 'load', function(event) {
+			hideSpinner();
 			if (event.target.status !== 204) {
 				console.info('error');
 				document.getElementById('message').classList.add('error');
@@ -54,13 +66,14 @@ window.addEventListener( 'load', function () {
 			}
 		} );
 		XHR.addEventListener( 'error', function( event ) {
+			hideSpinner();
 			document.getElementById('message').classList.add('error');
 			document.getElementById('title').innerHTML = 'Uh oh...';
 			document.getElementById('message').innerHTML = 'There may be a problem. Try again later or contact the admin.';
 		} );
 		XHR.open( 'POST', retryUrl);
 		XHR.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-
+		showSpinner();
 		XHR.send( JSON.stringify( {
 			'email': FD.get('email')
 		}) );
@@ -70,13 +83,8 @@ window.addEventListener( 'load', function () {
 	if(form) {
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
-			const el = document.getElementById('message');
-			el.classList.remove('error');
 			const data = new FormData(this);
-			if(data.get('password') !== data.get('confirm-password')) {
-				el.innerHTML = 'PASSWORDS DO NOT MATCH';
-				el.classList.add('error');
-			} else sendData(data);
+			sendData(data);
 		});
 	}
 	const retry = document.getElementById( 'tryAgain');

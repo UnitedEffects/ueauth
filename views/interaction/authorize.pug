@@ -1,0 +1,12 @@
+block credentials
+    .credential-container
+        form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
+            if (client)
+                p.sign-in #{client.clientName} wants to be authorized
+            else
+                p.sign-in Authorize
+            p You can expand Authorized Scopes to see what information will be shared
+            .credentials
+                form(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/confirm', method='post')
+                    button.btn-custom.btn-signin(type='submit') Authorize
+                    include details
