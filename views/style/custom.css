@@ -85,9 +85,14 @@
 .success {
     display: none;
 }
-
+.text-left {
+    text-align: left;
+}
 .invisible {
     position: absolute;
+}
+.width-auto {
+    width: auto;
 }
 
 .m-t-10 {

@@ -159,12 +159,17 @@ const api = {
 
 		return { consent: { grantId: await grant.save() } };
 	},
-	async oidcRenderErrorOptions(authGroup, out) {
+	async oidcRenderErrorOptions(authGroup, out, safeAG) {
 		return {
 			title: 'oops! something went wrong',
 			message: 'You may have navigated here by mistake',
+			redirect: `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` ||
+				authGroup.primaryDomain ||
+				undefined,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
+			authGroup: safeAG,
+			authGroupLogo: authGroup.config?.ui?.skin?.logo,
 			details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
 		};
 	},

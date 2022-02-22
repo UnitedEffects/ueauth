@@ -747,18 +747,18 @@ export default {
 	},
 	async renderError(ctx, out, error) {
 		console.error(error);
-		const { authGroup } = await safeAuthGroup(ctx.authGroup);
+		const { authGroup, safeAG } = await safeAuthGroup(ctx.authGroup);
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../../views'),
 			basedir: 'path/for/pug/extends',
 		});
 		ctx.type = 'html';
-		const options = await interactions.oidcRenderErrorOptions(authGroup, out);
+		const options = await interactions.oidcRenderErrorOptions(authGroup, out, safeAG);
 		options.assets = config.STATIC_ASSETS;
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('error', { ...options, nonce: ctx.res.locals.cspNonce });
+		ctx.body = await pug.render('response/error', { ...options, nonce: ctx.res.locals.cspNonce });
 	}
 };
 
