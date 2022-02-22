@@ -12,10 +12,10 @@ window.addEventListener( 'load', async function () {
 		state = params.state;
 	}
 	function showSpinner() {
-		$('#loading').css({ visibility: 'visible' });
+		$('#loading').css({ visibility: 'visible', position: 'inherit' });
 	}
 	function hideSpinner() {
-		$('#loading').css({ visibility: 'hidden' });
+		$('#loading').css({ visibility: 'hidden', position: 'absolute' });
 	}
 
 	async function requestDone(event, pk = undefined, code=undefined) {
@@ -34,7 +34,7 @@ window.addEventListener( 'load', async function () {
 			$('#notify-device').prop('disabled', false);
 			$('#notify-email').prop('disabled', false);
 			// start over???
-			$('#flash').append('<h5 class="error">There was an error. Please try again later.</h5>');
+			$('#flash').append('<p>There was an error. Please try again later.</p>');
 			$('#getInfo').css({ display: 'inherit' });
 			$('#resetting').css({ display: 'none' });
 			$('#notify').css({ display: 'none' });
@@ -72,7 +72,7 @@ window.addEventListener( 'load', async function () {
 				case 'device':
 					providerKey = result?.data?.data?.id;
 					jnReady.css({ display: 'inherit' });
-					jnReady.append('<p id="notify-ready-message">We have sent you a request on your device. After you approve, click the button below. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><button id="notify-done" class="btn btn-outline-dark m-3">Ready to Proceed</button>');
+					jnReady.append('<div class="credentials"><p id="notify-ready-message">We have sent you a request on your device. After you approve, click the button below. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><button id="notify-done" class="btn btn-outline-dark btn-custom m-t-20">Ready to Proceed</button></div>');
 
 					$('#notify-done').on('click', async (event) => {
 						return requestDone(event, providerKey, undefined);
@@ -80,7 +80,7 @@ window.addEventListener( 'load', async function () {
 					break;
 				case 'email':
 					jnReady.css({ display: 'inherit' });
-					jnReady.append('<p id="notify-ready-message">We have sent you a code via email. Please check your inbox, copy/paste the code in the field below, and click the button below when ready. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><input class="fields" id="code" name="code" type="text" aria-describedby="code" placeholder="code..."></input><button id="notify-done" class="btn btn-outline-dark m-3">Ready to Proceed</button>');
+					jnReady.append('<div class="credentials"><p id="notify-ready-message">We have sent you a code via email. Please check your inbox, copy/paste the code in the field below, and click the button below when ready. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><input id="code" name="code" type="text" aria-describedby="code" placeholder="code..."><label for="code">Code</label></input><button id="notify-done" class="btn btn-outline-dark btn-custom m-t-20">Ready to Proceed</button></div>');
 					$('#notify-done').on('click', async (event) => {
 						const code = $('#code').val();
 						return requestDone(event, undefined, code);
@@ -95,7 +95,7 @@ window.addEventListener( 'load', async function () {
 			console.error(error);
 			$('#notify-device').prop('disabled', false);
 			$('#notify-email').prop('disabled', false);
-			$('#flash').append('<h5 class="error">There was an error. Please try again later.</h5>');
+			$('#flash').append('<p>There was an error. Please try again later.</p>');
 			$('#getInfo').css({ display: 'inherit' });
 			$('#resetting').css({ display: 'none' });
 			$('#notify').css({ display: 'none' });
@@ -139,16 +139,16 @@ window.addEventListener( 'load', async function () {
 				//instructions
 				jBasicInfo.css({ display: 'none' });
 				jResetting.css({ display: 'inherit' });
-				let instruct = '<p id="reset-instructions"><span class="bolder">You are ready to roll.</span> Follow the instructions below. When you finish, click the button to close this window and go back to your login screen.</p><ol class="m-t-20 list-group list-group-flush list-group-numbered">';
+				let instruct = '<p id="reset-instructions">You are ready to roll. Follow the instructions below. When you finish, click the button to close this window and go back to your login screen.</p><ol class="m-t-20 list-group list-group-flush list-group-numbered">';
 				result.data?.data?.instructions.map((i) => {
 					instruct = `${instruct}<li class="list-group-item">${i}</li>`;
 				});
 				if(result.data?.data?.qrCode) {
-					instruct = `${instruct}</ol><div class="canvas"><canvas class="canvas-width" id="qrcode"></canvas></div>`;
+					instruct = `${instruct}</ol><div class="canvas m-t-20"><canvas class="canvas-50" id="qrcode"></canvas></div>`;
 				} else instruct = `${instruct}</ol>`;
 
 				if(result.data?.data?.proxyEnableScreen){
-					instruct = `${instruct}<div class="m-t-20 m-b-20 center"><a href="${result.data?.data?.proxyEnableScreen}" type="button" class="canvas-width btn btn-outline-dark">${(result.data?.data?.proxyEnableScreenButtonText) ? result.data?.data?.proxyEnableScreenButtonText : 'Click Here for Setup'}</a></div>`;
+					instruct = `${instruct}<div class="m-t-20 m-b-20 center"><a href="${result.data?.data?.proxyEnableScreen}" type="button" class="btn btn-outline-dark btn-custom">${(result.data?.data?.proxyEnableScreenButtonText) ? result.data?.data?.proxyEnableScreenButtonText : 'Click Here for Setup'}</a></div>`;
 				}
 
 				if(result.data?.data?.warnings && result.data?.data?.warnings.length !== 0) {
@@ -166,7 +166,7 @@ window.addEventListener( 'load', async function () {
 				notifyUrl = result?.data?.data?.uri;
 				jBasicInfo.css({ display: 'none' });
 				jNotify.css({ display: 'inherit'});
-				const notify = '<p id="notify-message"> It looks like you already have MFA enabled. This action would override your current settings so we need to make sure its you. You can verify your identity using your existing device or email. Please click the corresponding button.</p><div id="notify-buttons"><button class="btn btn-block btn-outline-dark m-3" id="notify-email">By Email...</button><button class="btn btn-block btn-outline-dark m-3" id="notify-device">By Device...</button></div>';
+				const notify = '<p id="notify-message"> It looks like you already have MFA enabled. This action would override your current settings so we need to make sure its you. You can verify your identity using your existing device or email. Please click the corresponding button.</p><div id="notify-buttons"><button class="btn btn-outline-dark btn-custom" id="notify-email">By Email...</button><button class="btn btn-outline-dark btn-custom m-t-20" id="notify-device">By Device...</button></div>';
 				jNotify.append(notify);
 				$('#notify-email').on('click', async (event) => {
 					return requestNotify('email', event);
@@ -187,9 +187,9 @@ window.addEventListener( 'load', async function () {
 			$('#notify').css({ display: 'none' });
 			$('#notify-ready').css({display: 'none'});
 			if(error.status === 401) {
-				$('#flash').append('<h5 class="error">Your username and password were not valid...</h5>');
+				$('#flash').append('<p>Your username and password were not valid...</p>');
 			} else {
-				$('#flash').append('<h5 class="error">There was an error. Please try again later.</h5>');
+				$('#flash').append('<p>There was an error. Please try again later.</p>');
 			}
 		}
 	}

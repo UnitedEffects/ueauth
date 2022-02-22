@@ -13,10 +13,6 @@ body, html {
 	align-items: flex-end;
 }
 
-.center {
-	text-align: center;
-}
-
 .bg {
 	background: url("https://assets.uecore.io/ueauth/20220221.1/background.jpg") no-repeat center center fixed;
   	height: 100%;

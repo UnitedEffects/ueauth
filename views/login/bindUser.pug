@@ -13,7 +13,7 @@ block bindUser
             ol.instructions.m-t-20.list-group.list-group-flush.list-group-numbered
                 each i in mfa.instructions.instructions
                     li.list-group-item !{i}
-            div.m-t-10.center
+            div.m-t-20-imp.center.canvas-50
                 canvas#qrcode.login-canvas-view
             if(mfa && mfa.setupScreen)
                 if(mfa.setupScreenButtonText)

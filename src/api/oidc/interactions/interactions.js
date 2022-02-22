@@ -93,8 +93,8 @@ const api = {
 			locked: authGroup.locked,
 			registerUrl: client.register_url || authGroup.registerUrl || authGroup.primaryDomain || undefined,
 			details: prompt.details,
-			tos: authGroup.primaryTOS || authGroup.primaryDomain || undefined,
-			policy: authGroup.primaryPrivacyPolicy || authGroup.primaryDomain || undefined,
+			tosUri: authGroup.primaryTOS || authGroup.primaryDomain || undefined,
+			policyUri: authGroup.primaryPrivacyPolicy || authGroup.primaryDomain || undefined,
 			params,
 			title: 'Sign-in Password Free',
 			session: session ? debug(session) : undefined,
@@ -162,7 +162,7 @@ const api = {
 	async oidcRenderErrorOptions(authGroup, out, safeAG) {
 		return {
 			title: 'oops! something went wrong',
-			message: 'You may have navigated here by mistake',
+			message: 'Click more information for details.',
 			redirect: `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` ||
 				authGroup.primaryDomain ||
 				undefined,
@@ -173,11 +173,25 @@ const api = {
 			details: Object.entries(out).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
 		};
 	},
-	async oidcLogoutSourceOptions(authGroup, name, action, secret, skipPrompt = false) {
+	async oidcLogoutSourceOptions(authGroup, name, action, secret, client, skipPrompt = false) {
 		return {
 			title: 'Log Out',
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
+			authGroupLogo: authGroup.config.ui.skin.logo,
+			clientName: client?.clientName,
+			clientUri: (authGroup.associatedClient === client?.clientId) ?
+				`https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` : client?.clientUri,
+			initiateLoginUri: client?.initiateLoginUri,
+			logoUri: client?.logoUri,
+			policyUri: client?.policyUri,
+			tosUri: client?.tosUri,
+			authGroup: {
+				name: authGroup.name,
+				primaryPrivacyPolicy: authGroup.primaryPrivacyPolicy,
+				primaryTOS: authGroup.primaryTOS,
+				primaryDomain: authGroup.primaryDomain
+			},
 			message: `Are you sure you want to sign-out from ${name}?`,
 			formId: 'op.logoutForm',
 			actionUrl: action,
@@ -190,7 +204,7 @@ const api = {
 	},
 	async oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName) {
 		return {
-			title: 'Success',
+			title: 'Confirmed',
 			clientName,
 			message,
 			clientUri,
@@ -200,6 +214,7 @@ const api = {
 			tosUri,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
+			authGroupLogo: authGroup.config.ui.skin.logo,
 			authGroup: {
 				name: authGroup.name,
 				primaryPrivacyPolicy: authGroup.primaryPrivacyPolicy,

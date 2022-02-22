@@ -1,9 +1,9 @@
 block primary
     if (flash)
-        .flash-container
+        .flash-container.m-b-20
             p=flash
-    if (client && client.logo_uri)
-        img.logo(src=client.logo_uri alt='Product Logo')
+    if (client && client.logoUri)
+        img.logo(src=client.logoUri alt='Product Logo')
     else if (authGroupLogo)
         img.logo(src=authGroupLogo alt='Platform Logo')
     p.org-name=authGroupName

@@ -150,9 +150,6 @@ window.addEventListener( 'load', async function () {
 	}
 
 	$('#lockAccount').on('click', async (event) => {
-		console.info('locking...');
-		console.info(panicUrl);
-		console.info(lockToken);
 		return lockAccount(panicUrl, lockToken, event);
 	});
 

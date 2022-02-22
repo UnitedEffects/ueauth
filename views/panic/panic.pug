@@ -1,105 +1,53 @@
-extends ../layout
+extends ../uelayout
 
 block content
-    body
-        style.
-            .center {
-                text-align: center;
-            }
-            .m20 {
-                margin: 20px;
-            }
-            .m10 {
-                margin: 10px;
-            }
-            .fields {
-                width: 65%;
-                border: lightgray;
-                border-style: solid;
-                border-width: thin;
-                padding: 5px;
-            }
-            .field-button {
-                padding-bottom: 5px;
-                width: 50%;
-            }
-            .error {
-                background: coral;
-                width: 85%;
-                color: white;
-                height: 8vh;
-                border-radius: 15px;
-                margin: auto;
-                padding-top: 10px;
-            }
-            .hidden {
-                visibility: hidden;
-                position: absolute;
-            }
-            #loading {
-                display: inline-block;
-                width: 50px;
-                height: 50px;
-                border: 3px solid rgba(255, 255, 255, .3);
-                border-radius: 50%;
-                border-top-color: grey;
-                animation: spin 1s ease-in-out infinite;
-                -webkit-animation: spin 1s ease-in-out infinite;
-            }
-
-            @keyframes spin {
-                to {
-                    -webkit-transform: rotate(360deg);
-                }
-            }
-
-            @-webkit-keyframes spin {
-                to {
-                    -webkit-transform: rotate(360deg);
-                }
-            }
-        //
-        script(nonce=nonce, type="text/javascript").
-            const authGroup = '#{authGroup}';
-            const panicUrl = '#{panicUrl}';
-            const lockToken = '#{code}';
-        script(nonce=nonce, src="https://code.jquery.com/jquery-3.6.0.slim.min.js", crossorigin="anonymous")
-        script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
-        script
-            include panic.js
-        section#head.section
-            .row
-                .col-lg-12
-                    .h-100.p-5.bg-light.rounded-3(style="max-width: 800px; margin: auto; margin-top: 50px; box-shadow: 1px 1px 2px slategrey;")
-                        h2.center.m-b-10=title
-                        p.center.m-b-20=message
-                        div.center.hidden(id='fl')
-                            .error(id='flash')
-                        center.m-t-5
-                            .hidden(id='loading')
-                        .center(id="start")
-                            p.m20
-                                ul.list-group
-                                    li.list-group-item THIS IS AN EMERGENCY PROCEDURE.
-                                    li.list-group-item Please be aware, if you lock your account, you will logout of all devices, disable your ability to login anywhere, disable MFA on your account, and revoke your MFA settings on your device. It can only be undone by using your onetime recovery codes or by a system administrator.
-                                    li.list-group-item If you have MFA and it is not compromised, it may be sufficient to simply change your passwords - both your email and your system password. You can change your system password by clicking Change Password below.
-                                    li.list-group-item If your passwords are secure but your device is not, you can bind your account to a new device by clicking Restore MFA below.
-                                    li.list-group-item If after these considerations you wish to proceed, please confirm your intention by typing your email address and click "LOCK MY ACCOUNT NOW"
-                            input.fields.m20(type="email" id="email" aria-describedby="emailHelp" placeholder="email...")
-                            div
-                                button.m20.field-button.btn.btn-block.btn-outline-dark(id='lockAccount') LOCK MY ACCOUNT NOW
-                        .center.hidden(id="result")
-                            h5.m20.center Your account is now locked. Take some time and secure your email, passwords, and device. When you are ready, you can navigate to the recovery wizard to unlock your account and restore MFA. You will need your recovery codes to do this.
-                            m20.center
-                                a(href='/' + authGroup.id + '/recoveraccount' target='_blank') [ Recover Account ]
-                            h4.m10.center When ready, you may close this window.
-                        .center.hidden(id="recover")
-                        .m-t-10.center
-                            if (tosUri || (authGroup && authGroup.primaryTOS))
-                                a(href=(tosUri || authGroup.primaryTOS)) [ Terms of Service ]
-                            if (policyUri || (authGroup && authGroup.primaryPrivacyPolicy))
-                                a(href=(policyUri || authGroup.primaryPrivacyPolicy) style="margin-left: 5px") [ Privacy Policy ]
-                            if (authGroup)
-                                a(href='/' + authGroup.id + '/recover-mfa' target='_blank') [ Restore MFA ]
-                            if (authGroup)
-                                a(href='/' + authGroup.id + '/forgotpassword' target='_blank') [ Change Password ]
+    script(nonce=nonce, type="text/javascript").
+        const authGroup = '#{authGroup}';
+        const panicUrl = '#{panicUrl}';
+        const lockToken = '#{code}';
+    script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
+    script
+        include panic.js
+    body.bg.flex
+        .utility-panel
+            .flash-container.m-b-20.hidden
+                p#fl=flash
+            if (authGroupLogo)
+                img.logo(src=authGroupLogo alt='Platform Logo')
+            if (authGroup && authGroup.name)
+                p.org-name=authGroup.name
+            p#title.header=title
+            p#instruct.description=message
+            center.m-t-5
+                div#loading.m-t-20.hidden
+            .credentials
+                div#start.center
+                    p
+                        ul.list-group
+                            li.list-group-item THIS IS AN EMERGENCY PROCEDURE.
+                            li.list-group-item Please be aware, if you lock your account, you will logout of all devices, disable your ability to login anywhere, disable MFA on your account, and revoke your MFA settings on your device. It can only be undone by using your onetime recovery codes or by a system administrator.
+                            li.list-group-item If you have MFA and it is not compromised, it may be sufficient to simply change your passwords - both your email and your system password. You can change your system password by clicking Change Password below.
+                            li.list-group-item If your passwords are secure but your device is not, you can bind your account to a new device by clicking Restore MFA below.
+                            li.list-group-item If after these considerations you wish to proceed, please confirm your intention by typing your email address and click "LOCK MY ACCOUNT NOW"
+                    div
+                        input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
+                        label(for='email') Email
+                    div
+                        button#lockAccount.btn.btn-outline-dark.btn-custom LOCK MY ACCOUNT NOW
+                div#result.center.hidden
+                    p.center Your account is now locked. Take some time and secure your email, passwords, and device. When you are ready, you can navigate to the recovery wizard to unlock your account and restore MFA. You will need your recovery codes to do this.
+                    .center
+                        a(href='/' + authGroup.id + '/recoveraccount' target='_blank') Recover Account
+                    h4.center When ready, you may close this window.
+                .center.hidden(id="recover")
+            .tandc.p-b-20.center.width-auto
+                if (authGroup && authGroup.primaryTOS)
+                    a(href=(authGroup.primaryTOS)) Terms of Service
+                if (authGroup && authGroup.primaryPrivacyPolicy)
+                    a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
+                if (authGroup)
+                    a(href='/' + authGroup.id + '/recover-mfa' target='_blank') Restore MFA
+                if (authGroup)
+                    a(href='/' + authGroup.id + '/forgotpassword' target='_blank') Change Password
+                if (authGroup && authGroup.primaryEmail)
+                    a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}

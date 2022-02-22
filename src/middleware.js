@@ -84,14 +84,14 @@ const mid = {
 							message: 'But, it looks like you may have gone to a bad URL',
 							details: Object.entries(error).map(([key, value]) => `<p><strong>${key}</strong>: ${value}</p>`).join('')
 						};
-						return res.render('response/error', data);
+						return res.render('response/response', data);
 					}
 					data = {
 						...data,
 						title: 'oops! something went wrong',
 						message: error.message, details: error.error
 					};
-					return res.render('response/error', data);
+					return res.render('response/response', data);
 				}
 			}
 			return res.respond(error);

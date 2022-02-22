@@ -6,8 +6,8 @@ block content
             if (flash)
                 .flash-container.m-b-20
                     p=flash
-            if (client && client.logo_uri)
-                img.logo(src=client.logo_uri alt='Product Logo')
+            if (client && client.logoUri)
+                img.logo(src=client.logoUri alt='Product Logo')
             else if (authGroupLogo)
                 img.logo(src=authGroupLogo alt='Platform Logo')
             if (authGroup && authGroup.name)
@@ -17,7 +17,7 @@ block content
             if(details)
                 .m-t-20.detail-color.text-left
                     details.detail-color
-                        summary Error Details
+                        summary More Information
                         p.detail-color.detail-background!=details
             if (redirect || logoUri || (authGroup && authGroup.primaryDomain))
                 a.btn.btn-outline-dark.btn-custom.m-t-20(href=(redirect || logoUri || authGroup.primaryDomain)) Go Home
