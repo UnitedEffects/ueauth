@@ -595,7 +595,7 @@ export default {
 		let _params;
 		let _session;
 		let _prompt;
-		const { authGroup } = await safeAuthGroup(req.authGroup);
+		const { authGroup, safeAG } = await safeAuthGroup(req.authGroup);
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
@@ -641,7 +641,10 @@ export default {
 			}
 			return res.render('response/response', {
 				title: 'SUCCESS!',
-				message: 'You should have a password free login link in your email or text messages. If you have MFA enabled, you will need to approve the login first. You may close this window.'
+				message: 'You should have a password free login link in your email or text messages. If you have MFA enabled, you will need to approve the login first. You may close this window.',
+				authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
+				splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+				authGroup: safeAG
 			});
 		} catch (err) {
 			if(iAccessToken) {
