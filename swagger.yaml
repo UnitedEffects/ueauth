@@ -7579,6 +7579,8 @@ components:
         displayName:
           type: string
           description: preferred display name of the user - sometimes a nickname
+        personalHeader:
+          type: string
         bio:
           type: string
           description: optional block of text about the user
@@ -7586,6 +7588,28 @@ components:
           type: string
           description: URI to an image for profile use
           example: https://example-cdn.com/id-of-your-image.jpeg
+        address:
+          type: object
+          description: primary address of the account
+          properties:
+            street1:
+              type: string
+            street2:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            postalCode:
+              type: string
+            country:
+              type: string
+        employer:
+          type: string
+        title:
+          type: string
+        position:
+          type: string
         additionalEmails:
           type: array
           items:
