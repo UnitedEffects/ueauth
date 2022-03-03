@@ -29,6 +29,8 @@ tags:
     description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
   - name: Users
     description: User Accounts unique to the Auth Group. Email must be unique
+  - name: Profiles
+    description: Secured Account Profiles
   - name: Clients
     description: Reading or Deleting Clients in your Auth Group. User OIDC /reg for Create or Updates
   - name: User Access
@@ -1203,13 +1205,182 @@ paths:
             schema:
               $ref: '#/components/schemas/recoverAccountRequest'
 
+  # Secured Account Profiles
+  /api/{group}/profile:
+    post:
+      tags:
+        - Profiles
+      summary: Create a secured profile that only you (the account holder) can access or govern access to.
+      description: "While Accounts themselves do not carry personal information, two concepts in UE Auth do: Secured Profiles and Organization User Profiles (as described here). Secured Profiles are entirely controlled by the Account holder (user) and not accessible by anyone other than that user. Secured Profile data can be requested but must always be actively approved and provided or denied by the User."
+      operationId: writeProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/securedProfileWrite'
+        description: Profile data to be written
+        required: true
+    patch:
+      tags:
+        - Profiles
+      summary: Update your secured profile
+      description: Update your secured profile tied to your account id.
+      operationId: updateProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: Profile data to be updated
+        required: true
+    get:
+      tags:
+        - Profiles
+      summary: Retrieve your secured profile
+      description: This will return only your profile tied to your account id
+      operationId: getProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    delete:
+      tags:
+        - Profiles
+      summary: Delete your secured profile
+      description: This will delete only your secured profile tied to your account id
+      operationId: removeOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Organization User Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
   # Organization User Profiles
   /api/{group}/organization/{org}/profiles:
     post:
       tags:
         - Organization User Profiles
       summary: Create an Organization User Profile (name, contact info, bio, etc.) for an Account associated to this Organization
-      description: "While Accounts themselves do not carry personal information, two concepts in UE Auth do: Secured Profiles (functionality pending) and Organization User Profiles (as described here). Organizations may need to define information about their users such as first and last name, address, or other data over which they wish to have a measure of control. This data is limited in scope to the Organization itself and access is limited to Organization administrators or the Account holder. As such, Organization User Profiles are unique only to the Organization but reference a single unique Account in the AuthGroup. One Account could have as many Organization User Profiles as there are Organizations to which the Account has been given access. In contrast, Secured Profiles (functionality pending) are entirely controlled by the Account holder (user) and not accessible by anyone other than that user. Secured Profile data can be requested but must always be actively approved and provided or denied by the User. In future iterations, it will be possible to request an Organization User Profile be seeded from a Secured Profile."
+      description: "While Accounts themselves do not carry personal information, two concepts in UE Auth do: Secured Profiles and Organization User Profiles (as described here). Organizations may need to define information about their users such as first and last name, address, or other data over which they wish to have a measure of control. This data is limited in scope to the Organization itself and access is limited to Organization administrators or the Account holder. As such, Organization User Profiles are unique only to the Organization but reference a single unique Account in the AuthGroup. One Account could have as many Organization User Profiles as there are Organizations to which the Account has been given access. In contrast, Secured Profiles are entirely controlled by the Account holder (user) and not accessible by anyone other than that user. Secured Profile data can be requested but must always be actively approved and provided or denied by the User. In future iterations, it will be possible to request an Organization User Profile be seeded from a Secured Profile."
       operationId: writeOrgProfile
       parameters:
         - name: group
@@ -1338,7 +1509,7 @@ paths:
       tags:
         - Organization User Profiles
       summary: Update an Organization User Profile (name, contact info, bio, etc.) for an Account associated to this Organization
-      description: This will change values of the Organization User Profile assocaited to the Account within a specified Organization. This will not update any information on the Account's Secured Profile (secured profile functionality pending).
+      description: This will change values of the Organization User Profile assocaited to the Account within a specified Organization. This will not update any information on the Account's Secured Profile.
       operationId: updateOrgProfile
       parameters:
         - name: group
@@ -6759,9 +6930,22 @@ components:
               type: string
               pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
               description: used for notifications. only visible to the user in question.
+        profile:
+          type: object
+          description: These are used to initialize a secured profile. Access is restricted to the Account holder after creation.
+          properties:
+            givenName:
+              type: string
+            familyName:
+              type: string
+            displayName:
+              type: string
+            picture:
+              type: string
+              format: uri
         metadata:
           type: object
-          description: additional context provided by the implementer. this field will be retured when secured profiles are available (see readme roadmap)
+          description: additional context provided by the implementer.
 
     writeAccountByOrg:
       type: object

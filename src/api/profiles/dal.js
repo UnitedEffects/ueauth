@@ -1,6 +1,28 @@
 import OrgProfile from './models/orgProfile';
+import Profile from './models/securedProfile';
 
 export default {
+	/* SECURED PROFILES */
+	async writeProfile(data) {
+		const profile = new Profile(data);
+		return profile.save();
+	},
+	async getProfiles(g, query) {
+		query.query.authGroup = g;
+		return Profile.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
+	async getProfile(authGroup, id) {
+		return Profile.findOne( { authGroup, $or: [{ _id: id }, { accountId: id }] });
+	},
+	async deleteProfile(authGroup, id) {
+		return Profile.findOneAndRemove( { authGroup, $or: [{ _id: id }, { accountId: id }] });
+	},
+	async patchProfile(authGroup, id, data) {
+		data.modifiedAt = Date.now();
+		return Profile.findOneAndUpdate({
+			authGroup, $or: [{ _id: id }, { accountId: id }] }, data, { new: true, overwrite: true });
+	},
+	/* ORG PROFILES */
 	async writeOrgProfile(data) {
 		const orgProfile = new OrgProfile(data);
 		return orgProfile.save();

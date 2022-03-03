@@ -144,6 +144,17 @@ const OP_EVENTS = {
 		'ue.organization.profile.edit',
 		'ue.organization.profile.destroy',
 		'ue.organization.profile.error'
+	],
+	securedProfile: [
+		'ue.secured.profile.create',
+		'ue.secured.profile.edit',
+		'ue.secured.profile.destroy',
+		'ue.secured.profile.error',
+		'ue.secured.profile.organization.synced',
+		'ue.secured.profile.copy.created',
+		'ue.secured.profile.access.denied',
+		'ue.secured.profile.access.approved',
+		'ue.secured.profile.access.created',
 	]
 };
 

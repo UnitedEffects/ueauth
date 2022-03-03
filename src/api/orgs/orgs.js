@@ -4,7 +4,7 @@ import dal from './dal';
 import dom from '../domains/domain';
 import prod from '../products/product';
 import access from '../accounts/access';
-import profile from '../profiles/profiles';
+import profile from '../profiles/profiles/org';
 import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';

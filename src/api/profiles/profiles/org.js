@@ -1,12 +1,12 @@
-import dal from './dal';
+import dal from '../dal';
 import Boom from '@hapi/boom';
-import account from '../accounts/account';
-import ueEvents from '../../events/ueEvents';
-import helper from '../../helper';
+import account from '../../accounts/account';
+import ueEvents from '../../../events/ueEvents';
+import helper from '../../../helper';
 import jsonPatch from 'jsonpatch';
 import Joi from 'joi';
 
-const config = require('../../config');
+const config = require('../../../config');
 
 export default {
 	async writeOrgProfile(data) {
