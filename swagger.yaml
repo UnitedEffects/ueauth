@@ -6987,7 +6987,7 @@ components:
                   enum:
                     - right
                     - left
-                    - center
+                    - middle
                   description: choose which way the screen inputs are oriented
                 bgGradientLow:
                   type: string
