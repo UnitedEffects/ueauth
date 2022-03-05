@@ -29,8 +29,9 @@ const requestProfile = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-    requestingEmail: String,
-    requestDetails: String,
+	requestingEmail: String,
+	requestDetails: String,
+	dataCallback: String,
 	targetAccountId: {
 		type: String,
 		required: true
@@ -39,6 +40,11 @@ const requestProfile = new mongoose.Schema({
 		type: String,
 		default: 'copy',
 		enum: ['copy', 'sync', 'access']
+	},
+	accessExpirationTime: {
+		type: String,
+		default: 'unlimited',
+		enum: ['1d', '7d', '30d', '90d', '180d', '360d', 'unlimited']
 	},
 	state: {
 		type: String,

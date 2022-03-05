@@ -1,12 +1,42 @@
 import OrgProfile from './models/orgProfile';
 import Profile from './models/securedProfile';
+import Request from './models/request';
 
 export default {
+	/* PROFILE REQUESTS */
+	async createRequest(data) {
+		const request = new Request(data);
+		return request.save();
+	},
+	async getRequests(g, query, targetAccountId, requestingAccountId) {
+		query.query.authGroup = g;
+		if(targetAccountId) query.query.targetAccountId = targetAccountId;
+		if(requestingAccountId) query.query.requestingAccountId = requestingAccountId;
+		return Request.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
+	async getRequest(authGroup, _id, user) {
+		const q = { _id, authGroup, $or: [ { targetAccountId: user }, { requestingAccountId: user } ] };
+		return Request.findOne(q);
+	},
+	async deleteRequest(authGroup, _id, user) {
+		const q = { _id, authGroup, $or: [ { targetAccountId: user }, { requestingAccountId: user } ] };
+		return Request.findOneAndRemove(q);
+	},
+	async updateRequestStatus(authGroup, _id, state, targetAccountId) {
+		const q = { _id, authGroup, targetAccountId};
+		const data = {
+			modifiedAt: Date.now(),
+			modifiedBy: targetAccountId,
+			state
+		};
+		return Profile.findOneAndUpdate(q, data, { new: true });
+	},
 	/* SECURED PROFILES */
 	async writeProfile(data) {
 		const profile = new Profile(data);
 		return profile.save();
 	},
+	// not exposed publicly and limited to root
 	async getProfiles(g, query) {
 		query.query.authGroup = g;
 		return Profile.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);

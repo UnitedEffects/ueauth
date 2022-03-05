@@ -31,6 +31,8 @@ tags:
     description: User Accounts unique to the Auth Group. Email must be unique
   - name: Profiles
     description: Secured Account Profiles
+  - name: Profile Requests
+    description: Request access to someone's profile data
   - name: Clients
     description: Reading or Deleting Clients in your Auth Group. User OIDC /reg for Create or Updates
   - name: User Access
@@ -1274,7 +1276,7 @@ paths:
                 properties:
                   type:
                     type: string
-                    example: 'Organization User Profile'
+                    example: 'Secured Profile'
                   data:
                     $ref: '#/components/schemas/securedProfile'
         '400':
@@ -1319,7 +1321,7 @@ paths:
                 properties:
                   type:
                     type: string
-                    example: 'Organization User Profile'
+                    example: 'Secured Profile'
                   data:
                     $ref: '#/components/schemas/securedProfile'
         '400':
@@ -1357,9 +1359,248 @@ paths:
                 properties:
                   type:
                     type: string
-                    example: 'Organization User Profile'
+                    example: 'Secured Profile'
                   data:
                     $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  # Request Account Profile Access
+  /api/{group}/profile/request:
+    post:
+      tags:
+        - Profile Requests
+      summary: Create a request to access someone's profile information
+      description: Requests are async mechanisms to access profile data. The Account holder may approve or deny the request. Requests automatically expire after 7 days.
+      operationId: createRequest
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/profileRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeProfileRequest'
+        description: Profile data to be written
+        required: true
+
+  /api/{group}/profile/requests/{sor}:
+    get:
+      tags:
+        - Profile Requests
+      summary: Retrieve your profile requests
+      description: Specify requests to you or from you and retrieve the list
+      operationId: getRequests
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: sor
+          in: path
+          description: specify sent or received
+          schema:
+            type: string
+            default: received
+            enum:
+              - sent
+              - received
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/profileRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+
+  /api/{group}/profile/request/{id}:
+    patch:
+      tags:
+        - Profile Requests
+      summary: Approve or deny a request to access your profile data
+      description: Approve or deny a request to access your profile data. Only the recipient can make this change.
+      operationId: updateRequest
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the request id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/profileRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profileRequestUpdate'
+        description: Profile data to be updated
+        required: true
+    get:
+      tags:
+        - Profile Requests
+      summary: Get a profile request
+      description: Get a profile request. You must be either the recipient or sender.
+      operationId: getRequest
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the request id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/profileRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    delete:
+      tags:
+        - Profile Requests
+      summary: Delete a profile request
+      description: Delete a profile request. You must be either the recipient or sender.
+      operationId: removeOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the request id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/profileRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -6905,6 +7146,20 @@ components:
         blocked:
           type: boolean
           description: root level block of the user from access to the authGroup
+        mfa:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        acceptingProfileRequests:
+          type: boolean
+        myNotifications:
+          type: object
+          properties:
+            profileRequests:
+              type: boolean
+              description: You can silence device notifications for profile requests
+              default: true
         active:
           type: boolean
           description: status of the account
@@ -6930,19 +7185,6 @@ components:
               type: string
               pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
               description: used for notifications. only visible to the user in question.
-        profile:
-          type: object
-          description: These are used to initialize a secured profile. Access is restricted to the Account holder after creation.
-          properties:
-            givenName:
-              type: string
-            familyName:
-              type: string
-            displayName:
-              type: string
-            picture:
-              type: string
-              format: uri
         metadata:
           type: object
           description: additional context provided by the implementer.
@@ -6958,6 +7200,32 @@ components:
           format: email
         username:
           type: string
+        profile:
+          description: you can use profile data to initilize an organization profile for this Account
+          allOf:
+            - $ref: '#/components/schemas/refSecuredProfileWrite'
+          properties:
+            externalId:
+              type: string
+              description: used to associate this Organization User to an internal record of the user in an HCM or other system
+
+    writeAccountProfile:
+      type: object
+      additionalProperties: false
+      properties:
+        profile:
+          type: object
+          description: These are used to initialize a secured profile. Access is restricted to the Account holder after creation.
+          properties:
+            givenName:
+              type: string
+            familyName:
+              type: string
+            displayName:
+              type: string
+            picture:
+              type: string
+              format: uri
 
     writeAccount:
       type: object
@@ -6966,10 +7234,24 @@ components:
         - email
       allOf:
         - $ref: '#/components/schemas/refWriteAccount'
+        - $ref: '#/components/schemas/writeAccountProfile'
       properties:
         generatePassword:
           type: boolean
           description: if false, password field is required; otherwise, a 32 char password is generated
+        profile:
+          type: object
+          description: These are used to initialize a secured profile. Access is restricted to the Account holder after creation.
+          properties:
+            givenName:
+              type: string
+            familyName:
+              type: string
+            displayName:
+              type: string
+            picture:
+              type: string
+              format: uri
 
     writeAuthGroup:
       type: object
@@ -7560,16 +7842,10 @@ components:
           format: uuid
           description: organization id this profile is associated to
 
-    securedProfileWrite:
+    refSecuredProfileWrite:
       type: object
-      required:
-        - accountId
       additionalProperties: false
       properties:
-        accountId:
-          type: string
-          format: uuid
-          description: user ID
         givenName:
           type: string
           description: the User's given name
@@ -7629,6 +7905,19 @@ components:
                 type: string
               number:
                 type: string
+
+    securedProfileWrite:
+      type: object
+      required:
+        - accountId
+      allOf:
+        - $ref: '#/components/schemas/refSecuredProfileWrite'
+      additionalProperties: false
+      properties:
+        accountId:
+          type: string
+          format: uuid
+          description: user ID
 
     securedProfile:
       type: object
@@ -8542,3 +8831,87 @@ components:
             buttonSelected:
               type: number
               description: privakey plugin specific - Any number other than zero is approved
+
+    profileRequestUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          example: approved
+          enum:
+            - new
+            - approved
+            - denied
+
+    profileRequest:
+      type: object
+      description: Requests expire after 7 days
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/writeProfileRequest'
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        modifiedAt:
+          type: string
+          format: date-time
+        modifiedBy:
+          type: string
+        authGroup:
+          type: string
+        requestingAccountId:
+          type: string
+          format: uuid
+        requestingEmail:
+          type: string
+          format: email
+        state:
+          type: string
+          default: new
+          example: new
+          enum:
+            - new
+            - approved
+            - denied
+
+    writeProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          default: copy
+          enum:
+            - copy
+            - sync
+            - access
+        targetAccountId:
+          type: string
+          format: uuid
+          description: the ID of the Account holder you are request profile data from
+        requestDetails:
+          type: string
+          description: brief explanation of who is making the request and why
+        dataCallback:
+          type: string
+          format: uri
+          description: if this is a copy request, you can provide a callback url for the data to be sent to on approval
+        accessExpirationTime:
+          type: string,
+          default: 30d
+          description: if this is an access request, how long would you like the access to last?
+          enum:
+            - 1d
+            - 7d
+            - 30d
+            - 90d
+            - 180d
+            - 360d
+            - unlimited

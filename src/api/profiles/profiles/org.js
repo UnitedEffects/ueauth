@@ -85,9 +85,13 @@ async function standardPatchValidation(original, patched) {
 		_id: Joi.string().valid(original._id).required(),
 		organization: Joi.string().valid(original.organization).required(),
 		accountId: Joi.string().valid(original.accountId).required(),
-		deleteRequested: Joi.boolean().valid(original.deleteRequested).required(),
-		deleteRequestedDate: Joi.any().valid(original.deleteRequestedDate).required()
 	};
+	if(original.deleteRequested) {
+		definition.deleteRequested = Joi.boolean().valid(original.deleteRequested).required();
+	}
+	if(original.deleteRequestedDate) {
+		definition.deleteRequestedDate = Joi.any().valid(original.deleteRequestedDate).required();
+	}
 	const orgProfileSchema = Joi.object().keys(definition);
 	const main = await orgProfileSchema.validateAsync(patched, {
 		allowUnknown: true

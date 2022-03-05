@@ -1,15 +1,127 @@
 import Boom from '@hapi/boom';
+import acc from '../accounts/account';
 import permissions from '../../permissions';
 import orgProfiles from './profiles/org';
 import profiles from './profiles/profile';
+import requests from './profiles/request';
 import ueEvents from '../../events/ueEvents';
 import {say} from '../../say';
 import n from '../plugins/notifications/notifications';
+import crypto from 'crypto';
+import challenge from '../plugins/challenge/challenge';
 
 const ORG_RESOURCE = 'Organization User Profile';
 const SEC_RESOURCE = 'Secured Profile';
 
 export default {
+	/* Request API */
+	async createRequest(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.user.sub) throw Boom.forbidden();
+			const requestingAccountId = req.user.sub;
+			if(!req.body.targetAccountId) throw Boom.badRequest('Must target an account for the request');
+			const target = await acc.getAccount(data.authGroup, data.targetAccountId);
+			if(!target) throw Boom.notFound(`target: ${data.targetAccountId}`);
+			if(target.acceptingProfileRequests === false) throw Boom.locked('User not accepting requests');
+			const sender = await acc.getAccount(data.authGroup, requestingAccountId);
+			const data = JSON.parse(JSON.stringify(req.body));
+			data.requestingEmail = sender.email;
+			data.authGroup = req.authGroup.id;
+			data.requestingAccountId = requestingAccountId;
+			if(data.type === 'access' && !data.accessExpirationTime) {
+				data.accessExpirationTime = 'unlimited';
+			}
+			const result = await requests.createRequest(data);
+			try {
+				if(req.globalSettings?.mfaChallenge?.enabled === true) {
+					if(target.mfa?.enabeled === true && target.myNotifications?.profileRequests !== false) {
+						const ag = JSON.parse(JSON.stringify(req.authGroup));
+						const uid = crypto.randomBytes(32).toString('hex');
+						const meta = {
+							event: 'ue.secured.profile.access.requested',
+							content: {
+								title: 'Personal Profile Data Request',
+								header: `${ag.name} Profile Requested`,
+								body: await reqChallengeMessge(ag, sender, data)
+							}
+						};
+						await challenge.sendChallenge(ag, req.globalSettings, {
+							accountId: data.targetAccountId, mfaEnabled: true }, uid, meta);
+					}
+				}
+			} catch (error) {
+				console.error('UNABLE TO SEND DEVICE CHALLENGE');
+				console.error(error);
+			}
+			return res.respond(say.created(result, SEC_RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
+			next(error);
+		}
+	},
+	async getRequests(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			// /profile/requests/:sor
+			if(!req.user.sub) throw Boom.forbidden();
+			if(!req.params.sor) throw Boom.badRequest('Must specify sent or received');
+			let result;
+			switch(req.params.sor.toLowerCase()) {
+			case 'sent':
+				result = await requests.getMyRequests(req.authGroup.id, req.query, undefined, req.user.sub);
+				break;
+			case 'received':
+				result = await requests.getMyRequests(req.authGroup.id, req.query, req.user.sub);
+				break;
+			default:
+				throw Boom.badRequest('unknown request');
+			}
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getRequest(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const user = req.user.sub;
+			const result = await requests.getRequest(req.authGroup.id, req.params.id, user);
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async deleteRequest(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const user = req.user.sub;
+			const result = await requests.deleteRequest(req.authGroup.id, req.params.id, user);
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
+			next(error);
+		}
+	},
+	async updateRequestStatus(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			if(!req.body.action) throw Boom.preconditionRequired('Must specify an action');
+			if (req.body.action !== 'approved' || req.body.action !== 'denied') throw Boom.badRequest('unknown action');
+			const user = req.user.sub;
+			const result = await requests.updateRequestStatus(req.authGroup.id, req.params.id, req.body.action, user);
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
+			next(error);
+		}
+	},
 	/* Secured Profiles */
 	async writeProfile(req, res, next) {
 		try {
@@ -199,4 +311,23 @@ async function tryNotification(req, result) {
 async function notifyUser(globalSettings, authGroup, organizationName, userId, activeUser, profile, aliasDns, aliasUi) {
 	const sendObject = await orgProfiles.profileUpdateNotification(authGroup, organizationName, userId, activeUser, [], profile, aliasDns, aliasUi);
 	return n.notify(globalSettings, sendObject, authGroup);
+}
+
+async function reqChallengeMessge(ag, sender, data) {
+	let message = `Someone with email address ${sender.email} and account ID ${sender.id} has requested access to your secured profile.`;
+	switch (data.type) {
+	case 'sync':
+		message = `${message} This a sync request: an organization profile will take a snapshot of your account as of today and hold that data indefinitely at their discretion. You are able to see all organization profiles tied to your account in your dashboard and can request they be deleted at any time; however, once synced, this data belongs to the organization and ${ag.name} platform cannot guarantee compliance with requests for deletion.`;
+		break;
+	case 'access':
+		message = `${message} This an access request, which means someone is trying to directly view your secured profile. The request specifies the access expiration as ${data.accessExpirationTime}. You are able to view all users with access to your secured profile in your dashboard and remove access at any time.`;
+		break;
+	case 'copy':
+		message = `${message} This a copy request, which means that your data could end up being copied to a system or product outside the control of ${ag.name} platform or its partners and subsidiaries. Please proceed carefully and ensure you know the requesting party before approving.`;
+		break;
+	default:
+		break;
+	}
+	if(data.requestDetails) message = `${message} Details Provided: ${data.requestDetails}`;
+	return message;
 }

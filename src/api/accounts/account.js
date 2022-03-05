@@ -1,6 +1,7 @@
 import jsonPatch from 'jsonpatch';
 import assert from 'assert';
 import dal from './dal';
+import prof from '../profiles/profiles/profile';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
@@ -19,6 +20,18 @@ export default {
 		if(!data.username) data.username = data.email;
 		const output = await dal.writeAccount(data);
 		ueEvents.emit(data.authGroup, 'ue.account.create', output);
+		if(data.profile) {
+			try {
+				await prof.writeProfile({
+					accountId: output.id,
+					authGroup: output.authGroup,
+					...data.profile
+				});
+			} catch (error) {
+				console.error(error);
+				if(config.ENV !== 'production') throw error;
+			}
+		}
 		return output;
 	},
 

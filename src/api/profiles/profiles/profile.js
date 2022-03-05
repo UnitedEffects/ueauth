@@ -1,26 +1,8 @@
 import dal from '../dal';
-import Boom from '@hapi/boom';
-import account from '../../accounts/account';
 import ueEvents from '../../../events/ueEvents';
 import helper from '../../../helper';
 import jsonPatch from 'jsonpatch';
 import Joi from 'joi';
-
-const config = require('../../../config');
-
-/**
- *
- 'ue.secured.profile.create', (done)
- 'ue.secured.profile.edit', (done)
- 'ue.secured.profile.destroy', (done)
- 'ue.secured.profile.error',
- 'ue.secured.profile.organization.synced',
- 'ue.secured.profile.copy.created',
- 'ue.secured.profile.access.denied',
- 'ue.secured.profile.access.approved',
- 'ue.secured.profile.access.created',
- *
- */
 
 export default {
 	async writeProfile(data) {

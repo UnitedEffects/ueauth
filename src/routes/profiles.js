@@ -3,6 +3,34 @@ import profiles from '../api/profiles/api';
 import m from '../middleware';
 
 const router = express.Router();
+// Secured Profile Requests
+router.post('/:group/profile/request', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions
+], profiles.createRequest);
+router.get('/:group/profile/requests/:sor', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], profiles.getRequests);
+router.get('/:group/profile/request/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], profiles.getRequest);
+router.delete('/:group/profile/request/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], profiles.deleteRequest);
+router.patch('/:group/profile/request/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions
+], profiles.updateRequestStatus);
 // Secured Profiles
 router.post('/:group/profile', [
 	m.validateAuthGroup,
