@@ -127,6 +127,10 @@ export default {
 		data.modifiedAt = Date.now();
 		return OrgProfile.findOneAndUpdate({ authGroup, organization, $or: [{ _id: id }, { accountId: id }] }, data, { new: true, overwrite: true });
 	},
+	async partialPatchOrgProfile(authGroup, organization, accountId, data) {
+		data.modifiedAt = Date.now();
+		return OrgProfile.findOneAndUpdate({ authGroup, organization, accountId }, data, { new: true });
+	},
 	async getAllMyOrgProfiles(authGroup, accountId) {
 		return OrgProfile.aggregate([
 			{

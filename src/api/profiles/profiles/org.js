@@ -39,6 +39,19 @@ export default {
 		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
 		return result;
 	},
+	async syncProfile(authGroup, organization, profile, accountId) {
+		const update = JSON.parse(JSON.stringify(profile));
+		delete update.accountId;
+		delete update.id;
+		delete update.createdAt;
+		delete update.createdBy;
+		delete update.authGroup;
+		delete update.meta;
+		update.modifiedBy = accountId;
+		const result = await dal.partialPatchOrgProfile(authGroup, organization, accountId, update);
+		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
+		return result;
+	},
 	async profileUpdateNotification (authGroup, organizationName, id, activeUser = 'SYSTEM ADMIN', formats = [], profile, aliasDns = undefined, aliasUi = undefined) {
 		const user = await account.getAccount(authGroup.id, id);
 		const data = {
@@ -52,7 +65,7 @@ export default {
 			screenUrl: `https://${aliasUi || config.UI_URL}/${authGroup.prettyName}`,
 			subject: `${organizationName} Profile Update on ${authGroup.name} Platform`,
 			message: `The organization, '${organizationName}', within the ${authGroup.name} Platform, wishes to inform you that some of the personal profile data they have on record about you has been updated. If this is unexpected or concerning, you should reach out to ${organizationName} to review the changes.`,
-			meta: profile
+			//meta: profile
 		};
 		if(formats.length === 0) {
 			data.formats = [];

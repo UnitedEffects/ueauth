@@ -9,13 +9,18 @@ export default {
 			requestId,
 			callerId
         };
-		if(profile) data.snapShot = profile;
+		if(profile) {
+			data.snapShot = profile;
+			data.status = 'approved';
+		}
 		const result = await dal.takeSnap(data);
 		ueEvents.emit(authGroup, 'ue.secured.profile.copy.created', result);
 		return result;
 	},
     async addSnapShot(authGroup, requestId, accountId, profile) {
-	    return dal.updateSnap(authGroup, requestId, accountId, 'approve', profile);
+	    const result = await dal.updateSnap(authGroup, requestId, accountId, 'approve', profile);
+		ueEvents.emit(authGroup, 'ue.secured.profile.copy.updated', result);
+		return result;
     },
     async deny(authGroup, requestId, accountId) {
         return dal.updateSnap(authGroup, requestId, accountId, 'denied');
@@ -24,6 +29,8 @@ export default {
 		return dal.getSnapShot(authGroup, id, caller);
 	},
 	async deleteSnapShot(authGroup, id, caller) {
-		return dal.deleteSnapShot(authGroup, id, caller);
+		const result  = await dal.deleteSnapShot(authGroup, id, caller);
+		ueEvents.emit(authGroup, 'ue.secured.profile.copy.destroyed', result);
+		return result;
 	}
 };

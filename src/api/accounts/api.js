@@ -33,10 +33,14 @@ const api = {
 			const password = req.body.password;
 			//clean up
 			delete req.body.generatePassword;
-			if (req.user && req.user.sub) req.body.modifiedBy = req.user.sub;
+			let user;
+			if (req.user && req.user.sub) {
+				req.body.modifiedBy = req.user.sub;
+				user = req.user;
+			}
 			// force recovery code creation as a second step
 			if (req.body.recoverCodes) delete req.body.recoverCodes;
-			const result = await acct.writeAccount(req.body);
+			const result = await acct.writeAccount(req.body, user);
 			try {
 				if (req.globalSettings.notifications.enabled === true &&
                     req.authGroup.pluginOptions.notification.enabled === true &&

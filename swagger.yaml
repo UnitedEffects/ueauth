@@ -1424,7 +1424,7 @@ paths:
         - openId: []
 
   # Request Account Profile Access
-  /api/{group}/profile/request:
+  /api/{group}/profile/request/{accountId}:
     post:
       tags:
         - Profile Requests
@@ -1435,6 +1435,12 @@ paths:
         - name: group
           in: path
           description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: accountId
+          in: path
+          description: the account Id to whom you are making the request
           schema:
             type: string
           required: true
@@ -9152,6 +9158,10 @@ components:
         requestingEmail:
           type: string
           format: email
+        targetAccountId:
+          type: string
+          format: uuid
+          description: the ID of the Account holder you are request profile data from
         state:
           type: string
           default: new
@@ -9163,6 +9173,9 @@ components:
 
     writeProfileRequest:
       type: object
+      required:
+        - type
+        - requestDetails
       additionalProperties: false
       properties:
         type:
@@ -9172,10 +9185,6 @@ components:
             - copy
             - sync
             - access
-        targetAccountId:
-          type: string
-          format: uuid
-          description: the ID of the Account holder you are request profile data from
         requestDetails:
           type: string
           description: brief explanation of who is making the request and why
@@ -9185,16 +9194,20 @@ components:
           description: if this is a copy request, you can provide a callback url for the data to be sent to on approval
         accessExpirationTime:
           type: string,
-          default: 30d
-          description: if this is an access request, how long would you like the access to last?
+          default: 30
+          description: if this is an access request, how long would you like the access to last in days?
           enum:
-            - 1d
-            - 7d
-            - 30d
-            - 90d
-            - 180d
-            - 360d
+            - 1
+            - 7
+            - 30
+            - 90
+            - 180
+            - 360
             - unlimited
+        orgId:
+          type: string
+          format: uuid
+          description: if this is a sync request, which organization?
 
     viewAccessObject:
       type: object

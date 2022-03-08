@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import acc from '../accounts/account';
 import permissions from '../../permissions';
+import org from '../orgs/orgs';
 import orgProfiles from './profiles/org';
 import profiles from './profiles/profile';
 import requests from './profiles/request';
@@ -9,11 +10,11 @@ import snaps from './profiles/snap';
 import ueEvents from '../../events/ueEvents';
 import {say} from '../../say';
 import n from '../plugins/notifications/notifications';
-import crypto from 'crypto';
 import challenge from '../plugins/challenge/challenge';
 
 const ORG_RESOURCE = 'Organization User Profile';
 const SEC_RESOURCE = 'Secured Profile';
+const config = require('../../config');
 
 export default {
 	/* Snapshot */
@@ -47,7 +48,6 @@ export default {
 	async getAllViews(req, res, next) {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
-			// /profile/access/:gor
 			if(!req.user.sub) throw Boom.forbidden();
 			if(!req.params.gor) throw Boom.badRequest('Must specify sent or received');
 			let result;
@@ -99,30 +99,39 @@ export default {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
 			if(!req.user.sub) throw Boom.forbidden();
 			const requestingAccountId = req.user.sub;
-			if(!req.body.targetAccountId) throw Boom.badRequest('Must target an account for the request');
+			if(!req.params.accountId) throw Boom.badRequest('Must target an account for the request');
+			const data = JSON.parse(JSON.stringify(req.body));
+			data.targetAccountId = req.params.accountId;
 			const target = await acc.getAccount(data.authGroup, data.targetAccountId);
 			if(!target) throw Boom.notFound(`target: ${data.targetAccountId}`);
 			if(target.acceptingProfileRequests === false) throw Boom.locked('User not accepting requests');
 			const sender = await acc.getAccount(data.authGroup, requestingAccountId);
-			const data = JSON.parse(JSON.stringify(req.body));
 			data.requestingEmail = sender.email;
 			data.authGroup = req.authGroup.id;
 			data.requestingAccountId = requestingAccountId;
 			if(data.type === 'access' && !data.accessExpirationTime) {
 				data.accessExpirationTime = 'unlimited';
 			}
+			if(data.type === 'sync' && !data.orgId) {
+				throw Boom.preconditionRequired('You must specify an organization to sync with');
+			}
+			let organization;
+			if(data.orgId) {
+				organization = await org.getOrg(req.authGroup.id, data.orgId);
+				if(!organization) throw Boom.badRequest('Unknown Organization ID requested for sync');
+			}
 			const result = await requests.createRequest(data);
 			try {
 				if(req.globalSettings?.mfaChallenge?.enabled === true) {
 					if(target.mfa?.enabeled === true && target.myNotifications?.profileRequests !== false) {
 						const ag = JSON.parse(JSON.stringify(req.authGroup));
-						const uid = crypto.randomBytes(32).toString('hex');
+						const uid = result.id;
 						const meta = {
 							event: 'ue.secured.profile.access.requested',
 							content: {
 								title: 'Personal Profile Data Request',
 								header: `${ag.name} Profile Requested`,
-								body: await reqChallengeMessge(ag, sender, data)
+								body: await reqChallengeMessge(ag, sender, data, organization?.name)
 							}
 						};
 						await challenge.sendChallenge(ag, req.globalSettings, {
@@ -142,7 +151,6 @@ export default {
 	async getRequests(req, res, next) {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
-			// /profile/requests/:sor
 			if(!req.user.sub) throw Boom.forbidden();
 			if(!req.params.sor) throw Boom.badRequest('Must specify sent or received');
 			let result;
@@ -418,21 +426,25 @@ async function notifyUser(globalSettings, authGroup, organizationName, userId, a
 	return n.notify(globalSettings, sendObject, authGroup);
 }
 
-async function reqChallengeMessge(ag, sender, data) {
-	let message = `Someone with email address ${sender.email} and account ID ${sender.id} has requested access to your secured profile.`;
+async function reqChallengeMessge(ag, sender, data, orgName) {
+	let message = `Someone with email address ${sender.email} and account ID ${sender.id} has requested access to your secured profile. By approving the request, you are taking responsibility for data share or transmission with the requesting party and release ${ag.name} and ${config.ROOT_COMPANY_NAME} from all liability for the decision.`;
 	switch (data.type) {
 	case 'sync':
-		message = `${message} This a sync request: an organization profile will take a snapshot of your account as of today and hold that data indefinitely at their discretion. You are able to see all organization profiles tied to your account in your dashboard and can request they be deleted at any time; however, once synced, this data belongs to the organization and ${ag.name} platform cannot guarantee compliance with requests for deletion.`;
+		message = `${message} This a sync request: ${orgName || 'an organization'} will take a snapshot of your secured profile to populate their records as of today and hold that data at their discretion. Once synced, this data belongs to ${orgName || 'the organization'} and ${ag.name} platform can communicate requests for deletion but cannot guarantee compliance.`;
 		break;
 	case 'access':
-		message = `${message} This an access request, which means someone is trying to directly view your secured profile. The request specifies the access expiration as ${data.accessExpirationTime} days. You are able to view all users with access to your secured profile in your dashboard and remove access at any time.`;
+		message = `${message} This an access request, which means someone is trying to directly view your secured profile. The request specifies the access expiration as ${data.accessExpirationTime} days.`;
 		break;
 	case 'copy':
-		message = `${message} This a copy request, which means that your data could end up being copied to a system or product outside the control of ${ag.name} platform or its partners and subsidiaries. Please proceed carefully and ensure you know the requesting party before approving.`;
+		message = `${message} This a copy request, which means that your data could end up being copied to a system or product outside the control of ${ag.name} platform or its partners and subsidiaries.`;
+		if(data.dataCallback) {
+			message = `${message} The request has been set up to transmit your data to an external server: ${data.dataCallback.split('/')[0]}.`;
+		}
 		break;
 	default:
 		break;
 	}
+	message = `${message}  Please proceed carefully and ensure you know the requesting party before approving.`;
 	if(data.requestDetails) message = `${message} Details Provided: ${data.requestDetails}`;
 	return message;
 }

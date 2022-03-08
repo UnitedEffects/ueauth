@@ -77,10 +77,6 @@ function oidcConfig(g, aliasDns = undefined) {
 		jwks,
 		findAccount: Account.findAccount,
 		async findById(ctx, sub, token) {
-			// @param ctx - koa request context
-			// @param sub {string} - account identifier (subject)
-			// @param token - is a reference to the token used for which a given account is being loaded,
-			//   is undefined in scenarios where claims are returned from authorization endpoint
 			return {
 				accountId: sub,
 				// @param use {string} - can either be "id_token" or "userinfo", depending on
@@ -102,6 +98,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			openid: ['sub', 'group'],
 			email: ['email', 'verified'],
 			username: ['username'],
+			profile: ['profile']
 		},
 		scopes: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes),
 		interactions: {

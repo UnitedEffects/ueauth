@@ -152,6 +152,8 @@ const OP_EVENTS = {
 		'ue.secured.profile.error',
 		'ue.secured.profile.organization.synced',
 		'ue.secured.profile.copy.created',
+		'ue.secured.profile.copy.destroyed',
+		'ue.secured.profile.copy.updated',
 		'ue.secured.profile.access.denied',
 		'ue.secured.profile.access.approved',
 		'ue.secured.profile.access.requested',

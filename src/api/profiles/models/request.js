@@ -32,6 +32,7 @@ const requestProfile = new mongoose.Schema({
 	requestingEmail: String,
 	requestDetails: String,
 	dataCallback: String,
+	orgId: String,
 	targetAccountId: {
 		type: String,
 		required: true
