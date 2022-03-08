@@ -155,6 +155,8 @@ const OP_EVENTS = {
 		'ue.secured.profile.access.denied',
 		'ue.secured.profile.access.approved',
 		'ue.secured.profile.access.requested',
+		'ue.secured.profile.view.created',
+		'ue.secured.profile.view.destroyed'
 	]
 };
 

@@ -1,8 +1,28 @@
 import OrgProfile from './models/orgProfile';
 import Profile from './models/securedProfile';
+import View from './models/viewAccess';
 import Request from './models/request';
 
 export default {
+	/* VIEW ACCESS */
+	async createView(data) {
+		const view = new View(data);
+		return view.save();
+	},
+	async getAllViews(g, query, targetAccountId, viewingAccountId) {
+		query.query.authGroup = g;
+		if(targetAccountId) query.query.targetAccountId = targetAccountId;
+		if(viewingAccountId) query.query.viewingAccountId = viewingAccountId;
+		return View.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
+	async getView(authGroup, _id, user) {
+		const q = { _id, authGroup, $or: [ { targetAccountId: user }, { viewingAccountId: user } ] };
+		return View.findOne(q);
+	},
+	async deleteView(authGroup, _id, user) {
+		const q = { _id, authGroup, $or: [ { targetAccountId: user }, { viewingAccountId: user } ] };
+		return View.findOneAndRemove(q);
+	},
 	/* PROFILE REQUESTS */
 	async createRequest(data) {
 		const request = new Request(data);

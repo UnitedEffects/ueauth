@@ -4,6 +4,7 @@ import permissions from '../../permissions';
 import orgProfiles from './profiles/org';
 import profiles from './profiles/profile';
 import requests from './profiles/request';
+import views from './profiles/view';
 import ueEvents from '../../events/ueEvents';
 import {say} from '../../say';
 import n from '../plugins/notifications/notifications';
@@ -14,6 +15,54 @@ const ORG_RESOURCE = 'Organization User Profile';
 const SEC_RESOURCE = 'Secured Profile';
 
 export default {
+	/* View Access API */
+	async getAllViews(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			// /profile/access/:gor
+			if(!req.user.sub) throw Boom.forbidden();
+			if(!req.params.gor) throw Boom.badRequest('Must specify sent or received');
+			let result;
+			switch(req.params.gor.toLowerCase()) {
+			case 'given':
+				result = await views.getAllViews(req.authGroup.id, req.query, req.user.sub);
+				break;
+			case 'received':
+				result = await views.getAllViews(req.authGroup.id, req.query, undefined, req.user.sub);
+				break;
+			default:
+				throw Boom.badRequest('unknown request');
+			}
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getView(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const user = req.user.sub;
+			const result = await views.getView(req.authGroup.id, req.params.id, user);
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async deleteView(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const user = req.user.sub;
+			const result = await views.deleteView(req.authGroup.id, req.params.id, user);
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
+			next(error);
+		}
+	},
 	/* Request API */
 	async createRequest(req, res, next) {
 		try {

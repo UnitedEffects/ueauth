@@ -33,6 +33,8 @@ tags:
     description: Secured Account Profiles
   - name: Profile Requests
     description: Request access to someone's profile data
+  - name: Profile Access
+    description: View access you have or have granted to secured profiles
   - name: Clients
     description: Reading or Deleting Clients in your Auth Group. User OIDC /reg for Create or Updates
   - name: User Access
@@ -1614,6 +1616,149 @@ paths:
       security:
         - bearer: []
         - openId: []
+
+  # Secured Profile View Access
+
+  /api/{group}/profile/accesses/{gor}:
+    get:
+      tags:
+        - Profile Access
+      summary: Retrieve secured profile access records
+      description: Retrieve secured profile access records of those profiles you have been cleared to access or of people who have access to your profile
+      operationId: getAllAccess
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: gor
+          in: path
+          description: access given or received
+          schema:
+            type: string
+            default: given
+            enum:
+              - given
+              - received
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/viewAccessObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+
+  /api/{group}/profile/access/{id}:
+    get:
+      tags:
+        - Profile Access
+      summary: Get a profile access record
+      description: Get a profile access record. You must be either the target or person being granted access.
+      operationId: getViewAccess
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the view access id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/viewAccessObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    delete:
+      tags:
+        - Profile Access
+      summary: Delete a profile access record
+      description: Delete a profile access record. You must be either the target or person being granted access.
+      operationId: removeOrgProfile
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the access id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/viewAccessObject'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
 
   # Organization User Profiles
   /api/{group}/organization/{org}/profiles:
@@ -8915,3 +9060,36 @@ components:
             - 180d
             - 360d
             - unlimited
+
+    viewAccessObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        authGroup:
+          type: string
+        viewingAccountId:
+          type: string
+          description: the ID of the person able to view the targetAccountId Secured Profile
+          format: uuid
+        viewingEmail:
+          type: string
+          format: email
+          description: the email address of the person able to view the targetAccountId Secured Profile
+        accessDetails:
+          type: string
+          description: an explanation of why this access was requested
+        targetAccountId:
+          type: string
+          format: uuid
+          descrption: the account Id of the secured profile being shared
