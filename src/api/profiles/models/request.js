@@ -44,7 +44,7 @@ const requestProfile = new mongoose.Schema({
 	accessExpirationTime: {
 		type: String,
 		default: 'unlimited',
-		enum: ['1d', '7d', '30d', '90d', '180d', '360d', 'unlimited']
+		enum: ['1', '7', '30', '90', '180', '360', 'unlimited']
 	},
 	state: {
 		type: String,

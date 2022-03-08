@@ -15,6 +15,9 @@ export default {
 	async getView(authGroup, id, user) {
 		return dal.getView(authGroup, id, user);
 	},
+	async checkView(authGroup, target, caller) {
+		return dal.checkView(authGroup, target, caller);
+	},
 	async deleteView(authGroup, id, user) {
 		const result = await dal.deleteView(authGroup, id, user);
 		ueEvents.emit(authGroup, 'ue.secured.profile.view.destroyed', result);

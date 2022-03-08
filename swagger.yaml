@@ -1377,6 +1377,51 @@ paths:
       security:
         - bearer: []
         - openId: []
+  /api/{group}/profiles/{id}:
+    get:
+      tags:
+        - Profiles
+      summary: Retrieve a secured profile by ID
+      description: You can retrieve your profile or one you have view access to
+      operationId: getProfileById
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: account id of the profile owner
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # Request Account Profile Access
   /api/{group}/profile/request:
@@ -1759,6 +1804,96 @@ paths:
         - bearer: []
         - openId: []
 
+  # SNAPSHOTS of Profiles
+  /api/{group}/profile/snapshot/{id}:
+    get:
+      tags:
+        - Profile Access
+      summary: Get an approved snapshot of a profile using the request id
+      description: Get an approved snapshot of a profile using the request id. You must be the requesting party or the profile owner.
+      operationId: getSnapShot
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the request id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+    delete:
+      tags:
+        - Profile Access
+      summary: Remove a snapshot of a profile using the request id.
+      description: Remove a snapshot of a profile using the request id. You must be the requesting party or the owner of the profile.
+      operationId: getSnapShot
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: id
+          in: path
+          description: the request id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Secured Profile'
+                  data:
+                    $ref: '#/components/schemas/securedProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # Organization User Profiles
   /api/{group}/organization/{org}/profiles:

@@ -1,9 +1,38 @@
 import OrgProfile from './models/orgProfile';
 import Profile from './models/securedProfile';
 import View from './models/viewAccess';
+import Snap from './models/snapShots';
 import Request from './models/request';
 
 export default {
+	/* SNAPSHOT */
+	async takeSnap(data) {
+		const snap = new Snap(data);
+		return snap.save();
+	},
+	async getSnapShot(authGroup, requestId, caller) {
+		const q = {
+			authGroup,
+			$or: [{ callerId: caller }, { accountId: caller }],
+			requestId
+		};
+		return Snap.findOne(q);
+	},
+	async deleteSnapShot(authGroup, requestId, caller) {
+		const q = {
+			authGroup,
+			$or: [{ callerId: caller }, { accountId: caller }],
+			requestId
+		};
+		return Snap.findOneAndRemove(q);
+	},
+	async updateSnap(authGroup, requestId, accountId, status, snapShot) {
+		const update = {
+			status
+		};
+		if (snapShot) update.snapShot = snapShot;
+		return Snap.findOneAndUpdate({ authGroup, requestId, accountId }, update, { new: true });
+	},
 	/* VIEW ACCESS */
 	async createView(data) {
 		const view = new View(data);
@@ -18,6 +47,9 @@ export default {
 	async getView(authGroup, _id, user) {
 		const q = { _id, authGroup, $or: [ { targetAccountId: user }, { viewingAccountId: user } ] };
 		return View.findOne(q);
+	},
+	async checkView(authGroup, targetAccountId, viewingAccountId) {
+		return View.findOne({ authGroup, targetAccountId, viewingAccountId });
 	},
 	async deleteView(authGroup, _id, user) {
 		const q = { _id, authGroup, $or: [ { targetAccountId: user }, { viewingAccountId: user } ] };

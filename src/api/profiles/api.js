@@ -5,6 +5,7 @@ import orgProfiles from './profiles/org';
 import profiles from './profiles/profile';
 import requests from './profiles/request';
 import views from './profiles/view';
+import snaps from './profiles/snap';
 import ueEvents from '../../events/ueEvents';
 import {say} from '../../say';
 import n from '../plugins/notifications/notifications';
@@ -15,6 +16,33 @@ const ORG_RESOURCE = 'Organization User Profile';
 const SEC_RESOURCE = 'Secured Profile';
 
 export default {
+	/* Snapshot */
+	async querySnapShot(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const caller = req.user.sub;
+			const result = await snaps.getSnapShot(req.authGroup.id, req.params.id, caller);
+			if(!result) throw Boom.notFound();
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async killSnapShot(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const caller = req.user.sub;
+			const result = await snaps.deleteSnapShot(req.authGroup.id, req.params.id, caller);
+			if(!result) throw Boom.notFound();
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 	/* View Access API */
 	async getAllViews(req, res, next) {
 		try {
@@ -45,6 +73,7 @@ export default {
 			if(!req.user.sub) throw Boom.forbidden();
 			const user = req.user.sub;
 			const result = await views.getView(req.authGroup.id, req.params.id, user);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			next(error);
@@ -57,6 +86,7 @@ export default {
 			if(!req.user.sub) throw Boom.forbidden();
 			const user = req.user.sub;
 			const result = await views.deleteView(req.authGroup.id, req.params.id, user);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
@@ -138,6 +168,7 @@ export default {
 			if(!req.user.sub) throw Boom.forbidden();
 			const user = req.user.sub;
 			const result = await requests.getRequest(req.authGroup.id, req.params.id, user);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			next(error);
@@ -150,6 +181,7 @@ export default {
 			if(!req.user.sub) throw Boom.forbidden();
 			const user = req.user.sub;
 			const result = await requests.deleteRequest(req.authGroup.id, req.params.id, user);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
@@ -165,6 +197,7 @@ export default {
 			if (req.body.action !== 'approved' || req.body.action !== 'denied') throw Boom.badRequest('unknown action');
 			const user = req.user.sub;
 			const result = await requests.updateRequestStatus(req.authGroup.id, req.params.id, req.body.action, user);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
@@ -206,6 +239,24 @@ export default {
 			if(!req.user.sub) throw Boom.forbidden();
 			const id = req.user.sub;
 			const result = await profiles.getProfile(req.authGroup.id, id);
+			if(!result) throw Boom.notFound();
+			return res.respond(say.ok(result, SEC_RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getProfileById(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
+			if(!req.params.id) throw Boom.preconditionRequired('Must specify an id');
+			if(!req.user.sub) throw Boom.forbidden();
+			const id = req.params.id;
+			if(id !== req.user.sub) {
+				const check = await views.checkView(req.authGroup.id, id, req.user.sub);
+				if(!check) throw Boom.forbidden();
+			}
+			const result = await profiles.getProfile(req.authGroup.id, id);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			next(error);
@@ -217,6 +268,7 @@ export default {
 			if(!req.user.sub) throw Boom.forbidden();
 			const id = req.user.sub;
 			const result = await profiles.deleteProfile(req.authGroup.id, id);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
@@ -230,6 +282,7 @@ export default {
 			const id = req.user.sub;
 			const profile = await profiles.getProfile(req.authGroup.id, id);
 			const result = await profiles.patchProfile(req.authGroup.id, profile, id, req.body, req.user.sub || 'SYSTEM ADMIN');
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
@@ -276,6 +329,7 @@ export default {
 				await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			}
 			const result = await orgProfiles.getOrgProfile(req.authGroup.id, req.organization.id, req.params.id);
+			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, ORG_RESOURCE));
 		} catch (error) {
 			next(error);
@@ -288,6 +342,7 @@ export default {
 			if(!req.params.id) throw Boom.badRequest('No ID provided');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const result = await orgProfiles.deleteOrgProfile(req.authGroup.id, req.organization.id, req.params.id);
+			if(!result) throw Boom.notFound();
 			await tryNotification(req, result);
 			return res.respond(say.ok(result, ORG_RESOURCE));
 		} catch (error) {
@@ -304,6 +359,7 @@ export default {
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const profile = await orgProfiles.getOrgProfile(req.authGroup.id, req.organization.id, req.params.id);
 			const result = await orgProfiles.patchOrgProfile(req.authGroup.id, req.organization.id, profile, req.params.id, req.body, req.user.sub || 'SYSTEM ADMIN');
+			if(!result) throw Boom.notFound();
 			await tryNotification(req, result);
 			return res.respond(say.ok(result, ORG_RESOURCE));
 		} catch (error) {
@@ -369,7 +425,7 @@ async function reqChallengeMessge(ag, sender, data) {
 		message = `${message} This a sync request: an organization profile will take a snapshot of your account as of today and hold that data indefinitely at their discretion. You are able to see all organization profiles tied to your account in your dashboard and can request they be deleted at any time; however, once synced, this data belongs to the organization and ${ag.name} platform cannot guarantee compliance with requests for deletion.`;
 		break;
 	case 'access':
-		message = `${message} This an access request, which means someone is trying to directly view your secured profile. The request specifies the access expiration as ${data.accessExpirationTime}. You are able to view all users with access to your secured profile in your dashboard and remove access at any time.`;
+		message = `${message} This an access request, which means someone is trying to directly view your secured profile. The request specifies the access expiration as ${data.accessExpirationTime} days. You are able to view all users with access to your secured profile in your dashboard and remove access at any time.`;
 		break;
 	case 'copy':
 		message = `${message} This a copy request, which means that your data could end up being copied to a system or product outside the control of ${ag.name} platform or its partners and subsidiaries. Please proceed carefully and ensure you know the requesting party before approving.`;

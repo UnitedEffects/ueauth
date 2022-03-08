@@ -1,20 +1,7 @@
 import dal from '../dal';
+import view from './view';
 import ueEvents from '../../../events/ueEvents';
 import helper from '../../../helper';
-
-/**
- *
- 'ue.secured.profile.create', (done)
- 'ue.secured.profile.edit', (done)
- 'ue.secured.profile.destroy', (done)
- 'ue.secured.profile.error',
- 'ue.secured.profile.organization.synced',
- 'ue.secured.profile.copy.created',
- 'ue.secured.profile.access.denied', (done)
- 'ue.secured.profile.access.approved', (done)
- 'ue.secured.profile.access.requested', (done)
- *
- */
 
 export default {
 	async createRequest(data) {
@@ -33,12 +20,22 @@ export default {
 	async deleteRequest(authGroup, id, user) {
 		return dal.deleteRequest(authGroup, id, user);
 	},
-	// triggers?
 	async updateRequestStatus(authGroup, id, state, target) {
 		const result = await dal.updateRequestStatus(authGroup, id, state, target);
 		switch (state) {
 		case 'approved':
 			ueEvents.emit(authGroup, 'ue.secured.profile.access.approved', result);
+			switch (result.type) {
+			case 'sync':
+				break;
+			case 'access':
+				await setAccess(result);
+				break;
+			case 'copy':
+				break;
+			default:
+				break;
+			}
 			break;
 		case 'denied':
 			ueEvents.emit(authGroup, 'ue.secured.profile.access.denied', result);
@@ -49,3 +46,20 @@ export default {
 		return result;
 	}
 };
+
+async function setAccess(result) {
+	console.info(result);
+	const accessObject = {
+		authGroup: result.authGroup,
+		viewingAccountId: result.requestingAccountId,
+		viewingEmail: result.requestingEmail,
+		accessDetails: result.requestDetails,
+		targetAccountId: result.targetAccountId
+	};
+	if(result.accessExpirationTime !== 'unlimited') {
+		const exDate = new Date();
+		const days = parseInt(result.accessExpirationTime);
+		accessObject.expiresAt = exDate.setDate(exDate.getDate() + days);
+	}
+	return view.createView(accessObject);
+}

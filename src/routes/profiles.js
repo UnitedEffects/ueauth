@@ -4,6 +4,16 @@ import m from '../middleware';
 
 const router = express.Router();
 // Secured Profile Access
+router.get('/:group/profile/snapshot/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], profiles.querySnapShot);
+router.delete('/:group/profile/snapshot/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], profiles.killSnapShot);
 router.get('/:group/profile/accesses/:gor', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
@@ -59,6 +69,11 @@ router.get('/:group/profile', [
 	m.isAuthenticated,
 	m.permissions
 ], profiles.getProfile);
+router.get('/:group/profiles/:id', [
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], profiles.getProfileById);
 router.delete('/:group/profile', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

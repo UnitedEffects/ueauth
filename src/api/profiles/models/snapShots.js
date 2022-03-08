@@ -17,9 +17,23 @@ const snapShotSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	requestId: {
+		type: String,
+		required: true,
+		unique: true
+	},
+	callerId: {
+		type: String,
+		required: true
+	},
 	accountId: {
 		type: String,
 		required: true
+	},
+	status: {
+		type: String,
+		default: 'pending',
+		enum: ['pending', 'approved', 'denied']
 	},
 	snapShot: Object,
 	_id: {
