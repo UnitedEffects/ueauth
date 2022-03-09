@@ -448,14 +448,17 @@ function oidcConfig(g, aliasDns = undefined) {
 								}
 								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
 									if(ctx.oidc.body.x_organization_context) {
+										/*
+										// access already validates that the orgs exist...
 										const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
 										if(!org || !org.id) {
 											throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
 										}
-										if(!access.orgs.split(' ').includes(org.id)) {
-											throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${org.id}`);
+										 */
+										if(!access.orgs.split(' ').includes(ctx.oidc.body.x_organization_context)) {
+											throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${ctx.oidc.body.x_organization_context}`);
 										}
-										claims['x-organization-context'] = org.id;
+										claims['x-organization-context'] = ctx.oidc.body.x_organization_context;
 									}
 									claims['x-access-organizations'] = access.orgs;
 								}

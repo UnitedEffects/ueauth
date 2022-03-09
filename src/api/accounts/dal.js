@@ -36,7 +36,8 @@ export default {
 	async getAccountByAccess(authGroup, id, org) {
 		const selectOptions = {
 			authGroup: 1,
-			access: 1
+			access: 1,
+			email: 1
 		};
 		if(org) {
 			selectOptions.access = { $elemMatch: { 'organization.id': org } };
