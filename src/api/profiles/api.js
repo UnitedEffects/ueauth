@@ -99,21 +99,24 @@ export default {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must specify an AuthGroup');
 			if(!req.user.sub) throw Boom.forbidden();
 			const requestingAccountId = req.user.sub;
-			if(!req.params.accountId) throw Boom.badRequest('Must target an account for the request');
+			if(!req.params['account_id']) throw Boom.badRequest('Must target an account for the request');
 			const data = JSON.parse(JSON.stringify(req.body));
-			data.targetAccountId = req.params.accountId;
-			const target = await acc.getAccount(data.authGroup, data.targetAccountId);
+			data.authGroup = req.authGroup.id;
+			data.targetAccountId = req.params['account_id'];
+			data.requestingAccountId = requestingAccountId;
+			const target = await acc.getAccount(req.authGroup.id, data.targetAccountId);
 			if(!target) throw Boom.notFound(`target: ${data.targetAccountId}`);
 			if(target.acceptingProfileRequests === false) throw Boom.locked('User not accepting requests');
-			const sender = await acc.getAccount(data.authGroup, requestingAccountId);
+			const sender = await acc.getAccount(req.authGroup.id, requestingAccountId);
 			data.requestingEmail = sender.email;
-			data.authGroup = req.authGroup.id;
-			data.requestingAccountId = requestingAccountId;
 			if(data.type === 'access' && !data.accessExpirationTime) {
 				data.accessExpirationTime = 'unlimited';
 			}
 			if(data.type === 'sync' && !data.orgId) {
 				throw Boom.preconditionRequired('You must specify an organization to sync with');
+			}
+			if(data.type === 'copy' && data.dataCallback) {
+				if(!data.dataCallback.includes('https')) throw Boom.badRequest('Callbacks must be https');
 			}
 			let organization;
 			if(data.orgId) {
@@ -123,7 +126,7 @@ export default {
 			const result = await requests.createRequest(data);
 			try {
 				if(req.globalSettings?.mfaChallenge?.enabled === true) {
-					if(target.mfa?.enabeled === true && target.myNotifications?.profileRequests !== false) {
+					if(target.mfa?.enabled === true && target.myNotifications?.profileRequests !== false) {
 						const ag = JSON.parse(JSON.stringify(req.authGroup));
 						const uid = result.id;
 						const meta = {
@@ -134,6 +137,8 @@ export default {
 								body: await reqChallengeMessge(ag, sender, data, organization?.name)
 							}
 						};
+						console.info('UID SHOULD BE REQUEST ID');
+						console.info(uid);
 						await challenge.sendChallenge(ag, req.globalSettings, {
 							accountId: data.targetAccountId, mfaEnabled: true }, uid, meta);
 					}
@@ -202,7 +207,7 @@ export default {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide request id');
 			if(!req.user.sub) throw Boom.forbidden();
 			if(!req.body.action) throw Boom.preconditionRequired('Must specify an action');
-			if (req.body.action !== 'approved' || req.body.action !== 'denied') throw Boom.badRequest('unknown action');
+			if (req.body.action !== 'approved' && req.body.action !== 'denied') throw Boom.badRequest('unknown action');
 			const user = req.user.sub;
 			const result = await requests.updateRequestStatus(req.authGroup.id, req.params.id, req.body.action, user);
 			if(!result) throw Boom.notFound();
@@ -264,7 +269,7 @@ export default {
 				if(!check) throw Boom.forbidden();
 			}
 			const result = await profiles.getProfile(req.authGroup.id, id);
-			if(!result) throw Boom.notFound();
+			if(!result) throw Boom.notFound(id);
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
 			next(error);
@@ -438,7 +443,7 @@ async function reqChallengeMessge(ag, sender, data, orgName) {
 	case 'copy':
 		message = `${message} This a copy request, which means that your data could end up being copied to a system or product outside the control of ${ag.name} platform or its partners and subsidiaries.`;
 		if(data.dataCallback) {
-			message = `${message} The request has been set up to transmit your data to an external server: ${data.dataCallback.split('/')[0]}.`;
+			message = `${message} The request has been set up to transmit your data to an external server: ${data.dataCallback.replace('https://', '').split('/')[0]}.`;
 		}
 		break;
 	default:

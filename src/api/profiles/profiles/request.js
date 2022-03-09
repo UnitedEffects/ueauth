@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Boom from '@hapi/boom';
 import dal from '../dal';
 import sp from './profile';
 import op from './org';
@@ -31,10 +32,11 @@ export default {
 	},
 	async updateRequestStatus(authGroup, id, state, target) {
 		const result = await dal.updateRequestStatus(authGroup, id, state, target);
+		if(!result) throw Boom.notFound(`Request not found: ${id}`);
 		switch (state) {
 		case 'approved':
 			ueEvents.emit(authGroup, 'ue.secured.profile.access.approved', result);
-			switch (result.type) {
+			switch (result?.type) {
 			case 'sync':
 				await setSync(authGroup, target, result);
 				break;
@@ -74,6 +76,7 @@ async function setAccess(result) {
 		const days = parseInt(result.accessExpirationTime);
 		accessObject.expiresAt = exDate.setDate(exDate.getDate() + days);
 	}
+	console.info(accessObject);
 	return view.createView(accessObject);
 }
 

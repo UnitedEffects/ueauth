@@ -1344,7 +1344,7 @@ paths:
         - Profiles
       summary: Delete your secured profile
       description: This will delete only your secured profile tied to your account id
-      operationId: removeOrgProfile
+      operationId: removeProfile
       parameters:
         - name: group
           in: path
@@ -1424,7 +1424,7 @@ paths:
         - openId: []
 
   # Request Account Profile Access
-  /api/{group}/profile/request/{accountId}:
+  /api/{group}/profile/request/{account_id}:
     post:
       tags:
         - Profile Requests
@@ -1438,7 +1438,7 @@ paths:
           schema:
             type: string
           required: true
-        - name: accountId
+        - name: account_id
           in: path
           description: the account Id to whom you are making the request
           schema:
@@ -1628,7 +1628,7 @@ paths:
         - Profile Requests
       summary: Delete a profile request
       description: Delete a profile request. You must be either the recipient or sender.
-      operationId: removeOrgProfile
+      operationId: removeRequest
       parameters:
         - name: group
           in: path
@@ -1770,7 +1770,7 @@ paths:
         - Profile Access
       summary: Delete a profile access record
       description: Delete a profile access record. You must be either the target or person being granted access.
-      operationId: removeOrgProfile
+      operationId: removeAccess
       parameters:
         - name: group
           in: path
@@ -1861,7 +1861,7 @@ paths:
         - Profile Access
       summary: Remove a snapshot of a profile using the request id.
       description: Remove a snapshot of a profile using the request id. You must be the requesting party or the owner of the profile.
-      operationId: getSnapShot
+      operationId: deleteSnapShot
       parameters:
         - name: group
           in: path
@@ -7395,7 +7395,7 @@ components:
     accountPlusCodes:
       type: object
       allOf:
-        $ref: '#/components/schemas/accountObject'
+        - $ref: '#/components/schemas/accountObject'
       properties:
         codes:
           type: array
@@ -9193,17 +9193,17 @@ components:
           format: uri
           description: if this is a copy request, you can provide a callback url for the data to be sent to on approval
         accessExpirationTime:
-          type: string,
-          default: 30
+          type: string
+          default: '30'
           description: if this is an access request, how long would you like the access to last in days?
           enum:
-            - 1
-            - 7
-            - 30
-            - 90
-            - 180
-            - 360
-            - unlimited
+            - '1'
+            - '7'
+            - '30'
+            - '90'
+            - '180'
+            - '360'
+            - 'unlimited'
         orgId:
           type: string
           format: uuid
@@ -9240,4 +9240,4 @@ components:
         targetAccountId:
           type: string
           format: uuid
-          descrption: the account Id of the secured profile being shared
+          description: the account Id of the secured profile being shared

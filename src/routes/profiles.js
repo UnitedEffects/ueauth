@@ -30,8 +30,16 @@ router.delete('/:group/profile/access/:id', [
 	m.permissions
 ], profiles.deleteView);
 // Secured Profile Requests
-router.post('/:group/profile/request', [
+
+function testing(req, res, next) {
+	console.info('hit the endpoint');
+	return next();
+}
+
+router.post('/:group/profile/request/:account_id', [
+	testing,
 	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
 	m.isAuthenticated,
 	m.schemaCheck,
 	m.permissions

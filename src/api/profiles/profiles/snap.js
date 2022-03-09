@@ -14,11 +14,13 @@ export default {
 			data.status = 'approved';
 		}
 		const result = await dal.takeSnap(data);
+		// todo limit exposure of result
 		ueEvents.emit(authGroup, 'ue.secured.profile.copy.created', result);
 		return result;
 	},
     async addSnapShot(authGroup, requestId, accountId, profile) {
 	    const result = await dal.updateSnap(authGroup, requestId, accountId, 'approve', profile);
+		// todo limit exposure of result
 		ueEvents.emit(authGroup, 'ue.secured.profile.copy.updated', result);
 		return result;
     },
@@ -30,6 +32,7 @@ export default {
 	},
 	async deleteSnapShot(authGroup, id, caller) {
 		const result  = await dal.deleteSnapShot(authGroup, id, caller);
+		// todo limit exposure of result
 		ueEvents.emit(authGroup, 'ue.secured.profile.copy.destroyed', result);
 		return result;
 	}

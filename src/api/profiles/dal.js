@@ -75,13 +75,13 @@ export default {
 		return Request.findOneAndRemove(q);
 	},
 	async updateRequestStatus(authGroup, _id, state, targetAccountId) {
-		const q = { _id, authGroup, targetAccountId};
+		const q = { _id, authGroup, targetAccountId };
 		const data = {
 			modifiedAt: Date.now(),
 			modifiedBy: targetAccountId,
 			state
 		};
-		return Profile.findOneAndUpdate(q, data, { new: true });
+		return Request.findOneAndUpdate(q, data, { new: true });
 	},
 	/* SECURED PROFILES */
 	async writeProfile(data) {
