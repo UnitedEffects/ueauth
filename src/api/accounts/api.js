@@ -21,13 +21,25 @@ const config = require('../../config');
 const RESOURCE = 'Account';
 
 const api = {
+	async importAccounts(req, res, next) {
+		try {
+			if (req.authGroup.active === false) throw Boom.forbidden('You can not add members to an inactive group');
+			if (!Array.isArray(req.body)) throw Boom.badRequest('You are expected to send an array of accounts');
+			if(req.body.length > 1000) throw Boom.badRequest('At this time, we can only import 1000 accounts a time');
+			const result = await acct.importAccounts(req.authGroup, req.globalSettings, req.body, req.user.sub || 'SYSTEM_ADMIN', req.customDomain);
+			return res.respond(say.created(result, RESOURCE));
+		} catch(error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.import.error', error);
+			next(error);
+		}
+	},
 	async writeAccount(req, res, next) {
 		try {
 			if (req.groupActivationEvent === true) return api.activateGroupWithAccount(req, res, next);
 			if (req.authGroup.active === false) throw Boom.forbidden('You can not add members to an inactive group');
 			if (!req.body.email) throw Boom.preconditionRequired('username is required');
 			if (req.body.generatePassword === true) {
-				req.body.password = cryptoRandomString({length: 32, type: 'url-safe'});
+				req.body.password = cryptoRandomString({length: 16, type: 'url-safe'});
 			}
 			if (!req.body.password) throw Boom.preconditionRequired('password is required');
 			const password = req.body.password;

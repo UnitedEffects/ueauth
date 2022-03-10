@@ -6,6 +6,9 @@ export default {
 		const account =  new Account(data);
 		return account.save();
 	},
+	async writeMany(accounts) {
+		return Account.insertMany(accounts, { ordered: false });
+	},
 	async getAccounts(g, query) {
 		query.query.authGroup = g;
 		return Account.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);

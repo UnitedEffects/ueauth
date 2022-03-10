@@ -16,6 +16,48 @@ const cryptoRandomString = require('crypto-random-string');
 const config = require('../../config');
 
 export default {
+	async importAccounts(authGroup, global, array, creator, customDomain) {
+		let failed = [];
+		let success = [];
+		let ok = 0;
+		const attempted = array.length;
+		const accounts = [];
+		array.map((acc) => {
+			const data = {
+				email: acc.email,
+				authGroup: authGroup.id,
+				username: acc.username || acc.email,
+				password: cryptoRandomString({length: 16, type: 'url-safe'}),
+				phone: acc.phone,
+				modifiedBy: creator
+			};
+			if(acc.id) data._id = acc.id;
+			accounts.push(data);
+		});
+		try {
+			const result = await dal.writeMany(accounts);
+			ok = result?.length || 0;
+			success = JSON.parse(JSON.stringify(result));
+		} catch (error) {
+			ok = error?.insertedDocs?.length || 0;
+			failed = error?.writeErrors;
+			success = error?.insertedDocs;
+		}
+		// todo - build bulk notification system to make this possible
+		/*
+		if (global.notifications.enabled === true &&
+			authGroup.pluginOptions.notification.enabled === true &&
+			authGroup.config.autoVerify === true) {
+			try {
+				await this.bulkResetOrVerify(authGroup, global, success, creator, false, customDomain);
+			} catch (er) {
+				console.error(er);
+				failed.push({ warning: er.message, message: 'some accounts may not have received a notification' });
+			}
+		}
+		 */
+		return { warning: 'Auto verify does not work with bulk imports. You will need to send password reset notifications or direct your users to the self-service password reset page.', attempted, ok, failed, success };
+	},
 	async writeAccount(data, creator = undefined) {
 		data.email = data.email.toLowerCase();
 		if(!data.username) data.username = data.email;
@@ -131,6 +173,24 @@ export default {
 		const aliasDns = authGroup.aliasDnsOIDC || undefined;
 		return this.resetOrVerify(authGroup, settings, user, ['email'], undefined, true, aliasDns);
 	},
+
+	// @notTested
+	// todo - incomplete implementation for bulk user import
+	async bulkResetOrVerify(authGroup, globalSettings, users, activeUser = undefined, aliasDns = undefined) {
+		const iAccessTokens = await iat.generateManyIAT(900, ['auth_group'], authGroup, users);
+		await Promise.all(users.map(async(user) => {
+			const findToken = iAccessTokens.filter((t) => {
+				return (t.payload.sub === user._id);
+			});
+			if(findToken.length !== 0) {
+				const data = this.verifyAccountOptions(authGroup, user, findToken[0].payload.jti, [], activeUser, aliasDns);
+				// todo - you'll still need to create a bulk notification system and only hit DB once for auth + notify objects
+				// todo n.notify will not work well for this...
+				return n.notify(globalSettings, data, authGroup);
+			}
+			return user;
+		}));
+	},
 	// @notTested
 	async resetOrVerify(authGroup, globalSettings, user, formats = [], activeUser = undefined, reset=true, aliasDns = undefined) {
 		let iAccessToken;
@@ -144,7 +204,7 @@ export default {
 			let data;
 			if(reset === true){
 				data = this.resetPasswordOptions(authGroup, user, iAccessToken, formats, activeUser, aliasDns);
-			} else data = this.verifyAccountOptions(authGroup, user, iAccessToken, formats = [], activeUser, aliasDns);
+			} else data = this.verifyAccountOptions(authGroup, user, iAccessToken, formats, activeUser, aliasDns);
 
 			return n.notify(globalSettings, data, authGroup);
 		} catch (error) {

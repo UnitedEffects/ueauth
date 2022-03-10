@@ -4,6 +4,7 @@ import m from '../middleware';
 
 const router = express.Router();
 const pJson = require('../../package.json');
+const config = require('../config');
 
 router.get('/', m.validateHostDomain, (req, res) => {
 	const date = new Date();
@@ -12,19 +13,23 @@ router.get('/', m.validateHostDomain, (req, res) => {
 			version: pJson.version,
 			by: `${req.authGroup.name} Platform`,
 			url: req.authGroup.primaryDomain,
+			company: req.authGroup.name,
 			year: date.getFullYear(),
 			home: pJson.homepage,
-			custom: true
+			custom: true,
+			production: (config.ENV === 'production')
 		});
 	}
 	return res.render('index', {
 		title: pJson.name, version: pJson.version,
 		description: pJson.description,
 		by: pJson.author,
-		url: pJson.person.url,
+		url: config.INIT_ROOT_PRIMARY_DOMAIN,
+		company: config.ROOT_COMPANY_NAME,
 		year: date.getFullYear(),
 		home: pJson.homepage,
-		custom: false
+		custom: false,
+		production: (config.ENV === 'production')
 	});
 });
 
