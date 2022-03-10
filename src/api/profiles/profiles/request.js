@@ -68,6 +68,7 @@ async function setAccess(result) {
 		authGroup: result.authGroup,
 		viewingAccountId: result.requestingAccountId,
 		viewingEmail: result.requestingEmail,
+		client: result.client,
 		accessDetails: result.requestDetails,
 		targetAccountId: result.targetAccountId
 	};
@@ -76,7 +77,6 @@ async function setAccess(result) {
 		const days = parseInt(result.accessExpirationTime);
 		accessObject.expiresAt = exDate.setDate(exDate.getDate() + days);
 	}
-	console.info(accessObject);
 	return view.createView(accessObject);
 }
 
@@ -100,7 +100,7 @@ async function setCopy(authGroup, target, result) {
 		const data = JSON.parse(JSON.stringify(profile));
 		data.terms = {
 			confidential: 'This data is private and confidential',
-			message: `This data is intended solely for use by email or id ${result.requestingEmail || result.requestingAccountId} with intent specified as: ${result.requestDetails}. Any use of this data beyond this stated intent, or sharing of this data beyond the system this request is targeting, is a breach of access and security. Security breaches are the liability and responsibility of the receiver of this request. If you have received this data by mistake, you are required to delete the information from your servers.`,
+			message: `This data is intended solely for use by ${result.requestingEmail || result.requestingAccountId} with intent specified as: ${result.requestDetails}. Any use of this data beyond this stated intent, or sharing of this data beyond the system this request is targeting, is a breach of access and security. Security breaches are the liability and responsibility of the receiver of this request. If you have received this data by mistake, you are required to delete the information from your servers.`,
 			liability: `By approving and transmitting this data, the account holder has waived all liability and responsibility of ${authGroup.name} and ${config.ROOT_COMPANY_NAME} as it relates to this data and its transmission.`
 		};
 		const options = {

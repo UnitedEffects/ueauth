@@ -1,8 +1,6 @@
 import express from 'express';
 import openapi from '../api/openapi/api';
 import m from '../middleware';
-// TODO DELETE
-import bodyParser from "body-parser";
 
 const router = express.Router();
 const pJson = require('../../package.json');
@@ -28,14 +26,6 @@ router.get('/', m.validateHostDomain, (req, res) => {
 		home: pJson.homepage,
 		custom: false
 	});
-});
-
-//TODO delete this
-const jsonParser = bodyParser.json();
-router.post('/testcallback', jsonParser, (req, res, next) => {
-	console.info('GOT CALLBACK REQUEST');
-	console.info(req.body);
-	return res.json({});
 });
 
 router.get('/:group/api', m.validateAuthGroup, openapi.reDocApi);

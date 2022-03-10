@@ -11,8 +11,13 @@ const config = require('../../../config');
 export default {
 	async writeOrgProfile(data) {
 		const result = await dal.writeOrgProfile(data);
-		// todo limit exposure of result
-		ueEvents.emit(data.authGroup, 'ue.organization.profile.create', result);
+		ueEvents.emit(data.authGroup, 'ue.organization.profile.create', {
+			id: result.id,
+			authGroup: result.authGroup,
+			organization: result.organization,
+			accountId: result.accountId,
+			externalId: result.externalId
+		});
 		return result;
 	},
 	async getOrgProfiles(authGroup, organization, q) {
@@ -24,14 +29,22 @@ export default {
 	},
 	async deleteOrgProfile(authGroup, organization, id) {
 		const result = await dal.deleteOrgProfile(authGroup, organization, id);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.organization.profile.destroy', result);
+		ueEvents.emit(authGroup, 'ue.organization.profile.destroy', {
+			id: result.id,
+			authGroup: result.authGroup,
+			organization: result.organization,
+			accountId: result.accountId,
+			externalId: result.externalId
+		});
 		return result;
 	},
 	async deleteAllOrgProfiles(authGroup, organization) {
 		const result = await dal.deleteAllOrgProfiles(authGroup, organization);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.organization.profile.destroy', result);
+		ueEvents.emit(authGroup, 'ue.organization.profile.destroy', {
+			count: result.length,
+			authGroup,
+			organization
+		});
 		return result;
 	},
 	async patchOrgProfile(authGroup, organization, profile, id, update, modifiedBy) {
@@ -39,8 +52,13 @@ export default {
 		patched.modifiedBy = modifiedBy;
 		await standardPatchValidation(profile, patched);
 		const result = await dal.patchOrgProfile(authGroup, organization, id, patched);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
+		ueEvents.emit(authGroup, 'ue.organization.profile.edit', {
+			id: result.id,
+			authGroup: result.authGroup,
+			organization: result.organization,
+			accountId: result.accountId,
+			externalId: result.externalId
+		});
 		return result;
 	},
 	async syncProfile(authGroup, organization, profile, accountId) {
@@ -53,8 +71,13 @@ export default {
 		delete update.meta;
 		update.modifiedBy = accountId;
 		const result = await dal.partialPatchOrgProfile(authGroup, organization, accountId, update);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
+		ueEvents.emit(authGroup, 'ue.organization.profile.edit', {
+			id: result.id,
+			authGroup: result.authGroup,
+			organization: result.organization,
+			accountId: result.accountId,
+			externalId: result.externalId
+		});
 		return result;
 	},
 	async profileUpdateNotification (authGroup, organizationName, id, activeUser = 'SYSTEM ADMIN', formats = [], profile, aliasDns = undefined, aliasUi = undefined) {
@@ -88,8 +111,13 @@ export default {
 		const result = await dal.myProfileRequest(authGroup, organization, accountId, request);
 		if(!result) throw Boom.notFound();
 		if(result.verified !== true) throw Boom.badRequest(result);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.organization.profile.edit', result);
+		ueEvents.emit(authGroup, 'ue.organization.profile.edit', {
+			id: result.id,
+			authGroup: result.authGroup,
+			organization: result.organization,
+			accountId: result.accountId,
+			externalId: result.externalId
+		});
 		return result;
 	},
 };

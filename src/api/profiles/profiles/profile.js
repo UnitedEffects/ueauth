@@ -7,8 +7,11 @@ import Joi from 'joi';
 export default {
 	async writeProfile(data) {
 		const result = await dal.writeProfile(data);
-		// todo limit exposure of result
-		ueEvents.emit(data.authGroup, 'ue.secured.profile.create', result);
+		ueEvents.emit(data.authGroup, 'ue.secured.profile.create', {
+			id: result.id,
+			authGroup: result.authGroup,
+			accountId: result.accountId
+		});
 		return result;
 	},
 	async getProfiles(authGroup, q) {
@@ -20,8 +23,11 @@ export default {
 	},
 	async deleteProfile(authGroup, id) {
 		const result = await dal.deleteProfile(authGroup, id);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.secured.profile.destroy', result);
+		ueEvents.emit(authGroup, 'ue.secured.profile.destroy', {
+			id: result.id,
+			authGroup: result.authGroup,
+			accountId: result.accountId
+		});
 		return result;
 	},
 	async patchProfile(authGroup, profile, id, update, modifiedBy) {
@@ -29,8 +35,11 @@ export default {
 		patched.modifiedBy = modifiedBy;
 		await standardPatchValidation(profile, patched);
 		const result = await dal.patchProfile(authGroup, id, patched);
-		// todo limit exposure of result
-		ueEvents.emit(authGroup, 'ue.secured.profile.edit', result);
+		ueEvents.emit(authGroup, 'ue.secured.profile.edit', {
+			id: result.id,
+			authGroup: result.authGroup,
+			accountId: result.accountId
+		});
 		return result;
 	}
 };

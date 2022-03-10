@@ -31,6 +31,11 @@ const requestProfile = new mongoose.Schema({
 	},
 	requestingEmail: String,
 	requestDetails: String,
+	// is this a person or a machine?
+	client: {
+		type: Boolean,
+		default: false
+	},
 	dataCallback: String,
 	orgId: String,
 	targetAccountId: {

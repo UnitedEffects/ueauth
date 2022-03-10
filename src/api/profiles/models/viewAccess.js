@@ -25,6 +25,10 @@ const viewProfileAccess = new mongoose.Schema({
 		required: true
 	},
 	viewingEmail: String,
+	client: {
+		type: Boolean,
+		default: false
+	},
 	accessDetails: String,
 	targetAccountId: {
 		type: String,

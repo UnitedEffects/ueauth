@@ -41,6 +41,7 @@ export default {
 			if(!result) throw Boom.notFound();
 			return res.respond(say.ok(result, SEC_RESOURCE));
 		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.secured.profile.error', error);
 			next(error);
 		}
 	},
@@ -101,14 +102,26 @@ export default {
 			const requestingAccountId = req.user.sub;
 			if(!req.params['account_id']) throw Boom.badRequest('Must target an account for the request');
 			const data = JSON.parse(JSON.stringify(req.body));
+			data.client = false;
 			data.authGroup = req.authGroup.id;
 			data.targetAccountId = req.params['account_id'];
 			data.requestingAccountId = requestingAccountId;
 			const target = await acc.getAccount(req.authGroup.id, data.targetAccountId);
 			if(!target) throw Boom.notFound(`target: ${data.targetAccountId}`);
 			if(target.acceptingProfileRequests === false) throw Boom.locked('User not accepting requests');
-			const sender = await acc.getAccount(req.authGroup.id, requestingAccountId);
-			data.requestingEmail = sender.email;
+			let sender;
+			if(req.user.client_credential) {
+				data.client = true;
+				data.requestingEmail = req.user.client_name;
+				sender = {
+					id: req.user.sub,
+					client: true,
+					name: req.user.client_name
+				};
+			} else {
+				sender = await acc.getAccount(req.authGroup.id, requestingAccountId);
+				data.requestingEmail = sender.email;
+			}
 			if(data.type === 'access' && !data.accessExpirationTime) {
 				data.accessExpirationTime = 'unlimited';
 			}
@@ -137,8 +150,6 @@ export default {
 								body: await reqChallengeMessge(ag, sender, data, organization?.name)
 							}
 						};
-						console.info('UID SHOULD BE REQUEST ID');
-						console.info(uid);
 						await challenge.sendChallenge(ag, req.globalSettings, {
 							accountId: data.targetAccountId, mfaEnabled: true }, uid, meta);
 					}
@@ -432,7 +443,16 @@ async function notifyUser(globalSettings, authGroup, organizationName, userId, a
 }
 
 async function reqChallengeMessge(ag, sender, data, orgName) {
-	let message = `Someone with email address ${sender.email} and account ID ${sender.id} has requested access to your secured profile. By approving the request, you are taking responsibility for data share or transmission with the requesting party and release ${ag.name} and ${config.ROOT_COMPANY_NAME} from all liability for the decision.`;
+	let message;
+	switch (sender.client) {
+	case true:
+		message = `An automated system with name ${sender.name} and ID ${sender.id} has requested access to your secured profile. By approving the request, you are taking responsibility for data share or transmission with the requesting party and release ${ag.name} and ${config.ROOT_COMPANY_NAME} from all liability for the decision.`;
+		break;
+	case false:
+	default:
+		message = `Someone with email address ${sender.email} and account ID ${sender.id} has requested access to your secured profile. By approving the request, you are taking responsibility for data share or transmission with the requesting party and release ${ag.name} and ${config.ROOT_COMPANY_NAME} from all liability for the decision.`;
+		break;
+	}
 	switch (data.type) {
 	case 'sync':
 		message = `${message} This a sync request: ${orgName || 'an organization'} will take a snapshot of your secured profile to populate their records as of today and hold that data at their discretion. Once synced, this data belongs to ${orgName || 'the organization'} and ${ag.name} platform can communicate requests for deletion but cannot guarantee compliance.`;
