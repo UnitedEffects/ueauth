@@ -1,6 +1,8 @@
 import jsonPatch from 'jsonpatch';
 import assert from 'assert';
 import dal from './dal';
+import prof from '../profiles/profiles/profile';
+import va from '../profiles/profiles/view';
 import helper from '../../helper';
 import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
@@ -14,11 +16,33 @@ const cryptoRandomString = require('crypto-random-string');
 const config = require('../../config');
 
 export default {
-	async writeAccount(data) {
+	async writeAccount(data, creator = undefined) {
 		data.email = data.email.toLowerCase();
 		if(!data.username) data.username = data.email;
 		const output = await dal.writeAccount(data);
 		ueEvents.emit(data.authGroup, 'ue.account.create', output);
+		if(data.profile) {
+			try {
+				await prof.writeProfile({
+					accountId: output.id,
+					authGroup: output.authGroup,
+					...data.profile
+				});
+				if(creator) {
+					const accessObject = {
+						authGroup: output.authGroup,
+						viewingAccountId: creator.sub,
+						viewingEmail: creator.email,
+						accessDetails: 'Administrator or service that created this account has unlimited access to your profile. You may remove this access at any time if you wish.',
+						targetAccountId: output.id
+					};
+					await va.createView(accessObject);
+				}
+			} catch (error) {
+				console.error(error);
+				if(config.ENV !== 'production') throw error;
+			}
+		}
 		return output;
 	},
 

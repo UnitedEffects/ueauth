@@ -32,6 +32,7 @@ function accountWithClaims(id, account) {
 				username: account.username,
 				email: account.email,
 				verified: account.verified,
+				profile: `POST /api/${account.authGroup}/profile/request/${id}`
 			};
 		},
 	};

@@ -1,4 +1,5 @@
 import dal from './dal';
+import org from '../orgs/orgs';
 import Boom from '@hapi/boom';
 import ueEvents from '../../events/ueEvents';
 import dom from '../domains/domain';
@@ -144,12 +145,19 @@ const factory = {
 		let permissions = {
 			member: []
 		};
-		//let miscRoles = [];
 		for(let i=0; i<userAccess.length; i++) {
 			let termsAllow = true;
-			if(userAccess[i].organization && userAccess[i].organization.terms && userAccess[i].organization.terms.required === true) {
-				if(userAccess[i].organization.terms.accepted !== true) termsAllow = false;
-				if(!userAccess[i].organization.terms.termsAcceptedOn) termsAllow = false;
+			const thisOrg = await org.getOrg(authGroup.id, userAccess[i].organization?.id);
+			if(!thisOrg) termsAllow = false;
+			else {
+				if(userAccess[i]?.organization?.terms?.required === true) {
+					if(userAccess[i].organization.terms.accepted !== true) termsAllow = false;
+					if(!userAccess[i].organization.terms.termsAcceptedOn) termsAllow = false;
+				}
+				if(thisOrg.restrictEmailDomains === true) {
+					const userDomain = user.email.split('@')[1];
+					if(!thisOrg.emailDomains.includes(userDomain)) termsAllow = false;
+				}
 			}
 			if (termsAllow === true) {
 				orgs.push(userAccess[i].organization.id);

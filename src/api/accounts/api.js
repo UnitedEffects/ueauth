@@ -3,6 +3,7 @@ import { say } from '../../say';
 import acct from './account';
 import access from './access';
 import group from '../authGroup/group';
+import orgProfile from '../profiles/profiles/org';
 import challenge from '../plugins/challenge/challenge';
 import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
@@ -32,10 +33,14 @@ const api = {
 			const password = req.body.password;
 			//clean up
 			delete req.body.generatePassword;
-			if (req.user && req.user.sub) req.body.modifiedBy = req.user.sub;
+			let user;
+			if (req.user && req.user.sub) {
+				req.body.modifiedBy = req.user.sub;
+				user = req.user;
+			}
 			// force recovery code creation as a second step
 			if (req.body.recoverCodes) delete req.body.recoverCodes;
-			const result = await acct.writeAccount(req.body);
+			const result = await acct.writeAccount(req.body, user);
 			try {
 				if (req.globalSettings.notifications.enabled === true &&
                     req.authGroup.pluginOptions.notification.enabled === true &&
@@ -78,17 +83,52 @@ const api = {
 				});
 				if(!checkForOrg.length) {
 					result = await access.defineAccess(req.authGroup, req.organization, user._id, {}, req.globalSettings, req.user.sub, 'created', true, req.customDomainUI, req.customDomain);
-				} else result = user;
+				} else result = { id: user.id };
+				try {
+					if(req.body.profile) {
+						await orgProfile.writeOrgProfile({
+							...req.body.profile,
+							authGroup: req.authGroup.id,
+							accountId: user.id,
+							organization: req.organization.id
+						});
+					}
+				} catch (error) {
+					console.error(error);
+					if(config.ENV !== 'production') throw error;
+				}
 			} else {
 				try {
-					newUser = await acct.writeAccount({
+					const newData = {
 						username: (req.body.username) ? req.body.username : req.body.email,
 						email: req.body.email,
 						authGroup: req.authGroup.id,
 						password
-					});
+					};
+					if(req.body.profile) {
+						newData.profile = {
+							givenName: req.body.profile.givenName,
+							familyName: req.body.profile.familyName,
+							displayName: req.body.profile.displayName,
+							picture: req.body.profile.picture
+						};
+					}
+					newUser = await acct.writeAccount(newData);
 					if(!newUser) throw new Error('Could not create user');
 					result = await access.defineAccess(req.authGroup, req.organization, newUser._id, {}, req.globalSettings, req.user.sub, 'created', true, req.customDomainUI, req.customDomain);
+					try {
+						if(req.body.profile) {
+							await orgProfile.writeOrgProfile({
+								...req.body.profile,
+								authGroup: req.authGroup.id,
+								accountId: newUser._id,
+								organization: req.organization.id
+							});
+						}
+					} catch (error) {
+						console.error(error);
+						if(config.ENV !== 'production') throw error;
+					}
 				} catch (e) {
 					if(newUser && newUser._id) await acct.deleteAccount(req.authGroup.id, newUser._id);
 					throw e;

@@ -63,6 +63,16 @@ const accountSchema = new mongoose.Schema({
 	mfa: {
 		enabled: Boolean
 	},
+	acceptingProfileRequests: {
+		type: Boolean,
+		default: true
+	},
+	myNotifications: {
+		profileRequests: {
+			type: Boolean,
+			default: true
+		}
+	},
 	access: [
 		{
 			organization: {

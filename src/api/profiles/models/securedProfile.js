@@ -1,10 +1,9 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
-import h from '../../../helper';
 
 mongoose.set('useCreateIndex', true);
 
-const orgProfileSchema = new mongoose.Schema({
+const profileSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
 		default: Date.now()
@@ -27,20 +26,8 @@ const orgProfileSchema = new mongoose.Schema({
 	},
 	accountId: {
 		type: String,
-		validate: {
-			validator: function (v) {
-				const ag = this.authGroup;
-				const org = this.organization;
-				return h.validateAccountReference(mongoose.model('accounts'), v, ag, org);
-			},
-			message: 'Account does not exist in this AuthGroup and/or Organization'
-		}
-	},
-	organization: {
-		type: String,
 		required: true
 	},
-	externalId: String,
 	givenName: String,
 	familyName: String,
 	displayName: String,
@@ -70,11 +57,6 @@ const orgProfileSchema = new mongoose.Schema({
 	title: String,
 	position: String,
 	personalHeader: String,
-	deleteRequested: {
-		type: Boolean,
-		default: false
-	},
-	deleteRequestedDate: Date,
 	meta: Object,
 	_id: {
 		type: String,
@@ -82,28 +64,22 @@ const orgProfileSchema = new mongoose.Schema({
 	}
 },{ _id: false });
 
-orgProfileSchema.index({ accountId: 1, organization: 1, authGroup: 1 }, { unique: true });
-orgProfileSchema.index({ externalId: 1, organization: 1, authGroup: 1 }, {
-	unique: true,
-	partialFilterExpression: {
-		'externalId': { $exists: true, $gt: '' }
-	}
-});
+profileSchema.index({ accountId: 1, authGroup: 1 }, { unique: true });
 
-orgProfileSchema.pre('save', function(callback) {
+profileSchema.pre('save', function(callback) {
 	//license check
 	callback();
 });
 
-orgProfileSchema.virtual('id').get(function(){
+profileSchema.virtual('id').get(function(){
 	return this._id.toString();
 });
 
-orgProfileSchema.set('toJSON', {
+profileSchema.set('toJSON', {
 	virtuals: true
 });
 
-orgProfileSchema.options.toJSON.transform = function (doc, ret, options) {
+profileSchema.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
@@ -111,4 +87,4 @@ orgProfileSchema.options.toJSON.transform = function (doc, ret, options) {
 };
 
 // Export the Mongoose model
-export default mongoose.model('org_profiles', orgProfileSchema);
+export default mongoose.model('profiles', profileSchema);
