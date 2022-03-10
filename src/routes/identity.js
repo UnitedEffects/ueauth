@@ -184,6 +184,15 @@ router.post('/:group/account', [
 	m.permissions,
 	m.access('accounts')
 ], account.writeAccount);
+router.post('/:group/accounts', [
+	m.validateAuthGroup,
+	m.schemaCheck,
+	m.isAuthenticated,
+	m.getGlobalPluginSettings,
+	m.organizationContext,
+	m.permissions,
+	m.access('accounts')
+], account.importAccounts);
 router.get('/:group/accounts', [
 	m.validateAuthGroup,
 	m.isAuthenticated,

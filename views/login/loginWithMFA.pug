@@ -15,6 +15,7 @@ block loginWithMFA
         div#mfa
         div#mfa-try-again(style='visibility: hidden')
             span#reconnect(style="font-size: 20px;").m-t-10 If you need to reconnect your device to your account, use the 'Restore MFA' link below. Otherwise click to retry login.
-            a.btn.btn-outline-dark.federated.m-t-10(href='/' + authGroup + '/interaction/' + uid)
-                i.fas.fa-undo
-                span.p-l-10 Try Again
+            div
+                a.btn.btn-outline-dark.federated.m-t-10(href='/' + authGroup + '/interaction/' + uid)
+                    i.fas.fa-undo
+                    span.p-l-10 Try Again

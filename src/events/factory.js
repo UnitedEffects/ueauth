@@ -88,7 +88,8 @@ const OP_EVENTS = {
 		'ue.account.create',
 		'ue.account.edit',
 		'ue.account.destroy',
-		'ue.account.error'
+		'ue.account.error',
+		'ue.account.import.error'
 	],
 	group: [
 		'ue.group.create',

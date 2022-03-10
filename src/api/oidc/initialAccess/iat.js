@@ -2,6 +2,20 @@ import oidc from '../oidc';
 import dal from './dal';
 
 export default {
+	// todo - incomplete implementation for bulk user import
+	async generateManyIAT(expiresIn, policies, authGroup, users) {
+		if(!authGroup) throw new Error('authGroup not defined');
+		const setOfIATs = [];
+		await Promise.all((users.map(async(x) => {
+			const iat = new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies });
+			iat.payload.auth_group = authGroup.id;
+			iat.payload.sub = x._id || x.id;
+			iat.payload.email = x.email;
+			setOfIATs.push(iat);
+			return x;
+		})));
+		return dal.insertMany(setOfIATs);
+	},
 	async generateIAT(expiresIn, policies, authGroup, meta = {}) {
 		if(!authGroup) throw new Error('authGroup not defined');
 		return new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies }).save().then(async (x) => {

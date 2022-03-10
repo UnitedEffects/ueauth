@@ -763,7 +763,7 @@ paths:
       tags:
         - Users
       summary: Register a new user
-      description: Register a new user to an Auth Group independant of any organization or other access considerations. Self-registration is possible if the Auth Group has defined locked=false. Otherwise, an appropriately permissioned member of the Auth Group must create the user. Please note that the only data provided by this endpoint (or any Account API) is the id, username, and email (and creat/modify/active meta data) of the user within this AuthGroup. The Account record holds no personal information aside from this email address and an optional phone number which is only visible to that Account owner. It is possible to add personal data into the metadata field, but this is a discouraged action.
+      description: Register a new user to an Auth Group independant of any organization or other access considerations. Self-registration is possible if the Auth Group has defined locked=false. Otherwise, an appropriately permissioned member of the Auth Group must create the user. Please note that the only data provided by this endpoint (or any Account API) is the id, username, and email (and creat/modify/active meta data) of the user within this AuthGroup. The Account record holds no personal information aside from this email address and an optional phone number which is only visible to that Account owner; however, if you supply profile information, a secured profile record will be generated which the account holder can administrate later.
       operationId: writeAccount
       parameters:
         - name: group
@@ -854,6 +854,69 @@ paths:
         - bearer: []
         - openId: []
   /api/{group}/accounts:
+    post:
+      tags:
+        - Users
+      summary: Import users to the Auth Group
+      description: This API allows you to import an array of users to the Auth Group independant of any organization or other access considerations. This API cannot be used for self-registration. Passwords are automatically generated and all users must claim their accounts. No profile data can be added with this API.
+      operationId: importAccounts
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: 'Accounts'
+                  data:
+                    type: object
+                    properties:
+                      attempted:
+                        type: number
+                        description: how many attempted
+                      ok:
+                        type: number
+                        description: how many successfully written?
+                      failed:
+                        type: array
+                        items:
+                          type: object
+                        description: which accounts failed and why
+                      success:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/getAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/importAccount'
+        description: Account data to be written
+        required: true
     get:
       tags:
         - Users
@@ -7512,6 +7575,30 @@ components:
             picture:
               type: string
               format: uri
+
+    importAccount:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: if provided, the system will attempt to use this ID as long as it is unique.
+        username:
+          type: string
+          description: optional identifier, must be unique in the authGroup. If not provided, set to email.
+        email:
+          type: string
+          description: email address
+        phone:
+          type: object
+          properties:
+            txt:
+              type: string
+              pattern: '\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$'
+              description: used for notifications. only visible to the user in question.
 
     writeAccount:
       type: object
