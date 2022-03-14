@@ -687,7 +687,7 @@ const api = {
 			console.error(error);
 			return res.render('response/response', {
 				title: 'Uh oh...',
-				message: 'We had a problem verifying your account. Please try again later. If the issue continues, contact the platform admin.',
+				message: 'We had a problem verifying your account. Please try again later.',
 				details: error,
 				authGroup: safeAG,
 				...screens.baseSettings(authGroup)
