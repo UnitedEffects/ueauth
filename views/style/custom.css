@@ -88,6 +88,10 @@
     position: absolute;
 }
 
+.wrap-overflow {
+    overflow-wrap: break-word;
+}
+
 .success {
     display: none;
 }

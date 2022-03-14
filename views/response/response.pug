@@ -18,7 +18,7 @@ block content
                 .m-t-20.detail-color.text-left
                     details.detail-color
                         summary More Information
-                        p.detail-color.detail-background!=details
+                        p.detail-color.detail-background.wrap-overflow!=details
             if (redirect || logoUri || (authGroup && authGroup.primaryDomain))
                 a.btn.btn-outline-dark.btn-custom.m-t-20(href=(redirect || logoUri || authGroup.primaryDomain)) Go Home
             .tandc.p-b-20.center.width-auto
