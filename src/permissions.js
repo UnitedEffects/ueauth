@@ -86,6 +86,7 @@ export default {
 			if(!req.permissions) req.permissions = {};
 			req.permissions = {
 				orgContext: context,
+				apiAgent: (req.user.client_credential === true),
 				groupAccess: [],
 				enforceOwn: false
 			};
@@ -129,6 +130,7 @@ export default {
 					}
 				}
 				if(accessObject['x-access-organizations']) req.permissions.organizations = accessObject['x-access-organizations'].split(' ');
+				if(req.permissions.apiAgent === true) req.permissions.organizations = [context];
 				if(accessObject['x-access-domains']) {
 					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-domains'][context]) {
 						req.permissions.domains = accessObject['x-access-domains'][context].split(' ');
@@ -171,18 +173,24 @@ export default {
 					}
 				}
 				if(accessObject['x-access-permissions']) {
-					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-permissions'][context]) {
-						req.permissions.permissions = accessObject['x-access-permissions'][context].split(' ');
-					}
-					if(mergePrimary) {
-						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-permissions'][primary]) {
-							if(!req.permissions.permissions) req.permissions.permissions = [];
-							req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'][primary].split(' '));
+					if(req.permissions.apiAgent === true) {
+						if(req.permissions?.organizations?.includes(context)) {
+							req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 						}
-					}
-					if(accessObject['x-access-permissions'].member && req.permissions.groupAccess.includes('member')) {
-						if(!req.permissions.permissions) req.permissions.permissions = [];
-						req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'].member.split(' '));
+					} else {
+						if(req.permissions?.organizations?.includes(context) && accessObject['x-access-permissions'][context]) {
+							req.permissions.permissions = accessObject['x-access-permissions'][context].split(' ');
+						}
+						if(mergePrimary) {
+							if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-permissions'][primary]) {
+								if(!req.permissions.permissions) req.permissions.permissions = [];
+								req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'][primary].split(' '));
+							}
+						}
+						if(accessObject['x-access-permissions'].member && req.permissions.groupAccess.includes('member')) {
+							if(!req.permissions.permissions) req.permissions.permissions = [];
+							req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'].member.split(' '));
+						}
 					}
 				}
 			}
