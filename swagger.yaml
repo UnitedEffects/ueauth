@@ -6512,6 +6512,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: search
+          in: query
+          description: this performs a standard keyword search - not part of odata
+          required: false
+          schema:
+            type: string
         - name: $filter
           in: query
           description: oData filter Query
@@ -6624,6 +6630,62 @@ paths:
       security:
         - bearer: []
         - openId: []
+    delete:
+      tags:
+        - Permissions
+      summary: Bulk Delete Permissions
+      description: Bulk delete permissions will remove all permissions identified by the array of UUIDs provided in the body as long as those permissions are not core=true (i.e. created by UE Auth itself). WARNING - this will not clear roles and can create orphan role references. This will be addressed in a future release but for now you must ensure this endpoint is not used on Ids with role references.
+      operationId: bulkDeletePermissions
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    $ref: '#/components/schemas/permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+        description: Remove all permissions by id in the array
+        required: true
 
   /api/{group}/products/{product}/permissions/{id}:
     get:
