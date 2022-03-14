@@ -487,8 +487,61 @@ export default {
 	isOIDCValid: passport.authenticate('oidc-token-validation', { session: false }),
 	isBasic: passport.authenticate('basic', { session: false }),
 	isSimpleIAT: passport.authenticate('simple-iat', { session: false }),
+	iatQueryCodeAuth,
 	isWhitelisted: whitelist,
 	getUser, // for testing
 	getClient, // for testing
 	runDecodedChecks // for testing
 };
+
+async function iatQueryCodeAuth (req, res, next) {
+	try {
+		if(!req.query.code) throw Boom.unauthorized();
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		const token = req.query.code;
+		const access = await iat.getOne(token, req.authGroup.id);
+		if(!access?.payload) throw Boom.unauthorized();
+		const payload = JSON.parse(JSON.stringify(access.payload));
+		if(payload?.kind !== 'InitialAccessToken') throw Boom.unauthorized();
+		const user = await account.getAccount(req.authGroup.id, payload.sub);
+		if(!user) throw Boom.unauthorized();
+		if(user.email !== payload.email) {
+			console.error('Query IAT email mismatch');
+			throw Boom.unauthorized();
+		}
+		if(user.authGroup !== payload.auth_group) {
+			console.error('Query IAT authGroup mismatch');
+			throw Boom.unauthorized();
+		}
+		if(user.authGroup !== req.authGroup.id) {
+			console.error('Query IAT authGroup Request mismatch');
+			throw Boom.unauthorized();
+		}
+		const subject = JSON.parse(JSON.stringify(user));
+		subject.sub = subject.id;
+		req.user = { ...subject, decoded: payload, subject_group: req.authGroup };
+		req.token = token;
+		try {
+			//attempt to clear iat and log the user out of other sessions but don't get hung up
+			await iat.deleteOne(access._id, req.authGroup.id);
+		} catch (e) {
+			console.error('check to make sure initial access tokens are deleting once used and that the user does not have active sessions');
+			console.error(e);
+		}
+		return next();
+	} catch (error) {
+		// Assumes this is only ever used for Browser based requests
+		console.error(error);
+		const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+		return res.render('response/response', {
+			title: 'Uh oh...',
+			message: 'Invalid Verify Account Link',
+			details: 'This page requires special access. Your account link may have expired or you may have copied it incorrectly. Check your email or mobile device for the link. If you think here is an issue, you can contact your platform administrator.',
+			authGroup: safeAG,
+			authGroupLogo: authGroup.config.ui.skin.logo || undefined,
+			splashImage: authGroup.config.ui.skin.splashImage || undefined,
+			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
+			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
+		});
+	}
+}

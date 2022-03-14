@@ -86,7 +86,7 @@ export default {
 			if(!req.permissions) req.permissions = {};
 			req.permissions = {
 				orgContext: context,
-				apiAgent: (req.user.client_credential === true),
+				apiAgent: (req.user?.client_credential === true),
 				groupAccess: [],
 				enforceOwn: false
 			};
@@ -249,7 +249,7 @@ export default {
 					roleFilter = roleFilter.concat(temp);
 				}
 			});
-			if(req.user.client_credential !== true) {
+			if(req.user?.client_credential !== true) {
 				// ensure member permissions are preserved
 				const temp = req.permissions?.permissions?.filter((p) => {
 					return (p.includes(`${req.authGroup.id}-member:::`));
