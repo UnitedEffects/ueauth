@@ -106,6 +106,24 @@ const api = {
 			next(error);
 		}
 	},
+	async bulkDelete(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if (!req.product) throw Boom.forbidden('Permission must be associated to one product');
+			if(!Array.isArray(req.body)) throw Boom.preconditionRequired('Must provide id array');
+			if (req.permissions.enforceOwn === true) throw Boom.forbidden();
+			if (req.product.core === true) {
+				// ensure only root users remove permissions from core products
+				await permissions.enforceRoot(req.permissions);
+			}
+			const result = await perm.bulkDelete(req.authGroup.id, req.product.id, req.body);
+			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.permission.error', error);
+			next(error);
+		}
+	},
 	async checkForRoles(req, res, next) {
 		try {
 			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');

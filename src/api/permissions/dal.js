@@ -25,6 +25,9 @@ export default {
 	async bulkWrite(permissions) {
 		return Permission.insertMany(permissions);
 	},
+	async bulkDelete(authGroup, product, ids) {
+		return Permission.deleteMany({ authGroup, product, _id: { $in: ids }, core: false });
+	},
 	async getTargetsOrActions(data, authGroup, product) {
 		const projection = {};
 		projection[data] = 1;

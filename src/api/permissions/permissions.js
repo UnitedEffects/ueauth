@@ -12,7 +12,14 @@ export default {
 	},
 
 	async getPermissions(authGroupId, product, q) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
 		const query = await helper.parseOdataQuery(q);
+		if(search) query.query.$text = { $search : search };
+		console.info(query);
 		return dal.getPermissions(authGroupId, product, query);
 	},
 
@@ -28,6 +35,13 @@ export default {
 		const result = await dal.deletePermission(authGroupId, product, id);
 		const output = { rolesImpacted: rolesCleared, permission: result };
 		ueEvents.emit(authGroupId, 'ue.permission.destroy', output);
+		return output;
+	},
+
+	async bulkDelete(authGroup, product, ids) {
+		const result = await dal.bulkDelete (authGroup, product, ids);
+		const output = { rolesImpacted: 'WARNING - bulk delete may orphan permission references in roles', permission: result };
+		ueEvents.emit(authGroup, 'ue.permission.destroy', result);
 		return output;
 	},
 

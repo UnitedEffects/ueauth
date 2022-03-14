@@ -361,6 +361,13 @@ router.get('/:group/products/:product/permissions/:id', [
 	m.permissions,
 	m.access('permissions')
 ], perm.getPermission);
+router.delete('/:group/products/:product/permissions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], perm.bulkDelete);
 router.delete('/:group/products/:product/permissions/:id', [
 	m.validateAuthGroup,
 	m.validateProduct,

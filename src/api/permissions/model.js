@@ -48,6 +48,7 @@ const permissionSchema = new mongoose.Schema({
 },{ _id: false });
 
 permissionSchema.index({ coded: 1, authGroup: 1, product: 1}, { unique: true });
+permissionSchema.index( { target: 'text', action: 'text', description: 'text', tags: 'text' });
 
 permissionSchema.pre('save', function(callback) {
 	const permission = this;
