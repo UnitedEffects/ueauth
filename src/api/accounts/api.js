@@ -670,52 +670,60 @@ const api = {
 			next(error);
 		}
 	},
-	async verifyAccountScreen (req, res, next) {
+	async verifyAccountScreen (req, res) {
+		const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
 		try {
-			const { authGroup } = await group.safeAuthGroup(req.authGroup);
-			if(!req.query.code) {
-				if(req.query.email) {
-					return res.render('error', {
-						title: 'Sent Password Reset',
-						message: 'Looks like successfully sent your password reset link.',
-						details: 'Check your email or mobile device.'
-					});
+			if (!req.user) throw Boom.unauthorized();
+			const update = [
+				{
+					op: 'replace',
+					path: '/verified',
+					value: true
 				}
-				return res.render('error', {
-					title: 'Uh oh...',
-					message: 'Invalid Verify Account Request',
-					details: 'This page requires special access. Check your email or mobile device for the link.'
-				});
-			}
-			return res.render('forgotpassword/forgot', screens.verifyScreen(authGroup, req.query, req.customDomain, req.customDomainUI));
+			];
+			await acct.patchAccount(authGroup, req.user.sub, update, req.user.sub, false);
+			return res.render('verify/response', screens.verifyScreen(safeAG, authGroup, req.user.email));
 		} catch (error) {
-			next (error);
+			console.error(error);
+			return res.render('response/response', {
+				title: 'Uh oh...',
+				message: 'We had a problem verifying your account. Please try again later. If the issue continues, contact the platform admin.',
+				details: error,
+				authGroup: safeAG,
+				...screens.baseSettings(authGroup)
+			});
 		}
 	},
 	async forgotPasswordScreen (req, res, next) {
 		try {
-			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
 			if(!req.query.code) {
 				if(req.query.email) {
-					return res.render('error', {
+					return res.render('response/response', {
 						title: 'Resent Password Reset',
 						message: 'Looks like successfully resent your password reset link.',
-						details: 'Check your email or mobile device.'
+						details: 'Check your email or mobile device.',
+						authGroup: safeAG,
+						...screens.baseSettings(authGroup)
 					});
 				}
 				if(req.globalSettings?.notifications?.enabled !== true)
 				{
-					return res.render('error', {
+					return res.render('response/response', {
 						title: 'Forgot Password Not Enabled by the OP Admin',
 						message: 'This UE Auth instance has not activated the global notifications plugin. This is required before secure password resets are allowed through self service.',
-						details: 'Please contact your UE Auth Admin.'
+						details: 'Please contact your UE Auth Admin.',
+						authGroup: safeAG,
+						...screens.baseSettings(authGroup)
 					});
 				}
 				if(authGroup?.pluginOptions?.notification?.enabled !== true || authGroup?.config?.centralPasswordReset !== true) {
-					return res.render('error', {
+					return res.render('response/response', {
 						title: `Forgot Password Not Enabled for ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name}`,
 						message: 'This Auth Group has either not enabled notifications or has disabled centralized password reset.',
-						details: `Please contact the ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name} admin.`
+						details: `Please contact the ${(req.authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : req.authGroup.name} admin.`,
+						authGroup: safeAG,
+						...screens.baseSettings(authGroup)
 					});
 				}
 

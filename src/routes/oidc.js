@@ -126,7 +126,8 @@ router.get('/:group/forgotpassword', [
 router.get('/:group/verifyaccount', [
 	jsonParser,
 	m.setNoCache,
-	m.validateAuthGroup
+	m.validateAuthGroup,
+	m.iatQueryCodeAuth,
 ], account.verifyAccountScreen);
 router.get('/:group/recoveraccount', [
 	jsonParser,

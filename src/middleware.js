@@ -343,6 +343,7 @@ const mid = {
 		return next();
 	},
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
+	iatQueryCodeAuth: authorizer.iatQueryCodeAuth,
 	isAuthenticated: authorizer.isAuthenticated,
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,

@@ -1,0 +1,25 @@
+extends ../uelayout
+
+block content
+    body.bg.flex
+        .utility-panel
+            if (flash)
+                .flash-container.m-b-20
+                    p=flash
+            if (client && client.logoUri)
+                img.logo(src=client.logoUri alt='Product Logo')
+            else if (authGroupLogo)
+                img.logo(src=authGroupLogo alt='Platform Logo')
+            if (authGroup && authGroup.name)
+                p.org-name=authGroup.name
+            p#title.header=title
+            div#message=message
+            p#instruct.description.center.m-t-20-imp If you're done, you may close this window.
+            a.btn.btn-custom.m-t-20(href='/'+authGroup.id+'/forgotpassword') Change My Password
+            .tandc.p-b-20.center.width-auto
+                if (authGroup && authGroup.primaryTOS)
+                    a(href=(authGroup.primaryTOS)) Terms of Service
+                if (authGroup && authGroup.primaryPrivacyPolicy)
+                    a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
+                if (authGroup && authGroup.primaryEmail)
+                    a(href='mailto:'+authGroup.primaryEmail) Contact #{authGroup.name}
