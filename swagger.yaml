@@ -5010,7 +5010,7 @@ paths:
         - name: search
           in: query
           description: keyword search across roles - not part of oData
-          required: true
+          required: false
           schema:
             type: string
         - name: $filter
@@ -5097,7 +5097,7 @@ paths:
         - name: search
           in: query
           description: keyword search across roles - not part of oData
-          required: true
+          required: false
           schema:
             type: string
         - name: $filter
@@ -5190,7 +5190,7 @@ paths:
         - name: search
           in: query
           description: keyword search across roles - not part of oData
-          required: true
+          required: false
           schema:
             type: string
         - name: $filter
@@ -5526,7 +5526,7 @@ paths:
         - name: search
           in: query
           description: keyword search across roles - not part of oData
-          required: true
+          required: false
           schema:
             type: string
         - name: $filter
