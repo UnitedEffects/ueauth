@@ -67,6 +67,7 @@ const roleSchema = new mongoose.Schema({
 
 roleSchema.index({ name: 1, authGroup: 1, product: 1}, { unique: true });
 roleSchema.index({ codedId: 1, authGroup: 1, product: 1}, { unique: true });
+roleSchema.index( { name: 'text', description: 'text' });
 
 roleSchema.pre('save', function(callback) {
 	//license check

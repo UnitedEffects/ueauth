@@ -5007,6 +5007,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: true
+          schema:
+            type: string
         - name: $filter
           in: query
           description: oData filter Query
@@ -5085,6 +5091,12 @@ paths:
         - name: org
           in: path
           description: organization Id
+          required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
           required: true
           schema:
             type: string
@@ -5172,6 +5184,12 @@ paths:
           in: path
           description: >-
             Unique user identifier
+          required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
           required: true
           schema:
             type: string
@@ -5502,6 +5520,12 @@ paths:
           in: path
           description: >-
             Unique user identifier
+          required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
           required: true
           schema:
             type: string
