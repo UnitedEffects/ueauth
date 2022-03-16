@@ -1,4 +1,5 @@
 import Role from './model';
+import Permissions from '../permissions/model';
 import { nanoid } from 'nanoid';
 
 export default {
@@ -36,6 +37,34 @@ export default {
 			{ organization: { $exists: false } }
 		];
 		return Role.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
+	},
+	async getPermissionsInRole(matchRole, organization = undefined, q, search = undefined) {
+		const match = JSON.parse(JSON.stringify(matchRole));
+		if(organization) {
+			match.$or = [
+				{ organization },
+				{ organization: { $exists: false } }
+			];
+		}
+		const query = [
+			{ $match: match },
+			{ $project: { permissions: 1 } },
+			{ $unwind: '$permissions' },
+			{ $project: {
+				_id: '$_id',
+				permission: { $arrayElemAt: [ { $split: ['$permissions', ' '] }, 0] }
+			}},
+			{ $group: { _id: '$_id', permissions: { $push: '$permission'}}}
+		];
+		const p = await Role.aggregate(query);
+		const ids = p[0]?.permissions;
+		const permMatch = {
+			authGroup: match.authGroup,
+			product: match.product,
+			_id: { $in: ids }
+		};
+		if(search) permMatch.$text = { $search: search };
+		return Permissions.find({ ...permMatch, ...q.query }).select(q.projection).sort(q.sort).skip(q.skip).limit(q.limit);
 	},
 	async getRoles(g, p, query) {
 		query.query.authGroup = g;

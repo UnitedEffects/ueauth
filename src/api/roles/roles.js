@@ -157,6 +157,20 @@ export default {
 		ueEvents.emit(authGroupId, 'ue.roles.destroy', result);
 		return result;
 	},
+	async getPermissionsInRole(authGroup, product, role, q, organization = undefined) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
+		const query = await helper.parseOdataQuery(q);
+		const matchRole = {
+			authGroup,
+			product,
+			_id: role
+		};
+		return dal.getPermissionsInRole(matchRole, organization, query, search);
+	},
 	/**
 	 * FOR INTERNAL USE ONLY
 	 * @param agId

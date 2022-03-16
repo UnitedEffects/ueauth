@@ -375,6 +375,13 @@ router.delete('/:group/products/:product/permissions/:id', [
 	m.permissions,
 	m.access('permissions')
 ], perm.deletePermission);
+router.get('/:group/products/:product/roles/:role/permissions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], role.getPermissionsInRole);
 
 // Organization Permissions
 router.get('/:group/organization/:org/products/:product/permissions', [
@@ -393,6 +400,14 @@ router.get('/:group/organization/:org/products/:product/permissions/:id', [
 	m.permissions,
 	m.access('permissions')
 ], perm.getOrgPermission);
+router.get('/:group/organization/:org/products/:product/roles/:role/permissions', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('permissions')
+], role.getOrgPermissionsInRole);
 
 // Permission Functional
 router.get('/:group/products/:product/permission/targets', [
