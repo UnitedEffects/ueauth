@@ -190,6 +190,33 @@ const api = {
 			ueEvents.emit(req.authGroup.id, 'ue.role.error', error);
 			next(error);
 		}
+	},
+	async getPermissionsInRole(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.product) throw Boom.forbidden('Roles must be associated to one product');
+			if(!req.params.role) throw Boom.forbidden('Role id is required');
+			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
+			const result = await role.getPermissionsInRole(req.authGroup.id, req.product.id, req.params.role, req.query);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getOrgPermissionsInRole(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if (!req.product) throw Boom.forbidden('Roles must be associated to one product');
+			if (!req.organization) throw Boom.forbidden('Roles must be associated to your organization');
+			if(!req.params.role) throw Boom.forbidden('Role id is required');
+			await permissions.enforceOwnProduct(req.permissions, req.product.id);
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			if(!req.organization.associatedProducts.includes(req.product.id)) throw Boom.forbidden(`Product not licensed: ${req.product.id}`);
+			const result = await role.getPermissionsInRole(req.authGroup.id, req.product.id, req.params.role, req.query, req.organization.id);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
 	}
 };
 

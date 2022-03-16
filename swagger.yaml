@@ -5007,6 +5007,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: false
+          schema:
+            type: string
         - name: $filter
           in: query
           description: oData filter Query
@@ -5086,6 +5092,12 @@ paths:
           in: path
           description: organization Id
           required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: false
           schema:
             type: string
         - name: $filter
@@ -5173,6 +5185,12 @@ paths:
           description: >-
             Unique user identifier
           required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: false
           schema:
             type: string
         - name: $filter
@@ -5503,6 +5521,12 @@ paths:
           description: >-
             Unique user identifier
           required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: false
           schema:
             type: string
         - name: $filter
@@ -6490,6 +6514,103 @@ paths:
       security:
         - bearer: []
         - openId: []
+  /api/{group}/organization/{org}/products/{product}/roles/{role}/permissions:
+    get:
+      tags:
+        - Organization Permissions
+      description: Query and search the permissions tied to a specific role within a product and organization context.
+      summary: Query and search the permissions tied to a specific role
+      operationId: getOrgRolePermissions
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Unique product identifier
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: Unique organization identifier
+          required: true
+          schema:
+            type: string
+        - name: role
+          in: path
+          description: Unique id of the role
+          required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: false
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: integer
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
 
   # Permissions CRUD
   /api/{group}/products/{product}/permissions:
@@ -6839,6 +6960,97 @@ paths:
                         items:
                           type: string
                           format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/products/{product}/roles/{role}/permissions:
+    get:
+      tags:
+        - Permissions
+      description: Query and search the permissions tied to a specific role within a product context.
+      summary: Query and search the permissions tied to a specific role
+      operationId: getRolePermissions
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Unique user identifier
+          required: true
+          schema:
+            type: string
+        - name: role
+          in: path
+          description: Unique id of the role
+          required: true
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: keyword search across roles - not part of oData
+          required: false
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: integer
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Role
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/permission'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

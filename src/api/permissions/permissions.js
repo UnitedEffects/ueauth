@@ -19,7 +19,6 @@ export default {
 		}
 		const query = await helper.parseOdataQuery(q);
 		if(search) query.query.$text = { $search : search };
-		console.info(query);
 		return dal.getPermissions(authGroupId, product, query);
 	},
 

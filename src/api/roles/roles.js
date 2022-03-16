@@ -36,22 +36,46 @@ export default {
 	},
 
 	async getAllRoles(authGroupId, q) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
 		const query = await helper.parseOdataQuery(q);
+		if(search) query.query.$text = { $search : search };
 		return dal.getAllRoles(authGroupId, query);
 	},
 
 	async getAllRolesAcrossProductsByOrg(authGroupId, organization, q) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
 		const query = await helper.parseOdataQuery(q);
+		if(search) query.query.$text = { $search : search };
 		return dal.getAllRolesAcrossProductsByOrg(authGroupId, organization, query);
 	},
 
 	async getRoles(authGroupId, product, q) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
 		const query = await helper.parseOdataQuery(q);
+		if(search) query.query.$text = { $search : search };
 		return dal.getRoles(authGroupId, product, query);
 	},
 
 	async getOrganizationRoles(authGroupId, product, organization, q) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
 		const query = await helper.parseOdataQuery(q);
+		if(search) query.query.$text = { $search : search };
 		return dal.getOrganizationRoles(authGroupId, product, organization, query);
 	},
 
@@ -132,6 +156,20 @@ export default {
 		const result = await dal.deleteAllCustomRoles(authGroupId, organization);
 		ueEvents.emit(authGroupId, 'ue.roles.destroy', result);
 		return result;
+	},
+	async getPermissionsInRole(authGroup, product, role, q, organization = undefined) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
+		const query = await helper.parseOdataQuery(q);
+		const matchRole = {
+			authGroup,
+			product,
+			_id: role
+		};
+		return dal.getPermissionsInRole(matchRole, organization, query, search);
 	},
 	/**
 	 * FOR INTERNAL USE ONLY
