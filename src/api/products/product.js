@@ -30,8 +30,8 @@ export default {
 	},
 
 	// @notTested
-	async getOrgProduct(authGroupId, id) {
-		return dal.getOrgProduct(authGroupId, id);
+	async getThisProduct(authGroupId, id) {
+		return dal.getThisProduct(authGroupId, id);
 	},
 
 	// @notTested

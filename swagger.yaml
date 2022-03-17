@@ -4541,7 +4541,7 @@ paths:
       tags:
         - Organization Products
       summary: Get all Products associated to an Organization
-      description: Return all Products defined as part of your AuthGroup
+      description: Return all Products defined as part of your Organization
       operationId: getOrgProducts
       parameters:
         - name: group
@@ -4556,36 +4556,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: $filter
-          in: query
-          description: oData filter Query
-          required: false
-          schema:
-            type: string
-        - name: $select
-          in: query
-          description: oData select Query
-          required: false
-          schema:
-            type: string
-        - name: $orderby
-          in: query
-          description: oData orderby Query
-          required: false
-          schema:
-            type: string
-        - name: $skip
-          in: query
-          description: oData skip Query
-          required: false
-          schema:
-            type: integer
-        - name: $top
-          in: query
-          description: oData top Query
-          required: false
-          schema:
-            type: integer
       responses:
         '200':
           description: successful operation
@@ -4618,7 +4588,7 @@ paths:
       tags:
         - Organization Products
       summary: Get an organization associated Product's Info
-      description: Query a single Product by ID
+      description: Query a single Product by ID within an Organization
       operationId: getOrgProduct
       parameters:
         - name: group
@@ -4636,7 +4606,121 @@ paths:
         - name: id
           in: path
           description: >-
-            Unique user identifier
+            Unique product identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    $ref: '#/components/schemas/product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/organization/{org}/domain/{domain}/products:
+    get:
+      tags:
+        - Organization Products
+      summary: Get all Products associated to an Organization's Domain
+      description: Return all Products defined as part of an Organization's Domain
+      operationId: getOrgDomainProducts
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization context
+          required: true
+          schema:
+            type: string
+        - name: domain
+          in: path
+          description: domain context
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Products
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+  /api/{group}/organization/{org}/domain/{domain}/products/{id}:
+    get:
+      tags:
+        - Organization Products
+      summary: Get a domain associated Product's Info
+      description: Query a single Product by ID within a domain
+      operationId: getOrgDomainProduct
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: organization context
+          required: true
+          schema:
+            type: string
+        - name: domain
+          in: path
+          description: domain context
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: >-
+            Unique product identifier
           required: true
           schema:
             type: string

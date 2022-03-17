@@ -239,6 +239,22 @@ router.get('/:group/organization/:org/products/:id', [
 	m.permissions,
 	m.access('products')
 ], prod.getOrgProduct);
+router.get('/:group/organization/:org/domain/:domain/products', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.validateDomain,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('products')
+], prod.getOrgDomainProducts);
+router.get('/:group/organization/:org/domain/:domain/products/:id', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.validateDomain,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('products')
+], prod.getOrgDomainProduct);
 
 // Roles
 router.get('/:group/products/:product/roles', [
