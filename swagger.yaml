@@ -2448,6 +2448,106 @@ paths:
         description: Account data to be written
         required: true
   /api/{group}/organization/{org}/accounts:
+    put:
+      tags:
+        - Organization Users
+      summary: Register multiple existing Auth Group accounts to the organization.
+      description: This will register multiple accounts to the organization. This API takes account Ids not email addresses. Unlike individual additions to an organization, this bulk endpoint will not create the accounts in the AuthGroup if they do not exist.
+      operationId: bulkWriteAccountsToOrg
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/getAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+        description: Array of Account Ids to be added
+        required: true
+    delete:
+      tags:
+        - Organization Users
+      summary: Remove multiple accounts from an organization.
+      description: This will bulk remove accounts from an organization. This API requires a body to be passed with a DELETE method.
+      operationId: bulkRemoveAccountsFromOrg
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+        - name: org
+          in: path
+          description: the organization ID
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/getAccount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+        description: Array of Account Ids to be removed
+        required: true
     get:
       tags:
         - Organization Users

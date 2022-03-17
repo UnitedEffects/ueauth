@@ -72,7 +72,30 @@ const api = {
 			next(error);
 		}
 	},
-
+	async bulkAddAccountsToOrg(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!Array.isArray(req.body)) throw Boom.preconditionRequired('Expected an array of Account Ids');
+			const result = await access.bulkAddAccountsToOrg(req.authGroup.id, req.organization, req.body);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
+	async bulkRemoveAccountsFromOrg(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!Array.isArray(req.body)) throw Boom.preconditionRequired('Expected an array of Account Ids');
+			const result = await access.bulkRemoveAccountsFromOrg(req.authGroup.id, req.organization.id, req.body);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
 	async createOrAssociateAccount(req, res, next) {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');

@@ -26,6 +26,12 @@ const factory = {
 			roles: orgRecord.organization.roles
 		};
 	},
+	async bulkAddAccountsToOrg(authGroup, organization, ids) {
+		return dal.bulkAddUsersToOrg(authGroup, organization, ids);
+	},
+	async bulkRemoveAccountsFromOrg(authGroup, org, ids) {
+		return dal.bulkRemoveUsersFromOrg(authGroup, org, ids);
+	},
 	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify= true, aliasUi = undefined, aliasDns = undefined) {
 		// pull user record
 		const authGroup = ag.id;

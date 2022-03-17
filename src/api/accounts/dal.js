@@ -1,5 +1,7 @@
 import Account from './model';
 import bcrypt from 'bcryptjs';
+import org from '../profiles/profiles/org';
+import Boom from '@hapi/boom';
 
 export default {
 	async writeAccount(data) {
@@ -107,6 +109,43 @@ export default {
 	},
 	async checkOrganizations(authGroup, organizations) {
 		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
+	},
+	async bulkAddUsersToOrg(authGroup, organization, ids) {
+		const filter = {
+			authGroup, 
+			_id: { $in: ids }, 
+			access: {$not: { $elemMatch: { 'organization.id': organization.id }}}};
+		if (organization.emailDomains?.length !== 0) {
+			let emailFilter;
+			organization.emailDomains.map((e) => {
+				emailFilter = `^.*@${e.replace('.', '\\.')}|`;
+				return e;
+			});
+			emailFilter = emailFilter.slice(0, -1);
+			filter.email = new RegExp(emailFilter, 'i');
+		}
+		return Account.updateMany(filter, { $addToSet: {
+			access: {
+				organization: {
+					id: organization.id,
+					terms: {
+						required: organization.access?.required || false,
+						accepted: false,
+						termsDeliveredOn: Date.now(),
+						termsOfAccess: organization.access?.terms || undefined,
+						termsVersion: organization.access?.termsVersion || undefined
+					}
+				}
+			}
+		}}, { upsert: false });
+	},
+	async bulkRemoveUsersFromOrg(authGroup, org, ids) {
+		return Account.updateMany({ authGroup, _id: { $in: ids }, access: { $elemMatch: { 'organization.id': org }}}, {
+			$pull: {
+				access: {
+					$elemMatch: { 'organization.id': org }
+				}
+			}}, { upsert: false });
 	},
 	async checkDomains(authGroup, orgId, id) {
 		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': orgId, 'organization.domains': id }} }).select({ _id: 1, authGroup: 1 });
