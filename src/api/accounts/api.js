@@ -4,6 +4,7 @@ import acct from './account';
 import access from './access';
 import group from '../authGroup/group';
 import orgProfile from '../profiles/profiles/org';
+import orgs from '../orgs/orgs';
 import challenge from '../plugins/challenge/challenge';
 import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
@@ -485,6 +486,11 @@ const api = {
 			} else {
 				id = (req.params.id === 'me') ? req.user.sub : req.params.id;
 				await permissions.enforceOwn(req.permissions, id);
+			}
+			if(req.query?.org){
+				const organization = await orgs.getOrg(req.authGroup.id, req.query.org);
+				if(!organization) delete req.query.org;
+				else req.query.org = organization.id;
 			}
 			const result = await access.getUserAccess(req.authGroup, id, req.query);
 			if (!result) throw Boom.notFound(`id requested was ${id}`);

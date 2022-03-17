@@ -4,7 +4,6 @@ import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
 import orgs from '../orgs/orgs';
-import product from '../products/product';
 import clientAccess from '../oidc/client/access';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
@@ -408,7 +407,8 @@ function oidcConfig(g, aliasDns = undefined) {
 						minimized: true
 					};
 					if(ctx.oidc.body.x_access_filter_organization){
-						query.org = ctx.oidc.body.x_access_filter_organization;
+						const organization = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_access_filter_organization);
+						if(organization) query.org = organization.id;
 					}
 					if(ctx.oidc.body.x_access_filter_domain){
 						query.domain = ctx.oidc.body.x_access_filter_domain;
@@ -448,17 +448,23 @@ function oidcConfig(g, aliasDns = undefined) {
 								}
 								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
 									if(ctx.oidc.body.x_organization_context) {
-										/*
-										// access already validates that the orgs exist...
-										const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
-										if(!org || !org.id) {
-											throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
+										let orgContext;
+										if(ctx.oidc.body.x_organization_context === ctx.oidc.body.x_access_filter_organization ||
+											ctx.oidc.body.x_organization_context === query?.org) {
+											if(query?.org) orgContext = query.org;
+										} else {
+											const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
+											if (!org?.id) {
+												throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
+											}
+											orgContext = org.id;
 										}
-										 */
-										if(!access.orgs.split(' ').includes(ctx.oidc.body.x_organization_context)) {
-											throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${ctx.oidc.body.x_organization_context}`);
+										if(orgContext) {
+											if(!access.orgs.split(' ').includes(orgContext)) {
+												throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${ctx.oidc.body.x_organization_context}`);
+											}
+											claims['x-organization-context'] = ctx.oidc.body.x_organization_context;
 										}
-										claims['x-organization-context'] = ctx.oidc.body.x_organization_context;
 									}
 									claims['x-access-organizations'] = access.orgs;
 								}
