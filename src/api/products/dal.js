@@ -14,7 +14,7 @@ export default {
 	},
 	async getTheseProducts(authGroup, idArray) {
 		return Product.find({ _id: { $in: idArray}, authGroup })
-			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1 });
+			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1, b2c: 1, url: 1 });
 	},
 	async getB2cProducts(authGroup) {
 		return Product.find({ authGroup, b2c: true, core: { $ne: true }})
@@ -27,9 +27,9 @@ export default {
 	async getProduct(authGroup, id) {
 		return Product.findOne( { authGroup, $or: [{ _id: id }, { codedId: id }] });
 	},
-	async getOrgProduct(authGroup, id) {
+	async getThisProduct(authGroup, id) {
 		return Product.findOne( { authGroup, $or: [{ _id: id }, { codedId: id }] })
-			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1 });
+			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1, b2c: 1, url: 1 });
 	},
 	async deleteProduct(authGroup, id) {
 		return Product.findOneAndRemove( { _id: id, authGroup });

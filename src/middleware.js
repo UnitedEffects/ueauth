@@ -7,6 +7,7 @@ import authorizer from './auth/auth';
 import helper from './helper';
 import group from './api/authGroup/group';
 import orgs from './api/orgs/orgs';
+import doms from './api/domains/domain';
 import product from './api/products/product';
 import account from './api/accounts/account';
 import access from './permissions';
@@ -243,6 +244,17 @@ const mid = {
 				return next();
 			}
 			req.organization = await orgs.getOrg(req.authGroup.id, req.params.org);
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
+	async validateDomain (req, res, next) {
+		try {
+			if (!req.params.domain) throw Boom.preconditionRequired('organization ID is required');
+			if (!req.authGroup) throw Boom.preconditionRequired('AuthGroup is required');
+			if (!req.organization) throw Boom.preconditionRequired('Organization context required');
+			req.domain = await doms.getDomain(req.authGroup.id, req.organization.id, req.params.domain);
 			return next();
 		} catch (error) {
 			next(error);

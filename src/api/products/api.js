@@ -187,7 +187,35 @@ const api = {
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			if(!req.organization.associatedProducts.includes(req.params.id)) throw Boom.notFound(req.params.id);
-			const result = await prod.getOrgProduct(req.authGroup.id || req.authGroup._id, req.params.id);
+			const result = await prod.getThisProduct(req.authGroup.id || req.authGroup._id, req.params.id);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getOrgDomainProducts(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization context');
+			if(!req.domain) throw Boom.preconditionRequired('Must provide an organization context');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			await permissions.enforceOwnDomain(req.permissions, req.domain.id);
+			const result = await prod.getTheseProducts(req.authGroup.id, req.domain.associatedOrgProducts || []);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async getOrgDomainProduct(req, res, next) {
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization context');
+			if(!req.domain) throw Boom.preconditionRequired('Must provide an organization context');
+			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
+			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
+			await permissions.enforceOwnDomain(req.permissions, req.domain.id);
+			if(!req.domain.associatedOrgProducts.includes(req.params.id)) throw Boom.notFound(req.params.id);
+			const result = await prod.getThisProduct(req.authGroup.id || req.authGroup._id, req.params.id);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
