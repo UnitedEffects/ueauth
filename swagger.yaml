@@ -37,8 +37,8 @@ tags:
     description: View access you have or have granted to secured profiles
   - name: Clients
     description: Reading or Deleting Clients in your Auth Group. User OIDC /reg for Create or Updates
-  - name: User Access
-    description: Manageing enterprise access being applied to users
+  - name: Account Dashboard
+    description: Manage personal account notifications, organizations, products, and more
   - name: Client Access
     description: Clients can be supplied with a single product reference and multiple roles to empower them with permissions
   - name: Validate Access
@@ -61,8 +61,8 @@ tags:
     description: General APIs to aid data updates or UI functionality
   - name: Organizations
     description: Manage subsets of the Auth Group data to represent customers, departments, etc. Apply Products to indicate licensed software
-  - name: Organization Users
-    description: User Account management through the Organization context
+  - name: Organization Users & Access
+    description: Manageing enterprise access being applied to users
   - name: Organization User Profiles
     description: Personal information (name, address, number) added and only accessible by the Organization and referenced Account
   - name: Organization Notification
@@ -2256,7 +2256,7 @@ paths:
   /api/{group}/organizations/profiles/account/{id}:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: As an Account holder, you can view all Org Profiles tied to your Account, regardless of Org Access
       description: Even though the Organization Account Profile is controlled by the Org, Accounts can still see that the org has their data and request that data be removed at any time. Use this API to see which Organizations have an Org Account Profile tied to you and the status of any requests you've made.
       operationId: getAllOrgProfiles
@@ -2323,7 +2323,7 @@ paths:
   /api/{group}/organizations/{org}/profiles/account/{id}:
     post:
       tags:
-        - User Access
+        - Account Dashboard
       summary: As an Account holder, request that an Organization delete your Org Profile, regardless of your access
       description: Even though the Organization Account Profile is controlled by the Org, Accounts can still see that the org has their data and request that data be removed at any time. Use this API to request the removal or clear the request. You can reference yourself with 'me' or if you have permissions, any Account ID.
       operationId: requestToOrgProfile
@@ -2401,7 +2401,7 @@ paths:
   /api/{group}/organization/{org}/account:
     put:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Register a new or existing user as part of an organization
       description: If you intend to add or create a user specific to your organization, this is the correct API. You may want to use the account/search API first. This method will check to see if a user with the email specified exists. If the user exists, an organization access record will be added to that user's account, otherwise, the user is first created and then the access record added. This API does not allow you to set a password, one will be generated. If notifications are enabled (recommended), the caller will never see the password and a notification will be sent to the user or they can simply trigger a password reset to claim the account. If notifications are not enabled, the generated password will be returned with this call and include a warning that notifications are disabled. Please note that the only data provided by this endpoint (or any Account API) is the id, username, and email of the user within this AuthGroup. The Account record holds no personal information aside from this email address and an optional phone number which is only visible to that Account owner.
       operationId: writeAccountToOrg
@@ -2450,7 +2450,7 @@ paths:
   /api/{group}/organization/{org}/accounts:
     put:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Register multiple existing Auth Group accounts to the organization.
       description: This will register multiple accounts to the organization. This API takes account Ids not email addresses. Unlike individual additions to an organization, this bulk endpoint will not create the accounts in the AuthGroup if they do not exist.
       operationId: bulkWriteAccountsToOrg
@@ -2500,7 +2500,7 @@ paths:
         required: true
     delete:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Remove multiple accounts from an organization.
       description: This will bulk remove accounts from an organization. This API requires a body to be passed with a DELETE method.
       operationId: bulkRemoveAccountsFromOrg
@@ -2550,7 +2550,7 @@ paths:
         required: true
     get:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Retrieve all users associated to an organization
       description: This API allows you to browse the email and id of every user that has been added to your organization.
       operationId: getAccountsByOrg
@@ -2620,7 +2620,7 @@ paths:
   '/api/{group}/organization/{org}/account/{id}':
     get:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Find a User with ID
       description: Identify a single user associated to an organization. Remember that Account records only return create/modified/active metadata, an email and an id.
       operationId: getAccountByOrg
@@ -2667,7 +2667,7 @@ paths:
   /api/{group}/access/organization/{org}/account/{id}:
     delete:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Remove an organization from user's access
       description: This endpoint removes a user form an organization and cuts off all access immediately. Please be advised, if a user obtained access records as part ofa  JWT token, that token may still show access until it expires.
       operationId: remove Org from access
@@ -2714,7 +2714,7 @@ paths:
         - openId: []
     get:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Get defined user access in order to make edits with PUT
       description: Get the specific record of domains and roles within the context of an organization. You can update and send back this record as part of the associated PUT endpoint to make changes.
       operationId: getDefinedUserAccess
@@ -2761,7 +2761,7 @@ paths:
         - openId: []
     put:
       tags:
-        - Organization Users
+        - Organization Users & Access
       summary: Overwrite defined user access of an Account in the context of a single Organization
       description: This endpoint allows you to change the domains and roles associated to an Account within the context of an Organization. Remember that this will overwrite the record not patch it.
       operationId: defineUserAccess
@@ -2820,11 +2820,133 @@ paths:
         description: Updated access object
         required: true
 
-  # User Access
+  /api/{group}/access/organization/{org}/accounts:
+    put:
+      tags:
+        - Organization Users & Access
+      summary: Add multiple user accounts to multiple domains and roles
+      description: Add multiple user accounts to multiple domains and roles. This is only an addition API and will not remove any roles or domains.
+      operationId: defineBulkUserAccessAdd
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: Organization id access is being applied to
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/updateUserAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accounts
+              allOf:
+                - $ref: '#/components/schemas/writeAccess'
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+        description: Updated access object
+        required: true
+    delete:
+      tags:
+        - Organization Users & Access
+      summary: Remove multiple user accounts from multiple domains and roles
+      description: Remove multiple user accounts from multiple domains and roles. This is only a remove API and will not add any roles or domains.
+      operationId: defineBulkUserAccessRemove
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: org
+          in: path
+          description: Organization id access is being applied to
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/updateUserAccess'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accounts
+              allOf:
+                - $ref: '#/components/schemas/writeAccess'
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+        description: Updated access object
+        required: true
+
+  # Account Dashboard
   /api/{group}/access/account/{id}:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Query the organizations, products, roles and permissions of a user
       description: This API will return all of the access information available for a specific user. It is not recommended that anyone other than AuthGroup administrators be given permissions to this endpoint.
       operationId: getUserAccess
@@ -2985,7 +3107,7 @@ paths:
   /api/{group}/access/organizations:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Allows a user to view their account organizations and the state of those organizations
       description: When an organization is applied to a user, it may be fully functional immediately (providing full access) or it may require the user to accept Terms of Access. This API allows the user to view the state of those organizations so the user can accept, decline or otherwise take action with regards to their account and information relative to organizations.
       operationId: getMyOrgs
@@ -3026,7 +3148,7 @@ paths:
   /api/{group}/access/organizations/{org}/terms:
     put:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Accept or decline terms of access for an organization. Declining will remove you from the organization.
       description: This API allows a user to agree to the terms of access imposed by an organization, or decline and remove all access from that organization.
       operationId: acceptOrDeclineOrg
@@ -3089,7 +3211,7 @@ paths:
   /api/{group}/access/my/organizations/{org}/products:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Allows a user to view all products within the context of one org to which they have access and can be linked
       description: This will return an object array of all the b2c products the Auth Group has and all of the b2b products within the context of the organization. The data is derived from the token only.
       operationId: getMyProducts
@@ -3150,7 +3272,7 @@ paths:
   /api/{group}/access/my/organizations:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Allows a user to view detailed information about any organizations on their token
       description: "Query details about the organizations you have access to. They must be present on your token for this to work, which means the token was requested with the scope access or access::organization"
       operationId: getMyOrgDetails
@@ -3199,7 +3321,7 @@ paths:
   /api/{group}/access/my/notifications:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Allows a user to request any notifications sent to them
       description: View all notifications not yet expired (ttl) with your user Id as the recipient
       operationId: getMyNotifications
@@ -3248,7 +3370,7 @@ paths:
   /api/{group}/access/my/notification/{id}:
     get:
       tags:
-        - User Access
+        - Account Dashboard
       summary: Allows a user to view a single notification that was sent to them only
       description: Allows a user to view a notification by id if the recipientUserId is their own user id
       operationId: getMyNotification

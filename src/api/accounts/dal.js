@@ -1,7 +1,5 @@
 import Account from './model';
 import bcrypt from 'bcryptjs';
-import org from '../profiles/profiles/org';
-import Boom from '@hapi/boom';
 
 export default {
 	async writeAccount(data) {
@@ -110,10 +108,79 @@ export default {
 	async checkOrganizations(authGroup, organizations) {
 		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
 	},
+	//todo these need to account for more than one domain
+	async bulkAddUsersToDomains(authGroup, org, domains, ids) {
+		const filter = {
+			authGroup,
+			_id: {$in: ids},
+			access: { $elemMatch: {'organization.id': org} }
+		};
+
+		return Account.updateMany(filter, {
+			$addToSet: {
+				'access.$[o].organization.domains': { $each: domains }
+			}}, {
+			arrayFilters: [
+				{ 'o.organization.id': org }
+			],
+			upsert: false
+		});
+	},
+	async bulkRemoveUsersFromDomains(authGroup, org, domains, ids) {
+		const filter = {
+			authGroup,
+			_id: {$in: ids},
+			access: { $elemMatch: {'organization.id': org} }
+		};
+
+		return Account.updateMany(filter, {
+			$pull: {
+				'access.$[o].organization.domains': { $in: domains }
+			}}, {
+			arrayFilters: [
+				{ 'o.organization.id': org }
+			],
+			upsert: false
+		});
+	},
+	async bulkAddUsersToRoles(authGroup, org, roles, ids) {
+		const filter = {
+			authGroup,
+			_id: {$in: ids},
+			access: { $elemMatch: {'organization.id': org} }
+		};
+
+		return Account.updateMany(filter, {
+			$addToSet: {
+				'access.$[o].organization.roles': { $each: roles }
+			}}, {
+			arrayFilters: [
+				{ 'o.organization.id': org }
+			],
+			upsert: false
+		});
+	},
+	async bulkRemoveUsersFromRoles(authGroup, org, roles, ids) {
+		const filter = {
+			authGroup,
+			_id: {$in: ids},
+			access: { $elemMatch: {'organization.id': org} }
+		};
+
+		return Account.updateMany(filter, {
+			$pull: {
+				'access.$[o].organization.roles': { $in: roles }
+			}}, {
+			arrayFilters: [
+				{ 'o.organization.id': org }
+			],
+			upsert: false
+		});
+	},
 	async bulkAddUsersToOrg(authGroup, organization, ids) {
 		const filter = {
-			authGroup, 
-			_id: { $in: ids }, 
+			authGroup,
+			_id: { $in: ids },
 			access: {$not: { $elemMatch: { 'organization.id': organization.id }}}};
 		if (organization.emailDomains?.length !== 0) {
 			let emailFilter;

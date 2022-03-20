@@ -32,6 +32,33 @@ const factory = {
 	async bulkRemoveAccountsFromOrg(authGroup, org, ids) {
 		return dal.bulkRemoveUsersFromOrg(authGroup, org, ids);
 	},
+	async bulkAddAccessToAccounts(authGroup, org, data) {
+		const ids = data.accounts;
+		const domains = data.domains;
+		const roles = data.roles;
+		let addDoms, addRoles;
+		if(domains) {
+			addDoms = await dal.bulkAddUsersToDomains(authGroup, org, domains, ids);
+		}
+		if(roles) {
+			addRoles = await dal.bulkAddUsersToRoles(authGroup, org, roles, ids);
+		}
+		return (addRoles || addDoms);
+	},
+	async bulkRemoveAccessToAccounts(authGroup, org, data) {
+		const ids = data.accounts;
+		const domains = data.domains;
+		const roles = data.roles;
+		let addDoms, addRoles;
+		if(domains) {
+			addDoms = await dal.bulkRemoveUsersFromDomains(authGroup, org, domains, ids);
+		}
+		if(roles) {
+			addRoles = await dal.bulkRemoveUsersFromRoles(authGroup, org, roles, ids);
+		}
+		return (addRoles || addDoms);
+	},
+
 	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify= true, aliasUi = undefined, aliasDns = undefined) {
 		// pull user record
 		const authGroup = ag.id;
