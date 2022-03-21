@@ -2846,9 +2846,32 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/updateUserAccess'
+                type: object
+                properties:
+                  domains:
+                    type: object
+                    properties:
+                      matching:
+                        type: number
+                        description: how many records matched the account ids given
+                      modified:
+                        type: number
+                        description: how many records were updated
+                      operationRan:
+                        type: boolean
+                        description: did the update run as expected
+                  roles:
+                    type: object
+                    properties:
+                      matching:
+                        type: number
+                        description: how many records matched the account ids given
+                      modified:
+                        type: number
+                        description: how many records were updated
+                      operationRan:
+                        type: boolean
+                        description: did the update run as expected
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2906,9 +2929,32 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/updateUserAccess'
+                type: object
+                properties:
+                  domains:
+                    type: object
+                    properties:
+                      matching:
+                        type: number
+                        description: how many records matched the account ids given
+                      modified:
+                        type: number
+                        description: how many records were updated
+                      operationRan:
+                        type: boolean
+                        description: did the update run as expected
+                  roles:
+                    type: object
+                    properties:
+                      matching:
+                        type: number
+                        description: how many records matched the account ids given
+                      modified:
+                        type: number
+                        description: how many records were updated
+                      operationRan:
+                        type: boolean
+                        description: did the update run as expected
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

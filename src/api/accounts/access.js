@@ -43,7 +43,7 @@ const factory = {
 		if(roles) {
 			addRoles = await dal.bulkAddUsersToRoles(authGroup, org, roles, ids);
 		}
-		return (addRoles || addDoms);
+		return ({ domains: { matching: addDoms?.n, modified: addDoms?.nModified, operationRan: (addDoms?.ok === 1) }, roles: { matching: addRoles?.n, modified: addRoles?.nModified, operationRan: (addRoles?.ok === 1) } });
 	},
 	async bulkRemoveAccessToAccounts(authGroup, org, data) {
 		const ids = data.accounts;
@@ -56,7 +56,7 @@ const factory = {
 		if(roles) {
 			addRoles = await dal.bulkRemoveUsersFromRoles(authGroup, org, roles, ids);
 		}
-		return (addRoles || addDoms);
+		return ({ domains: { matching: addDoms?.n, modified: addDoms?.nModified, operationRan: (addDoms?.ok === 1) }, roles: { matching: addRoles?.n, modified: addRoles?.nModified, operationRan: (addRoles?.ok === 1) } });
 	},
 
 	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify= true, aliasUi = undefined, aliasDns = undefined) {
