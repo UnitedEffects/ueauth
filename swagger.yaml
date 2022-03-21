@@ -6171,6 +6171,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: search
+          in: query
+          description: keyword search across records - not part of oData
+          schema:
+            type: string
+          required: false
         - name: $filter
           in: query
           description: oData filter Query
@@ -9246,6 +9252,9 @@ components:
         externalId:
           type: string
           description: If an external system manages sales/billing of organizations, you can link with this
+        alias:
+          type: string
+          description: human readable word that represents the organization - e.g. slug
         name:
           type: string
           description: organization name
