@@ -108,7 +108,6 @@ export default {
 	async checkOrganizations(authGroup, organizations) {
 		return Account.find({ authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
 	},
-	//todo these need to account for more than one domain
 	async bulkAddUsersToDomains(authGroup, org, domains, ids) {
 		const filter = {
 			authGroup,
@@ -205,6 +204,28 @@ export default {
 				}
 			}
 		}}, { upsert: false });
+	},
+	async bulkSetTermsAccessFalse(authGroup, org, newVersion, terms) {
+		const filter = {
+			authGroup,
+			$and: [
+				{access: { $elemMatch: {'organization.id': org }}},
+				{access:  { $not: { 'organization.terms.termsVersion': newVersion }}},
+			]
+		};
+		return Account.updateMany(filter, {
+			'access.$[o].organization.terms.termsVersion': newVersion,
+			'access.$[o].organization.terms.required': true,
+			'access.$[o].organization.terms.termsDeliveredOn': Date.now(),
+			'access.$[o].organization.terms.termsOfAccess': terms,
+			'access.$[o].organization.terms.termsAcceptedOn': undefined,
+			'access.$[o].organization.terms.accepted': false,
+		}, {
+			arrayFilters: [
+				{ 'o.organization.id': org }
+			],
+			upsert: false
+		});
 	},
 	async bulkRemoveUsersFromOrg(authGroup, org, ids) {
 		return Account.updateMany({ authGroup, _id: { $in: ids }, access: { $elemMatch: { 'organization.id': org }}}, {

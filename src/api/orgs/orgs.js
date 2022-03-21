@@ -8,6 +8,7 @@ import profile from '../profiles/profiles/org';
 import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
+
 import Joi from 'joi';
 
 export default {
@@ -94,6 +95,17 @@ export default {
 			ueEvents.emit(authGroup.id, 'ue.organization.error', e);
 		}
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.organization.edit', result);
+		if(patched.access?.required === true && org.access?.termsVersion !== patched.access?.termsVersion) {
+			// todo - event based async bulk notification
+			if(patched.access?.disableAccessOnChange === true) {
+				try {
+					await access.bulkSetTermsAccessFalse(authGroup.id, id, patched.access.termsVersion, patched.access.terms);
+				} catch (error) {
+					console.error(error);
+					ueEvents.emit(authGroup.id, 'ue.account.error', error);
+				}
+			}
+		}
 		return result;
 	},
 

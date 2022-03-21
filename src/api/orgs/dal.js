@@ -10,7 +10,7 @@ export default {
 		return Organization.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
 	async getOrg(authGroup, id) {
-		return Organization.findOne( { $or: [{ _id: id }, { externalId: id }], authGroup });
+		return Organization.findOne( { $or: [{ _id: id }, { externalId: id }, { alias: id }], authGroup });
 	},
 	async getTheseOrgs(authGroup, idArray) {
 		return Organization.find({ _id: { $in: idArray}, authGroup }).select({ _id: 1, externalId: 1, name: 1, description: 1, contactEmail: 1, contactName: 1, contactAddress: 1, contactPhone: 1});

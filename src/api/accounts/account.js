@@ -43,19 +43,7 @@ export default {
 			failed = error?.writeErrors;
 			success = error?.insertedDocs;
 		}
-		// todo - build bulk notification system to make this possible
-		/*
-		if (global.notifications.enabled === true &&
-			authGroup.pluginOptions.notification.enabled === true &&
-			authGroup.config.autoVerify === true) {
-			try {
-				await this.bulkResetOrVerify(authGroup, global, success, creator, false, customDomain);
-			} catch (er) {
-				console.error(er);
-				failed.push({ warning: er.message, message: 'some accounts may not have received a notification' });
-			}
-		}
-		 */
+		// todo - event based bulk notification system
 		return { warning: 'Auto verify does not work with bulk imports. You will need to send password reset notifications or direct your users to the self-service password reset page.', attempted, ok, failed, success };
 	},
 	async writeAccount(data, creator = undefined) {
