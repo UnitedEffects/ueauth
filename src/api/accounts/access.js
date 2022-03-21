@@ -58,7 +58,9 @@ const factory = {
 		}
 		return ({ domains: { matching: addDoms?.n, modified: addDoms?.nModified, operationRan: (addDoms?.ok === 1) }, roles: { matching: addRoles?.n, modified: addRoles?.nModified, operationRan: (addRoles?.ok === 1) } });
 	},
-
+	async bulkSetTermsAccessFalse(authGroup, org, version, terms) {
+		return dal.bulkSetTermsAccessFalse(authGroup, org, version, terms);
+	},
 	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify= true, aliasUi = undefined, aliasDns = undefined) {
 		// pull user record
 		const authGroup = ag.id;

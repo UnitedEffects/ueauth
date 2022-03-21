@@ -142,7 +142,11 @@ const orgSchema = new mongoose.Schema({
 			default: false
 		},
 		terms: String,
-		termsVersion: String
+		termsVersion: String,
+		disableAccessOnChange: {
+			type: Boolean,
+			default: false
+		}
 	},
 	profileNotifications: {
 		type: Boolean,

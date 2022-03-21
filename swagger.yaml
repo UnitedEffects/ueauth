@@ -9303,6 +9303,9 @@ components:
             termsVersion:
               type: string
               description: optional method to version your terms. recommended if you want to update them later
+            disableAccessOnChange:
+              type: boolean
+              description: if this is true, everytime the termsVersion changes, everyone loses access until they accept. Otherwise, a simple notification is created.
         profileNotifications:
           type: boolean
           description: When this is set to true, any Organization User Profile creation or update events result in a notification to the associated Account (user)

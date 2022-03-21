@@ -4,11 +4,16 @@ import dal from './dal';
 import dom from '../domains/domain';
 import prod from '../products/product';
 import access from '../accounts/access';
+import acc from '../accounts/account';
 import profile from '../profiles/profiles/org';
 import role from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
+import n from '../plugins/notifications/notifications';
+import plugs from '../plugins/plugins';
 import Joi from 'joi';
+
+const config = require('../../config');
 
 export default {
 	async writeOrg(agId, data) {
@@ -94,6 +99,17 @@ export default {
 			ueEvents.emit(authGroup.id, 'ue.organization.error', e);
 		}
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.organization.edit', result);
+		if(patched.access?.required === true && org.access?.termsVersion !== patched.access?.termsVersion) {
+			// todo - event based async bulk notification
+			if(patched.access?.disableAccessOnChange === true) {
+				try {
+					await access.bulkSetTermsAccessFalse(authGroup.id, id, patched.access.termsVersion, patched.access.terms);
+				} catch (error) {
+					console.error(error);
+					ueEvents.emit(authGroup.id, 'ue.account.error', error);
+				}
+			}
+		}
 		return result;
 	},
 
