@@ -20,6 +20,7 @@ export default {
 		if(data.sso) {
 			if(Object.keys(data.sso).length > 1) throw Boom.badRequest('You can only define a single SSO connection per org');
 		}
+		if(data.alias) data.alias = data.alias.toLowerCase();
 		const output = await dal.writeOrg(data);
 		ueEvents.emit(data.authGroup, 'ue.organization.create', output);
 		return output;
@@ -37,9 +38,13 @@ export default {
 	},
 
 	async getOrg(authGroupId, id) {
-		return await dal.getOrg(authGroupId, id);
+		return dal.getOrg(authGroupId, id);
 	},
 
+	async getOrgBySsoEmailDomain(authGroupId, email) {
+		const emailDomain = email.split('@');
+		return dal.getOrgBySsoEmailDomain(authGroupId, emailDomain[1]);
+	},
 	async getTheseOrgs(authGroupId, idArray) {
 		return dal.getTheseOrgs(authGroupId, idArray);
 	},
@@ -88,6 +93,7 @@ export default {
 		if(limited === true) {
 			await restrictedPatchValidation(org, patched);
 		} else await standardPatchValidation(org, patched);
+		if(patched.alias) patched.alias = patched.alias.toLowerCase();
 		const result = await dal.patchOrg(authGroup.id || authGroup._id, id, patched);
 		try {
 			await dom.updateAdminDomainAssociatedProducts(authGroup.id || authGroup._id, patched);

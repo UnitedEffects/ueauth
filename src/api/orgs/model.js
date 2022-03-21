@@ -165,6 +165,7 @@ const orgSchema = new mongoose.Schema({
 		oauth2: federatedOauth2,
 		saml: Object
 	},
+	ssoEmailDomain: String,
 	ssoAddAccountToOrg: {
 		type: Boolean,
 		default: false
@@ -187,6 +188,12 @@ orgSchema.index({ authGroup: 1, alias: 1 }, {
 	unique: true,
 	partialFilterExpression: {
 		'alias': { $exists: true, $gt: '' }
+	}
+});
+orgSchema.index({ authGroup: 1, ssoEmailDomain: 1 }, {
+	unique: true,
+	partialFilterExpression: {
+		ssoEmailDomain: { $exists: true, $gt: '' }
 	}
 });
 

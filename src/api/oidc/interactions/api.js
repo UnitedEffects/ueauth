@@ -42,7 +42,7 @@ async function safeAuthGroup(ag) {
 	return group.safeAuthGroup(ag);
 }
 
-export default {
+const api = {
 	async getInt(req, res, next) {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
@@ -50,6 +50,7 @@ export default {
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
+			params.emailScreen = true;
 			if (authGroup?.pluginOptions?.notification.enabled === true &&
 			req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
@@ -57,42 +58,22 @@ export default {
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
 
-			if(params.org && client.client_allow_org_federation===true && authGroup) {
-				try {
-					const organization = await org.getOrg(authGroup, params.org);
-					if(!organization) throw 'no org';
-					if(organization.sso) {
-						Object.keys(organization.sso).map((key) => {
-							if(organization.sso[key]) {
-								const orgSSO = JSON.parse(JSON.stringify(organization.sso[key]));
-								orgSSO.provider = `org:${params.org}`;
-								const code = `${key}.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
-								if(!client.client_federation_options || organization.ssoLimit === true) {
-									client.client_federation_options = [];
-								}
-								if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
-								if(!authGroup?.config?.federate) {
-									if(!authGroup?.config) throw Boom.badImplementation('Missing configuration for AuthGroup');
-									authGroup.config.federate = {
-										oidc: []
-									};
-								}
-								if(!authGroup?.config?.federate[key]) {
-									authGroup.config.federate[key] = [];
-								}
-								authGroup.config.federate[key].push(orgSSO);
-							}
-						});
-					}
-				} catch(error) {
-					log.notify('Issue with org SSO');
-				}
-			}
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
 			switch (prompt.name) {
 			case 'login': {
+				if(!params.org && client.client_allow_org_self_identify === true && authGroup) {
+					params.selfIdentify = true;
+				}
+				if(params.org && client.client_allow_org_federation === true && authGroup) {
+					try {
+						const organization = await org.getOrg(authGroup, params.org);
+						await orgSSO(organization, params, client, authGroup);
+					} catch(error) {
+						log.notify('Issue with org SSO');
+					}
+				}
 				const options = {
 					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
 				};
@@ -109,32 +90,6 @@ export default {
 			default:
 				return undefined;
 			}
-		} catch (err) {
-			return next(err);
-		}
-	},
-
-	async passwordless (req, res, next) {
-		try {
-			const provider = await oidc(req.authGroup, req.customDomain);
-			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
-			const { authGroup } = await safeAuthGroup(req.authGroup);
-			const client = await provider.Client.find(params.client_id);
-			if(client.auth_group !== authGroup.id) {
-				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
-			}
-			params.passwordless = false;
-			if (authGroup?.pluginOptions?.notification?.enabled === true &&
-				req.globalSettings?.notifications?.enabled === true) {
-				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
-			}
-
-			if (params.passwordless === false ||
-				authGroup?.pluginOptions?.notification?.enabled === false ||
-				req.globalSettings?.notifications?.enabled === false) {
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, 'Magic Link authentication is not enabled, please use another method.'));
-			}
-			return res.render('login/passwordless', interactions.pwdlessLogin(authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
 			return next(err);
 		}
@@ -170,6 +125,7 @@ export default {
 				token.payload.sub !== id ||
 				token.payload.email !== account.email ||
 				token.payload.uid !== uid) {
+				params.emailScreen = true;
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid credentials. Your Magic Link may have expired.'));
 			}
 
@@ -491,6 +447,7 @@ export default {
 	},
 	async login(req, res, next) {
 		try {
+			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
@@ -498,6 +455,47 @@ export default {
 			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
+			}
+			if (req.body?.action === 'orgLookup') {
+				params.emailScreen = true;
+				const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
+				if(req.body?.organization) {
+					try {
+						const organization = await org.getOrg(authGroup, req.body?.organization);
+						await orgSSO(organization, params, client, authGroup);
+					} catch(error) {
+						log.notify('Issue with org SSO');
+					}
+				}
+				const options = {
+					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
+				};
+				if(req.query.flash) options.flash = req.query.flash;
+				return res.render('login/login', options);
+			}
+
+			if (req.body?.action === 'email') {
+				if (!req.body?.email) params.emailScreen = true;
+				else params.email = req.body.email;
+				const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
+				if(client.client_allow_org_federation===true && authGroup && req.body?.email) {
+					try {
+						let organization;
+						if(params.org) {
+							organization = await org.getOrg(authGroup, params.org);
+						} else {
+							organization = await org.getOrgBySsoEmailDomain(authGroup, req.body.email);
+						}
+						await orgSSO(organization, params, client, authGroup);
+					} catch(error) {
+						log.notify('Issue with org SSO');
+					}
+				}
+				const options = {
+					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
+				};
+				if(req.query.flash) options.flash = req.query.flash;
+				return res.render('login/login', options);
 			}
 
 			let account = {};
@@ -525,6 +523,7 @@ export default {
 				if(client.auth_group !== authGroup.id) {
 					throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 				}
+				params.emailScreen = true;
 				return res.render('login/login',
 					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
 						{
@@ -612,11 +611,13 @@ export default {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			} else {
+				params.emailScreen = true;
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Magic Link login is not available at this time.'));
 			}
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 			if (!account) {
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email or password.'));
+				params.emailScreen = true;
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email address'));
 			}
 			if(account.mfa?.enabled === true) {
 				const metaChallenge = {
@@ -651,6 +652,7 @@ export default {
 				await iat.deleteOne(iAccessToken.jti, authGroup.id);
 			}
 			if (_uid && client && _params) {
+				_params.emailScreen = true;
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Magic Link login is not available right now. You can try traditional login or come back later.'));
 			}
 			return next(err);
@@ -813,4 +815,33 @@ async function checkProvider(upstream, ag) {
 	});
 	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${name}`);
 	return { spec, provider, name, myConfig: option[0]};
+}
+
+export default api;
+
+async function orgSSO(organization, params, client, authGroup) {
+	if(organization?.sso) {
+		params.organization = organization;
+		Object.keys(organization.sso).map((key) => {
+			if(organization.sso[key]) {
+				const orgSSO = JSON.parse(JSON.stringify(organization.sso[key]));
+				orgSSO.provider = `org:${params.org}`;
+				const code = `${key}.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
+				if(!client.client_federation_options || organization.ssoLimit === true) {
+					client.client_federation_options = [];
+				}
+				if(!client.client_federation_options.includes(code)) client.client_federation_options.push(code);
+				if(!authGroup?.config?.federate) {
+					if(!authGroup?.config) throw Boom.badImplementation('Missing configuration for AuthGroup');
+					authGroup.config.federate = {
+						oidc: []
+					};
+				}
+				if(!authGroup?.config?.federate[key]) {
+					authGroup.config.federate[key] = [];
+				}
+				authGroup.config.federate[key].push(orgSSO);
+			}
+		});
+	}
 }

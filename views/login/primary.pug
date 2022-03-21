@@ -9,7 +9,9 @@ block primary
     p.org-name=authGroupName
     if (client)
         p.product-name=client.clientName
-    if (!mfa || mfa.pending !== true)
+    if (params.selfIdentify === true)
+        include selfIdentify
+    else if (!mfa || mfa.pending !== true)
         include credentials
     else if (mfa.bindUser === true)
         include bindUser

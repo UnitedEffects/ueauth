@@ -239,7 +239,8 @@ function oidcConfig(g, aliasDns = undefined) {
 				'client_optional_skip_logout_prompt',
 				'associated_product',
 				'client_federation_options',
-				'client_allow_org_federation'
+				'client_allow_org_federation',
+				'client_allow_org_self_identify'
 			],
 			validator(ctx, key, value, metadata) {
 				if (key === 'auth_group') {
@@ -315,6 +316,16 @@ function oidcConfig(g, aliasDns = undefined) {
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						error.message = `${error.message} - Client Allow Org Federation`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'client_allow_org_self_identify') {
+					try {
+						if (value === undefined || value === null) value = false;
+						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Allow Org Self Identification`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
