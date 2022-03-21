@@ -255,12 +255,25 @@ router.put('/:group/account/panic', [
 router.put('/:group/organization/:org/account',[
 	m.validateAuthGroup,
 	m.validateOrganization,
-	m.getGlobalPluginSettings,
 	m.isAuthenticated,
 	m.getGlobalPluginSettings,
 	m.permissions,
 	m.access('accounts', 'organization')
 ], account.createOrAssociateAccount);
+router.put('/:group/organization/:org/accounts',[
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts', 'organization')
+], account.bulkAddAccountsToOrg);
+router.delete('/:group/organization/:org/accounts',[
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts', 'organization')
+], account.bulkRemoveAccountsFromOrg);
 router.get('/:group/organization/:org/accounts', [
 	m.validateAuthGroup,
 	m.validateOrganization,

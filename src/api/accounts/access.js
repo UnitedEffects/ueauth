@@ -26,6 +26,39 @@ const factory = {
 			roles: orgRecord.organization.roles
 		};
 	},
+	async bulkAddAccountsToOrg(authGroup, organization, ids) {
+		return dal.bulkAddUsersToOrg(authGroup, organization, ids);
+	},
+	async bulkRemoveAccountsFromOrg(authGroup, org, ids) {
+		return dal.bulkRemoveUsersFromOrg(authGroup, org, ids);
+	},
+	async bulkAddAccessToAccounts(authGroup, org, data) {
+		const ids = data.accounts;
+		const domains = data.domains;
+		const roles = data.roles;
+		let addDoms, addRoles;
+		if(domains) {
+			addDoms = await dal.bulkAddUsersToDomains(authGroup, org, domains, ids);
+		}
+		if(roles) {
+			addRoles = await dal.bulkAddUsersToRoles(authGroup, org, roles, ids);
+		}
+		return ({ domains: { matching: addDoms?.n, modified: addDoms?.nModified, operationRan: (addDoms?.ok === 1) }, roles: { matching: addRoles?.n, modified: addRoles?.nModified, operationRan: (addRoles?.ok === 1) } });
+	},
+	async bulkRemoveAccessToAccounts(authGroup, org, data) {
+		const ids = data.accounts;
+		const domains = data.domains;
+		const roles = data.roles;
+		let addDoms, addRoles;
+		if(domains) {
+			addDoms = await dal.bulkRemoveUsersFromDomains(authGroup, org, domains, ids);
+		}
+		if(roles) {
+			addRoles = await dal.bulkRemoveUsersFromRoles(authGroup, org, roles, ids);
+		}
+		return ({ domains: { matching: addDoms?.n, modified: addDoms?.nModified, operationRan: (addDoms?.ok === 1) }, roles: { matching: addRoles?.n, modified: addRoles?.nModified, operationRan: (addRoles?.ok === 1) } });
+	},
+
 	async defineAccess(ag, org, id, access, globalSettings, modifiedBy = 'SYSTEM_ADMIN', type='updated', notify= true, aliasUi = undefined, aliasDns = undefined) {
 		// pull user record
 		const authGroup = ag.id;

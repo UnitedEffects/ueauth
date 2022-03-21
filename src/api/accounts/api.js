@@ -72,6 +72,71 @@ const api = {
 			next(error);
 		}
 	},
+	async bulkAddAccountsToOrg(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!Array.isArray(req.body)) throw Boom.preconditionRequired('Expected an array of Account Ids');
+			const result = await access.bulkAddAccountsToOrg(req.authGroup.id, req.organization, req.body);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
+	async bulkRemoveAccountsFromOrg(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!Array.isArray(req.body)) throw Boom.preconditionRequired('Expected an array of Account Ids');
+			const result = await access.bulkRemoveAccountsFromOrg(req.authGroup.id, req.organization.id, req.body);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
+
+	async bulkAddAccessToAccounts(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!req.body.accounts || !Array.isArray(req.body.accounts)) {
+				throw Boom.preconditionRequired('Expected an array of Account Ids');
+			}
+			if(req.body.domains && !Array.isArray(req.body.domains)) {
+				throw Boom.preconditionRequired('Expected an array of domain Ids');
+			}
+			if(req.body.roles && !Array.isArray(req.body.roles)) {
+				throw Boom.preconditionRequired('Expected an array of roles Ids');
+			}
+			const result = await access.bulkAddAccessToAccounts(req.authGroup.id, req.organization.id, req.body);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
+	async bulkRemoveAccessToAccounts(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.organization) throw Boom.preconditionRequired('Must provide associated Organization');
+			if(!req.body.accounts || !Array.isArray(req.body.accounts)) {
+				throw Boom.preconditionRequired('Expected an array of Account Ids');
+			}
+			if(req.body.domains && !Array.isArray(req.body.domains)) {
+				throw Boom.preconditionRequired('Expected an array of domain Ids');
+			}
+			if(req.body.roles && !Array.isArray(req.body.roles)) {
+				throw Boom.preconditionRequired('Expected an array of roles Ids');
+			}
+			const result = await access.bulkRemoveAccessToAccounts(req.authGroup.id, req.organization.id, req.body);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch (error) {
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			next(error);
+		}
+	},
 
 	async createOrAssociateAccount(req, res, next) {
 		try {
