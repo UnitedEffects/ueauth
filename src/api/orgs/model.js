@@ -114,6 +114,7 @@ const orgSchema = new mongoose.Schema({
 	contactAddress: String,
 	contactPhone: String,
 	externalId: String,
+	alias: String,
 	metadata: Object,
 	// products purchased/licensed/accessed by the organization
 	associatedProducts: [
@@ -171,10 +172,17 @@ const orgSchema = new mongoose.Schema({
 },{ _id: false });
 
 orgSchema.index({ name: 1, authGroup: 1}, { unique: true });
+orgSchema.index( { alias: 'text', name: 'text', description: 'text', contactName: 'text' });
 orgSchema.index({ authGroup: 1, externalId: 1 }, {
 	unique: true,
 	partialFilterExpression: {
 		'externalId': { $exists: true, $gt: '' }
+	}
+});
+orgSchema.index({ authGroup: 1, alias: 1 }, {
+	unique: true,
+	partialFilterExpression: {
+		'alias': { $exists: true, $gt: '' }
 	}
 });
 

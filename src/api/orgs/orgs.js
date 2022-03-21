@@ -10,8 +10,6 @@ import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 
-const config = require('../../config');
-
 export default {
 	async writeOrg(agId, data) {
 		data.authGroup = agId;
@@ -27,7 +25,13 @@ export default {
 	},
 
 	async getOrgs(authGroupId, q) {
+		let search;
+		if(q.search) {
+			search = q.search;
+			delete q.search;
+		}
 		const query = await helper.parseOdataQuery(q);
+		if(search) query.query.$text = { $search : search };
 		return dal.getOrgs(authGroupId, query);
 	},
 
