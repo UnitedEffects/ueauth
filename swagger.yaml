@@ -7963,6 +7963,10 @@ components:
           type: boolean
           default: false
           description: when enabled, this allows an organization to issue their own custom SSO to login
+        client_allow_org_self_identify:
+          type: boolean
+          default: false
+          description: when enabled, login starts with a form that asks the user to enter an org id or alias
 
     clientObject:
       type: object
@@ -9316,6 +9320,10 @@ components:
         ssoAddAccountToOrg:
           type: boolean
           description: when true, a user logging in to a product with org specified is automatically added to the organization, assuming email domain restrictions do not prevent the add
+        ssoEmailDomain:
+          type: string
+          example: example.com
+          description: this is a unique SSO email domain for the organization
         sso:
           type: object
           description: while the API may define multiple options, you can only ever have one of these at a time on an organization

@@ -1,0 +1,13 @@
+block selfIdentify
+    .credential-container
+        form#mainLogin(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
+            p.sign-in Enter Your Organization ID or Alias
+            .credentials
+                div
+                    input#organization(type='text' name='organization' placeholder='Organization' required='' autofocus='autofocus' onfocus='this.select()')
+                    label(for='organization') Org
+            span.fpsw
+                a(href='/'+authGroup+'/forgotpassword') Forgot your password?
+                if (locked === false && registerUrl)
+                    a.fpsw-reg(href=registerUrl) Register Here
+            button.btn-custom.btn-signin(type='submit' form=mainLogin name='action' value='orgLookup') Continue

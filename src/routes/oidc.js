@@ -29,6 +29,12 @@ router.get('/:group/interaction/:uid', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], interactions.getInt);
+router.get('/:group/interaction/:uid/login', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], interactions.getInt);
 // abort interaction
 router.get('/:group/interaction/:uid/abort', [
 	jsonParser,
@@ -83,22 +89,7 @@ router.post('/:group/interaction/:uid/confirm', [
 	m.getGlobalPluginSettings
 ], interactions.confirm);
 
-/**
- * Password-less routes, not defined directly by OP Library
- */
-router.get('/:group/interaction/:uid/passwordless-request', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings
-], interactions.passwordless);
-router.post('/:group/interaction/:uid/passwordless', [
-	jsonParser,
-	urlParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings
-], interactions.sendPasswordFree);
+// Magic Link
 router.get('/:group/interaction/:uid/passwordless', [
 	jsonParser,
 	m.setNoCache,
