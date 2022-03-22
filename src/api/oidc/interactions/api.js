@@ -61,6 +61,7 @@ const api = {
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
+			await clearOrgContext(req, res, params, authGroup);
 			switch (prompt.name) {
 			case 'login': {
 				if(!params.org && client.client_allow_org_self_identify === true && authGroup) {
@@ -69,8 +70,10 @@ const api = {
 				if(params.org && client.client_allow_org_federation === true && authGroup) {
 					try {
 						const organization = await org.getOrg(authGroup, params.org);
-						await orgSSO(organization, params, client, authGroup);
+						await orgSSO(req, res, organization, params, client, authGroup);
+						console.info(JSON.stringify(authGroup, null, 2));
 					} catch(error) {
+						console.error(error)
 						log.notify('Issue with org SSO');
 					}
 				}
@@ -462,8 +465,9 @@ const api = {
 				if(req.body?.organization) {
 					try {
 						const organization = await org.getOrg(authGroup, req.body?.organization);
-						await orgSSO(organization, params, client, authGroup);
+						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
+						console.error(error);
 						log.notify('Issue with org SSO');
 					}
 				}
@@ -486,8 +490,9 @@ const api = {
 						} else {
 							organization = await org.getOrgBySsoEmailDomain(authGroup, req.body.email);
 						}
-						await orgSSO(organization, params, client, authGroup);
+						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
+						console.error(error);
 						log.notify('Issue with org SSO');
 					}
 				}
@@ -819,7 +824,32 @@ async function checkProvider(upstream, ag) {
 
 export default api;
 
-async function orgSSO(organization, params, client, authGroup) {
+async function clearOrgContext(req, res, params, authGroup) {
+	const url = params?.redirect_uri?.replace('https://', '')?.split('/');
+	if(Array.isArray(url)) {
+		const domain = url[0];
+		url.shift();
+		const path = url.join('/');
+		res.cookie(`${authGroup.id}.organization-context`, null, { domain, path, overwrite: true });
+	}
+}
+
+async function orgSSO(req, res, organization, params, client, authGroup) {
+	if(organization?.id) {
+		const url = params?.redirect_uri?.replace('https://', '')?.split('/');
+		if(Array.isArray(url)) {
+			const domain = url[0];
+			url.shift();
+			const path = url.join('/');
+			res.cookie(`${authGroup.id}.organization-context`, organization.id, { domain, path, overwrite: true });
+		}
+		let orgs = req.cookies[`${authGroup.id}.organizations`]?.split(',');
+		if(!orgs?.includes((organization.alias || organization.externalId || organization.id))) {
+			if(!Array.isArray(orgs)) orgs = [];
+			orgs.push((organization.alias || organization.externalId || organization.id));
+			res.cookie(`${authGroup.id}.organizations`, orgs.join(','), { sameSite: 'strict', overwrite: true });
+		}
+	}
 	if(organization?.sso) {
 		params.organization = organization;
 		Object.keys(organization.sso).map((key) => {
