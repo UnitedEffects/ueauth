@@ -1,13 +1,29 @@
 block selfIdentify
     .credential-container
-        form#mainLogin(autocomplete='off', action='/'+authGroup+'/interaction/'+uid+'/login', method='post')
-            p.sign-in Enter Your Organization ID or Alias
-            .credentials
-                div
-                    input#organization(type='text' name='organization' placeholder='Organization' required='' autofocus='autofocus' onfocus='this.select()')
-                    label(for='organization') Org
-            span.fpsw
-                a(href='/'+authGroup+'/forgotpassword') Forgot your password?
-                if (locked === false && registerUrl)
-                    a.fpsw-reg(href=registerUrl) Register Here
-            button.btn-custom.btn-signin(type='submit' form=mainLogin name='action' value='orgLookup') Continue
+        p.sign-in Organization ID or Alias
+        .credentials
+            if (params.orgs && params.orgs.length)
+                each org, i in params.orgs
+                    form(id='org'+i autocomplete='off' action='/' + authGroup + '/interaction/' + uid + '/login' method='post')
+                        input.hidden-accessible(form='org'+i type='text', name='organization' value=org)
+                        button.btn.btn-outline-dark.org-preset-button.m-b-10.text-left(type='submit' form='org'+i name='action' value='orgLookup')
+                            span=org
+                            i.fas.fa-arrow-right.icon-right
+                span.fpsw
+                    details.detail-color
+                        summary Enter a different organization
+                        .m-t-10
+                            form#mainLogin(autocomplete='off', action='/' + authGroup + '/interaction/' + uid + '/login', method='post')
+                                div
+                                    input#organization(type='text' name='organization' placeholder='Organization' required='' autofocus='autofocus' onfocus='this.select()')
+                                    label(for='organization') Org
+                            span.fpsw.clear-cache-container
+                                label.clear-cache-label Clear Saved Orgs
+                                input#clear.icon-right.clear-cache-checkbox(type='checkbox' form='mainLogin' name='clearCookies')
+                            button.btn-custom.btn-signin(type='submit' form='mainLogin' name='action' value='orgLookup') Continue
+            else
+                form#mainLogin(autocomplete='off', action='/' + authGroup + '/interaction/' + uid + '/login', method='post')
+                    div
+                        input#organization(type='text' name='organization' placeholder='Organization' required='' autofocus='autofocus' onfocus='this.select()')
+                        label(for='organization') Org
+                button.btn-custom.btn-signin(type='submit' form='mainLogin' name='action' value='orgLookup') Continue
