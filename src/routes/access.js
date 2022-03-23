@@ -472,7 +472,7 @@ router.get('/:group/products/:product/permissions/:id/reference-check/role', [
 	m.validateProduct,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('role')
+	m.access('roles')
 ], perm.checkForRoles);
 router.get('/:group/products/:product/reference-check/permissions', [
 	m.validateAuthGroup,
