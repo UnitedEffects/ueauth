@@ -65,12 +65,14 @@ const api = {
 			case 'login': {
 				if(!params.org && client.client_allow_org_self_identify === true && authGroup) {
 					params.selfIdentify = true;
+					params.orgs = req.cookies[`${authGroup.id}.organizations`]?.split(',');
 				}
 				if(params.org && client.client_allow_org_federation === true && authGroup) {
 					try {
 						const organization = await org.getOrg(authGroup, params.org);
-						await orgSSO(organization, params, client, authGroup);
+						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
+						console.error(error)
 						log.notify('Issue with org SSO');
 					}
 				}
@@ -462,8 +464,10 @@ const api = {
 				if(req.body?.organization) {
 					try {
 						const organization = await org.getOrg(authGroup, req.body?.organization);
-						await orgSSO(organization, params, client, authGroup);
+						params.org = organization.id;
+						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
+						console.error(error);
 						log.notify('Issue with org SSO');
 					}
 				}
@@ -481,13 +485,14 @@ const api = {
 				if(client.client_allow_org_federation===true && authGroup && req.body?.email) {
 					try {
 						let organization;
-						if(params.org) {
-							organization = await org.getOrg(authGroup, params.org);
+						if(params.org || req.body?.org) {
+							organization = await org.getOrg(authGroup, (params.org || req.body?.org));
 						} else {
 							organization = await org.getOrgBySsoEmailDomain(authGroup, req.body.email);
 						}
-						await orgSSO(organization, params, client, authGroup);
+						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
+						console.error(error);
 						log.notify('Issue with org SSO');
 					}
 				}
@@ -792,7 +797,7 @@ async function checkProvider(upstream, ag) {
 		if(!authGroup.config.federate[spec]) {
 			authGroup.config.federate[spec] = [];
 		}
-		if(organization.sso && organization.sso[spec]){
+		if(organization?.sso && organization?.sso[spec]){
 			organization.sso[spec].provider = provider;
 			authGroup.config.federate[spec].push(organization.sso[spec]);
 		}
@@ -819,13 +824,25 @@ async function checkProvider(upstream, ag) {
 
 export default api;
 
-async function orgSSO(organization, params, client, authGroup) {
-	if(organization?.sso) {
+async function orgSSO(req, res, organization, params, client, authGroup) {
+	if(organization?.id) {
+		let orgs = [];
+		if(req.body?.clearCookies !== 'on') {
+			orgs = req.cookies[`${authGroup.id}.organizations`]?.split(',');
+		}
+		if(!orgs?.includes((organization.alias || organization.externalId || organization.id))) {
+			if(!Array.isArray(orgs)) orgs = [];
+			if(orgs.length > 4) orgs.shift();
+			orgs.push((organization.alias || organization.externalId || organization.id));
+			res.cookie(`${authGroup.id}.organizations`, orgs.join(','), { sameSite: 'strict', overwrite: true });
+		}
+	}
+	if(organization?.id && organization?.sso) {
 		params.organization = organization;
 		Object.keys(organization.sso).map((key) => {
 			if(organization.sso[key]) {
 				const orgSSO = JSON.parse(JSON.stringify(organization.sso[key]));
-				orgSSO.provider = `org:${params.org}`;
+				orgSSO.provider = `org:${organization.id}`;
 				const code = `${key}.${orgSSO.provider}.${orgSSO.name.replace(/ /g, '_')}`;
 				if(!client.client_federation_options || organization.ssoLimit === true) {
 					client.client_federation_options = [];
