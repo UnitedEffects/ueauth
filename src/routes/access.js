@@ -380,7 +380,7 @@ router.get('/:group/products/:product/permissions', [
 	m.permissions,
 	m.access('permissions')
 ], perm.getPermissions);
-router.post('/:group/products/:product/permissions', [
+router.post('/:group/products/:product/permission', [
 	m.validateAuthGroup,
 	m.validateProduct,
 	m.isAuthenticated,
@@ -402,6 +402,14 @@ router.delete('/:group/products/:product/permissions', [
 	m.permissions,
 	m.access('permissions')
 ], perm.bulkDelete);
+router.post('/:group/products/:product/permissions', [
+	m.validateAuthGroup,
+	m.validateProduct,
+	m.isAuthenticated,
+	m.schemaCheck,
+	m.permissions,
+	m.access('permissions')
+], perm.bulkAdd);
 router.delete('/:group/products/:product/permissions/:id', [
 	m.validateAuthGroup,
 	m.validateProduct,
