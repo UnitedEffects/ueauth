@@ -4,7 +4,7 @@ import roles from '../roles/roles';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 
-export default {
+const papi = {
 	async writePermission(data) {
 		const output = await dal.writePermission(data);
 		ueEvents.emit(data.authGroup, 'ue.permission.create', output);
@@ -42,6 +42,23 @@ export default {
 		const output = { rolesImpacted: 'WARNING - bulk delete may orphan permission references in roles', permission: result };
 		ueEvents.emit(authGroup, 'ue.permission.destroy', result);
 		return output;
+	},
+
+	async bulkAdd(authGroup, product, array, user) {
+		const permissions = [];
+		array.map((p) => {
+			const perm = {
+				...p,
+				authGroup,
+				product
+			};
+			if(user) {
+				perm.createdBy = user;
+				perm.modifiedBy = user;
+			}
+			permissions.push(perm);
+		});
+		return papi.bulkWrite(authGroup, permissions);
 	},
 
 	async deletePermissionsByProduct(authGroupId, product) {
@@ -84,3 +101,5 @@ export default {
 		return out;
 	}
 };
+
+export default papi;

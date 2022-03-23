@@ -6971,6 +6971,60 @@ paths:
         - openId: []
 
   # Permissions CRUD
+  /api/{group}/products/{product}/permission:
+    post:
+      tags:
+        - Permissions
+      summary: Create a permission.
+      description: Permissions have a many to one relationship to Products, meaning all Permissions must specify exactly one Product. Once created, a Permission can't be updated... you must delete it and create a new one. You will see references to a Permission's code in this and other UE Auth docs. This is refering to the shorthand and unique (within the AuthGroup and Product) encoding that UE Auth automatically creates for each permission object in the format of target::action:ownership. For a detailed explanation of Permissions in UE Auth, you may review this <a href='https://github.com/UnitedEffects/ueauth/wiki/UE-Auth-Permissions'>Wiki Document</a>.
+      operationId: createPermission
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Permission
+                  data:
+                    $ref: '#/components/schemas/permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writePermission'
+        description: Create a new permission
+        required: true
+      security:
+        - bearer: [ ]
+        - openId: [ ]
   /api/{group}/products/{product}/permissions:
     get:
       tags:
@@ -7059,9 +7113,9 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Create a permission.
-      description: Permissions have a many to one relationship to Products, meaning all Permissions must specify exactly one Product. Once created, a Permission can't be updated... you must delete it and create a new one. You will see references to a Permission's code in this and other UE Auth docs. This is refering to the shorthand and unique (within the AuthGroup and Product) encoding that UE Auth automatically creates for each permission object in the format of target::action:ownership. For a detailed explanation of Permissions in UE Auth, you may review this <a href='https://github.com/UnitedEffects/ueauth/wiki/UE-Auth-Permissions'>Wiki Document</a>.
-      operationId: createPermission
+      summary: Create many permissions.
+      description: Permissions have a many to one relationship to Products, meaning all Permissions must specify exactly one Product. Once created, a Permission can't be updated... you must delete it and create a new one. This API creates multiple permissions for a single product. For a detailed explanation of Permissions in UE Auth, you may review this <a href='https://github.com/UnitedEffects/ueauth/wiki/UE-Auth-Permissions'>Wiki Document</a>.
+      operationId: createManyPermission
       parameters:
         - name: group
           in: path
@@ -7086,7 +7140,9 @@ paths:
                     type: string
                     example: Permission
                   data:
-                    $ref: '#/components/schemas/permission'
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/permission'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -7103,8 +7159,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/writePermission'
-        description: Create a new role
+              type: array
+              items:
+                $ref: '#/components/schemas/writePermission'
+        description: Create new pemrissions
         required: true
       security:
         - bearer: []
