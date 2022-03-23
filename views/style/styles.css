@@ -126,6 +126,19 @@ input:focus + label, input:not(:placeholder-shown) + label {
 	padding-top: max(8vw, 140px);
 }
 
+.auto-width {
+	width: auto;
+}
+
+.middle-panel {
+	margin: 120px auto;
+	width: 480px;
+	border-radius: 8px;
+	box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+	box-sizing: border-box;
+	padding: 40px 60px 60px 60px;
+}
+
 .login-canvas-view {
 	width: 75%;
 }
@@ -362,6 +375,7 @@ details summary::-webkit-details-marker {
 	.credential-container {
 		border: none;
 		width: 100%;
+		padding: 0;
 		padding-bottom: 32px;
 	}
 
@@ -373,8 +387,6 @@ details summary::-webkit-details-marker {
 	.credential-container, .tandc {
 		width: 100%;
 		box-sizing: border-box;
-		padding-left: 60px;
-		padding-right: 60px;
 	}
 
 	button {
@@ -389,5 +401,9 @@ details summary::-webkit-details-marker {
 	.utility-panel {
 		box-shadow: none;
 	}
+	.middle-panel {
+		padding: 0;
+		box-shadow: none;
+	}
+}
 
-  }
