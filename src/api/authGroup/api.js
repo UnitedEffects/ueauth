@@ -205,13 +205,19 @@ const api = {
 				'payload.post_logout_redirect_uris': pl.post_logout_redirect_uris
 			};
 
-			//update redirect uris
-			update['payload.redirect_uris'] = update['payload.redirect_uris'].concat([`https://${result.aliasDnsUi}`, `https://${result.aliasDnsUi}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${result.aliasDnsOIDC}/oauth2-redirect.html`]);
-			update['payload.redirect_uris'] = [...new Set(update['payload.redirect_uris'])];
+			if(body.aliasDnsUi) {
+				update['payload.redirect_uris'] = update['payload.redirect_uris'].concat([`https://${result.aliasDnsUi}`, `https://${result.aliasDnsUi}${config.UI_LOGIN_REDIRECT_PATH}`]);
+				update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].concat([`https://${result.aliasDnsUi}`, `https://${result.aliasDnsUi}${config.UI_LOGOUT_REDIRECT_PATH}`]);
+			}
 
-			//update logout uris
-			update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].concat([`https://${result.aliasDnsUi}`, `https://${result.aliasDnsUi}${config.UI_LOGOUT_REDIRECT_PATH}`, `https://${result.aliasDnsOIDC}/oauth2-redirect.html`]);
+			if(body.aliasDnsOIDC) {
+				update['payload.redirect_uris'] = update['payload.redirect_uris'].concat([`https://${result.aliasDnsOIDC}/oauth2-redirect.html`]);
+				update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].concat([`https://${result.aliasDnsOIDC}/oauth2-redirect.html`]);
+			}
+
+			update['payload.redirect_uris'] = [...new Set(update['payload.redirect_uris'])];
 			update['payload.post_logout_redirect_uris'] = [...new Set(update['payload.post_logout_redirect_uris'])];
+
 			await cl.simplePatch(req.params.id, result.associatedClient, update);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -226,14 +232,34 @@ const api = {
 		// deletes both aliasDns entries from an authGroup
 		try {
 			await permissions.enforceRoot(req.permissions);
-			const result = await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN');
+			if(!req.params.target) throw Boom.preconditionRequired('Target of UI or OIDC required');
+			const result = await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN', req.params.target);
+			const client = await cl.getOneByAgId(req.params.id, result.associatedClient);
+			if(!client) throw Boom.badData('Associated client not found');
+			const pl = JSON.parse(JSON.stringify(client.payload));
+			if(!client.payload || !pl.redirect_uris || !Array.isArray(pl.redirect_uris)) throw Boom.badData('Something went wrong updating the client redirect-uri for this authgroup');
+			if(!pl.post_logout_redirect_uris || !Array.isArray(pl.post_logout_redirect_uris)) throw Boom.badData('Something went wrong updating the client post-logout-redirect-uri for this authgroup');
 			const update = {
-				'payload.redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`],
-				'payload.post_logout_redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`]
+				'payload.redirect_uris': pl.redirect_uris,
+				'payload.post_logout_redirect_uris': pl.post_logout_redirect_uris
 			};
-			if(config.ENV !== 'dev') {
-				update['payload.post_logout_redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
-				update['payload.redirect_uris'].push(`https://${config.SWAGGER}/oauth2-redirect.html`);
+
+			if(req.params.target === 'ui') {
+				update['payload.redirect_uris'] = update['payload.redirect_uris'].filter((url) => {
+					return (!url.includes(req.authGroup.aliasDnsUi));
+				});
+				update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].filter((url) => {
+					return (!url.includes(req.authGroup.aliasDnsUi));
+				});
+			}
+
+			if(req.params.target === 'oidc') {
+				update['payload.redirect_uris'] = update['payload.redirect_uris'].filter((url) => {
+					return (!url.includes(req.authGroup.aliasDnsOIDC));
+				});
+				update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].filter((url) => {
+					return (!url.includes(req.authGroup.aliasDnsOIDC));
+				});
 			}
 			await cl.simplePatch(req.params.id, result.associatedClient, update);
 			return res.respond(say.ok(result, RESOURCE));

@@ -50,7 +50,7 @@ router.post('/group/:id/alias-dns', [
 	m.isAuthenticated,
 	m.permissions,
 	m.access('group-aliasDns')], group.addAliasDns);
-router.delete('/group/:id/alias-dns', [
+router.delete('/group/:id/alias-dns/:target', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,

@@ -202,11 +202,18 @@ const agp = {
 	// @notTested
 	async updateAliasDns(id, body, user) {
 		const update = {
-			aliasDnsUi: body.aliasDnsUi,
-			aliasDnsOIDC: body.aliasDnsOIDC,
 			modifiedBy: user
 		};
-		const result = await dal.patchNoOverwrite(id, update);
+		const filter = {};
+		if(body.aliasDnsUi) {
+			update.aliasDnsUi = body.aliasDnsUi;
+			filter.$or = [{ aliasDnsUi: { $exists: false }}, { aliasDnsUi: null }];
+		}
+		if(body.aliasDnsOIDC) {
+			update.aliasDnsOIDC = body.aliasDnsOIDC;
+			filter.$or = [{ aliasDnsOIDC: { $exists: false }}, { aliasDnsOIDC: null }];
+		}
+		const result = await dal.patchNoOverwrite(id, update, filter);
 		if(!result) throw Boom.notFound(id);
 		const output = JSON.parse(JSON.stringify(result));
 		delete output.config;
@@ -216,11 +223,20 @@ const agp = {
 	},
 
 	// @notTested
-	async removeAliasDns(id, user) {
+	async removeAliasDns(id, user, target) {
 		const update = {
-			modifiedBy: user,
-			$unset: { aliasDnsOIDC: '', aliasDnsUi: '' }
+			modifiedBy: user
 		};
+		switch(target) {
+		case 'ui':
+			update.$unset = { aliasDnsUi: 1 };
+			break;
+		case 'oidc':
+			update.$unset = { aliasDnsOIDC: 1 };
+			break;
+		default:
+			throw Boom.badRequest('Target required');
+		}
 		const result = await dal.patchNoOverwrite(id, update);
 		if(!result) throw Boom.notFound(id);
 		const output = JSON.parse(JSON.stringify(result));
@@ -290,11 +306,11 @@ async function standardPatchValidation(original, patched) {
 	if(original.securityExpiration) {
 		definition.securityExpiration = Joi.any().valid(original.securityExpiration).required();
 	}
-	if(patched.aliasDnsUi || original.aliasDnsUi) {
-		definition.aliasDnsUi = Joi.string().valid(original.aliasDnsUi);
+	if(patched.aliasDnsUi !== original.aliasDnsUi) {
+		throw Boom.badRequest('aliasDnsUi cannot be edited form this API');
 	}
-	if(patched.aliasDnsOIDC || original.aliasDnsOIDC) {
-		definition.aliasDnsOIDC = Joi.string().valid(original.aliasDnsOIDC);
+	if(patched.aliasDnsOIDC !== original.aliasDnsOIDC) {
+		throw Boom.badRequest('aliasDnsOIDC cannot be edited form this API');
 	}
 
 	const groupSchema = Joi.object().keys(definition);
