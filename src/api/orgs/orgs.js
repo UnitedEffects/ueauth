@@ -77,7 +77,7 @@ export default {
 			const diff = originalProducts.filter(x => !updatedProducts.includes(x));
 			for(let i=0; i<diff.length; i++) {
 				const temp = await dom.checkProducts(authGroup, id, diff[i]);
-				if(temp.length !== 0) {
+				if(temp.length !== 0 && temp !== false) {
 					domains.push({
 						productId: diff[i],
 						domainReferences: temp
