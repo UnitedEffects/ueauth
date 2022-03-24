@@ -290,11 +290,11 @@ async function standardPatchValidation(original, patched) {
 	if(original.securityExpiration) {
 		definition.securityExpiration = Joi.any().valid(original.securityExpiration).required();
 	}
-	if(patched.aliasDnsUi || original.aliasDnsUi) {
-		definition.aliasDnsUi = Joi.string().valid(original.aliasDnsUi);
+	if(patched.aliasDnsUi !== original.aliasDnsUi) {
+		throw Boom.badRequest('aliasDnsUi cannot be edited form this API');
 	}
-	if(patched.aliasDnsOIDC || original.aliasDnsOIDC) {
-		definition.aliasDnsOIDC = Joi.string().valid(original.aliasDnsOIDC);
+	if(patched.aliasDnsOIDC !== original.aliasDnsOIDC) {
+		throw Boom.badRequest('aliasDnsOIDC cannot be edited form this API');
 	}
 
 	const groupSchema = Joi.object().keys(definition);
