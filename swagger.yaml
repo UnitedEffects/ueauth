@@ -444,6 +444,7 @@ paths:
               $ref: '#/components/schemas/agAliasDns'
         description: DNS domains to be written
         required: true
+  /api/group/{id}/alias-dns/{target}:
     delete:
       tags:
         - Auth Groups
@@ -456,6 +457,15 @@ paths:
           required: true
           schema:
             type: string
+        - name: target
+          in: path
+          description: ui or oidc alias
+          required: true
+          schema:
+            type: string
+            enum:
+              - ui
+              - oidc
       responses:
         '200':
           description: successful operation
@@ -8570,9 +8580,6 @@ components:
     agAliasDns:
       type: object
       additionalProperties: false
-      required:
-        - aliasDnsUi
-        - aliasDnsOIDC
       properties:
         aliasDnsUi:
           type: string
