@@ -164,7 +164,6 @@ const api = {
 	},
 	async patch(req, res, next) {
 		try {
-			console.info(req.user);
 			const grp = await group.getOne(req.params.id);
 			if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
 			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM', req.globalSettings);
