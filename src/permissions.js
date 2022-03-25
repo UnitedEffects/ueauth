@@ -197,10 +197,12 @@ export default {
 			// Root super user
 			if(req.user.subject_group && req.user.subject_group.prettyName === 'root') {
 				if((req.user.group || req.user.auth_group) === req.permissions.sub_group){
-					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
-					// todo evaluate if this should remain or if we should include a
-					//  conditional so Client_Credentials are not valid as super
-					req.permissions.groupAccess.push('super');
+					if(req.user.client_credential !== true) {
+						if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
+						// todo evaluate if this should remain or if we should include a
+						//  conditional so Client_Credentials are not valid as super
+						req.permissions.groupAccess.push('super');
+					}
 				}
 			}
 

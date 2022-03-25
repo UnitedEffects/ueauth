@@ -232,6 +232,7 @@ const api = {
 		// deletes both aliasDns entries from an authGroup
 		try {
 			await permissions.enforceRoot(req.permissions);
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(!req.params.target) throw Boom.preconditionRequired('Target of UI or OIDC required');
 			const result = await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN', req.params.target);
 			const client = await cl.getOneByAgId(req.params.id, result.associatedClient);
@@ -243,22 +244,21 @@ const api = {
 				'payload.redirect_uris': pl.redirect_uris,
 				'payload.post_logout_redirect_uris': pl.post_logout_redirect_uris
 			};
-
 			if(req.params.target === 'ui') {
 				update['payload.redirect_uris'] = update['payload.redirect_uris'].filter((url) => {
-					return (!url.includes(req.authGroup.aliasDnsUi));
+					return (!url.includes(authGroup.aliasDnsUi));
 				});
 				update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].filter((url) => {
-					return (!url.includes(req.authGroup.aliasDnsUi));
+					return (!url.includes(authGroup.aliasDnsUi));
 				});
 			}
 
 			if(req.params.target === 'oidc') {
 				update['payload.redirect_uris'] = update['payload.redirect_uris'].filter((url) => {
-					return (!url.includes(req.authGroup.aliasDnsOIDC));
+					return (!url.includes(authGroup.aliasDnsOIDC));
 				});
 				update['payload.post_logout_redirect_uris'] = update['payload.post_logout_redirect_uris'].filter((url) => {
-					return (!url.includes(req.authGroup.aliasDnsOIDC));
+					return (!url.includes(authGroup.aliasDnsOIDC));
 				});
 			}
 			await cl.simplePatch(req.params.id, result.associatedClient, update);
