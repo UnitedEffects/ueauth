@@ -1,10 +1,68 @@
 import Boom from '@hapi/boom';
 import access from './api/accounts/access';
+import roles from './api/roles/roles';
 import helper from './helper';
 import logs from './api/logging/logs';
 const config = require('./config');
 
 export default {
+	setRoleTarget(target) {
+		return function (req, res, next) {
+			try {
+				req.roleTarget = target;
+				return next();
+			} catch (error) {
+				next(error);
+			}
+		}
+	},
+	/**
+	 * NOTE: This is not highly performant. This should only be used where enforce on its own would not work such as with APIs specific to
+	 * AuthGroup Root that you wish to empower a service client to access. Must be preceded with setRoleTarget;
+	 * @param req
+	 * @param res
+	 * @param next
+	 * @returns {Promise<*>}
+	 */
+	async enforceRole(req, res, next) {
+		const ERROR_MESSAGE = 'You do not have the right roles';
+		try {
+			const target = req.roleTarget;
+			// ensure middleware provides a target
+			if (!target) throw Boom.internal('Role enforcement middleware requires a target that maps to known role');
+			// if there is no user, assume no access
+			if (!req.user) throw Boom.unauthorized();
+			// ensure there are permissions... there should at least be member info
+			if (!req.permissions) throw Boom.forbidden(ERROR_MESSAGE)
+			// if root user, they have priority
+			if (req.permissions.groupAccess.includes('super')) {
+				if (config.FULL_SUPER_CONTROL === true) return next();
+				if (superAccess(req)) return next();
+				throw Boom.unauthorized('Super Admin is not fully enabled');
+			}
+			// ensure a core product exists
+			if (!req.permissions?.core?.products) throw Boom.forbidden(ERROR_MESSAGE);
+			// ensure group access
+			if (!req.permissions?.groupAccess?.length) throw Boom.forbidden(ERROR_MESSAGE);
+			// ensure group member
+			if (!req.permissions?.groupAccess?.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
+
+			let access = false;
+			await Promise.all(req.permissions.roles.map(async(rid) => {
+				if(access === false) {
+					const array = rid.split('::');
+					const ag = (req.permissions?.groupAccess?.includes('client-super')) ? req.permissions.sub_group : req.authGroup.id;
+					const role = await roles.getRole(ag, array[0], array[1]);
+					if(role.name === target) access = true;
+				}
+				return rid;
+			}))
+			if(access === false) throw Boom.forbidden(ERROR_MESSAGE);
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
 	enforce(target, ...args) {
 		return function (req, res, next) {
 			const ERROR_MESSAGE = 'You do not have the right permissions';
@@ -127,6 +185,8 @@ export default {
 				if(accessObject['x-access-group']) {
 					if (req.permissions.sub_group === req.permissions.req_group) {
 						req.permissions.groupAccess = accessObject['x-access-group'].split(' ');
+					} else if (req.user?.subject_group?.name === 'root') {
+						req.permissions.groupAccess = accessObject['x-access-group'].split(' ');
 					}
 				}
 				if(accessObject['x-access-organizations']) req.permissions.organizations = accessObject['x-access-organizations'].split(' ');
@@ -143,32 +203,40 @@ export default {
 					}
 				}
 				if(accessObject['x-access-products']) {
-					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-products'][context]) {
-						req.permissions.products = accessObject['x-access-products'][context].split(' ');
-					}
-					if(mergePrimary) {
-						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-products'][primary]) {
-							if(!req.permissions.products) req.permissions.products = [];
-							req.permissions.products = req.permissions.products.concat(accessObject['x-access-products'][primary].split(' '));
+					if(req.permissions.apiAgent === true) {
+						req.permissions.products = accessObject['x-access-products'].split(' ');
+					} else {
+						if(req.permissions?.organizations?.includes(context) && accessObject['x-access-products'][context]) {
+							req.permissions.products = accessObject['x-access-products'][context].split(' ');
 						}
-					}
-					const temp = [];
-					if(req.permissions.products) {
-						req.permissions.products.map((p) => {
-							temp.push(p.split(',')[0]);
-							return p;
-						});
-						req.permissions.products = temp;
+						if(mergePrimary) {
+							if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-products'][primary]) {
+								if(!req.permissions.products) req.permissions.products = [];
+								req.permissions.products = req.permissions.products.concat(accessObject['x-access-products'][primary].split(' '));
+							}
+						}
+						const temp = [];
+						if(req.permissions.products) {
+							req.permissions.products.map((p) => {
+								temp.push(p.split(',')[0]);
+								return p;
+							});
+							req.permissions.products = temp;
+						}
 					}
 				}
 				if(accessObject['x-access-roles']) {
-					if(req.permissions.organizations && req.permissions.organizations.includes(context) && accessObject['x-access-roles'][context]) {
-						req.permissions.roles = accessObject['x-access-roles'][context].split(' ');
-					}
-					if(mergePrimary) {
-						if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-roles'][primary]) {
-							if(!req.permissions.roles) req.permissions.roles = [];
-							req.permissions.roles = req.permissions.roles.concat(accessObject['x-access-roles'][primary].split(' '));
+					if(req.permissions.apiAgent === true) {
+						req.permissions.roles = accessObject['x-access-roles'].split(' ');
+					} else {
+						if(req.permissions?.organizations?.includes(context) && accessObject['x-access-roles'][context]) {
+							req.permissions.roles = accessObject['x-access-roles'][context].split(' ');
+						}
+						if(mergePrimary) {
+							if(req.permissions.organizations && req.permissions.organizations.includes(primary) && accessObject['x-access-roles'][primary]) {
+								if(!req.permissions.roles) req.permissions.roles = [];
+								req.permissions.roles = req.permissions.roles.concat(accessObject['x-access-roles'][primary].split(' '));
+							}
 						}
 					}
 				}
@@ -194,15 +262,15 @@ export default {
 					}
 				}
 			}
+
 			// Root super user
 			if(req.user.subject_group && req.user.subject_group.prettyName === 'root') {
 				if((req.user.group || req.user.auth_group) === req.permissions.sub_group){
+					if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
 					if(req.user.client_credential !== true) {
-						if(!req.permissions.groupAccess) req.permissions.groupAccess = [];
-						// todo evaluate if this should remain or if we should include a
-						//  conditional so Client_Credentials are not valid as super
+						// this only applies to people not clients
 						req.permissions.groupAccess.push('super');
-					}
+					} else req.permissions.groupAccess.push('client-super');
 				}
 			}
 
@@ -222,37 +290,44 @@ export default {
 			// filtering out any permissions that are not from the core product from the user's permissions
 			let permFilter = [];
 			let roleFilter = [];
-			req.permissions.core.productCodedIds.map((ci) => {
-				if(req.permissions.permissions) {
-					const temp = req.permissions.permissions.filter((p) => {
-						return (p.includes(`${ci}:::`));
-					});
-					permFilter = permFilter.concat(temp);
-				}
 
-				if(req.permissions.roles) {
-					const temp = req.permissions.roles.filter((r) => {
-						return (r.includes(`${ci}::`));
-					});
-					roleFilter = roleFilter.concat(temp);
-				}
-			});
-			req.permissions.core.products.map((pr) => {
+			if(req.permissions.apiAgent !== true && req.user?.subject_group?.name !== 'root') {
+				req.permissions.core.productCodedIds.map((ci) => {
+					if(req.permissions.permissions) {
+						const temp = req.permissions.permissions.filter((p) => {
+							return (p.includes(`${ci}:::`));
+						});
+						permFilter = permFilter.concat(temp);
+					}
 
-				if(req.permissions.permissions) {
-					const temp = req.permissions.permissions.filter((p) => {
-						return (p.includes(`${pr}:::`));
-					});
-					permFilter = permFilter.concat(temp);
-				}
+					if(req.permissions.roles) {
+						const temp = req.permissions.roles.filter((r) => {
+							return (r.includes(`${ci}::`));
+						});
+						roleFilter = roleFilter.concat(temp);
+					}
+				});
+				req.permissions.core.products.map((pr) => {
 
-				if(req.permissions.roles) {
-					const temp = req.permissions.roles.filter((r) => {
-						return (r.includes(`${pr}::`));
-					});
-					roleFilter = roleFilter.concat(temp);
-				}
-			});
+					if(req.permissions.permissions) {
+						const temp = req.permissions.permissions.filter((p) => {
+							return (p.includes(`${pr}:::`));
+						});
+						permFilter = permFilter.concat(temp);
+					}
+
+					if(req.permissions.roles) {
+						const temp = req.permissions.roles.filter((r) => {
+							return (r.includes(`${pr}::`));
+						});
+						roleFilter = roleFilter.concat(temp);
+					}
+				});
+			} else {
+				roleFilter = req.permissions.roles;
+				permFilter = req.permissions.permissions;
+			}
+
 			if(req.user?.client_credential !== true) {
 				// ensure member permissions are preserved
 				const temp = req.permissions?.permissions?.filter((p) => {
@@ -305,7 +380,7 @@ export default {
 		}
 	},
 	async enforceRoot(p) {
-		if(!p.groupAccess.includes('super')) throw Boom.forbidden();
+		if(!p.groupAccess.includes('super') && !p.groupAccess.includes('client-super')) throw Boom.forbidden();
 	},
 	async canAccessGroupKeys(p) {
 		let keyPerms = [];

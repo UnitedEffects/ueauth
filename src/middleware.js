@@ -270,8 +270,6 @@ const mid = {
 			next(error);
 		}
 	},
-	permissions: access.permissions,
-	access: access.enforce,
 	async openGroupRegAuth(req, res, next) {
 		try {
 			if (config.OPEN_GROUP_REG === true) return next();
@@ -354,6 +352,12 @@ const mid = {
 		req.accountCreationRequest = true;
 		return next();
 	},
+	// permissions and roles
+	permissions: access.permissions,
+	access: access.enforce,
+	setRoleTarget: access.setRoleTarget,
+	enforceRole: access.enforceRole,
+	// authorization
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
 	iatQueryCodeAuth: authorizer.iatQueryCodeAuth,
 	isAuthenticated: authorizer.isAuthenticated,

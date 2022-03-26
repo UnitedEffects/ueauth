@@ -43,18 +43,20 @@ router.patch('/group/:id', [
 	m.permissions,
 	m.access('group')], group.patch);
 
-// Alias DNS - root only or client credential from root
+// Alias DNS - root only or client credential from root with role groupAliasDns
 router.post('/group/:id/alias-dns', [
 	m.schemaCheck,
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('group-aliasDns')], group.addAliasDns);
+	m.setRoleTarget('groupAliasDns'),
+	m.enforceRole], group.addAliasDns);
 router.delete('/group/:id/alias-dns/:target', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
 	m.permissions,
-	m.access('group-aliasDns')], group.removeAliasDns);
+	m.setRoleTarget('groupAliasDns'),
+	m.enforceRole], group.removeAliasDns);
 
 // Plugins
 router.post('/plugins/global/notifications', [
