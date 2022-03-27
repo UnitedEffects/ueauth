@@ -246,10 +246,6 @@ export default {
 							req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 						}
 					} else {
-						console.info('checking perms');
-						console.info(context);
-						console.info(primary);
-						console.info(mergePrimary);
 						if(req.permissions?.organizations?.includes(context) && accessObject['x-access-permissions'][context]) {
 							req.permissions.permissions = accessObject['x-access-permissions'][context].split(' ');
 						}
