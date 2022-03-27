@@ -246,6 +246,10 @@ export default {
 							req.permissions.permissions = accessObject['x-access-permissions'].split(' ');
 						}
 					} else {
+						console.info('checking perms');
+						console.info(context);
+						console.info(primary);
+						console.info(mergePrimary);
 						if(req.permissions?.organizations?.includes(context) && accessObject['x-access-permissions'][context]) {
 							req.permissions.permissions = accessObject['x-access-permissions'][context].split(' ');
 						}
@@ -259,6 +263,7 @@ export default {
 							if(!req.permissions.permissions) req.permissions.permissions = [];
 							req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'].member.split(' '));
 						}
+						console.info(req.permissions.permissions);
 					}
 				}
 			}

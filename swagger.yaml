@@ -107,9 +107,18 @@ paths:
                       group:
                         type: string
                         example: V1StGXR8_Z5jdHi6B-myT
+                      name:
+                        type: string
+                        description: the name of the authgroup
+                      searched:
+                        type: string
+                        description: the authgroup searched
                       id:
                         type: string
                         description: the client_id of the AuthGroup
+                      core:
+                        type: object
+                        description: information about AuthGroup primary products - only sent when logged in and authorized
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
