@@ -16,7 +16,11 @@ router.get('/health', m.health);
 
 // Auth Group Functional
 router.get('/groupcheck/:prettyName', [m.isWhitelisted], group.check);
-router.get('/group-info/:group', [m.isWhitelisted], group.getPublicGroupInfo);
+router.get('/group-info/:group', [
+	m.isPublicOrAuth,
+	m.pubOrContext,
+	m.pubOrPermissions
+], group.getPublicGroupInfo);
 
 // Auth Groups
 router.post('/group', [

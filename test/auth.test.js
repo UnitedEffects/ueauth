@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
 import Model from '../src/api/accounts/model';
 import auth from '../src/auth/auth';
+import core from '../src/auth/core';
 
 import {AccountMocks, GroupMocks, NotifyMocks, PluginMocks, Tokens} from './models';
 import t from './testhelper';
@@ -38,7 +39,7 @@ describe('Auth Functions', () => {
 				sub: act._id
 			};
 			mockingoose(Model).toReturn(act, 'findOne');
-			const result = await auth.getUser(grp, lookup, token);
+			const result = await core.getUser(grp, lookup, token);
 			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
 			// expected claims
 			const expected = {
@@ -62,7 +63,7 @@ describe('Auth Functions', () => {
 			// mock a client
 			const client = PluginMocks.notificationClient();
 			mockingoose(ModelC).toReturn({ _id: client.client_id, payload: client }, 'findOne');
-			const result = await auth.getClient(grp, { sub: client.client_id });
+			const result = await core.getClient(grp, { sub: client.client_id });
 			expect(ModelC.Query.prototype.findOne).toHaveBeenCalled();
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(client);
@@ -84,7 +85,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			const result = await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			const result = await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			const expected = {
 				sub: act.sub,
 				group: grp._id,
@@ -114,7 +115,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			const result = await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			const result = await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			const expected = {
 				sub: act.sub,
 				group: grp._id,
@@ -146,7 +147,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			const result = await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			const result = await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			const expected = {
 				sub: act.sub,
 				group: grp._id,
@@ -177,7 +178,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -199,7 +200,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -221,7 +222,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -243,7 +244,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -265,7 +266,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -286,7 +287,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -308,7 +309,7 @@ describe('Auth Functions', () => {
 			act.authGroup = grp._id;
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			mockingoose(Model).toReturn(act, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -329,7 +330,7 @@ describe('Auth Functions', () => {
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
 			// despite declaring an account, we will return undefined for this negative test
 			mockingoose(Model).toReturn(undefined, 'findOne');
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);
@@ -350,7 +351,7 @@ describe('Auth Functions', () => {
 			client.auth_group = grp._id;
 			mockingoose(ModelC).toReturn({ _id: client.client_id, payload: client }, 'findOne');
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
-			const result = await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			const result = await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			const expected = {
 				client_credential: true,
 				sub: decoded.sub,
@@ -383,7 +384,7 @@ describe('Auth Functions', () => {
 			client.auth_group = grp._id;
 			mockingoose(ModelC).toReturn({ _id: client.client_id, payload: client }, 'findOne');
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
-			const result = await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			const result = await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			const expected = {
 				client_credential: true,
 				sub: decoded.client_id,
@@ -417,7 +418,7 @@ describe('Auth Functions', () => {
 			// breaking by returning undefined for negative test
 			mockingoose(ModelC).toReturn(undefined, 'findOne');
 			const issuer = [`${config.PROTOCOL}://${config.SWAGGER}/${grp.prettyName}`,`${config.PROTOCOL}://${config.SWAGGER}/${grp.id || grp._id}`];
-			await auth.runDecodedChecks(decoded.jti, issuer, decoded, grp);
+			await core.runDecodedChecks(decoded.jti, issuer, decoded, grp);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
 			expect(error.output.statusCode).toBe(401);

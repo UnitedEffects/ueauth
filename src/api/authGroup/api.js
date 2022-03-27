@@ -279,6 +279,12 @@ const api = {
 				name: result.name,
 				id: result.associatedClient
 			};
+			if(req.user && req.permissions) {
+				const core = await group.returnCoreInfo(result, req.permissions, ag, req.query);
+				if(core) {
+					out.core = core;
+				}
+			}
 			return res.respond(say.ok(out, RESOURCE));
 		} catch (error) {
 			next(error);
