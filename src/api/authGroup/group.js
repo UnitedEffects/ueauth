@@ -285,7 +285,7 @@ const agp = {
 		let core;
 		if(permissions?.groupAccess?.includes('super') || permissions?.groupAccess?.includes('client-super')) {
 			if(ag === permissions?.core?.group) {
-				core = permissions.core.group;
+				core = permissions.core;
 			} else {
 				const coreProducts = await helper.cacheCoreProduct(query.resetCache, ogAg);
 				if(coreProducts.length) {
