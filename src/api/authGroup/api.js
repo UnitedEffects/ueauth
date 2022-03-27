@@ -280,39 +280,9 @@ const api = {
 				id: result.associatedClient
 			};
 			if(req.user && req.permissions) {
-				if(req.permissions?.groupAccess?.includes('super') || req.permissions?.groupAccess?.includes('client-super')) {
-					if(ag === req.permissions?.core?.group) {
-						out.core = req.permissions.core.group;
-					} else {
-						const coreProducts = await helper.cacheCoreProduct(req.query.resetCache, result);
-						if(coreProducts.length) {
-							out.core = {
-								group: ag,
-								products: [],
-								productCodedIds: []
-							}
-							coreProducts.map((p) => {
-								out.core.products.push(p.id || p._id);
-								out.core.productCodedIds.push(p.codedId);
-							});
-						}
-					}
-				} else if(req.permissions?.sub_group === ag && req.permissions?.core?.group === ag) {
-					let bFound = false;
-					req.permissions?.core?.productCodedIds?.map((id) => {
-						if(bFound === false) {
-							req.permissions?.permissions?.map((p) => {
-								if(bFound === false) {
-									if(p.includes(`${id}:::group::read:own`) || p.includes(`${id}:::group::read`)) {
-										bFound = true;
-									}
-								}
-							})
-						}
-					});
-					if(bFound) {
-						out.core = req.permissions.core;
-					}
+				const core = await group.returnCoreInfo(result, req.permissions, ag, req.query);
+				if(core) {
+					out.core = core;
 				}
 			}
 			return res.respond(say.ok(out, RESOURCE));
