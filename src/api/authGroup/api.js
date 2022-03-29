@@ -276,9 +276,11 @@ const api = {
 			const out = {
 				searched: ag,
 				group: result.prettyName,
+				groupId: result.id,
 				name: result.name,
 				id: result.associatedClient
 			};
+			if(result.aliasDnsUi) out.preferredHost = result.aliasDnsUi;
 			if(req.user && req.permissions) {
 				const core = await group.returnCoreInfo(result, req.permissions, ag, req.query);
 				if(core) {
