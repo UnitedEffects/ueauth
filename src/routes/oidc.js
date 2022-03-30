@@ -19,6 +19,13 @@ router.post('/:group/token/initial-access', [
 	m.permissions
 ], api.getInitialAccessToken);
 
+router.get('/:group/auth/session', [
+	jsonParser,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions
+], api.getSessionInfo);
+
 /**
  * OP Defined Interactions
  */

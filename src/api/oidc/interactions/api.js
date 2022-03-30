@@ -8,6 +8,7 @@ import org from '../../orgs/orgs';
 import log from '../../logging/logs';
 import iat from '../initialAccess/iat';
 import interactions from './interactions';
+import sessions from '../session/session';
 import n from '../../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
@@ -823,6 +824,10 @@ async function checkProvider(upstream, ag) {
 }
 
 export default api;
+
+async function orgContextSession(authGroup, uid, session, clientId, accountId, state, orgContext) {
+	return sessions.addOrgContext(authGroup, uid, session, clientId, accountId, state, orgContext);
+}
 
 async function orgSSO(req, res, organization, params, client, authGroup) {
 	if(organization?.id) {
