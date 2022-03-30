@@ -1,4 +1,5 @@
 import Client from '../models/client';
+import Account from "../../accounts/model";
 
 export default {
 	async get(authGroup, query, search = undefined) {
@@ -115,5 +116,20 @@ export default {
 			'payload.auth_group': authGroup
 		}, { access }, { new: true })
 			.select({ _id: 1, access: 1, 'payload.auth_group': 1 });
-	}
+	},
+	async checkRoles(authGroup, id) {
+		const clients = await Client.find({ 'payload.auth_group': authGroup, access: { roles: id }}).limit(100).select({ _id: 1, 'payload.client_name': 1, 'payload.auth_group': 1, 'payload.associated_product': 1});
+		const output = [];
+		if(clients) {
+			clients.map((c) => {
+				output.push({
+					id: c._id,
+					authGroup: c.payload.auth_group,
+					name: c.payload.client_name,
+					product: c.payload.associated_product
+				});
+			});
+		}
+		return output;
+	},
 };
