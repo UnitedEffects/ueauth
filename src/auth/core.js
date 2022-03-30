@@ -4,7 +4,7 @@ import Boom from '@hapi/boom';
 import iat from '../api/oidc/initialAccess/iat';
 import account from '../api/accounts/account';
 import group from '../api/authGroup/group';
-import passport from "passport";
+import passport from 'passport';
 
 const config = require('../config');
 
@@ -152,10 +152,18 @@ const core = {
 	},
 	async whitelist(req, res, next) {
 		try {
+			let whiteList = config.UI_WHITE_LIST();
+			if(!Array.isArray(whiteList)) whiteList = [];
+			if(req.authGroup?.aliasDnsUi) {
+				whiteList.push(req.authGroup.aliasDnsUi);
+			}
+			if(req.authGroup?.aliasDnsOIDC) {
+				whiteList.push(req.authGroup.aliasDnsOIDC);
+			}
 			if(config.ENV !== 'dev'){
-				if(config.UI_WHITE_LIST().includes(req.hostname) && req.secure) return next();
+				if(whiteList.includes(req.hostname) && req.secure) return next();
 			} else {
-				if(config.UI_WHITE_LIST().includes(req.hostname)) return next();
+				if(whiteList.includes(req.hostname)) return next();
 			}
 			throw Boom.unauthorized();
 		} catch (error) {
@@ -213,16 +221,16 @@ const core = {
 			});
 		}
 	},
-    async publicOrAuth (req, res, next) {
-        const grabToken = req.headers?.authorization?.split(' ');
-        if(grabToken?.length && grabToken[0].toLowerCase() === 'bearer') {
-            // this is a token, we should do auth...
-            return passport.authenticate('oidc', { session: false })(req, res, next);
-        } else {
-            req.user = null;
-            return core.whitelist(req, res, next);
-        }
-    },
+	async publicOrAuth (req, res, next) {
+		const grabToken = req.headers?.authorization?.split(' ');
+		if(grabToken?.length && grabToken[0].toLowerCase() === 'bearer') {
+			// this is a token, we should do auth...
+			return passport.authenticate('oidc', { session: false })(req, res, next);
+		} else {
+			req.user = null;
+			return core.whitelist(req, res, next);
+		}
+	},
 	issuerArray(provider, g) {
 		const issuer = provider.issuer.split('/');
 		const id = issuer[issuer.length-1];
