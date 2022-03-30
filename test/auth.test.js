@@ -3,10 +3,9 @@ import 'regenerator-runtime/runtime';
 import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
 import Model from '../src/api/accounts/model';
-import auth from '../src/auth/auth';
 import core from '../src/auth/core';
 
-import {AccountMocks, GroupMocks, NotifyMocks, PluginMocks, Tokens} from './models';
+import {AccountMocks, GroupMocks, PluginMocks, Tokens} from './models';
 import t from './testhelper';
 
 

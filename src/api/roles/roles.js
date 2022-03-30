@@ -4,6 +4,7 @@ import dal from './dal';
 import helper from '../../helper';
 import ueEvents from '../../events/ueEvents';
 import access from '../accounts/access';
+import client from '../oidc/client/access';
 import Joi from 'joi';
 
 export default {
@@ -92,6 +93,10 @@ export default {
 		if(checkAccounts) {
 			throw Boom.badRequest('There are users associated to this role. You must remove them before deleting it.', checkAccounts);
 		}
+		const checkClients = await client.checkRoles(authGroupId, id);
+		if(checkClients) {
+			throw Boom.badRequest('There are backend services associated to this role. You must remove them before deleting it.', checkClients);
+		}
 		const result = await dal.deleteRoleByOrgProdId(authGroupId, product, organization, id);
 		ueEvents.emit(authGroupId, 'ue.role.destroy', result);
 		return result;
@@ -105,6 +110,10 @@ export default {
 		const checkAccounts = await access.checkRoles(authGroupId, id);
 		if(checkAccounts) {
 			throw Boom.badRequest('There are users associated to this role. You must remove them before deleting it.', checkAccounts);
+		}
+		const checkClients = await client.checkRoles(authGroupId, id);
+		if(checkClients) {
+			throw Boom.badRequest('There are backend services associated to this role. You must remove them before deleting it.', checkClients);
 		}
 		const result = await dal.deleteRole(authGroupId, product, id);
 		ueEvents.emit(authGroupId, 'ue.role.destroy', result);

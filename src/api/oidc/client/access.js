@@ -73,5 +73,10 @@ export default {
         result = cleanupAccessResponse(result);
 		ueEvents.emit(authGroup, 'ue.client.access.defined', result);
 		return result;
+	},
+	async checkRoles(ag, id) {
+		const result = await dal.checkRoles(ag, id);
+		if(result.length === 0) return false;
+		return result;
 	}
 };

@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import crypto from 'crypto';
 
 const config = require('../../config');
+const TTL = 5*60*1000; // 5 minutes
 
 const corsOptions = {
 	origin: function(ctx) {
@@ -19,10 +20,16 @@ const corsOptions = {
 
 class UEProvider {
 	constructor() {
-		this.providerList = {};
+		this.providerList = new Map();
+	}
+	element(provider) {
+		return {
+			ttl: new Date(Date.now() + TTL),
+			provider
+		};
 	}
 	get(agId) {
-		return this.providerList[agId];
+		return this.providerList.get(agId);
 	}
 	getAll() {
 		return this.providerList;
@@ -30,9 +37,9 @@ class UEProvider {
 	define(group, issuer, options) {
 		const agId = group.id || group._id;
 		// Do not let this get bigger than 100 instances, you can always reinitialize
-		if(Object.keys(this.providerList).length > 100) {
-			const oldStream = Object.keys(this.providerList)[0];
-			this.delete(oldStream);
+		if(this.providerList.size > 100) {
+			const [f] = this.providerList.keys();
+			this.providerList.delete(f);
 		}
 		const newProvider = new Provider(issuer, options);
 		newProvider.proxy = true;
@@ -62,28 +69,30 @@ class UEProvider {
 			return next();
 		});
 		newProvider.use(middle.parseKoaOIDC);
-		this.providerList[agId] = newProvider;
-		//async event emitter
-		events.providerEventEmitter(this.providerList[agId], group);
-		return this.providerList[agId];
+		this.providerList.set(agId, this.element(newProvider));
+		events.providerEventEmitter(newProvider, group);
+		return newProvider;
 	}
 	find(group, issuer, options) {
 		const agId = group.id || group._id;
 		const op = this.get(agId);
-		if(!op || !op.issuer) {
+		if(!op?.provider || !op?.provider?.issuer) {
 			return this.define(group, issuer, options);
 		}
-		if(op.issuer !== issuer) {
+		if(new Date() > op?.ttl) {
 			return this.define(group, issuer, options);
 		}
-		return op;
+		if(op?.provider?.issuer !== issuer) {
+			return this.define(group, issuer, options);
+		}
+		return op.provider;
 	}
 	removeListeners(agId) {
-		this.providerList[agId].removeAllListeners();
+		this.providerList.get(agId)?.provider?.removeAllListeners();
 	}
 	delete(agId) {
 		this.removeListeners(agId);
-		delete this.providerList[agId];
+		this.providerList.delete(agId);
 	}
 }
 
