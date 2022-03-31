@@ -7,8 +7,6 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -39,44 +37,44 @@ jobs:
       #  run: yarn global add serverless
 
       # Deploy to QA
-      - name: Deploy
-        run: yarn simple-deploy --stage=${{ secrets.NODE_ENV }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SLS_DEBUG: 1
-          NODE_ENV: ${{ secrets.NODE_ENV }}
-          SWAGGER: ${{ secrets.SWAGGER }}
-          UI_URL: ${{ secrets.UI_URL }}
-          UI_LOGIN_REDIRECT_PATH: /signin-oidc
-          UI_LOGOUT_REDIRECT_PATH: /signout-oidc
-          PROTOCOL: ${{ secrets.PROTOCOL }}
-          MONGO: ${{ secrets.MONGO }}
-          REPLICA: ${{ secrets.REPLICA }}
-          PERSIST_HTTP_ERRORS: false
-          WRITE_LOGS_TO_DB: false
-          SINGLE_USE_IAT: true
-          GROUP_SECURE_EXPIRES: ${{ secrets.GROUP_SECURE_EXPIRES }}
-          COOKIE_KEYS: ${{ secrets.COOKIE_KEYS }}
-          ALLOW_ROOT_CREATION: false
-          ROOT_EMAIL: ${{ secrets.ROOT_EMAIL }}
-          ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${{ secrets.ONE_TIME_PERSONAL_ROOT_CREATION_KEY }}
-          FULL_SUPER_CONTROL: true
-          OPEN_GROUP_REG: ${{ secrets.OPEN_GROUP_REG }}
-          ROOT_COMPANY_NAME: United Effects
-          INIT_ROOT_PRIMARY_DOMAIN: ${{ secrets.INIT_ROOT_PRIMARY_DOMAIN }}
-          INIT_ROOT_PRIMARY_TOS: ${{ secrets.INIT_ROOT_PRIMARY_TOS }}
-          INIT_ROOT_PRIMARY_POLICY: ${{ secrets.INIT_ROOT_PRIMARY_POLICY }}
-          PLATFORM_NAME: UE Core
-          UI_WHITE_LIST: ${{ secrets.UI_WHITE_LIST }}
-          UI_CORE_AUDIENCE_ORIGIN: ${{ secrets.UI_CORE_AUDIENCE_ORIGIN }}
-          CORE_SCOPES: "core:read,core:write,core:delete,core:update,api:read,api:write,api:delete,api:update"
-          STATIC_ASSETS: "https://assets.uecore.io/ueauth/"
-          CUSTOM_FONTS_URL: ${{ secrets.UE_FONTS }}
-          ROOT_GROUP_REGISTRATION_UI_URL: ${{ secrets.ROOT_GROUP_REGISTRATION_UI_URL }}
-          UI_PKCE_REQUIRED: true
-          DEFAULT_UI_SKIN_GRADIENT_LOW: "#131525"
-          DEFAULT_UI_SKIN_GRADIENT_HIGH: "#1D2035"
-          EVENT_EMITTER_CLEAN_SENSITIVE: true
-          ACCESS_OBJECT_SIZE_LIMIT: 8000
-          SECURITY_FRAME_ANCESTORS: "*.unitedeffects.com"
+#      - name: Deploy
+#        run: yarn simple-deploy --stage=${{ secrets.NODE_ENV }}
+#        env:
+#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          SLS_DEBUG: 1
+#          NODE_ENV: ${{ secrets.NODE_ENV }}
+#          SWAGGER: ${{ secrets.SWAGGER }}
+#          UI_URL: ${{ secrets.UI_URL }}
+#          UI_LOGIN_REDIRECT_PATH: /signin-oidc
+#          UI_LOGOUT_REDIRECT_PATH: /signout-oidc
+#          PROTOCOL: ${{ secrets.PROTOCOL }}
+#          MONGO: ${{ secrets.MONGO }}
+#          REPLICA: ${{ secrets.REPLICA }}
+#          PERSIST_HTTP_ERRORS: false
+#          WRITE_LOGS_TO_DB: false
+#          SINGLE_USE_IAT: true
+#          GROUP_SECURE_EXPIRES: ${{ secrets.GROUP_SECURE_EXPIRES }}
+#          COOKIE_KEYS: ${{ secrets.COOKIE_KEYS }}
+#          ALLOW_ROOT_CREATION: false
+#          ROOT_EMAIL: ${{ secrets.ROOT_EMAIL }}
+#          ONE_TIME_PERSONAL_ROOT_CREATION_KEY: ${{ secrets.ONE_TIME_PERSONAL_ROOT_CREATION_KEY }}
+#          FULL_SUPER_CONTROL: true
+#          OPEN_GROUP_REG: ${{ secrets.OPEN_GROUP_REG }}
+#          ROOT_COMPANY_NAME: United Effects
+#          INIT_ROOT_PRIMARY_DOMAIN: ${{ secrets.INIT_ROOT_PRIMARY_DOMAIN }}
+#          INIT_ROOT_PRIMARY_TOS: ${{ secrets.INIT_ROOT_PRIMARY_TOS }}
+#          INIT_ROOT_PRIMARY_POLICY: ${{ secrets.INIT_ROOT_PRIMARY_POLICY }}
+#          PLATFORM_NAME: UE Core
+#          UI_WHITE_LIST: ${{ secrets.UI_WHITE_LIST }}
+#          UI_CORE_AUDIENCE_ORIGIN: ${{ secrets.UI_CORE_AUDIENCE_ORIGIN }}
+#          CORE_SCOPES: "core:read,core:write,core:delete,core:update,api:read,api:write,api:delete,api:update"
+#          STATIC_ASSETS: "https://assets.uecore.io/ueauth/"
+#          CUSTOM_FONTS_URL: ${{ secrets.UE_FONTS }}
+#          ROOT_GROUP_REGISTRATION_UI_URL: ${{ secrets.ROOT_GROUP_REGISTRATION_UI_URL }}
+#          UI_PKCE_REQUIRED: true
+#          DEFAULT_UI_SKIN_GRADIENT_LOW: "#131525"
+#          DEFAULT_UI_SKIN_GRADIENT_HIGH: "#1D2035"
+#          EVENT_EMITTER_CLEAN_SENSITIVE: true
+#          ACCESS_OBJECT_SIZE_LIMIT: 8000
+#          SECURITY_FRAME_ANCESTORS: "*.unitedeffects.com"

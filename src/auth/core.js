@@ -160,11 +160,14 @@ const core = {
 			if(req.authGroup?.aliasDnsOIDC) {
 				whiteList.push(req.authGroup.aliasDnsOIDC);
 			}
+			/* todo - bring this back
 			if(config.ENV !== 'dev'){
 				if(whiteList.includes(req.hostname) && req.secure) return next();
 			} else {
 				if(whiteList.includes(req.hostname)) return next();
 			}
+			 */
+			if(whiteList.includes(req.hostname)) return next();
 			throw Boom.unauthorized();
 		} catch (error) {
 			next(error);

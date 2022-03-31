@@ -156,7 +156,7 @@ const mid = {
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
 			const AG = await group.findByAliasDNS(req.hostname);
-			if(!AG) throw Boom.notFound('DNS not recognized');
+			if(!AG) throw Boom.notFound(`DNS not recognized - ${req.hostname}`);
 			req.customDomain = req.hostname;
 			req.customDomainUI = AG.aliasDnsUi;
 			req.authGroup = AG;
@@ -189,7 +189,7 @@ const mid = {
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
 			if(req.hostname !== config.SWAGGER.split(':')[0]) {
-				if(req.authGroup.aliasDnsOIDC !== req.hostname) throw Boom.notFound('DNS not recognized');
+				if(req.authGroup.aliasDnsOIDC !== req.hostname) throw Boom.notFound(`DNS not recognized - ${req.hostname}`);
 				req.customDomain = req.hostname;
 				req.customDomainUI = req.authGroup.aliasDnsUi;
 			}
