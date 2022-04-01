@@ -48,7 +48,7 @@ export default {
 		return result;
 	},
 	async patchOrgProfile(authGroup, organization, profile, id, update, modifiedBy) {
-		const patched = jsonPatch.apply_patch(profile.toObject(), update);
+		const patched = jsonPatch.apply_patch(profile?.toObject(), update);
 		patched.modifiedBy = modifiedBy;
 		await standardPatchValidation(profile, patched);
 		const result = await dal.patchOrgProfile(authGroup, organization, id, patched);

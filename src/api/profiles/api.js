@@ -382,6 +382,7 @@ export default {
 			// Allow Account holders to query this record using their Account Id
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
 			const profile = await orgProfiles.getOrgProfile(req.authGroup.id, req.organization.id, req.params.id);
+			if(!profile) throw Boom.notFound(req.params.id);
 			const result = await orgProfiles.patchOrgProfile(req.authGroup.id, req.organization.id, profile, req.params.id, req.body, req.user.sub || 'SYSTEM ADMIN');
 			if(!result) throw Boom.notFound();
 			await tryNotification(req, result);

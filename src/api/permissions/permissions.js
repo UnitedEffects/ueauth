@@ -13,7 +13,7 @@ const papi = {
 
 	async getPermissions(authGroupId, product, q) {
 		let search;
-		if(q.search) {
+		if(q?.search) {
 			search = q.search;
 			delete q.search;
 		}
@@ -83,8 +83,12 @@ const papi = {
 
 	async getTargetsOrActions(data, authGroup, product) {
 		const result = await dal.getTargetsOrActions(data, authGroup, product);
-		const out = result[0];
-		if(out._id) {
+		let out = {
+			id: data,
+			values: []
+		};
+		if(result?.[0]) out = result[0];
+		if(out?._id) {
 			out.id = out._id;
 			delete out._id;
 		}
@@ -93,8 +97,12 @@ const papi = {
 
 	async getTags(authGroup, product) {
 		const result = await dal.getTags(authGroup, product);
-		const out = result[0];
-		if(out._id) {
+		let out = {
+			id: 'Tags',
+			values: []
+		};
+		if(result?.[0]) out = result[0];
+		if(out?._id) {
 			out.id = out._id;
 			delete out._id;
 		}

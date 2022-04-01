@@ -259,7 +259,6 @@ export default {
 							if(!req.permissions.permissions) req.permissions.permissions = [];
 							req.permissions.permissions = req.permissions.permissions.concat(accessObject['x-access-permissions'].member.split(' '));
 						}
-						console.info(req.permissions.permissions);
 					}
 				}
 			}

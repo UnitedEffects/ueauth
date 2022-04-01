@@ -18,11 +18,13 @@ const api = {
 			if (!req.authGroup) throw Boom.badRequest('AuthGroup not defined');
 			const result = await prod.getCoreProducts(req.authGroup);
 			if(!result.length) throw Boom.badRequest('No Core Product Detected. Contact the Admin');
+			const availableVersion = JSON.parse(JSON.stringify(coreProductInfo));
+			delete availableVersion.force;
 			const output = {
 				id: req.authGroup.id,
 				prettyName: req.authGroup.prettyName,
 				coreProducts: result,
-				availableVersion: coreProductInfo,
+				availableVersion,
 				force: false,
 				updateRequired: false
 			};
