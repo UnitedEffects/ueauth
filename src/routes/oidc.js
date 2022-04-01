@@ -4,7 +4,7 @@ import api from '../api/oidc/api';
 import m from '../middleware';
 import interactions from '../api/oidc/interactions/api';
 import chApi from '../api/plugins/challenge/api';
-import account from "../api/accounts/api";
+import account from '../api/accounts/api';
 
 const jsonParser = bodyParser.json();
 const urlParser = bodyParser.urlencoded({extended:true});
