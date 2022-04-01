@@ -51,5 +51,5 @@ jobs:
               owner: 'UnitedEffects',
               repo: 'ue.charts',
               workflow_id: 'update-deps.yaml',
-              ref: 'master'
+              ref: 'main'
             })
