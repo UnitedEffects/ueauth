@@ -1,6 +1,6 @@
 # UE Auth by United Effects LLC
 
-[![CI](https://github.com/UnitedEffects/ueauth/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/UnitedEffects/ueauth/actions/workflows/main.yml)
+[![Build](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml/badge.svg)](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml)
 
 [UEAuth](https://ueauth.io) is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management and provides the missing pieces enterprises typically have to develop on their own in a single package.
 
