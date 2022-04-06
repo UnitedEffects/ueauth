@@ -21,7 +21,8 @@ body, html {
 
 .logo {
 	display: block;
-	width: 40px;
+	/*width: 40px;*/
+	width: 100px;
 	margin: 0 auto 4px auto;
 }
 
