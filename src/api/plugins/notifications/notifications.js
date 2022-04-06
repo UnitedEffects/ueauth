@@ -114,6 +114,15 @@ export default {
 	async notify(global, data, ag) {
 		data.authGroupId = ag.id;
 		data.destinationUri = global.notifications.notificationServiceUri;
+		data.branding = {
+			platform: ag.name,
+			contact: ag.primaryEmail,
+			domain: ag.primaryDomain,
+			tos: ag.primaryTOS,
+			privacyPolicy: ag.primaryPrivacyPolicy,
+			backgroundImage: ag.config?.ui?.skin?.splashImage,
+			logo: ag.config?.ui?.skin?.logo
+		};
 		let notification;
 		try {
 			notification = await this.createNotification(data);
