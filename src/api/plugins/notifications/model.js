@@ -46,6 +46,7 @@ const notificationSchema = new mongoose.Schema({
 	},
 	// context for customers (those without primary organization access)
 	organization: String,
+	branding: Object,
 	meta: Object
 }, { _id: false});
 

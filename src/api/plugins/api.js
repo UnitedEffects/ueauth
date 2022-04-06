@@ -86,6 +86,15 @@ const api = {
 				if(data.recipientEmail) data.formats.push('email');
 				if(data.recipientSms) data.formats.push('sms');
 			}
+			data.branding = {
+				platform: req.authGroup.name,
+				contact: req.authGroup.primaryEmail,
+				domain: req.authGroup.primaryDomain,
+				tos: req.authGroup.primaryTOS,
+				privacyPolicy: req.authGroup.primaryPrivacyPolicy,
+				backgroundImage: req.authGroup.config?.ui?.skin?.splashImage,
+				logo: req.authGroup.config?.ui?.skin?.logo
+			};
 			result = await notifications.createNotification(data);
 			try {
 				await notifications.sendNotification(result, req.globalSettings);
