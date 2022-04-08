@@ -357,10 +357,11 @@ const api = {
 					if(req.body.length > 1 || req.body[0].path !== '/password' || req.body[0].op !== 'replace') {
 						throw Boom.methodNotAllowed();
 					}
+					bpwd = true;
 				}
 			}
 			await permissions.enforceOwn(req.permissions, id);
-			const result = await acct.patchAccount(req.authGroup, id, req.body, req.user.sub || req.user.id || 'SYSTEM', bpwd, req.permissions.enforceOwn);
+			const result = await acct.patchAccount(req.authGroup, id, req.body, req.user.sub || 'SYSTEM', bpwd, req.permissions.enforceOwn);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);

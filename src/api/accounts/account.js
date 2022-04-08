@@ -114,14 +114,17 @@ export default {
 	},
 
 	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false, limit = false) {
+		let password = bpwd;
 		const account = await dal.getAccount(authGroup.id || authGroup._id, id);
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
-		patched.modifiedBy = modifiedBy;
+		if(patched.password !== account.password) {
+			password = true;
+		}
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
 		}
 		await standardPatchValidation(account, patched, limit);
-		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, bpwd);
+		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, password);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.account.edit', result);
 		return result;
 	},
@@ -372,7 +375,7 @@ async function standardPatchValidation(original, patched, limit) {
 	// ensure access cannot be updated via Patch
 	if(original.access?.length !== 0) {
 		try {
-			assert.deepEqual(patched.access, JSON.parse(JSON.stringify(original.access)));
+			assert.deepEqual(JSON.parse(JSON.stringify(patched.access)), JSON.parse(JSON.stringify(original.access)));
 		} catch(error) {
 			console.error(error);
 			throw Boom.forbidden('You can not set access through this API');
@@ -385,7 +388,7 @@ async function standardPatchValidation(original, patched, limit) {
 	// ensure recoverCodes cannot be updated via Patch
 	if(original.recoverCodes?.length !== 0) {
 		try {
-			assert.deepEqual(patched.recoverCodes, JSON.parse(JSON.stringify(original.recoverCodes)));
+			assert.deepEqual(JSON.parse(JSON.stringify(patched.recoverCodes)), JSON.parse(JSON.stringify(original.recoverCodes)));
 		} catch(error) {
 			console.error(error);
 			throw Boom.forbidden('You can not set recovery codes through this API');
