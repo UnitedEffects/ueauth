@@ -3,8 +3,6 @@ import qs from 'qs';
 import Boom from '@hapi/boom';
 import dal from '../dal';
 import events from '../eventProcessor';
-import acc from '../../../accounts/account';
-import int from '../../../oidc/interactions/interactions';
 
 const config = require('../../../../config');
 
