@@ -266,7 +266,7 @@ const agp = {
 			recipientEmail: owner,
 			screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}?code=${authGroup.initialAccessToken}`,
 			subject: `Your Have Registered a new Platform: ${authGroup.name}`,
-			message: `You created a new auth group called '${authGroup.name}'. The button below will take you to your sign-on, or if you haven't finished setup, allow you to do so. If you want to store the URL for later, use: https://${config.UI_URL}/${authGroup.prettyName}`,
+			message: `You created a new auth group called '${authGroup.name}'. The button below will take you to your sign-on. If you want to store the URL for later, use: https://${config.UI_URL}/${authGroup.prettyName}`,
 			meta: {
 				description: 'Direct API Post Call',
 				token: authGroup.initialAccessToken,
