@@ -3194,7 +3194,26 @@ paths:
                     type: string
                     example: User Access
                   data:
-                    $ref: '#/components/schemas/userAccess'
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        terms:
+                          type: object
+                          description: the terms that the user has recieved and or accepted
+                        domains:
+                          type: array
+                          description: domain information including name and description
+                          items:
+                            type: object
+                        roles:
+                          type: array
+                          items:
+                            type: string
+                            format: uuid
+                        organization:
+                          type: object
+                          description: details about the organization context of these domains, roles, and terms. This will also include the latest terms of the orgnaization
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
