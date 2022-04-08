@@ -1,5 +1,7 @@
 import Account from './model';
 import bcrypt from 'bcryptjs';
+import Organization from '../orgs/model';
+import Domain from '../domains/model';
 
 export default {
 	async writeAccount(data) {
@@ -261,18 +263,71 @@ export default {
 		}).select({ _id: 1, email: 1, username: 1});
 	},
 	async getAllOrgs(authGroup, id) {
-		let output = {
-			id,
-			authGroup,
-			access: []
-		};
-		const result = await Account.findOne({ _id:id, authGroup }).select({ access: 1 });
-		if(result && result.access.length !== 0) {
-			result.access.map((org) => {
-				output.access.push(org);
-			});
-		}
-		return output;
+		return Account.aggregate([
+			{
+				$match: { _id:id, authGroup }
+			},
+			{
+				$project: { access: 1 }
+			},
+			{
+				$unwind: '$access'
+			},
+			{
+				$replaceRoot: { newRoot: '$access.organization' }
+			},
+			{
+				$lookup: {
+					from: Organization.collection.name,
+					let: { id: '$id' },
+					pipeline: [
+						{ $match: { $expr: { $eq: ['$_id', '$$id'] }}},
+						{ $project: { name: 1, description: 1, access: 1, emailDomains: 1, restrictedEmailDomains: 1 }}
+					],
+					as: 'organization'
+				}
+			},
+			{
+				$unwind: '$organization'
+			},
+			{
+				$unwind: {
+					path: '$domains',
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$lookup: {
+					from: Domain.collection.name,
+					let: { id: '$domains' },
+					pipeline: [
+						{ $match: { $expr: { $eq: ['$_id', '$$id'] }}},
+						{ $project: { name: 1, description: 1 }}
+					],
+					as: 'domains'
+				}
+			},
+			{
+				$unwind: {
+					path: '$domains',
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$group: {
+					_id: '$id',
+					terms: { $first: '$terms' },
+					domains: { $push: '$domains' },
+					roles: { $first: '$roles' },
+					organization: { $first: '$organization' },
+				}
+			},
+			{
+				$project: {
+					_id: 0
+				}
+			}
+		]);
 	},
 	async checkOneUserOrganizations(authGroup, organizations, id) {
 		return Account.findOne({ _id: id, authGroup, access: { $elemMatch: { 'organization.id': organizations } } }).select({ _id: 1, authGroup: 1 });
