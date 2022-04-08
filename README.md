@@ -6,6 +6,25 @@
 
 The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider), which is the only [openid.net](https://openid.net/developers/certified/) certified javascript library currently listed. Multi-tenancy in this context means each tenant is an "AuthGroup" and all artifacts such as accounts (users) and clients are unique and locked to the AuthGroup.
 
+## Note to Followers
+
+Thank you for your support of UE Auth! We have been adding A LOT of functionality, but we have not updated this documentation just yet. Please be patient as this is all happening with the launch of our commercial SaaS solution which you can access at [unitedeffects.com](https://unitedeffects.com). We will update these documents very soon. In the meantime, you can access our up-to-date API documentation in our demo environment here: [DEMO API DOCS](https://qa.ueauth.io/api)
+
+## LICENSE
+
+This project is available under a modified Apache 2.0 license which states that while you may make use of this product in a number of ways, you may not sell the product as an offering unto itself. UE Auth is a Patent Pending technology, please review the [license](LICENSE.md). Please feel free to [contact us at United Effects](mailto:solution@unitedeffects.com) to discuss alternative licensing options.
+
+### SaaS Offerings
+
+#### Solutions
+
+If you'd like to access the features of UE Auth and much more without having to DIY the solution, please visit our commercial offerings at [United Effects](https://unitedeffects.com) where our Beta is free to use, and there will always be a free tier. Alternatively, you may contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com).
+
+#### Support
+
+If you're looking for help with a commercial solution, you may contact us at [help@unitedeffects.com](mailto:help@unitedeffects.com).
+
+
 ## Object Relationship Model
 
 ![Object Relationships Diagram](https://unitedeffects.com/docs/object-relationships.jpeg)
@@ -62,12 +81,6 @@ Please note, documentation is still a work in progress. If you can't find someth
 * [AuthGroup Configuration](https://github.com/UnitedEffects/ueauth/wiki/AuthGroup-Configuration)
 * [Notification Plugin](https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin)
 * [FAQ & Tips](https://github.com/UnitedEffects/ueauth/wiki/FAQ-and-Tips)
-
-## Upcoming Roadmap
-
-* Secured Profiles
-* Federated SSO and Social Logins
-* Multi-Factor Authentication
 
 UE Auth is a Patent Pending Technology. Please read the License before use.
 

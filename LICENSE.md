@@ -1,4 +1,4 @@
-Copyright 2021 United Effects LLC
+Copyright 2022 United Effects LLC
 
 The Software is provided to you by the Licensor under the License, as defined below, subject to the following condition.
 
