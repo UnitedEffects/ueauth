@@ -103,7 +103,7 @@ export default {
 				// find account
 				const account = await acc.getAccount(authGroup.id, req.user.sub || req.user.id);
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
-				if(account.mfa.enabled === false) {
+				if(!account.mfa?.enabled) {
 					// if account is not mfaEnabled, enable and send instructions
 					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
