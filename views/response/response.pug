@@ -28,3 +28,5 @@ block content
                     a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
                 if (authGroup && authGroup.primaryEmail)
                     a(href='mailto:'+authGroup.primaryEmail) Contact #{authGroup.name}
+                if (authGroup)
+                    a(href='/' + authGroup.id + '/forgotpassword') Reset Password
