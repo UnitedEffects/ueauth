@@ -167,7 +167,10 @@
     text-align: center;
     width: 90%; margin:auto;
 }
-
+.mfa-flash {
+    margin: auto;
+    width: fit-content;
+}
 /* Self Identify */
 
 .icon-right {

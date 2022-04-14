@@ -187,7 +187,7 @@ window.addEventListener( 'load', async function () {
 			$('#resetting').css({ display: 'none' });
 			$('#notify').css({ display: 'none' });
 			$('#notify-ready').css({display: 'none'});
-			$('#flash-container').css({ display: 'inherit' });
+			$('#flash-container').css({ visibility: 'inherit', position: 'inherit' });
 			if(error.status === 401) {
 				$('#flash').append('<p>Your username and password were not valid...</p>');
 			} else {
