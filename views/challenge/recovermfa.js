@@ -179,6 +179,7 @@ window.addEventListener( 'load', async function () {
 			} else throw result;
 		} catch (error) {
 			// do something
+			console.info('ERROR CAUGHT');
 			console.info(error);
 			hideSpinner();
 			this.disabled=false;
@@ -186,10 +187,11 @@ window.addEventListener( 'load', async function () {
 			$('#resetting').css({ display: 'none' });
 			$('#notify').css({ display: 'none' });
 			$('#notify-ready').css({display: 'none'});
+			$('#flash-container').css({ display: 'inherit' });
 			if(error.status === 401) {
 				$('#flash').append('<p>Your username and password were not valid...</p>');
 			} else {
-				$('#flash').append('<p>There was an error. Please try again later.</p>');
+				$('#flash').append('<p>There was an error. Please try again later. If the problem continues, contact admin using the link below.</p>');
 			}
 		}
 	}
