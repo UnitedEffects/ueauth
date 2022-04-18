@@ -58,9 +58,9 @@ export default {
 		return result;
 	},
 
-	async getMyProducts(authGroup, pIds) {
+	async getMyProducts(authGroup, pIds, core = false) {
 		const b2c = await dal.getB2cProducts(authGroup);
-		const b2b = await dal.getMyProducts(authGroup, pIds);
+		const b2b = await dal.getMyProducts(authGroup, pIds, core);
 		return { authGroup, b2c, b2b };
 	},
 

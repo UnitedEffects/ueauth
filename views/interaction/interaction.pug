@@ -3,15 +3,7 @@ extends ../uelayout
 block content
     body.bg.flex
         if(align === 'middle')
-            style.
-                .credential-container {
-                    width: auto;
-                }
-
-                .utility-panel {
-                    width: auto;
-                }
-            .utility-panel
+            .panel.middle-panel.width-auto
                 include primary
         else
             .panel
