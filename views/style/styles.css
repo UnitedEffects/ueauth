@@ -370,7 +370,7 @@ details summary::-webkit-details-marker {
 	.panel {
 		width: 100%;
 		min-width: auto;
-		padding-top: max(4vw, 60px);
+		padding: max(4vw, 40px);
 	}
 
 	.credential-container {
@@ -403,8 +403,10 @@ details summary::-webkit-details-marker {
 		box-shadow: none;
 	}
 	.middle-panel {
-		padding: 0;
+		margin: 0;
 		box-shadow: none;
+		width: 100% !important;
+		padding: max(4vw, 40px);
 	}
 }
 

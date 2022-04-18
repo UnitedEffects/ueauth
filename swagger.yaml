@@ -3312,6 +3312,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: includeCore
+          in: query
+          description: Include Core B2B products in returned list
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: successful operation
