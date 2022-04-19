@@ -19,11 +19,11 @@ const core = {
 		if(!userRecord) return undefined;
 		return await userRecord.claims();
 	},
-	async getClient(authGroup, decoded) {
+	async getClient(authGroup, id) {
 		/**
          * When client credential token comes, we look up the client itself
          */
-		return cl.getOne(authGroup, decoded.sub || decoded.client_id);
+		return cl.getOne(authGroup, id);
 	},
 	async introspect(token, authGroup, aliasDns = undefined) {
 		/**
@@ -62,6 +62,8 @@ const core = {
 		return result;
 	},
 	async runDecodedChecks(token, issuer, decoded, authGroup, externalValidation = false, customDomain = undefined) {
+		let cl;
+		let client;
 		if(decoded.nonce) {
 			// check its not id-token
 			throw Boom.unauthorized('ID Tokens can not be used for API Access');
@@ -100,7 +102,14 @@ const core = {
 					// this is an access token and we expect users to only use the associatedClient
 					// otherwise we will let the client check further below validate
 					if(decoded.client_id !== authGroup.associatedClient) {
-						throw Boom.unauthorized('Access Token client ID not specific to this auth group client');
+						//throw Boom.unauthorized('Access Token client ID not specific to this auth group client');
+						if(!cl) cl = await core.getClient(authGroup, decoded.client_id);
+						if(!cl) throw Boom.unauthorized('Client not found');
+						client = JSON.parse(JSON.stringify(cl));
+						if (!client) throw Boom.unauthorized('Client not recognized');
+						if(!client.auth_group && client.auth_group !== decoded.group) {
+							throw Boom.unauthorized('Client not associated with indicated auth group');
+						}
 					}
 				}
 
@@ -128,9 +137,9 @@ const core = {
 		}
 		// client_credential - note, permissions may still stop the request
 		if((decoded.client_id === decoded.sub) || (!decoded.sub && decoded.client_id)) {
-			const cl = await core.getClient(authGroup, decoded);
+			if(!cl) cl = await core.getClient(authGroup, decoded.sub || decoded.client_id);
 			if(!cl) throw Boom.unauthorized('Client not found');
-			let client = JSON.parse(JSON.stringify(cl));
+			client = JSON.parse(JSON.stringify(cl));
 			if (!client) throw Boom.unauthorized('Client not recognized');
 			if(!client.auth_group && client.auth_group !== decoded.group) {
 				throw Boom.unauthorized('Client not associated with indicated auth group');
