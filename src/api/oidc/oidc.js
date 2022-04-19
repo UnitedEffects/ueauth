@@ -356,6 +356,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			}
 		},
 		cookies: {
+			//todo - abstract this to the AG
 			keys: config.COOKIE_KEYS(),
 			long: {
 				httpOnly: true,

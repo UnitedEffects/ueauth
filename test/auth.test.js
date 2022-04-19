@@ -62,7 +62,7 @@ describe('Auth Functions', () => {
 			// mock a client
 			const client = PluginMocks.notificationClient();
 			mockingoose(ModelC).toReturn({ _id: client.client_id, payload: client }, 'findOne');
-			const result = await core.getClient(grp, { sub: client.client_id });
+			const result = await core.getClient(grp, client.client_id);
 			expect(ModelC.Query.prototype.findOne).toHaveBeenCalled();
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(client);
