@@ -281,6 +281,25 @@ const api = {
 				id: result.associatedClient
 			};
 			if(result.aliasDnsUi) out.preferredHost = result.aliasDnsUi;
+			if(req.user) {
+				out.details = {
+					primaryDomain: result.primaryDomain,
+					primaryTOS: result.primaryTOS,
+					primaryPrivacyPolicy: result.primaryPrivacyPolicy,
+					registerUrl: result.registerUrl,
+					primaryEmail: result.primaryEmail,
+					aliasDnsUi: result.aliasDnsUi,
+					aliasDnsOIDC: result.aliasDnsOIDC,
+					config: {
+						ui: result.config?.ui
+					},
+					mfaChallenge: {
+						enable: result.mfaChallenge?.enable || false,
+						required: result.mfaChallenge?.required || false
+					},
+					locked: result.locked
+				};
+			}
 			if(req.user && req.permissions) {
 				const core = await group.returnCoreInfo(result, req.permissions, ag, req.query);
 				if(core) {

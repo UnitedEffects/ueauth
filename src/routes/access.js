@@ -75,7 +75,6 @@ router.get('/:group/access/my/organizations', [
 ], org.getMyOrgs);
 router.get('/:group/access/my/organizations/:org/products', [
 	m.validateAuthGroup,
-	m.validateOrganization,
 	m.isAuthenticated,
 	m.permissions,
 	m.access('accounts')
