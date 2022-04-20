@@ -19,8 +19,8 @@ block content
                     details.detail-color
                         summary More Information
                         p.detail-color.detail-background.wrap-overflow!=details
-            if (redirect || logoUri || (authGroup && authGroup.primaryDomain))
-                a.btn.btn-outline-dark.btn-custom.m-t-20(href=(redirect || logoUri || authGroup.primaryDomain)) Go Home
+            if (redirect || (client && client.clientUri))
+                a.btn.btn-outline-dark.btn-custom.m-t-20(href=(redirect || logoUri)) Go Home
             .tandc.p-b-20.center.width-auto
                 if (authGroup && authGroup.primaryTOS)
                     a(href=(authGroup.primaryTOS)) Terms of Service
