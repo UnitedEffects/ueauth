@@ -14,6 +14,8 @@ import access from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from './api/plugins/plugins';
+import passport from "passport";
+import core from "./auth/core";
 
 const config = require('./config');
 
@@ -165,6 +167,14 @@ const mid = {
 		} catch (error) {
 			next(error);
 		}
+	},
+	async conditionalAGValidate(req, res, next) {
+		const grabToken = req.headers?.authorization?.split(' ');
+		if(grabToken?.length && grabToken[0].toLowerCase() === 'bearer') {
+			// this is a token, we should validate AG
+			return mid.validateAuthGroup(req, res, next);
+		}
+		return next();
 	},
 	async validateAuthGroup (req, res, next) {
 		try {

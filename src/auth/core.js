@@ -4,7 +4,6 @@ import Boom from '@hapi/boom';
 import iat from '../api/oidc/initialAccess/iat';
 import account from '../api/accounts/account';
 import group from '../api/authGroup/group';
-import passport from 'passport';
 
 const config = require('../config');
 
@@ -231,16 +230,6 @@ const core = {
 				bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 				bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
 			});
-		}
-	},
-	async publicOrAuth (req, res, next) {
-		const grabToken = req.headers?.authorization?.split(' ');
-		if(grabToken?.length && grabToken[0].toLowerCase() === 'bearer') {
-			// this is a token, we should do auth...
-			return passport.authenticate('oidc', { session: false })(req, res, next);
-		} else {
-			req.user = null;
-			return core.whitelist(req, res, next);
 		}
 	},
 	issuerArray(provider, g) {

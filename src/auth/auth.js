@@ -317,5 +317,14 @@ export default {
 	isSimpleIAT: passport.authenticate('simple-iat', { session: false }),
 	iatQueryCodeAuth: core.iatQueryCodeAuth,
 	isWhitelisted: core.whitelist,
-	publicOrAuth: core.publicOrAuth
+	async publicOrAuth (req, res, next) {
+		const grabToken = req.headers?.authorization?.split(' ');
+		if(grabToken?.length && grabToken[0].toLowerCase() === 'bearer') {
+			// this is a token, we should do auth...
+			return passport.authenticate('oidc', { session: false })(req, res, next);
+		} else {
+			req.user = null;
+			return core.whitelist(req, res, next);
+		}
+	},
 };
