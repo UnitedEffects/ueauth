@@ -37,9 +37,9 @@ block content
                 else
                     button.btn.btn-outline-dark.btn-custom(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
                     if onCancel
-                        a.btn.btn-outline-dark.btn-custom.m-t-20(type="button" href=onCancel id='onCancel') Cancel
+                        a.btn.btn-outline-dark.btn-custom.m-t-20(href=onCancel id='onCancel') Cancel
                     else if clientUri
-                        a.btn.btn-outline-dark.btn-custom.m-t-20(type="button" href=clientUri id='clientUri') Cancel
+                        a.btn.btn-outline-dark.btn-custom.m-t-20(href=clientUri id='clientUri') Cancel
                     else
                         button.btn.btn-outline-dark.btn-custom.m-t-20(type="submit" form=formId id='cancel' value="no") Cancel
             .tandc.p-b-20.width-auto.center
