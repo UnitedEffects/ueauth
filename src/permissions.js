@@ -81,7 +81,11 @@ export default {
 				if (req.permissions.groupAccess.includes('super')) {
 					if (config.FULL_SUPER_CONTROL === true) return next();
 					if (superAccess(req)) return next();
-					throw Boom.unauthorized('Super Admin is not fully enabled');
+					throw Boom.forbidden('Super Admin is not fully enabled');
+				}
+				// allow owner through no matter what...
+				if (req.user.sub === req.authGroup.owner) {
+					return next();
 				}
 				// ensure a core product exists
 				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
