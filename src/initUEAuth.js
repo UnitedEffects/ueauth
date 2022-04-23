@@ -29,8 +29,8 @@ export default {
 			const agMeta = { ...meta, core: 'groupAdmin'};
 			const ogMeta = { ...meta, core: 'orgAdmin' };
 			const defaultProduct1 = {
-				name: `${authGroup.name} - AuthGroup Admin Portal`,
-				description: `AuthGroup management product reference for group '${authGroup.name}'. Add users to this product to manage authgroup configuration and features. Do not delete as system access will be compromised`,
+				name: `${authGroup.name} - Super Admin Portal`,
+				description: `This is a 'super admin' portal to manage the '${authGroup.name}' platform itself. Add users to this product to manage your customers, organizations, products, permissions, etc. Do not add your customers to this product. Do not delete as system access will be compromised.`,
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
@@ -40,8 +40,8 @@ export default {
 			};
 			meta.core = 'orgAdmin';
 			const defaultProduct2 = {
-				name: `${authGroup.name} - Organization Admin Portal`,
-				description: `Organization management product reference for group '${authGroup.name}'. New organizations have this product automatically associated so they can manage their users and domains. Do not delete as system access will be compromised.`,
+				name: `${authGroup.name} - Customer Portal`,
+				description: `This is a portal for customers or other groups to self manage their organizations within the '${authGroup.name}' platform. Add users to this product so they can self service management of their organization. Do not delete as system access will be compromised.`,
 				authGroup: authGroup.id,
 				type: 'global',
 				createdBy: creator.id,
@@ -55,7 +55,7 @@ export default {
 			if(!initProductOrg) throw new Error('Could not initialize platform product for organization admins');
 			permArray.map((p) => {
 				if(!p.DEPRECATED) {
-					p.description = `${authGroup.name} - AuthGroup Admin Portal Permission. System Created. DO NOT DELETE`;
+					p.description = `${authGroup.name} - Super Admin Portal Permission. System Created. DO NOT DELETE`;
 					p.product = initProductAdmin.id;
 					p.authGroup = authGroup.id;
 					p.tags = ['ag-portal'];
@@ -64,7 +64,7 @@ export default {
 			});
 			permOrgArray.map((p) => {
 				if(!p.DEPRECATED) {
-					p.description = `${authGroup.name} - Organization Admin Portal Permission. System Created. DO NOT DELETE`;
+					p.description = `${authGroup.name} - Customer Portal Permission. System Created. DO NOT DELETE`;
 					p.product = initProductOrg.id;
 					p.authGroup = authGroup.id;
 					p.tags = ['org-portal'];
@@ -74,8 +74,8 @@ export default {
 			permissionsAdmin = await perm.bulkWrite(authGroup.id, bulkPermWrite);
 			permissionsOrg = await perm.bulkWrite(authGroup.id, bulkPermOrgWrite);
 			const defaultOrg = {
-				name: `${authGroup.name} - Global`,
-				description: `Primary organization of authGroup '${authGroup.name}'. Do not delete as system access will be compromised.`,
+				name: `${authGroup.name} Platform Admin`,
+				description: `Internal '${authGroup.name}' platform super administration organization. Do not delete as system access will be compromised.`,
 				type: 'internal',
 				createdBy: creator.id,
 				authGroup: authGroup.id,
@@ -86,8 +86,8 @@ export default {
 			initOrg = await orgs.writeOrg(authGroup.id, defaultOrg);
 			if(!initOrg) throw new Error('Could not initialize primary organization');
 			const defaultDom = {
-				name: `${authGroup.name} - Primary Domain`,
-				description: `Primary domain of organization '${initOrg.name}'. Do not delete as system access will be compromised.`,
+				name: `${authGroup.name} Primary Domain`,
+				description: `Primary domain of organization '${initOrg.name}'. Add your users to this domain to give them the ability to access the Super Admin Portal. Do not delete as system access will be compromised.`,
 				authGroup: authGroup.id,
 				organization: initOrg.id,
 				createdBy: creator.id,
@@ -108,7 +108,7 @@ export default {
 				temp.name = rl.role;
 				temp.createdBy = creator.id;
 				temp.authGroup = authGroup.id;
-				temp.description = (!rl.description) ? `${authGroup.name} Group Admin Portal Role. System Generated. Do Not Delete` : rl.description;
+				temp.description = (!rl.description) ? `${authGroup.name} Super Admin Portal Role. System Generated. Do Not Delete` : rl.description;
 				temp.product = initProductAdmin.id;
 				temp.productCodedId = initProductAdmin.codedId;
 				temp.core = true;
@@ -128,7 +128,7 @@ export default {
 				temp.name = rl.role;
 				temp.createdBy = creator.id;
 				temp.authGroup = authGroup.id;
-				temp.description = (!rl.description) ? `${authGroup.name} Organization Admin Portal Role. System Generated. Do Not Delete` : rl.description;
+				temp.description = (!rl.description) ? `${authGroup.name} Customer Portal Role. System Generated. Do Not Delete` : rl.description;
 				temp.product = initProductOrg.id;
 				temp.productCodedId = initProductOrg.codedId;
 				temp.core = true;
