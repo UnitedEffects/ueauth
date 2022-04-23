@@ -29,8 +29,8 @@ export default {
 			active: true,
 			$or: [
 				{ _id: q },
-				{ prettyName: q },
-				{ aliasDnsUi: q }
+				{ prettyName: q?.toLowerCase() },
+				{ aliasDnsUi: q?.toLowerCase() }
 			]};
 		return Group.findOne(query);
 	},
