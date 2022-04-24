@@ -84,7 +84,7 @@ export default {
 					throw Boom.forbidden('Super Admin is not fully enabled');
 				}
 				// allow owner through no matter what...
-				if (req.user.sub === req.authGroup.owner) {
+				if (req.user?.sub === req.authGroup?.owner) {
 					return next();
 				}
 				// ensure a core product exists
