@@ -68,15 +68,19 @@ export default {
 		return result;
 	},
 
-	async patchOrg(authGroup, org, id, update, modifiedBy, limited = true) {
+	async patchOrg(authGroup, org, id, update, modifiedBy, limited = true, core = undefined) {
 		const patched = jsonPatch.apply_patch(org.toObject(), update);
 		const originalProducts = [...new Set(org.associatedProducts)];
 		const updatedProducts = [...new Set(patched.associatedProducts)];
 		let domains = [];
+		let coreProdRemoved = false;
 		if(updatedProducts.length < originalProducts.length) {
 			const diff = originalProducts.filter(x => !updatedProducts.includes(x));
 			for(let i=0; i<diff.length; i++) {
 				const temp = await dom.checkProducts(authGroup, id, diff[i]);
+				if(originalProducts.includes(diff[i]) && !updatedProducts.includes(diff[i]) && core?.products?.includes(diff[i])) {
+					coreProdRemoved = true;
+				}
 				if(temp.length !== 0 && temp !== false) {
 					domains.push({
 						productId: diff[i],
@@ -84,6 +88,9 @@ export default {
 					});
 				}
 			}
+		}
+		if(coreProdRemoved === true) {
+			throw Boom.forbidden('You cannot remove core products as this would impact access. If you feel you need to carry out this action, contact the administrator');
 		}
 		if(domains.length !== 0) {
 			throw Boom.badRequest('You are attempting to remove a product from this organization that is referenced in domains. Remove from the domains first', domains);

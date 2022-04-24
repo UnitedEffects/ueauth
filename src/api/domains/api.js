@@ -67,7 +67,7 @@ const api = {
 				await permissions.enforceOwnDomain(req.permissions, req.params.org, req.params.id);
 			}
 			const domain = await dom.getDomain(req.authGroup.id || req.authGroup._id, req.params.org, req.params.id);
-			const result = await dom.patchDomain(req.authGroup, domain, req.params.org, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM');
+			const result = await dom.patchDomain(req.authGroup, domain, req.params.org, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', req.permissions?.core);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.domain.error', error);

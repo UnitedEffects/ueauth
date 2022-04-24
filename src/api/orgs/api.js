@@ -80,7 +80,7 @@ const api = {
 			if(!req.params.id) return next(Boom.preconditionRequired('Must provide id'));
 			await permissions.enforceOwnOrg(req.permissions, req.params.id);
 			const organization = await org.getOrg(req.authGroup.id, req.params.id);
-			let result = await org.patchOrg(req.authGroup, organization, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', req.permissions.enforceOwn);
+			let result = await org.patchOrg(req.authGroup, organization, req.params.id, req.body, req.user.sub || req.user.id || 'SYSTEM', req.permissions.enforceOwn, req.permissions?.core);
 			result = includeSSORedirectURIs(result, req.authGroup.aliasDnsOIDC);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
