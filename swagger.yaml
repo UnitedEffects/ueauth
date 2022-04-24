@@ -8526,7 +8526,7 @@ components:
                 - privakey
             meta:
               type: object
-              description: This is an area designated for metadata such as provider ids, secrets, etc. As an example, for the privakey integration, use meta to store 'privakeyClient' and 'privakeySecret'.
+              description: This is an area designated for metadata such as provider ids, secrets, etc. As an example, for the privakey integration, use meta to store 'privakeyLoginId', 'privakeyClient' and 'privakeySecret'.
         federate:
           type: object
           properties:

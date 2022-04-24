@@ -32,9 +32,23 @@ export default {
 		return result;
 	},
 
-	async patchDomain(authGroup, dom, orgId, id, update, modifiedBy) {
+	async patchDomain(authGroup, dom, orgId, id, update, modifiedBy, core = undefined) {
 		const patched = jsonPatch.apply_patch(dom.toObject(), update);
 		patched.modifiedBy = modifiedBy;
+		const originalProducts = [...new Set(dom.associatedOrgProducts)];
+		const updatedProducts = [...new Set(patched.associatedOrgProducts)];
+		let coreProdRemoved = false;
+		if(updatedProducts.length < originalProducts.length) {
+			const diff = originalProducts.filter(x => !updatedProducts.includes(x));
+			for(let i=0; i<diff.length; i++) {
+				if(originalProducts.includes(diff[i]) && !updatedProducts.includes(diff[i]) && core?.products?.includes(diff[i])) {
+					coreProdRemoved = true;
+				}
+			}
+		}
+		if(coreProdRemoved === true) {
+			throw Boom.forbidden('You cannot remove core products as this would impact access. If you feel you need to carry out this action, contact the administrator');
+		}
 		await standardPatchValidation(dom, patched);
 		const result = await dal.patchDomain(authGroup.id || authGroup._id, orgId, id, patched);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.domain.edit', result);

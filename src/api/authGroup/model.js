@@ -10,7 +10,8 @@ mongoose.set('useCreateIndex', true);
 const mfaMeta = new mongoose.Schema({
 	// supporting privakey interface
 	privakeyClient: String,
-	privaKeySecret: String
+	privaKeySecret: String,
+	privakeyLoginId: String
 	// strict is false so this object can be used for any integration or additional data capture
 }, { _id: false, strict: false });
 
