@@ -201,7 +201,6 @@ const api = {
 			if(!req.organization) throw Boom.preconditionRequired('Must provide an organization context');
 			if(!req.domain) throw Boom.preconditionRequired('Must provide an organization context');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			//await permissions.enforceOwnDomain(req.permissions, req.domain.id);
 			const result = await prod.getTheseProducts(req.authGroup.id, req.domain.associatedOrgProducts || []);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -215,7 +214,6 @@ const api = {
 			if(!req.domain) throw Boom.preconditionRequired('Must provide an organization context');
 			if(!req.params.id) throw Boom.preconditionRequired('Must provide id');
 			await permissions.enforceOwnOrg(req.permissions, req.organization.id);
-			//await permissions.enforceOwnDomain(req.permissions, req.domain.id);
 			if(!req.domain.associatedOrgProducts.includes(req.params.id)) throw Boom.notFound(req.params.id);
 			const result = await prod.getThisProduct(req.authGroup.id || req.authGroup._id, req.params.id);
 			return res.respond(say.ok(result, RESOURCE));
