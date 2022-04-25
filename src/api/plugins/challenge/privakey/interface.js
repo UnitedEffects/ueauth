@@ -123,12 +123,12 @@ const pkApi = {
 				{
 					title: 'Approve',
 					strongAuth: true,
-					style: '{"color":"green"}'
+					style: '{"color":"#16C656"}'
 				},
 				{
 					title: 'Decline',
 					strongAuth: false,
-					style: '{"color":"red"}'
+					style: '{"color":"#FF6600"}'
 				}
 			];
 		} else {

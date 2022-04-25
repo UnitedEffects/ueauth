@@ -260,7 +260,7 @@ export default {
 			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
 			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/forgotpassword?code=${iAccessToken.jti}`,
 			subject: `${authGroup.name} - User Password Reset`,
-			message: 'You have requested a password reset. Click the button below or copy past the link in a browser to continue.',
+			message: 'You, or an admin, have requested a password reset. To proceed, click the button below or copy paste the link in a browser to continue.',
 			meta: {
 				description: 'Direct API Patch Call',
 				token: iAccessToken.jti,
