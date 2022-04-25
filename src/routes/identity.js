@@ -211,6 +211,13 @@ router.get('/:group/accounts/search', [
 	m.permissions,
 	m.access('accounts-organization'),
 ], account.searchAccounts);
+router.get('/:group/organization/:org/accounts/search', [
+	m.validateAuthGroup,
+	m.validateOrganization,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('accounts-organization'),
+], account.searchAccounts);
 router.get('/:group/account/:id', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
