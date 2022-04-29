@@ -620,7 +620,13 @@ const api = {
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Magic Link login is not available at this time.'));
 			}
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
-			if (!account) {
+
+			// ensure that we do not bypass any restrictions
+			if (!account ||
+				account.userLocked === true ||
+				account.blocked === true ||
+				account.active !== true ||
+				(account.verified !== true && authGroup.config.requireVerified === true)) {
 				params.emailScreen = true;
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email address'));
 			}
