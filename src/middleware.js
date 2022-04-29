@@ -14,8 +14,6 @@ import access from './permissions';
 import mongoose from 'mongoose';
 import swag from './swagger';
 import plugins from './api/plugins/plugins';
-import passport from "passport";
-import core from "./auth/core";
 
 const config = require('./config');
 
