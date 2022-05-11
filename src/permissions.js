@@ -284,10 +284,17 @@ export default {
 			if(!coreProducts.length) throw new Error('Could not identify core products for this authgroup');
 			req.permissions.core = {
 				group: req.permissions.req_group,
-				org: coreOrg,
 				products: [],
 				productCodedIds: []
 			};
+			if(coreOrg?.id) {
+				req.permissions.core.org = {
+					id: coreOrg.id,
+					name: coreOrg.name,
+					description: coreOrg.description,
+					contact: coreOrg.contactEmail
+				};
+			}
 			coreProducts.map((p) => {
 				req.permissions.core.products.push(p.id || p._id);
 				req.permissions.core.productCodedIds.push(p.codedId);
