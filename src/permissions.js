@@ -280,9 +280,11 @@ export default {
 
 			// we look up the core product and ensure all the permissions match the id associated.
 			const coreProducts = await helper.cacheCoreProduct(req.query.resetCache, req.authGroup);
+			const coreOrg = await helper.cachePrimaryOrg(req.query.resetCache, req.authGroup);
 			if(!coreProducts.length) throw new Error('Could not identify core products for this authgroup');
 			req.permissions.core = {
 				group: req.permissions.req_group,
+				org: coreOrg,
 				products: [],
 				productCodedIds: []
 			};
