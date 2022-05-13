@@ -100,6 +100,8 @@ const config = {
 	MEMBER_PERMISSIONS: ['member:::accounts::update:own', 'member:::accounts::read:own', 'member:::accounts::delete:own', 'member:::useraccess::delete:own', 'member:::useraccess::read:own','member:::operations-reset-user-password::create', 'member:::operations-user::create:own', 'member:::operations-invite::create:own', 'member:::accounts-notification::read:own'],
 	// The Event Emitter writes out a lot of information with regards to the objects of the system. Some of that information could contain sensative information such as passwords or secrets. When this setting is true, sensitive data is sanitized before display.
 	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
+	// You can set the custom domain header you want to use to track incoming upstream request domains
+	CUSTOM_DOMAIN_PROXY_HEADER: process.env.CUSTOM_DOMAIN_PROXY_HEADER || envVars.CUSTOM_DOMAIN_PROXY_HEADER || 'x-host',
 	// You can decide which events are actually emitted below. This is the only configuration that requires hardcoded updates.
 	EVENT_EMITTER: (envVars && envVars.DISABLE_STREAMS === true) ? {} :{
 		general: true,

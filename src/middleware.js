@@ -34,11 +34,25 @@ const mid = {
 			next(error);
 		}
 	},
+	domainProxySettings(req, res, next) {
+		try {
+			req.cdHostname = req.hostname;
+			if(req.headers?.[config.CUSTOM_DOMAIN_PROXY_HEADER] !== req.headers?.host) {
+				if(req.headers?.[config.CUSTOM_DOMAIN_PROXY_HEADER]) {
+					req.cdHostname = req.headers[config.CUSTOM_DOMAIN_PROXY_HEADER];
+				}
+			}
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
 	cores (req, res, next) {
 		try {
 			res.header('Access-Control-Allow-Origin', '*');
 			res.header('Access-Control-Allow-Methods', 'GET, HEAD, POST, DELETE, PUT, PATCH, OPTIONS');
 			res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, api_key, Authorization');
+			console.info(req.headers);
 			next();
 		} catch (error) {
 			next(error);
@@ -152,12 +166,12 @@ const mid = {
 	},
 	async validateHostDomain (req, res, next) {
 		try {
-			if(req.hostname === config.SWAGGER.split(':')[0]) return next();
+			if(req.cdHostname === config.SWAGGER.split(':')[0]) return next();
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
-			const AG = await group.findByAliasDNS(req.hostname);
-			if(!AG) throw Boom.notFound(`DNS not recognized - ${req.hostname}`);
-			req.customDomain = req.hostname;
+			const AG = await group.findByAliasDNS(req.cdHostname);
+			if(!AG) throw Boom.notFound(`DNS not recognized - ${req.cdHostname}`);
+			req.customDomain = req.cdHostname;
 			req.customDomainUI = AG.aliasDnsUi;
 			req.authGroup = AG;
 			req.params.group = AG._id || AG.id;
@@ -196,9 +210,9 @@ const mid = {
 			req.params.group = result._id || result.id;
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
-			if(req.hostname !== config.SWAGGER.split(':')[0]) {
-				if(req.authGroup.aliasDnsOIDC !== req.hostname) throw Boom.notFound(`DNS not recognized - ${req.hostname}`);
-				req.customDomain = req.hostname;
+			if(req.cdHostname !== config.SWAGGER.split(':')[0]) {
+				if(req.authGroup.aliasDnsOIDC !== req.cdHostname) throw Boom.notFound(`DNS not recognized - ${req.cdHostname}`);
+				req.customDomain = req.cdHostname;
 				req.customDomainUI = req.authGroup.aliasDnsUi;
 			}
 			// adding organization context for secure API calls into this... may find a better home later
