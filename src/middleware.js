@@ -34,6 +34,19 @@ const mid = {
 			next(error);
 		}
 	},
+	domainProxySettings(req, res, next) {
+		try {
+			if(req.headers?.['x-host'] !== req.headers?.host) {
+				if(req.headers?.['x-host']) {
+					req.headers.host = req.headers?.['x-host'];
+					req.hostname = req.headers?.['x-host'];
+				}
+			}
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
 	cores (req, res, next) {
 		try {
 			res.header('Access-Control-Allow-Origin', '*');
