@@ -37,9 +37,9 @@ const mid = {
 	domainProxySettings(req, res, next) {
 		try {
 			req.cdHostname = req.hostname;
-			if(req.headers?.['x-host'] !== req.headers?.host) {
-				if(req.headers?.['x-host']) {
-					req.cdHostname = req.headers['x-host'];
+			if(req.headers?.[config.CUSTOM_DOMAIN_PROXY_HEADER] !== req.headers?.host) {
+				if(req.headers?.[config.CUSTOM_DOMAIN_PROXY_HEADER]) {
+					req.cdHostname = req.headers[config.CUSTOM_DOMAIN_PROXY_HEADER];
 				}
 			}
 			return next();

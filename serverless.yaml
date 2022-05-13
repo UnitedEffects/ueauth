@@ -54,6 +54,7 @@ provider:
     EVENT_EMITTER_CLEAN_SENSITIVE: ${env:EVENT_EMITTER_CLEAN_SENSITIVE, file(./.env/env.${self:custom.local_env}.json):EVENT_EMITTER_CLEAN_SENSITIVE}
     ACCESS_OBJECT_SIZE_LIMIT: ${env:ACCESS_OBJECT_SIZE_LIMIT, file(./.env/env.${self:custom.local_env}.json):ACCESS_OBJECT_SIZE_LIMIT}
     SECURITY_FRAME_ANCESTORS: ${env:SECURITY_FRAME_ANCESTORS, file(./.env/env.${self:custom.local_env}.json):SECURITY_FRAME_ANCESTORS}
+    CUSTOM_DOMAIN_PROXY_HEADER: ${env:CUSTOM_DOMAIN_PROXY_HEADER, file(./.env/env.${self:custom.local_env}.json):CUSTOM_DOMAIN_PROXY_HEADER}
 
 package:
   patterns:
