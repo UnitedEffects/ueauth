@@ -36,10 +36,10 @@ const mid = {
 	},
 	domainProxySettings(req, res, next) {
 		try {
+			req.cdHostname = req.hostname;
 			if(req.headers?.['x-host'] !== req.headers?.host) {
 				if(req.headers?.['x-host']) {
-					req.headers.host = req.headers?.['x-host'];
-					req.hostname = req.headers?.['x-host'];
+					req.cdHostname = req.headers['x-host'];
 				}
 			}
 			return next();
@@ -166,12 +166,12 @@ const mid = {
 	},
 	async validateHostDomain (req, res, next) {
 		try {
-			if(req.hostname === config.SWAGGER.split(':')[0]) return next();
+			if(req.cdHostname === config.SWAGGER.split(':')[0]) return next();
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
-			const AG = await group.findByAliasDNS(req.hostname);
-			if(!AG) throw Boom.notFound(`DNS not recognized - ${req.hostname}`);
-			req.customDomain = req.hostname;
+			const AG = await group.findByAliasDNS(req.cdHostname);
+			if(!AG) throw Boom.notFound(`DNS not recognized - ${req.cdHostname}`);
+			req.customDomain = req.cdHostname;
 			req.customDomainUI = AG.aliasDnsUi;
 			req.authGroup = AG;
 			req.params.group = AG._id || AG.id;
@@ -210,9 +210,9 @@ const mid = {
 			req.params.group = result._id || result.id;
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
-			if(req.hostname !== config.SWAGGER.split(':')[0]) {
-				if(req.authGroup.aliasDnsOIDC !== req.hostname) throw Boom.notFound(`DNS not recognized - ${req.hostname}`);
-				req.customDomain = req.hostname;
+			if(req.cdHostname !== config.SWAGGER.split(':')[0]) {
+				if(req.authGroup.aliasDnsOIDC !== req.cdHostname) throw Boom.notFound(`DNS not recognized - ${req.cdHostname}`);
+				req.customDomain = req.cdHostname;
 				req.customDomainUI = req.authGroup.aliasDnsUi;
 			}
 			// adding organization context for secure API calls into this... may find a better home later
