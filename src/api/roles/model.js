@@ -47,7 +47,7 @@ const roleSchema = new mongoose.Schema({
 				validator: function (v) {
 					return h.validatePermissionReference(mongoose.model('permissions'), v, this.authGroup, this.product);
 				},
-				message: 'Permission does not exist or is not part of this product. Also make sure you provide value as a concat of \'permission.id permission.coded\' where there is a space between the values.'
+				message: prop => `Permission does not exist or is not part of this product. Also make sure you provide value as a concat of "permission.id permission.coded" where there is a space between the values: ${prop.value}`
 			}
 		}
 	],
