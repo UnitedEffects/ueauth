@@ -102,9 +102,9 @@ export default {
 	async deleteRole(authGroup, product, id) {
 		return Role.findOneAndRemove( { _id: id, authGroup, product });
 	},
-	async patchRole(authGroup, id, product, data) {
+	async patchRole(authGroup, id, product, data, runValidators = true) {
 		data.modifiedAt = Date.now();
-		const options = { new: true, overwrite: true, runValidators: true };
+		const options = { new: true, overwrite: true, runValidators };
 		return Role.findOneAndUpdate({ _id: id, authGroup, product }, data, options);
 	},
 	async patchOrganizationRole(authGroup, id, organization, product, data) {

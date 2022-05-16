@@ -123,7 +123,9 @@ export default {
 	async patchRole(authGroup, role, id, product, update, modifiedBy) {
 		const patched = jsonPatch.apply_patch(role.toObject(), update);
 		patched.modifiedBy = modifiedBy;
-		const result = await dal.patchRole(authGroup.id || authGroup._id, id, product, patched);
+		let validate = false;
+		if(JSON.stringify(role?.permissions) !== JSON.stringify(patched?.permissions)) validate = true;
+		const result = await dal.patchRole(authGroup.id || authGroup._id, id, product, patched, validate);
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.role.edit', result);
 		return result;
 	},
