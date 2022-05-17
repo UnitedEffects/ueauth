@@ -48,6 +48,7 @@ jobs:
           UI_URL: ${{ secrets.UI_URL }}
           UI_LOGIN_REDIRECT_PATH: /signin-oidc
           UI_LOGOUT_REDIRECT_PATH: /signout-oidc
+          UI_REFRESH_REDIRECT_PATH: /silentrenew
           PROTOCOL: ${{ secrets.PROTOCOL }}
           MONGO: ${{ secrets.MONGO }}
           REPLICA: ${{ secrets.REPLICA }}
