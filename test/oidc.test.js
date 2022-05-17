@@ -54,7 +54,12 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 			expect(result.auth_group).toBe(grp.id);
 			expect(result.grant_types).toMatchObject(['client_credentials', 'authorization_code', 'refresh_token']);
 			expect(result.response_types).toMatchObject(['code']);
-			expect(result.redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
+			const expectedURIs = [
+				`https://${config.UI_URL}`,
+				`https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`,
+				`https://${config.UI_URL}${config.UI_REFRESH_REDIRECT_PATH}`,
+				`https://${config.SWAGGER}/oauth2-redirect.html`];
+			expect(result.redirect_uris).toMatchObject(expectedURIs);
 			if (grp.primaryDomain !== config.UI_URL) {
 				expect(result.post_logout_redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`, grp.primaryDomain]);
 			} else {
@@ -80,7 +85,7 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 			expect(result.auth_group).toBe(grp.id);
 			expect(result.grant_types).toMatchObject(['client_credentials', 'authorization_code', 'refresh_token']);
 			expect(result.response_types).toMatchObject(['code']);
-			expect(result.redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
+			expect(result.redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.UI_URL}${config.UI_REFRESH_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 			expect(result.post_logout_redirect_uris).toMatchObject([`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`, `https://${config.SWAGGER}/oauth2-redirect.html`]);
 		} catch (error) {
 			t.fail(error);

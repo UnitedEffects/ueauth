@@ -24,6 +24,7 @@ provider:
     UI_URL: ${env:UI_URL, file(./.env/env.${self:custom.local_env}.json):UI_URL}
     UI_LOGIN_REDIRECT_PATH: ${env:UI_LOGIN_REDIRECT_PATH, file(./.env/env.${self:custom.local_env}.json):UI_LOGIN_REDIRECT_PATH}
     UI_LOGOUT_REDIRECT_PATH: ${env:UI_LOGOUT_REDIRECT_PATH, file(./.env/env.${self:custom.local_env}.json):UI_LOGOUT_REDIRECT_PATH}
+    UI_REFRESH_REDIRECT_PATH: ${env:UI_REFRESH_REDIRECT_PATH, file(./.env/env.${self:custom.local_env}.json):UI_REFRESH_REDIRECT_PATH}
     PROTOCOL: ${env:PROTOCOL, file(./.env/env.${self:custom.local_env}.json):PROTOCOL}
     MONGO: ${env:MONGO, file(./.env/env.${self:custom.local_env}.json):MONGO}
     REPLICA: ${env:REPLICA, file(./.env/env.${self:custom.local_env}.json):REPLICA}

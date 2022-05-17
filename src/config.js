@@ -20,6 +20,8 @@ const config = {
 	UI_LOGIN_REDIRECT_PATH: process.env.UI_LOGIN_REDIRECT_PATH || envVars.UI_LOGIN_REDIRECT_PATH || '/signin',
 	// Reference to where the UI redirect URL should go for AuthGroup access to the UI
 	UI_LOGOUT_REDIRECT_PATH: process.env.UI_LOGOUT_REDIRECT_PATH || envVars.UI_LOGOUT_REDIRECT_PATH || '/signout',
+	// Reference to where the UI redirect for token refresh should go for AuthGroup access to the UI
+	UI_REFRESH_REDIRECT_PATH: process.env.UI_REFRESH_REDIRECT_PATH || envVars.UI_REFRESH_REDIRECT_PATH || '/silentrenew',
 	// Reference to where users should be linked when they need to complete a registration (optional)
 	ROOT_GROUP_REGISTRATION_UI_URL: process.env.ROOT_GROUP_REGISTRATION_UI_URL || envVars.ROOT_GROUP_REGISTRATION_UI_URL || undefined,
 	// This service can persist http errors in mongo logs. Not recommended for production

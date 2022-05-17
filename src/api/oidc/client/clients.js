@@ -42,7 +42,7 @@ export default {
 			'client_name': config.PLATFORM_NAME,
 			'grant_types': ['client_credentials', 'authorization_code', 'refresh_token'],
 			'response_types': ['code'],
-			'redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`],
+			'redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.UI_URL}${config.UI_REFRESH_REDIRECT_PATH}`],
 			'post_logout_redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGOUT_REDIRECT_PATH}`],
 			'auth_group': authGroup.id,
 		};
