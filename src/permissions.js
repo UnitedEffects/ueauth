@@ -26,6 +26,8 @@ export default {
 	 */
 	async enforceRole(req, res, next) {
 		const ERROR_MESSAGE = 'You do not have the right roles';
+		console.info(req.permissions);
+		console.info(req.user);
 		try {
 			const target = req.roleTarget;
 			// ensure middleware provides a target
@@ -48,15 +50,18 @@ export default {
 			if (!req.permissions?.groupAccess?.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
 
 			let access = false;
-			await Promise.all(req.permissions?.roles?.map(async(rid) => {
-				if(access === false) {
-					const array = rid.split('::');
-					const ag = (req.permissions?.groupAccess?.includes('client-super')) ? req.permissions.sub_group : req.authGroup.id;
-					const role = await roles.getRole(ag, array[0], array[1]);
-					if(role.name === target) access = true;
-				}
-				return rid;
-			}))
+
+			if(req.permissions?.roles && Array.isArray(req.permissions.roles)) {
+				await Promise.all(req.permissions?.roles?.map(async(rid) => {
+					if(access === false) {
+						const array = rid.split('::');
+						const ag = (req.permissions?.groupAccess?.includes('client-super')) ? req.permissions.sub_group : req.authGroup.id;
+						const role = await roles.getRole(ag, array[0], array[1]);
+						if(role.name === target) access = true;
+					}
+					return rid;
+				}))
+			}
 			if(access === false) throw Boom.forbidden(ERROR_MESSAGE);
 			return next();
 		} catch (error) {
