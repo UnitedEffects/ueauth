@@ -8615,6 +8615,10 @@ components:
                   type: string
                   description: a logo for the top of the login and authorize screens. best at 40x40 pixels
                   format: uri
+                favicon:
+                  type: string
+                  description: a favicon to use with the portal specific to the AG brand. Must be square and no more than 500px
+                  format: uri
                 loginOrientation:
                   type: string
                   enum:

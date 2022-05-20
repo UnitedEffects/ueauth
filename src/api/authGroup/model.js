@@ -178,6 +178,7 @@ const authGroup = new mongoose.Schema({
 				backgroundImage: String,
 				splashImage: String,
 				logo: String,
+				favicon: String,
 				loginOrientation: {
 					type: String,
 					enum: ['left', 'middle', 'right'],
