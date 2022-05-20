@@ -35,7 +35,7 @@ export default {
 			// ensure there are permissions... there should at least be member info
 			if (!req.permissions) throw Boom.forbidden(ERROR_MESSAGE)
 			// if root user, they have priority
-			if (req.permissions.groupAccess.includes('super')) {
+			if (req.permissions?.groupAccess?.includes('super')) {
 				if (config.FULL_SUPER_CONTROL === true) return next();
 				if (superAccess(req)) return next();
 				throw Boom.unauthorized('Super Admin is not fully enabled');
@@ -48,7 +48,7 @@ export default {
 			if (!req.permissions?.groupAccess?.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
 
 			let access = false;
-			await Promise.all(req.permissions.roles.map(async(rid) => {
+			await Promise.all(req.permissions?.roles?.map(async(rid) => {
 				if(access === false) {
 					const array = rid.split('::');
 					const ag = (req.permissions?.groupAccess?.includes('client-super')) ? req.permissions.sub_group : req.authGroup.id;
@@ -74,11 +74,11 @@ export default {
 					if(req.accountCreationRequest === true && req.authGroup.locked === false) return next();
 					throw Boom.unauthorized();
 				}
-				if (req.user.initialAccessToken) return next();
+				if (req.user?.initialAccessToken) return next();
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
 				// if root user, they have priority
-				if (req.permissions.groupAccess.includes('super')) {
+				if (req.permissions?.groupAccess?.includes('super')) {
 					if (config.FULL_SUPER_CONTROL === true) return next();
 					if (superAccess(req)) return next();
 					throw Boom.forbidden('Super Admin is not fully enabled');
@@ -88,11 +88,11 @@ export default {
 					return next();
 				}
 				// ensure a core product exists
-				if (!req.permissions.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
+				if (!req.permissions?.core || !req.permissions.core.products) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group access
-				if (!req.permissions.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
+				if (!req.permissions?.groupAccess || !req.permissions.groupAccess.length) throw Boom.forbidden(ERROR_MESSAGE);
 				// ensure group member
-				if (!req.permissions.groupAccess.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
+				if (!req.permissions?.groupAccess?.includes('member')) throw Boom.forbidden(ERROR_MESSAGE);
 				let bFound = false;
 				let requestTarget;
 				let targets = [target];
