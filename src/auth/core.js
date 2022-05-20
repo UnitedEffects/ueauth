@@ -58,8 +58,8 @@ const core = {
 				result.iss = iss.join('/');
 			}
 		}
-		console.info(accessToken);
-		console.info(result);
+		//console.info(accessToken);
+		//console.info(result);
 		return result;
 	},
 	async runDecodedChecks(token, issuer, decoded, authGroup, externalValidation = false, customDomain = undefined) {

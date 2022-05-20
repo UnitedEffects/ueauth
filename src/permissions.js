@@ -26,8 +26,8 @@ export default {
 	 */
 	async enforceRole(req, res, next) {
 		const ERROR_MESSAGE = 'You do not have the right roles';
-		console.info(req.permissions);
-		console.info(req.user);
+		//console.info(req.permissions);
+		//console.info(req.user);
 		try {
 			const target = req.roleTarget;
 			// ensure middleware provides a target
