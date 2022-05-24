@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import cryptoRandomString from "crypto-random-string";
 import { nanoid } from 'nanoid';
 import keys from './generate-keys';
 import ms from 'ms';
@@ -139,6 +140,7 @@ const authGroup = new mongoose.Schema({
 	aliasDnsOIDC: String,
 	config: {
 		keys: Array,
+		cookieKeys: Array,
 		requireVerified: {
 			type: Boolean,
 			default: false
@@ -317,6 +319,11 @@ authGroup.pre('save', async function(next) {
 	if(!this.prettyName) this.prettyName = this._id;
 	if(this.config.keys.length === 0) {
 		this.config.keys = await keys.write();
+	}
+	if(this.config.cookieKeys.length === 0) {
+		for(let i=0; i<5; i++) {
+			this.config.cookieKeys.push(cryptoRandomString({length: 10}));
+		}
 	}
 	next();
 });
