@@ -8,6 +8,7 @@ import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
+import cryptoRandomString from 'crypto-random-string';
 
 const config = require('../../config');
 
@@ -186,12 +187,21 @@ const agp = {
 
 	async operations(id, operation, user) {
 		const userId = user.sub || 'SYSTEM';
-		let keys;
+		let keys = [];
 		let result;
 		switch (operation) {
 		case 'rotate_keys':
 			keys = await k.write();
+			if(!keys.length) throw Boom.expectationFailed('Could not rotate keys at this time');
 			result = await dal.patchNoOverwrite(id, { modifiedBy: userId, 'config.keys': keys });
+			ueEvents.emit(id, 'ue.group.edit', result);
+			return result;
+		case 'rotate_cookie_keys':
+			for(let i=0; i<5; i++) {
+				keys.push(cryptoRandomString({length: 10}));
+			}
+			if(!keys.length) throw Boom.expectationFailed('Could not rotate cookie keys at this time');
+			result = await dal.patchNoOverwrite(id, { modifiedBy: userId, 'config.cookieKeys': keys });
 			ueEvents.emit(id, 'ue.group.edit', result);
 			return result;
 		default:

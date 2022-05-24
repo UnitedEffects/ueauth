@@ -53,7 +53,10 @@ const api = {
 			account = await acct.writeAccount(aData);
 			client = await cl.generateClient(g);
 			final = JSON.parse(JSON.stringify(await group.activateNewAuthGroup(g, account, client.client_id)));
-			if(final.config) delete final.config.keys;
+			if(final.config) {
+				delete final.config.keys;
+				delete final.config.cookieKeys;
+			}
 			try {
 				plugins = await plugs.initPlugins();
 			} catch (error) {
@@ -154,7 +157,10 @@ const api = {
 			if (!result) throw Boom.notFound(`id requested was ${req.params.id}`);
 			let output = JSON.parse(JSON.stringify(result));
 			if(output.config) {
-				if(await permissions.canAccessGroupKeys(req.permissions) === false) delete output.config.keys;
+				if(await permissions.canAccessGroupKeys(req.permissions) === false) {
+					delete output.config.keys;
+					delete output.config.cookieKeys;
+				}
 			}
 			output = includeSSORedirectUris(output);
 			return res.respond(say.ok(output, RESOURCE));
@@ -168,7 +174,10 @@ const api = {
 			if(!grp) throw Boom.notFound(`id requested was ${req.params.id}`);
 			const result = await group.patch(grp, req.body, req.user.sub || 'SYSTEM', req.globalSettings);
 			let output = JSON.parse(JSON.stringify(result));
-			if(output.config) delete output.config.keys;
+			if(output.config) {
+				delete output.config.keys;
+				delete output.config.cookieKeys;
+			}
 			output = includeSSORedirectUris(output);
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {
@@ -181,7 +190,10 @@ const api = {
 			const body = req.body;
 			if(!body.operation) next(Boom.badData('must specify operation'));
 			const result = await group.operations(req.authGroup.id, body.operation, req.user);
-			if(result.config) delete result.config.keys;
+			if(result.config) {
+				delete result.config.keys;
+				delete result.config.cookieKeys;
+			}
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.group.error', error);

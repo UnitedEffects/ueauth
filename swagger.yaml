@@ -3878,8 +3878,8 @@ paths:
     post:
       tags:
         - Operations
-      summary: Execute operations against a auth group (only rotate_keys currently supported)
-      description: Execute operations against a auth group (only rotate_keys currently supported)
+      summary: Execute operations against a auth group (only rotate_keys and rotate_cookie_keys are currently supported)
+      description: Execute operations against a auth group (only rotate_keys and rotate_cookie_keys are currently supported)
       operationId: groupOperations
       parameters:
         - name: group
@@ -7853,6 +7853,7 @@ components:
           enum:
             - rotate_secret
             - rotate_keys
+            - rotate_cookie_keys
             - rotate_registration_access_token
 
     userOperations:
