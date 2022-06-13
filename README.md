@@ -68,9 +68,13 @@ If you're looking for help with a commercial solution, you may contact us at [he
 8. Make the request. This will create your account, activate your AuthGroup, provide a oAuth Client with client_id and client_secret, initialize the primary products, organizations and domains and finally associate you to those products so you have full Admin privileges.
 9. Access your well-known URL here: https://qa.ueauth.io/your_url_friendly_name/.well-known/openid-configuration
     
+## Optional Dependency
+
+* TODO pulsar-client optional dependency overview and limitations here
+
 ## Guides
 
-Please note, documentation is still a work in progress. If you can't find something you need, reach out: [United Effects Team](mailto:team@unitedeffects.com)
+Please note, documentation is still a work in progress. If you can't find something you need, reach out: [United Effects Team](mailto:help@unitedeffects.com)
 
 * [UE Auth](https://github.com/UnitedEffects/ueauth/wiki)
 * [Overview](https://github.com/UnitedEffects/ueauth/wiki/Overview)
@@ -83,5 +87,9 @@ Please note, documentation is still a work in progress. If you can't find someth
 * [FAQ & Tips](https://github.com/UnitedEffects/ueauth/wiki/FAQ-and-Tips)
 
 UE Auth is a Patent Pending Technology. Please read the License before use.
+
+## Investment Opportunities
+
+If you are interested in learning about investment opportunities with United Effects, contact [invest@unitedeffects.com](mailto:invest@unitedeffects.com)
 
 Copyright (c) 2022 [United Effects LLC](https://unitedeffects.com), all rights reserved.
