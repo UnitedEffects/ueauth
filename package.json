@@ -130,5 +130,8 @@
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose-legacy"
     }
+  },
+  "optionalDependencies": {
+    "pulsar-client": "^1.6.2"
   }
 }
