@@ -254,7 +254,7 @@ paths:
       tags:
         - Auth Groups
       summary: Register a new auth group
-      description: Create your AuthGroup and hold on to the Initial Access Token that will be generated and returned upon creation. You will need it to create your Account user (POST /api/{group}/account) with the same email address you used to create your AuthGroup (owner). The AuthGroup will be inactive until you create your owner Account, at which point it will activate and all necassary data will be generated.
+      description: Create your AuthGroup and hold on to the Initial Access Token that will be generated and returned upon creation. You will need it to create your Account user (POST /api/{group}/account) with the same email address you used to create your AuthGroup (owner). The AuthGroup will be inactive until you create your owner Account, at which point it will activate and all necassary data will be generated. NOTE - You are not able to create an authGroup with the externalStreaming setting enabled. You must update it after.
       responses:
         '201':
           description: successful operation
@@ -609,6 +609,38 @@ paths:
                   type: number
                   description: the current global plugin version. this will autoincrement if successful
         description: Setting for notification desired
+        required: true
+
+  /api/plugins/global/event-stream:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global Event Stream Plugin as Service Owner
+      description: Configure Global Event Stream Plugin as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeEventStream'
+        description: Setting for mfa challenge desired
         required: true
 
   /api/plugins/global/mfa-challenge:
@@ -8485,6 +8517,12 @@ components:
       description: these are plugin configurations
       additionalProperties: false
       properties:
+        externalStreaming:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
         notification:
           type: object
           properties:
@@ -8732,6 +8770,52 @@ components:
               description: the url of your service to which we post
             registeredClientId:
               type: string
+        eventStream:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            provider:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - pulsar
+                adminUrl:
+                  type: string
+                  format: uri
+                streamUrl:
+                  type: string
+                  format: uri
+                lockStreamingOnceActive:
+                  type: boolean
+                  example: false
+                  description: when this is active, an AG admin can turn on event streaming but is unable to deactivate without a root user
+                enableValidation:
+                  type: boolean
+                  description: if active, every message sent is validated for correct schema
+                  default: false
+                externalEventBodySchemaUrl:
+                  type: string
+                  format: uri
+                  description: if you are using an external json schema provider to validate schema. only applicable if enableValidation is set to true
+                setupConfig:
+                  type: object
+                  description: the example is pulsar specific and for pulsar, clusterList is required
+                  example:
+                    adminRoles: []
+                    clusterList: ['dev-cluster']
+                clientConfig:
+                  type: object
+                  description: the example is pulsar specific - this is not a required input as defaults are present
+                  example:
+                    operationTimeoutSeconds: 30
+                    ioThreads: 1
+                    tlsTrustCertsFilePath: /my/path
+                    tlsValidateHostname: false
+                    tlsAllowInsecureConnection: false
+
         mfaChallenge:
           type: object
           properties:
@@ -9682,7 +9766,7 @@ components:
           example: authorization_code
         discovery_url:
           type: string
-          format: url
+          format: uri
           description: this is the discovery oidc .well-known url usually ending in "/.well-known/openid-configuration"
         scopes:
           type: array
@@ -9814,6 +9898,56 @@ components:
         password:
           type: string
           description: your new password. If left off the request, one will be generated for you
+
+# Event Stream Plugin
+    writeEventStream:
+      type: object
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
+        currentVersion:
+          type: number
+        provider:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - pulsar
+            adminUrl:
+              type: string
+              format: uri
+            streamUrl:
+              type: string
+              format: uri
+            lockStreamingOnceActive:
+              type: boolean
+              example: false
+              description: when this is active, an AG admin can turn on event streaming but is unable to deactivate without a root user
+            enableValidation:
+              type: boolean
+              description: if active, every message sent is validated for correct schema
+              default: false
+            externalEventBodySchemaUrl:
+              type: string
+              format: uri
+              description: if you are using an external json schema provider to validate schema. only applicable if enableValidation is set to true
+            setupConfig:
+              type: object
+              example:
+                adminRoles: []
+                clusterList: ['dev-cluster']
+            clientConfig:
+              type: object
+              description: the example is pulsar specific - this is not a required input as defaults are present
+              example:
+                operationTimeoutSeconds: 30
+                ioThreads: 1
+                tlsTrustCertsFilePath: /my/path
+                tlsValidateHostname: false
+                tlsAllowInsecureConnection: false
 
 # MFA CHALLENGE
     writeMfaChallenge:
