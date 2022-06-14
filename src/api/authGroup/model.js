@@ -261,6 +261,12 @@ const authGroup = new mongoose.Schema({
 		}
 	},
 	pluginOptions: {
+		externalStreaming: {
+			enabled: {
+				type: Boolean,
+				default: false
+			}
+		},
 		notification: {
 			enabled: {
 				type: Boolean,
