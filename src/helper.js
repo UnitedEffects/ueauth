@@ -127,7 +127,6 @@ export default {
 	async getGlobalSettingsCache() {
 		const cache = await myCache.get('globalSettings');
 		if(cache) return JSON.parse(cache);
-		return cache;
 	},
 	async setGlobalSettingsCache(data) {
 		await myCache.set('globalSettings', JSON.stringify(data), 300);

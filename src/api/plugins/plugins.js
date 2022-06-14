@@ -97,8 +97,6 @@ export default {
 	},
 	async toggleGlobalEventStreamSettings(data, userId, root) {
 		/*
-		todo generate a client at Root for Event Streams
-		todo make sure you return clientId and ClientSecret
 		// We may need something like this when we reintroduce auth...
 		let client;
 		if(data.enabled === true) {

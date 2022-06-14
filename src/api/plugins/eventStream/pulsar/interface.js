@@ -56,6 +56,7 @@ export default {
 					})
 				});
 			} else console.info('Tenant already exists');
+
 			const namespaceResponse = await axios({
 				method: 'get',
 				url: `${adminUrl}${namespaceAPI}`
@@ -83,7 +84,6 @@ export default {
 		const client = Client.getInstance(provider);
 		const topic = `persistent://${group.id}/${NAMESPACE}/${TOPIC}`;
 		const producer = await pulsarProducers.find(group.id, client, topic);
-
 		// todo - envelope for the events?
 		// todo - send can be non-await once we cache producer
 		// todo - create conditional where for some events we ack via await and for rest we do not
