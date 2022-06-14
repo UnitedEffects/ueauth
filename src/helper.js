@@ -3,7 +3,7 @@ import Boom from '@hapi/boom';
 import group from './api/authGroup/group';
 import NodeCache from 'node-cache';
 import product from './api/products/product';
-import orgs from "./api/orgs/orgs";
+import orgs from './api/orgs/orgs';
 
 const myCache = new NodeCache();
 const jwtCheck = /^([A-Za-z0-9\-_~+\/]+[=]{0,2})\.([A-Za-z0-9\-_~+\/]+[=]{0,2})(?:\.([A-Za-z0-9\-_~+\/]+[=]{0,2}))?$/;
@@ -96,7 +96,9 @@ export default {
 			'device',
 			'introspection',
 			'operation',
-			'group'
+			'group',
+			'core',
+			'eos'
 		];
 		return protectedNamespaces.includes(x.toLowerCase());
 	},
@@ -121,6 +123,14 @@ export default {
 			await cacheThis(result, authGroup, 'PrimaryOrg');
 		}
 		return result;
+	},
+	async getGlobalSettingsCache() {
+		const cache = await myCache.get('globalSettings');
+		if(cache) return JSON.parese(cache);
+		return cache;
+	},
+	async setGlobalSettingsCache(data) {
+		await myCache.set('globalSettings', JSON.stringify(data), 300);
 	},
 	async cacheAG(reset, prefix, id, mustBeActive = true) {
 		let result;

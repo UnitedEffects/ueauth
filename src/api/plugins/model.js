@@ -23,6 +23,48 @@ const pluginConfig = new mongoose.Schema({
 		notificationServiceUri: String,
 		registeredClientId: String
 	},
+	eventStream: {
+		enabled: {
+			type: Boolean,
+			default: false
+		},
+		provider: {
+			type: {
+				type: String,
+				enum: ['pulsar']
+			},
+			adminUrl: String,
+			streamUrl: String,
+			lockStreamingOnceActive: {
+				type: String,
+				default: false
+			},
+			setupConfig: {
+				type: Object,
+				/**
+				 * For pulsar, the following are required
+				 * clusterList
+				 * adminRoles
+				 */
+			},
+			clientConfig: {
+				type: Object,
+				/**
+				 * For pulsar, the following are possible but not required:
+				 * operationTimeoutSeconds
+				 * ioThreads
+				 * tlsTrustCertsFilePath
+				 * tlsValidateHostname
+				 * tlsAllowInsecureConnection
+				 */
+			},
+			enableValidation: {
+				type: Boolean,
+				default: false
+			},
+			externalEventBodySchemaUrl: String //only matters if enableValidation = true
+		}
+	},
 	mfaChallenge: {
 		enabled: {
 			type: Boolean,

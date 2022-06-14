@@ -75,6 +75,12 @@ router.post('/plugins/global/mfa-challenge', [
 	m.isAuthenticated,
 	m.permissions,
 	m.access('plugins')], plugins.toggleGlobalMFASettings);
+router.post('/plugins/global/event-stream', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('plugins')], plugins.toggleGlobalEventStreamSettings);
 router.get('/plugins/global', [
 	m.validateAuthGroup,
 	m.isAuthenticated,
