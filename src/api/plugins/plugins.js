@@ -2,6 +2,8 @@ import Boom from '@hapi/boom';
 import dal from './dal';
 import cl from '../oidc/client/clients';
 import log from '../logging/logs';
+import helper from '../../helper';
+import eStream from './eventStream/eventStream';
 
 export default {
 	async initPlugins() {
@@ -93,8 +95,48 @@ export default {
 			}
 		};
 	},
+	async toggleGlobalEventStreamSettings(data, userId, root) {
+		/*
+		// We may need something like this when we reintroduce auth...
+		let client;
+		if(data.enabled === true) {
+			client = await cl.generateNotificationServiceClient(root);
+			data.registeredClientId = client.client_id;
+		}
+		if(data.enabled === false) {
+			await cl.deleteNotificationsServiceClient(root);
+		}
+		 */
+		const lastSaved = await this.getLatestPluginOptions();
+		if(data.currentVersion !== lastSaved.version) {
+			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
+		}
+		delete data.currentVersion;
+		const update = JSON.parse(JSON.stringify(lastSaved));
+		if (data?.enabled === false) {
+			update.eventStream = {
+				enabled: false
+			};
+		} else {
+			await eStream.validateProvider(data?.provider);
+			update.eventStream = data;
+		}
+		const saved = await dal.updatePlugins(lastSaved.version+1, update, userId);
+		return {
+			eventStream: {
+				plugins: {
+					version: lastSaved.version+1
+				},
+				...saved.eventStream
+			}
+		};
+	},
 	async getLatestPluginOptions() {
-		return dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
+		const cache = await helper.getGlobalSettingsCache();
+		if(cache) return cache;
+		const latest = await dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
+		await helper.setGlobalSettingsCache(latest);
+		return latest;
 	},
 	// @notTested
 	async auditPluginOptions() {

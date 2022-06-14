@@ -26,7 +26,6 @@ router.post('/:group/mfa/safe-recovery', [
 ], challengeApi.safeRecoveryNotification);
 
 // Bind user and get instructions
-// todo allow both basic and bearer
 router.post('/:group/mfa/instructions', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings,
