@@ -56,7 +56,7 @@ const api = {
 	},
 	async getLatestPluginOptions(req, res, next) {
 		try {
-			const result = await pins.getLatestPluginOptions();
+			const result = await pins.getLatestPluginOptions(true);
 			await permissions.enforceRoot(req.permissions);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

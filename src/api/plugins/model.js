@@ -36,7 +36,7 @@ const pluginConfig = new mongoose.Schema({
 			adminUrl: String,
 			streamUrl: String,
 			lockStreamingOnceActive: {
-				type: String,
+				type: Boolean,
 				default: false
 			},
 			setupConfig: {
