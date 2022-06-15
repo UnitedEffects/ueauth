@@ -1,5 +1,6 @@
 import client from '../../../oidc/client/clients';
 
+
 class PulsarClient {
 	constructor() {
 		throw new Error('Use PulsarClient.getInstance()');
