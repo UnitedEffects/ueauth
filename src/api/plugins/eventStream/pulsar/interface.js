@@ -1,8 +1,12 @@
 import Boom from '@hapi/boom';
 import axios from 'axios';
+import Client from './clientSingleton';
+import Producers from './producers';
 
 const NAMESPACE = 'core-ueauth';
 const TOPIC = 'ueauth-logs';
+
+const pulsarProducers = new Producers();
 
 export default {
 	async validateSettings(provider) {
@@ -27,7 +31,7 @@ export default {
 	},
 	async initializeAG(group, provider) {
 		try {
-			const tenant = group.id;
+			const tenant = group.id || group._id;
 			const adminUrl = provider?.adminUrl;
 			const tenantAPI = '/admin/v2/tenants';
 			const namespaceAPI = `/admin/v2/namespaces/${tenant}`;
@@ -40,72 +44,53 @@ export default {
 			if(!tenantsResponse?.data) throw new Error('Query to get tenants from pulsar did not work');
 			if(!Array.isArray(tenantsResponse.data)) throw new Error('tenants response from pulsar is not an array');
 			if(!tenantsResponse.data.includes(tenant)) {
-				await axios({
+				const result = await axios({
 					method: 'put',
 					url: `${adminUrl}${tenantAPI}/${tenant}`,
-					data: {
+					headers: {
+						'content-type': 'application/json'
+					},
+					data: JSON.stringify({
 						adminRoles,
-						clusterList
-					}
+						allowedClusters: clusterList
+					})
 				});
-			}
+			} else console.info('Tenant already exists');
 			const namespaceResponse = await axios({
 				method: 'get',
 				url: `${adminUrl}${namespaceAPI}`
 			});
 			if(!namespaceResponse?.data) throw new Error(`Query to get namespaces from pulsar tenant ${tenant} did not work`);
 			if(!Array.isArray(namespaceResponse.data)) throw new Error(`namespace response from pulsar tenant ${tenant} is not an array`);
-			if(!namespaceResponse.data.includes(NAMESPACE)) {
+			if(!namespaceResponse.data.includes(`${tenant}/${NAMESPACE}`)) {
 				await axios({
 					method: 'put',
+					headers: {
+						'content-type': 'application/json'
+					},
 					url: `${adminUrl}${namespaceAPI}/${NAMESPACE}`
 				});
-			}
+			} else console.info('namespace already exists');
 		} catch (error) {
-			if(error.isAxiosError) console.error(error.response);
+			if(error.isAxiosError) {
+				console.error(error.response);
+			}
 			else console.error(error);
 			throw Boom.failedDependency(`There is a problem initializing external streaming of audit data for platform ${group.name}. Please try again later. If the problem continues, contact the admin.`);
 		}
 	},
 	async publish(group, emit, provider) {
-		let Pulsar;
-		try {
-			Pulsar = require('pulsar-client');
-		} catch (error) {
-			throw new Error('This environment does not support the Pulsar event streaming plugin - the pulsar client is not installed');
-		}
-		// Assume that you can not be here unless Pulsar is installed
-		// need one client for the entire runtime
-		// need one producer per AG
-		console.info(emit);
-		const serviceUrl = provider?.streamUrl;
-		const clientConffig = {
-			serviceUrl,
-			...provider?.clientConfig
-		};
-		// todo Create a client - singleton class or cache
-		const client = new Pulsar.Client(clientConffig);
-
-		// todo Create a producer - cache this by AG
-		const producer = await client.createProducer({
-			topic: `persistent://${group.id}/${NAMESPACE}/${TOPIC}`,
-			sendTimeoutMs: 30000,
-			batchingEnabled: true,
-		});
+		const client = Client.getInstance(provider);
+		const topic = `persistent://${group.id}/${NAMESPACE}/${TOPIC}`;
+		const producer = await pulsarProducers.find(group.id, client, topic);
 
 		// todo - envelope for the events?
 		// todo - send can be non-await once we cache producer
 		// todo - create conditional where for some events we ack via await and for rest we do not
 		const msg = JSON.stringify(emit);
-		await producer.send({
+		producer.send({
 			data: Buffer.from(msg),
 		});
-		// todo only call flush when grabbing the producer from the cache or before you send new messages...
-		await producer.flush();
-
-		// todo remove these once cache is in place
-		await producer.close();
-		await client.close();
 	},
 	/**
 	 *
