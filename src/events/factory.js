@@ -212,7 +212,11 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 			const AG = await helper.cacheAG(false, 'AG', group);
 			if(AG?.pluginOptions?.externalStreaming?.enabled === true) {
 				// not waiting for this
-				eStream.publish(AG, emit);
+				eStream.publish(AG, emit).catch((error) => {
+					console.error('UNABLE TO STREAM EXTERNALLY - NOT THROWING ERROR - OUTPUTTING TO CONSOLE INSTEAD');
+					console.error(error);
+					console.info(emit);
+				});
 			} else console.info(emit);
 		});
 	}
