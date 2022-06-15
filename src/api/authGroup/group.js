@@ -118,7 +118,7 @@ const agp = {
 	async patch(group, update, user, global) {
 		let globalSettings;
 		if(!global) {
-			globalSettings = await plugins.getLatestPluginOptions();
+			globalSettings = await plugins.getLatestPluginOptions(true);
 		} else globalSettings = global;
 		const patched = jsonPatch.apply_patch(group.toObject(), update);
 

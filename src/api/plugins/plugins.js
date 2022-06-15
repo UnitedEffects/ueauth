@@ -11,7 +11,7 @@ export default {
 	},
 	async toggleGlobalMFASettings(data, userId, root) {
 		let client;
-		const record = await this.getLatestPluginOptions();
+		const record = await this.getLatestPluginOptions(true);
 		if(!record) throw Boom.internal('System may not have been initialized yet');
 		if(data?.currentVersion !== record?.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
@@ -75,7 +75,7 @@ export default {
 		if(data.enabled === false) {
 			await cl.deleteNotificationsServiceClient(root);
 		}
-		const lastSaved = await this.getLatestPluginOptions();
+		const lastSaved = await this.getLatestPluginOptions(true);
 		if(data.currentVersion !== lastSaved.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
@@ -107,12 +107,13 @@ export default {
 			await cl.deleteNotificationsServiceClient(root);
 		}
 		 */
-		const lastSaved = await this.getLatestPluginOptions();
+		const lastSaved = await this.getLatestPluginOptions(true);
 		if(data.currentVersion !== lastSaved.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
 		delete data.currentVersion;
 		const update = JSON.parse(JSON.stringify(lastSaved));
+		console.info(data);
 		if (data?.enabled === false) {
 			update.eventStream = {
 				enabled: false
@@ -120,19 +121,21 @@ export default {
 		} else {
 			await eStream.validateProvider(data?.provider);
 			update.eventStream = data;
+			console.info(update);
 		}
 		const saved = await dal.updatePlugins(lastSaved.version+1, update, userId);
 		return {
 			eventStream: {
-				plugins: {
-					version: lastSaved.version+1
-				},
+				version: lastSaved.version+1,
 				...saved.eventStream
 			}
 		};
 	},
-	async getLatestPluginOptions() {
-		const cache = await helper.getGlobalSettingsCache();
+	async getLatestPluginOptions(bustCache = false) {
+		let cache;
+		if (bustCache !== true) {
+			cache = await helper.getGlobalSettingsCache();
+		}
 		if(cache) return cache;
 		const latest = await dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
 		await helper.setGlobalSettingsCache(latest);
