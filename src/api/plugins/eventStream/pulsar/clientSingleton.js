@@ -30,7 +30,9 @@ class PulsarClient {
 				serviceUrl: provider?.streamUrl,
 				...provider?.clientConfig
 			};
+
 			if(auth) clientConfig['authentication'] = auth;
+
 			PulsarClient.instance = new Pulsar.Client(clientConfig);
 		}
 		return PulsarClient.instance;
