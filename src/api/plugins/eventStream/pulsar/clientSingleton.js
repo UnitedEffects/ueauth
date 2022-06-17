@@ -33,6 +33,7 @@ class PulsarClient {
 
 			if(auth) clientConfig['authentication'] = auth;
 
+
 			PulsarClient.instance = new Pulsar.Client(clientConfig);
 		}
 		return PulsarClient.instance;
