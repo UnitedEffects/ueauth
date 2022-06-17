@@ -33,6 +33,14 @@ const pluginConfig = new mongoose.Schema({
 				type: String,
 				enum: ['pulsar']
 			},
+			// todo auto populate this as part of creation...
+			auth: {
+				issuerUrl: String,
+				clientId: String,
+				rootRef: String, // a copy of the ROOT AG ID
+				audience: String,
+				scope: String
+			},
 			adminUrl: String,
 			streamUrl: String,
 			lockStreamingOnceActive: {
@@ -120,6 +128,7 @@ pluginConfig.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
 	delete ret.__v;
+	delete ret?.eventStream?.provider?.auth?.rootRef;
 };
 
 // Export the Mongoose model
