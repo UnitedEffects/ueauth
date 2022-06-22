@@ -293,6 +293,7 @@ const api = {
 				id: result.associatedClient
 			};
 			if(result.aliasDnsUi) out.preferredHost = result.aliasDnsUi;
+			if(result.aliasDnsOIDC) out.preferredOP = result.aliasDnsOIDC;
 			if(req.user) {
 				out.details = {
 					primaryDomain: result.primaryDomain,
