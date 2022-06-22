@@ -116,6 +116,12 @@ paths:
                       id:
                         type: string
                         description: the client_id of the AuthGroup
+                      preferredHost:
+                        type: string
+                        description: custom domain for UI if present
+                      preferredOP:
+                        type: string
+                        description: custom domain for OIDC provider if present
                       core:
                         type: object
                         description: information about AuthGroup primary products - only sent when logged in and authorized
