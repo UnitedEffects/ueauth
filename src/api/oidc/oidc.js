@@ -210,6 +210,9 @@ function oidcConfig(g, aliasDns = undefined) {
 					if(oneOf) {
 						return oneOf;
 					}
+					if(ctx.request?.body?.audience) {
+						return ctx.request.body.audience;
+					}
 					return undefined;
 				},
 				enabled: true,
