@@ -1,6 +1,7 @@
 import '@babel/register';
 import 'regenerator-runtime/runtime';
 import Model from '../src/api/plugins/notifications/model';
+import Group from '../src/api/authGroup/model';
 import notify from '../src/api/plugins/notifications/notifications';
 import {GroupMocks, PluginMocks, NotifyMocks, Tokens} from './models';
 
@@ -32,6 +33,7 @@ describe('Plugins', () => {
 		ModelG.Query.prototype.findOne.mockClear();
 		ModelP.Query.prototype.findOne.mockClear();
 		ModelC.Query.prototype.findOne.mockClear();
+		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
 	});
 
 	it('Create Notification', async () => {

@@ -161,6 +161,7 @@ const authGroup = new mongoose.Schema({
 			default: true
 		},
 		scopes: [String],
+		privateScopes: [String],
 		// if true, logins must use pkce
 		pkceRequired: {
 			type: Boolean,

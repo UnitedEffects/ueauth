@@ -89,6 +89,17 @@ const config = {
 			return [];
 		}
 	},
+	// Private scopes to ensure all authgroups can use
+	RESTRICTED_SCOPES () {
+		try {
+			if(process.env.RESTRICTED_SCOPES) return process.env.RESTRICTED_SCOPES.toString().split(',');
+			if(envVars.RESTRICTED_SCOPES) return envVars.RESTRICTED_SCOPES.toString().split(',');
+			return [];
+		} catch (error) {
+			console.error(error);
+			return [];
+		}
+	},
 	// STATIC_ASSETS are images or CSS for the UI components. If you wish to serve static assets locally, add the appropriate files to ./public and change this to "/"
 	STATIC_ASSETS: process.env.STATIC_ASSETS || envVars.STATIC_ASSETS || 'https://assets.uecore.io/ueauth/',
 	// CUSTOM_FONTS_URL allows you to change the overall fonts of the system

@@ -209,7 +209,14 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 					}
 				}
 			}
-			const AG = await helper.cacheAG(false, 'AG', group);
+			let AG;
+			try {
+				AG = await helper.cacheAG(false, 'AG', group);
+			} catch (error) {
+				console.error('unable to lookup AG, defaulting to console out');
+				if(config.ENV === 'test') throw new Error('Auth Group not found');
+			}
+
 			if(AG?.pluginOptions?.externalStreaming?.enabled === true) {
 				// not waiting for this
 				eStream.publish(AG, emit).catch((error) => {
