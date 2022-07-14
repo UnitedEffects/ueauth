@@ -308,26 +308,28 @@ function oidcConfig(g, aliasDns = undefined) {
 				if (key === 'dynamic_scope') {
 					try {
 						if(value) {
-							if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a list of one or more dynamic scopes seperated by spaces`);
-						}
-						const scopes = oidcOptions.scopes.filter((s) => {
-							return (s.includes('{d}'));
-						});
-						const tests = [];
-						scopes.map((s) => {
-							tests.push(s.replace('{d}', ''));
-						});
-						const aV = value.split(' ');
-						const recognizedScopes = [];
-						for (const scope of aV) {
-							for (const t of tests) {
-								let test = new RegExp(t);
-								if (test.exec(scope)) {
-									recognizedScopes.push(scope);
+							if(typeof value !== 'string') {
+								throw new InvalidClientMetadata(`${key} must be a list of one or more dynamic scopes seperated by spaces`);
+							}
+							const scopes = oidcOptions.scopes.filter((s) => {
+								return (s.includes('{d}'));
+							});
+							const tests = [];
+							scopes.map((s) => {
+								tests.push(s.replace('{d}', ''));
+							});
+							const aV = value.split(' ');
+							const recognizedScopes = [];
+							for (const scope of aV) {
+								for (const t of tests) {
+									let test = new RegExp(t);
+									if (test.exec(scope)) {
+										recognizedScopes.push(scope);
+									}
 								}
 							}
+							if(recognizedScopes.length === 0) throw new InvalidClientMetadata(`${key} value ${value} must match a regular expression from the OP scope list.`);
 						}
-						if(recognizedScopes.length === 0) throw new InvalidClientMetadata(`${key} value ${value} must match a regular expression from the OP scope list.`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						error.message = `${error.message} - Dynamic Scopes`;
