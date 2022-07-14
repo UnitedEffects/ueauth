@@ -8782,6 +8782,13 @@ components:
                   type: string
                   enum:
                     - pulsar
+                restAuth:
+                  type: boolean
+                streamAuth:
+                  type: boolean
+                auth:
+                  type: object
+                  description: information about the oauth2 resource client generated for this plugin
                 adminUrl:
                   type: string
                   format: uri
@@ -9934,6 +9941,14 @@ components:
               type: string
               format: uri
               description: if you are using an external json schema provider to validate schema. only applicable if enableValidation is set to true
+            restAuth:
+              type: boolean
+              default: false
+              description: will calls to the REST API require a client_credential token?
+            streamAuth:
+              type: boolean
+              default: false
+              description: will publishing events require a client_credential token?
             setupConfig:
               type: object
               example:

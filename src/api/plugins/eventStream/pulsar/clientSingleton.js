@@ -15,7 +15,7 @@ class PulsarClient {
 			}
 
 			let auth;
-			if(provider?.auth) {
+			if(provider?.streamAuth === true) {
 				const params = {
 					issuer_url: provider?.auth?.issuerUrl
 				};
@@ -32,7 +32,6 @@ class PulsarClient {
 			};
 
 			if(auth) clientConfig['authentication'] = auth;
-
 
 			PulsarClient.instance = new Pulsar.Client(clientConfig);
 		}
