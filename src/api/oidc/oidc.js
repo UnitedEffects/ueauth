@@ -26,7 +26,7 @@ const ACCESS_SCOPES = [
 	'access:domains',
 	'access:products',
 	'access:roles',
-	'access:permissions'
+	'access:permissions',
 ];
 const BASE_SCOPES = [
 	'openid',
@@ -217,13 +217,46 @@ function oidcConfig(g, aliasDns = undefined) {
 				},
 				enabled: true,
 				getResourceServerInfo: (ctx, resourceIndicator, client) => {
+					const ds = oidcOptions.scopes.filter((s) => {
+						return (s.includes('{d}'));
+					});
+					const scopes = oidcOptions.scopes.filter((s) => {
+						return (!s.includes('{d}'));
+					});
 					const resource = {
 						audience: resourceIndicator,
 						accessTokenFormat: 'jwt',
-						scope: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes).join(' ')
+						scope: scopes.join(' ')
 					};
-					if(client.scope) {
-						resource.scope = client.scope.replace('openid', '').trim();
+					const requestedScopes = ctx.oidc?.body?.scope.split(' ');
+					const tests = [];
+					ds.map((s) => {
+						tests.push(s.replace('{d}', ''));
+					});
+					let recognizedScopes = [];
+					for (const scope of requestedScopes) {
+						for (const t of tests) {
+							let test = new RegExp(t);
+							if (test.exec(scope)) {
+								recognizedScopes.push(scope);
+							}
+						}
+					}
+					recognizedScopes = [...new Set(recognizedScopes)];
+					if(recognizedScopes.length > 0) {
+						resource.scope = resource.scope.split(' ').concat(recognizedScopes).join(' ');
+					}
+					if(client.scope || client.dynamic_scope) {
+						let override = [];
+						if(client.scope) {
+							override = override.concat(client.scope.replace('openid', '').trim().split(' '));
+						}
+
+						if(client.dynamic_scope) {
+							override = override.concat(client.dynamic_scope.split(' '));
+						}
+
+						resource.scope = override.join(' ');
 					}
 					return (resource);
 				},
@@ -243,7 +276,8 @@ function oidcConfig(g, aliasDns = undefined) {
 				'associated_product',
 				'client_federation_options',
 				'client_allow_org_federation',
-				'client_allow_org_self_identify'
+				'client_allow_org_self_identify',
+				'dynamic_scope'
 			],
 			validator(ctx, key, value, metadata) {
 				if (key === 'auth_group') {
@@ -268,6 +302,35 @@ function oidcConfig(g, aliasDns = undefined) {
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						error.message = `${error.message} - Associated Product`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'dynamic_scope') {
+					try {
+						if(value) {
+							if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a list of one or more dynamic scopes seperated by spaces`);
+						}
+						const scopes = oidcOptions.scopes.filter((s) => {
+							return (s.includes('{d}'));
+						});
+						const tests = [];
+						scopes.map((s) => {
+							tests.push(s.replace('{d}', ''));
+						});
+						const aV = value.split(' ');
+						const recognizedScopes = [];
+						for (const scope of aV) {
+							for (const t of tests) {
+								let test = new RegExp(t);
+								if (test.exec(scope)) {
+									recognizedScopes.push(scope);
+								}
+							}
+						}
+						if(recognizedScopes.length === 0) throw new InvalidClientMetadata(`${key} value ${value} must match a regular expression from the OP scope list.`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Dynamic Scopes`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
