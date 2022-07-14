@@ -31,12 +31,14 @@ export default {
 	},
 	async initializeAG(group, provider) {
 		try {
+			// todo if restAuth, get token
 			const tenant = group.id || group._id;
 			const adminUrl = provider?.adminUrl;
 			const tenantAPI = '/admin/v2/tenants';
 			const namespaceAPI = `/admin/v2/namespaces/${tenant}`;
 			const adminRoles = provider?.setupConfig?.adminRoles;
 			const clusterList = provider?.setupConfig?.clusterList;
+			// todo if restAuth, add token to header
 			const tenantsResponse = await axios({
 				method: 'get',
 				url: `${adminUrl}${tenantAPI}`
@@ -44,6 +46,7 @@ export default {
 			if(!tenantsResponse?.data) throw new Error('Query to get tenants from pulsar did not work');
 			if(!Array.isArray(tenantsResponse.data)) throw new Error('tenants response from pulsar is not an array');
 			if(!tenantsResponse.data.includes(tenant)) {
+				// todo if restAuth, add token to header
 				const result = await axios({
 					method: 'put',
 					url: `${adminUrl}${tenantAPI}/${tenant}`,
@@ -65,6 +68,7 @@ export default {
 			if(!namespaceResponse?.data) throw new Error(`Query to get namespaces from pulsar tenant ${tenant} did not work`);
 			if(!Array.isArray(namespaceResponse.data)) throw new Error(`namespace response from pulsar tenant ${tenant} is not an array`);
 			if(!namespaceResponse.data.includes(`${tenant}/${NAMESPACE}`)) {
+				// todo if restAuth, add token to header
 				await axios({
 					method: 'put',
 					headers: {
@@ -85,8 +89,6 @@ export default {
 		const client = Client.getInstance(provider);
 		const topic = `persistent://${group.id}/${NAMESPACE}/${TOPIC}`;
 		const producer = await pulsarProducers.find(group.id, client, topic);
-
-
 		// todo - envelope for the events?
 		// todo - send can be non-await once we cache producer
 		// todo - create conditional where for some events we ack via await and for rest we do not
@@ -94,16 +96,5 @@ export default {
 		producer.send({
 			data: Buffer.from(msg),
 		});
-	},
-	/**
-	 *
-	 * todo
-	async validateSchema() {
-
-	},
-
-	async updateSchema() {
-
 	}
-	*/
 };

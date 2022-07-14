@@ -33,13 +33,22 @@ const pluginConfig = new mongoose.Schema({
 				type: String,
 				enum: ['pulsar']
 			},
-			// todo auto populate this as part of creation...
 			auth: {
 				issuerUrl: String,
 				clientId: String,
 				rootRef: String, // a copy of the ROOT AG ID
 				audience: String,
 				scope: String
+			},
+			//use client credentials for API requests
+			restAuth: {
+				type: Boolean,
+				default: false
+			},
+			//use client credentials for streaming
+			streamAuth: {
+				type: Boolean,
+				default: false
 			},
 			adminUrl: String,
 			streamUrl: String,
