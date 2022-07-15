@@ -111,6 +111,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
+		extraParams: ['audience'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -214,6 +215,9 @@ function oidcConfig(g, aliasDns = undefined) {
 					if(ctx.request?.body?.audience) {
 						return ctx.request.body.audience;
 					}
+					if(ctx.oidc?.params?.audience) {
+						return ctx.oidc.params.audience;
+					}
 					return undefined;
 				},
 				enabled: true,
@@ -229,7 +233,15 @@ function oidcConfig(g, aliasDns = undefined) {
 						accessTokenFormat: 'jwt',
 						scope: scopes.join(' ')
 					};
-					const requestedScopes = ctx.oidc?.body?.scope.split(' ');
+					let requestedScopes = [];
+					switch(ctx.oidc?.route) {
+					case 'token':
+						requestedScopes = ctx.oidc?.body?.scope.split(' ');
+						break;
+					case 'authorization':
+						requestedScopes = ctx.oidc?.params?.scope.split(' ');
+						break;
+					}
 					const tests = [];
 					ds.map((s) => {
 						tests.push(s.replace('{d}', ''));
