@@ -233,15 +233,21 @@ function oidcConfig(g, aliasDns = undefined) {
 						accessTokenFormat: 'jwt',
 						scope: scopes.join(' ')
 					};
+
 					let requestedScopes = [];
 					switch(ctx.oidc?.route) {
 					case 'token':
-						requestedScopes = ctx.oidc?.body?.scope.split(' ');
+						if(ctx.oidc?.body?.scope) {
+							requestedScopes = ctx.oidc.body.scope.split(' ');
+						}
 						break;
 					case 'authorization':
-						requestedScopes = ctx.oidc?.params?.scope.split(' ');
+						if(ctx.oidc?.params?.scope) {
+							requestedScopes = ctx.oidc.params.scope.split(' ');
+						}
 						break;
 					}
+
 					const tests = [];
 					ds.map((s) => {
 						tests.push(s.replace('{d}', ''));
@@ -271,6 +277,7 @@ function oidcConfig(g, aliasDns = undefined) {
 
 						resource.scope = override.join(' ');
 					}
+
 					return (resource);
 				},
 				useGrantedResource: (ctx, model) => {

@@ -9949,6 +9949,9 @@ components:
               type: boolean
               default: false
               description: will publishing events require a client_credential token?
+            authScopes:
+              type: string
+              description: if specific scopes are required for the client credential authorizer add them here as space delimited strings
             setupConfig:
               type: object
               example:

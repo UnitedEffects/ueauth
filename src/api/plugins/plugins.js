@@ -5,11 +5,14 @@ import log from '../logging/logs';
 import helper from '../../helper';
 import eStream from './eventStream/eventStream';
 
+const config = require('../../config');
+
 export default {
 	async initPlugins() {
 		return dal.initPlugins();
 	},
 	async toggleGlobalMFASettings(data, userId, root) {
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
 		let client;
 		const record = await this.getLatestPluginOptions(true);
 		if(!record) throw Boom.internal('System may not have been initialized yet');
@@ -67,6 +70,7 @@ export default {
 		return dal.updatePlugins(lastSaved.version+1, lastSaved, userId);
 	},
 	async toggleGlobalNotifications(data, userId, root) {
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
 		let client;
 		if(data.enabled === true) {
 			client = await cl.generateNotificationServiceClient(root);
@@ -96,26 +100,23 @@ export default {
 		};
 	},
 	async toggleGlobalEventStreamSettings(data, userId, root) {
-		/*
-		todo generate a client at Root for Event Streams
-		todo make sure you return clientId and ClientSecret, pulsar will need these for configuration
-		// We may need something like this when we reintroduce auth...
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
 		let client;
 		if(data.enabled === true) {
-			client = await cl.generateNotificationServiceClient(root);
-			data.registeredClientId = client.client_id;
+			client = await cl.generateEventStreamingClient(root);
+			if(!client) throw Boom.badRequest('Unable to generate a client at this time.');
 		}
 		if(data.enabled === false) {
-			await cl.deleteNotificationsServiceClient(root);
+			await cl.deleteEventStreamingClient(root);
 		}
-		 */
 		const lastSaved = await this.getLatestPluginOptions(true);
 		if(data.currentVersion !== lastSaved.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
 		delete data.currentVersion;
+		const authScopes = data.authScopes;
+		delete data.authScopes;
 		const update = JSON.parse(JSON.stringify(lastSaved));
-		console.info(data);
 		if (data?.enabled === false) {
 			update.eventStream = {
 				enabled: false
@@ -123,15 +124,26 @@ export default {
 		} else {
 			await eStream.validateProvider(data?.provider);
 			update.eventStream = data;
-			console.info(update);
+			update.eventStream.provider.auth = {
+				issuerUrl: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}`,
+				clientId: client.client_id,
+				rootRef: root.id || root._id,
+				audience: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}/streaming`,
+				scope: authScopes
+			};
 		}
 		const saved = await dal.updatePlugins(lastSaved.version+1, update, userId);
-		return {
+		let output = {
 			eventStream: {
 				version: lastSaved.version+1,
 				...saved.eventStream
 			}
 		};
+		if(output.eventStream?.provider?.auth?.clientId && client.client_secret){
+			output = JSON.parse(JSON.stringify(output));
+			output.eventStream.provider.auth.clientSecret = client.client_secret;
+		}
+		return output;
 	},
 	async getLatestPluginOptions(bustCache = false) {
 		let cache;
