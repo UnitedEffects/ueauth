@@ -48,3 +48,4 @@ src/api/ueAuth/
 src/jwks-old.json
 src/jwks.json
 debugging/
+docker-compose.yml

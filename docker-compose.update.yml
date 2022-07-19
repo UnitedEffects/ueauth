@@ -1,0 +1,44 @@
+services:
+  ueauth:
+    build: .
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=dev
+      - PROTOCOL=http
+      - MONGO=YOURVALUEHERE
+      - REPLICA=YOURVALUEHERE
+      - SWAGGER=localhost:3000
+      - UI_URL=YOURVALUEHERE
+      - UI_LOGIN_REDIRECT_PATH=/signin-oidc
+      - UI_LOGOUT_REDIRECT_PATH=/signout-oidc
+      - UI_REFRESH_REDIRECT_PATH=/silentrenew
+      - PERSIST_HTTP_ERRORS=false
+      - WRITE_LOGS_TO_DB=false
+      - SINGLE_USE_IAT=true
+      - GROUP_SECURE_EXPIRES=2592000
+      - COOKIE_KEYS=YOURVALUEHERE
+      - ALLOW_ROOT_CREATION=true
+      - ROOT_EMAIL=YOURVALUEHERE
+      - ROOT_COMPANY_NAME=YOURVALUEHERE
+      - ONE_TIME_PERSONAL_ROOT_CREATION_KEY=YOURVALUEHERE
+      - FULL_SUPER_CONTROL=true
+      - OPEN_GROUP_REG=true
+      - INIT_ROOT_PRIMARY_DOMAIN=YOURVALUEHERE
+      - INIT_ROOT_PRIMARY_TOS=YOURVALUEHERE
+      - INIT_ROOT_PRIMARY_POLICY=YOURVALUEHERE
+      - PLATFORM_NAME=Core EOS
+      - UI_WHITE_LIST=localhost
+      - UI_CORE_AUDIENCE_ORIGIN=http://localhost:3000
+      - UI_PKCE_REQUIRED=false
+      - CORE_SCOPES=api:read,api:write,api:delete,api:update,core:read,core:write,core:delete,core:update
+      - RESTRICTED_SCOPES=YOURVALUEHERE,{d}REGEX
+      - STATIC_ASSETS=https://assets.uecore.io/ueauth/
+      - ROOT_GROUP_REGISTRATION_UI_URL=http://localhost:3000
+      - DEFAULT_UI_SKIN_GRADIENT_LOW=#131525
+      - DEFAULT_UI_SKIN_GRADIENT_HIGH=#1D2035
+      - EVENT_EMITTER_CLEAN_SENSITIVE=false
+      - ACCESS_OBJECT_SIZE_LIMIT=8000
+      - SECURITY_FRAME_ANCESTORS=*
+      - DISABLE_STREAMS=true
+      - CUSTOM_DOMAIN_PROXY_HEADER=x-host

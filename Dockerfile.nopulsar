@@ -1,5 +1,5 @@
 FROM node:16-alpine3.14
-LABEL author="team@unitedeffects.com"
+LABEL author="help@unitedeffects.com"
 RUN mkdir /app
 
 COPY . /app

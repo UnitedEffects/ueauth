@@ -15,6 +15,7 @@ class PulsarClient {
 			try {
 				Pulsar = require('pulsar-client');
 			} catch (error) {
+				console.error(error);
 				throw new Error('This environment does not support the Pulsar event streaming plugin - the pulsar client is not installed');
 			}
 
