@@ -207,6 +207,11 @@ const agp = {
 		copy.associatedClient = clientId;
 		delete copy.securityExpiration;
 		const result = await dal.activatePatch(authGroup._id || authGroup.id, copy);
+		try {
+			await ueEvents.master(authGroup.id || authGroup._id, 'ue.group.initialize', result);
+		} catch (error) {
+			ueEvents.emit(authGroup.id || authGroup._id, 'ue.group.error', error);
+		}
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.group.initialize', result);
 		return result;
 	},

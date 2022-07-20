@@ -213,8 +213,8 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 			try {
 				AG = await helper.cacheAG(false, 'AG', group);
 			} catch (error) {
-				console.error('unable to lookup AG, defaulting to console out');
-				if(config.ENV === 'test') throw new Error('Auth Group not found');
+				console.info('unknown AG, possibly new');
+				//if(config.ENV === 'test') throw new Error('Auth Group not found');
 			}
 
 			if(AG?.pluginOptions?.externalStreaming?.enabled === true) {
@@ -222,9 +222,9 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 				eStream.publish(AG, emit).catch((error) => {
 					console.error('UNABLE TO STREAM EXTERNALLY - NOT THROWING ERROR - OUTPUTTING TO CONSOLE INSTEAD');
 					if(config.ENV !== 'production') console.error(error);
-					console.info(emit);
+					console.info(JSON.stringify(emit, null, 2));
 				});
-			} else console.info(emit);
+			} else console.info(JSON.stringify(emit, null, 2));
 		});
 	}
 }

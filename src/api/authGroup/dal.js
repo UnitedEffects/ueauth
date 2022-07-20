@@ -1,8 +1,12 @@
 import Group from './model';
+import ueEvents from "../../events/ueEvents";
 
 export default {
 	async write(data) {
 		const group = new Group(data);
+		// we publish first to ensure we don't ever create a local record without an async streamed record
+		// this only matters if the externalStreaming plugin and masterStream option are enabled
+		await ueEvents.master(group._id, 'ue.group.create', group);
 		return group.save();
 	},
 	async get(query) {

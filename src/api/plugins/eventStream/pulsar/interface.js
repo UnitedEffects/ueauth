@@ -106,6 +106,23 @@ export default {
 			throw Boom.failedDependency(`There is a problem initializing external streaming of audit data for platform ${group.name}. Please try again later. If the problem continues, contact the admin.`);
 		}
 	},
+	async publishMaster(group, emit, provider) {
+		if(provider.masterStream?.enabled === true &&
+			provider.masterStream?.streamPath) {
+			const topic = provider.masterStream.streamPath;
+			let client;
+			try {
+				client = await Client.getInstance(provider);
+			} catch (error) {
+				console.info(error);
+			}
+			const producer = await pulsarProducers.find(`master-${group.id}`, client, topic);
+			const msg = JSON.stringify(emit);
+			return producer.send({
+				data: Buffer.from(msg),
+			});
+		}
+	},
 	async publish(group, emit, provider) {
 		const topic = `persistent://${group.id}/${NAMESPACE}/${TOPIC}`;
 		let client;
@@ -115,9 +132,8 @@ export default {
 			console.info(error);
 		}
 		const producer = await pulsarProducers.find(group.id, client, topic);
-		// todo - send can be non-await once we cache producer
-		// todo - create conditional where for some events we ack via await and for rest we do not
 		const msg = JSON.stringify(emit);
+		console.info(`streaming --> ${JSON.stringify(emit, null, 2)}`);
 		producer.send({
 			data: Buffer.from(msg),
 		});

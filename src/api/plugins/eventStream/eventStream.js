@@ -45,5 +45,21 @@ export default {
 		const stream = await activeInterfaceSelector(ag);
 		if(!stream) throw Boom.failedDependency('No external streaming interface available');
 		return stream.i.publish(ag, data, stream.provider);
+	},
+	async master(ag, data) {
+		try {
+			const settings = await plugins.getLatestPluginOptions();
+			if(settings?.eventStream?.provider?.masterStream?.enabled === true &&
+				settings?.eventStream?.provider?.masterStream?.streamPath &&
+				settings?.eventStream?.provider?.type) {
+				const stream = await generalInterfaceSelector(settings.eventStream.provider.type);
+				if (!stream) throw Boom.failedDependency('No external streaming interface available');
+				return stream.publishMaster(ag, data, settings.eventStream.provider);
+			}
+		} catch (error) {
+			console.error(error);
+			return undefined;
+		}
+
 	}
 };

@@ -33,6 +33,13 @@ const pluginConfig = new mongoose.Schema({
 				type: String,
 				enum: ['pulsar']
 			},
+			masterStream: {
+				enabled: {
+					type: Boolean,
+					default: false
+				},
+				streamPath: String
+			},
 			auth: {
 				issuerUrl: String,
 				clientId: String,
@@ -47,6 +54,10 @@ const pluginConfig = new mongoose.Schema({
 			},
 			//use client credentials for streaming
 			streamAuth: {
+				type: Boolean,
+				default: false
+			},
+			masterAuth: {
 				type: Boolean,
 				default: false
 			},

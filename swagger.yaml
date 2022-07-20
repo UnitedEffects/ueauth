@@ -8786,6 +8786,20 @@ components:
                   type: boolean
                 streamAuth:
                   type: boolean
+                masterAuth:
+                  type: boolean
+                  default: false
+                  description: will you need auth to publish to the master stream?
+                masterStream:
+                  type: object
+                  description: the master stream is a data stream that UEAuth can write transaction information to that exists outside the context of any one authgroup. For example, when a new Auth Group is created, it would be published to this stream so that other systems can react to the creation.
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    streamPath:
+                      type: string
+                      description: this is the topic or stream address to publish master stream content
                 auth:
                   type: object
                   description: information about the oauth2 resource client generated for this plugin
@@ -9952,6 +9966,20 @@ components:
             authScopes:
               type: string
               description: if specific scopes are required for the client credential authorizer add them here as space delimited strings
+            masterAuth:
+              type: boolean
+              default: false
+              description: will you need auth to publish to the master stream?
+            masterStream:
+              type: object
+              description: the master stream is a data stream that UEAuth can write transaction information to that exists outside the context of any one authgroup. For example, when a new Auth Group is created, it would be published to this stream so that other systems can react to the creation.
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+                streamPath:
+                  type: string
+                  description: this is the topic or stream address to publish master stream content
             setupConfig:
               type: object
               example:
