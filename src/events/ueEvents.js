@@ -1,6 +1,6 @@
 import UEStreams from './ueStreams';
 import factory from './factory';
-import stream from '../../src/api/plugins/eventStream/eventStream';
+import stream from '../api/plugins/eventStream/eventStream';
 import { v4 as uuid } from 'uuid';
 const ueStreams = new UEStreams();
 
