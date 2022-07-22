@@ -140,7 +140,9 @@ const config = {
 		access: true,
 		role: true,
 		permission: true,
-		orgProfile: true
+		orgProfile: true,
+		securedProfile: true,
+
 	},
 	SECURITY_POLICY: {
 		// eslint-disable-next-line quotes
