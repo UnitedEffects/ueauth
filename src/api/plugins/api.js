@@ -40,9 +40,23 @@ const api = {
 			next(error);
 		}
 	},
+	async toggleGlobalEventStreamSettings(req, res, next) {
+		try {
+			if (!req.body) return next(Boom.preconditionRequired('configuration body is required'));
+			if (req.body.enabled === true && !req.body.provider) {
+				return next(Boom.preconditionRequired('Provider is required'));
+			}
+			await permissions.enforceRoot(req.permissions);
+			const user = req.user.sub;
+			const result = await pins.toggleGlobalEventStreamSettings(req.body, user, req.authGroup);
+			return res.respond(say.created(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async getLatestPluginOptions(req, res, next) {
 		try {
-			const result = await pins.getLatestPluginOptions();
+			const result = await pins.getLatestPluginOptions(true);
 			await permissions.enforceRoot(req.permissions);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {

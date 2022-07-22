@@ -9,6 +9,7 @@ import dal from '../src/api/authGroup/dal';
 import group from '../src/api/authGroup/group';
 import { AccountMocks, GroupMocks, PluginMocks, Tokens } from './models';
 import t from './testhelper';
+import Group from "../src/api/authGroup/model";
 
 const mockingoose = require('mockingoose');
 
@@ -26,6 +27,7 @@ describe('Auth Groups', () => {
 	it('Create a group with default active as false and locked as false', async () => {
 		try {
 			const grp = GroupMocks.newGroup('TEST', 'tst', false, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const expected = JSON.parse(JSON.stringify(grp));
 			expected.id = expected._id;
 			delete expected._id;
@@ -67,9 +69,11 @@ describe('Auth Groups', () => {
 		}
 	});
 
+
 	it('Create a group with active and passwordless as true - both should remain false', async () => {
 		try {
 			const grp = GroupMocks.newGroup('TEST', 'tst', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const expected = JSON.parse(JSON.stringify(grp));
 			expected.id = expected._id;
 			delete expected._id;
@@ -118,6 +122,7 @@ describe('Auth Groups', () => {
 	it('Create a group with active and requireVerified as true - both should remain false', async () => {
 		try {
 			const grp = GroupMocks.newGroup('TEST', 'tst', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const expected = JSON.parse(JSON.stringify(grp));
 			expected.id = expected._id;
 			delete expected._id;
@@ -166,6 +171,7 @@ describe('Auth Groups', () => {
 	it('complete group signup', async () => {
 		try {
 			const grp = GroupMocks.newGroup('TEST', 'tst', false, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const plugins = PluginMocks.global;
 			const expected = JSON.parse(JSON.stringify(grp));
 			expected.initialAccessToken = Tokens.iatPostMeta._id;
@@ -238,6 +244,7 @@ describe('Auth Groups', () => {
 	it('switch group owner', async () => {
 		try {
 			const grp = GroupMocks.newGroup('TEST', 'tst', false, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const updated = JSON.parse(JSON.stringify(grp));
 			updated.owner = uuid();
 			const expected = JSON.parse(JSON.stringify(updated));
@@ -259,6 +266,7 @@ describe('Auth Groups', () => {
 	it('activate a new authgroup', async () => {
 		try {
 			const grp = GroupMocks.newGroup('NewGroup', 'ngt', false, false, true);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const act = AccountMocks.randomAccount();
 			const clientId = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
@@ -291,6 +299,7 @@ describe('Auth Groups', () => {
 	it('rotate auth group oidc keys', async () => {
 		try {
 			const grp = GroupMocks.newGroup('NewGroup', 'ngt', true, false );
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const act = AccountMocks.randomAccount();
 			mockingoose(Model).toReturn(grp, 'findOneAndUpdate');
 			const spy = jest.spyOn(dal, 'patchNoOverwrite');
@@ -311,6 +320,7 @@ describe('Auth Groups', () => {
 		try {
 
 			const grp = GroupMocks.newGroup('TEST ONE', 'tst1', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			const user = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
 			updated.name = 'UPDATED TEST';
@@ -357,6 +367,7 @@ describe('Auth Groups', () => {
 		try {
 			const global = PluginMocks.notification(true);
 			const grp = GroupMocks.newGroup('TEST ONE', 'tst1', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			grp.pluginOptions.notification.enabled = false;
 			const user = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
@@ -405,6 +416,7 @@ describe('Auth Groups', () => {
 		try {
 			const global = PluginMocks.notification(false);
 			const grp = GroupMocks.newGroup('TEST ONE', 'tst1', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			grp.pluginOptions.notification.enabled = false;
 			const user = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
@@ -448,6 +460,7 @@ describe('Auth Groups', () => {
 		try {
 			const global = PluginMocks.notification(true);
 			const grp = GroupMocks.newGroup('TEST ONE', 'tst1', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			grp.pluginOptions.notification.enabled = false;
 			const user = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
@@ -490,6 +503,7 @@ describe('Auth Groups', () => {
 		try {
 			const global = PluginMocks.notification(false);
 			const grp = GroupMocks.newGroup('TEST ONE', 'tst1', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			grp.pluginOptions.notification.enabled = false;
 			const user = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
@@ -532,6 +546,7 @@ describe('Auth Groups', () => {
 		try {
 			const global = PluginMocks.notification(true);
 			const grp = GroupMocks.newGroup('TEST ONE', 'tst1', true, false);
+			mockingoose(Model).toReturn(GroupMocks.group, 'findOne');
 			grp.pluginOptions.notification.enabled = false;
 			const user = uuid();
 			const updated = JSON.parse(JSON.stringify(grp));
@@ -569,5 +584,4 @@ describe('Auth Groups', () => {
 			expect(error.output.payload.error).toBe('Method Not Allowed');
 		}
 	});
-
 });

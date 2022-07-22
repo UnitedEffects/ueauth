@@ -6,6 +6,7 @@ import helper from '../../helper';
 import k from './generate-keys';
 import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
+import eStreams from '../plugins/eventStream/eventStream';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import cryptoRandomString from 'crypto-random-string';
@@ -48,6 +49,12 @@ const agp = {
 				}
 			}
 		}
+		// ensure that external streaming can only be patched after creation
+		if (data?.pluginOptions?.externalStreaming?.enabled === true) {
+			data.pluginOptions.externalStreaming.enabled = false;
+		}
+
+		// mfa Challenge
 		if(data.config?.mfaChallenge?.enabled === true) {
 			// ensure this is off when first created
 			data.config.mfaChallenge.enabled = false;
@@ -111,9 +118,11 @@ const agp = {
 	async patch(group, update, user, global) {
 		let globalSettings;
 		if(!global) {
-			globalSettings = await plugins.getLatestPluginOptions();
+			globalSettings = await plugins.getLatestPluginOptions(true);
 		} else globalSettings = global;
 		const patched = jsonPatch.apply_patch(group.toObject(), update);
+
+		// validation for mfaChallenge being enabled
 		if(patched.config?.mfaChallenge?.enable === true) {
 			if(!patched.config?.mfaChallenge?.type) {
 				throw Boom.badRequest('MFA type is required');
@@ -129,17 +138,22 @@ const agp = {
 				throw Boom.badRequest(`Unsupported MFA type requested ${patched.config.mfaChallenge.type}`);
 			}
 		}
-		if(patched.pluginOptions.notification.enabled === true && group.pluginOptions.notification.enabled === false) {
-			if (globalSettings.notifications.enabled !== true) {
+
+		// validation for notifications plugin being enabled
+		if(patched?.pluginOptions?.notification?.enabled === true && group?.pluginOptions?.notification?.enabled !== true) {
+			if (globalSettings?.notifications?.enabled !== true) {
 				throw Boom.methodNotAllowed('The Service Admin has not enabled Global Notifications. ' +
                     'This options is not currently possible for Auth Groups. Contact your admin to activate this feature.');
 			}
 		}
-		if(patched.config.autoVerify === true && patched.pluginOptions.notification.enabled === false) {
+
+		// validation for autoVerify being turned on - notification plugin is required
+		if(patched.config?.autoVerify === true && patched?.pluginOptions?.notification?.enabled !== true) {
 			throw Boom.methodNotAllowed('Automatic account verification requires that you activate or keep active notifications');
 		}
-		// if notifications are off
-		if (patched.pluginOptions && patched.pluginOptions.notification && patched.pluginOptions.notification.enabled !== true){
+
+		// if notifications are off some options are not available
+		if (patched?.pluginOptions?.notification?.enabled !== true){
 			// if no config was set, there is no issue
 			if (patched.config) {
 				// can not have passwordless support without notifications
@@ -154,6 +168,25 @@ const agp = {
 				}
 			}
 		}
+
+		// validation and setup for externalStreaming
+		if(patched?.pluginOptions?.externalStreaming?.enabled === true &&
+			group?.pluginOptions?.externalStreaming?.enabled !== true) {
+			if (globalSettings?.eventStream?.enabled !== true) {
+				throw Boom.methodNotAllowed('The Service Admin has not enabled external event streaming. ' +
+					'This options is not currently possible for Auth Groups. Contact your admin to activate this feature.');
+			}
+			await eStreams.initializeAG(patched, globalSettings);
+		}
+
+		// make sure that if externalStreaming is locked by root, it cannot be deactivated
+		if(patched?.pluginOptions?.externalStreaming?.enabled === false &&
+			group?.pluginOptions?.externalStreaming?.enabled === true) {
+			if (globalSettings?.eventStream?.provider?.lockStreamingOnceActive === true) {
+				throw Boom.methodNotAllowed('The service admin has locked the event streaming API. You must contact the admin to disable it.');
+			}
+		}
+
 		patched.modifiedBy = user;
 		await standardPatchValidation(group, patched);
 		const result = await dal.patch(group.id || group._id, patched);
@@ -174,6 +207,11 @@ const agp = {
 		copy.associatedClient = clientId;
 		delete copy.securityExpiration;
 		const result = await dal.activatePatch(authGroup._id || authGroup.id, copy);
+		try {
+			await ueEvents.master(authGroup.id || authGroup._id, 'ue.group.initialize', result);
+		} catch (error) {
+			ueEvents.emit(authGroup.id || authGroup._id, 'ue.group.error', error);
+		}
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.group.initialize', result);
 		return result;
 	},

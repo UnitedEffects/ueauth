@@ -13,6 +13,7 @@ const MongoAdapter = require('./dal');
 
 
 const coreScopes = config.CORE_SCOPES();
+const privateScopes = config.RESTRICTED_SCOPES();
 const ueP = new UEProvider();
 
 const {
@@ -110,6 +111,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
+		extraParams: ['audience'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -213,6 +215,9 @@ function oidcConfig(g, aliasDns = undefined) {
 					if(ctx.request?.body?.audience) {
 						return ctx.request.body.audience;
 					}
+					if(ctx.oidc?.params?.audience) {
+						return ctx.oidc.params.audience;
+					}
 					return undefined;
 				},
 				enabled: true,
@@ -228,7 +233,21 @@ function oidcConfig(g, aliasDns = undefined) {
 						accessTokenFormat: 'jwt',
 						scope: scopes.join(' ')
 					};
-					const requestedScopes = ctx.oidc?.body?.scope.split(' ');
+
+					let requestedScopes = [];
+					switch(ctx.oidc?.route) {
+					case 'token':
+						if(ctx.oidc?.body?.scope) {
+							requestedScopes = ctx.oidc.body.scope.split(' ');
+						}
+						break;
+					case 'authorization':
+						if(ctx.oidc?.params?.scope) {
+							requestedScopes = ctx.oidc.params.scope.split(' ');
+						}
+						break;
+					}
+
 					const tests = [];
 					ds.map((s) => {
 						tests.push(s.replace('{d}', ''));
@@ -258,6 +277,7 @@ function oidcConfig(g, aliasDns = undefined) {
 
 						resource.scope = override.join(' ');
 					}
+
 					return (resource);
 				},
 				useGrantedResource: (ctx, model) => {
@@ -314,8 +334,17 @@ function oidcConfig(g, aliasDns = undefined) {
 							const scopes = oidcOptions.scopes.filter((s) => {
 								return (s.includes('{d}'));
 							});
+							const dynamicRestricted = privateScopes.concat(g.config.privateScopes).filter((s) => {
+								return (s.includes('{d}'));
+							});
+							const generalRestricted = privateScopes.concat(g.config.privateScopes).filter((s) => {
+								return (!s.includes('{d}'));
+							});
 							const tests = [];
 							scopes.map((s) => {
+								tests.push(s.replace('{d}', ''));
+							});
+							dynamicRestricted.map((s) => {
 								tests.push(s.replace('{d}', ''));
 							});
 							const aV = value.split(' ');
@@ -328,7 +357,12 @@ function oidcConfig(g, aliasDns = undefined) {
 									}
 								}
 							}
-							if(recognizedScopes.length === 0) throw new InvalidClientMetadata(`${key} value ${value} must match a regular expression from the OP scope list.`);
+							for (const scope of aV) {
+								if(generalRestricted.includes(scope)) {
+									recognizedScopes.push(scope);
+								}
+							}
+							if(recognizedScopes.length === 0) throw new InvalidClientMetadata(`${key} value ${value} must match a regular expression from the OP scope list OR the AuthGroup restricted dynamic scope list.`);
 						}
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;

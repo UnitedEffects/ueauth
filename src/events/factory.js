@@ -1,4 +1,6 @@
 import {v4 as uuid} from 'uuid';
+import helper from '../helper';
+import eStream from '../api/plugins/eventStream/eventStream';
 const config = require('../config');
 
 const OP_EVENTS = {
@@ -174,7 +176,7 @@ function getEventList() {
 function processProviderStream(provider, event, clean, group, UE = false) {
 	const eventType = event.split('.');
 	if((eventType[0] === 'ue') === UE) {
-		provider.on(event, (ctx, ...args) => {
+		provider.on(event, async (ctx, ...args) => {
 			const emit = {
 				id: uuid(), //to help find this in a log
 				group,
@@ -207,8 +209,22 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 					}
 				}
 			}
-			// emitter - we can hook this up to an external event system from here later
-			console.info(emit);
+			let AG;
+			try {
+				AG = await helper.cacheAG(false, 'AG', group);
+			} catch (error) {
+				console.info('unknown AG, possibly new');
+				//if(config.ENV === 'test') throw new Error('Auth Group not found');
+			}
+
+			if(AG?.pluginOptions?.externalStreaming?.enabled === true) {
+				// not waiting for this
+				eStream.publish(AG, emit).catch((error) => {
+					console.error('UNABLE TO STREAM EXTERNALLY - NOT THROWING ERROR - OUTPUTTING TO CONSOLE INSTEAD');
+					if(config.ENV !== 'production') console.error(error);
+					console.info(JSON.stringify(emit, null, 2));
+				});
+			} else console.info(JSON.stringify(emit, null, 2));
 		});
 	}
 }

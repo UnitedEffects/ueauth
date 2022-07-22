@@ -2,14 +2,19 @@ import Boom from '@hapi/boom';
 import dal from './dal';
 import cl from '../oidc/client/clients';
 import log from '../logging/logs';
+import helper from '../../helper';
+import eStream from './eventStream/eventStream';
+
+const config = require('../../config');
 
 export default {
 	async initPlugins() {
 		return dal.initPlugins();
 	},
 	async toggleGlobalMFASettings(data, userId, root) {
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
 		let client;
-		const record = await this.getLatestPluginOptions();
+		const record = await this.getLatestPluginOptions(true);
 		if(!record) throw Boom.internal('System may not have been initialized yet');
 		if(data?.currentVersion !== record?.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
@@ -65,6 +70,7 @@ export default {
 		return dal.updatePlugins(lastSaved.version+1, lastSaved, userId);
 	},
 	async toggleGlobalNotifications(data, userId, root) {
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
 		let client;
 		if(data.enabled === true) {
 			client = await cl.generateNotificationServiceClient(root);
@@ -73,7 +79,7 @@ export default {
 		if(data.enabled === false) {
 			await cl.deleteNotificationsServiceClient(root);
 		}
-		const lastSaved = await this.getLatestPluginOptions();
+		const lastSaved = await this.getLatestPluginOptions(true);
 		if(data.currentVersion !== lastSaved.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
@@ -93,8 +99,61 @@ export default {
 			}
 		};
 	},
-	async getLatestPluginOptions() {
-		return dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
+	async toggleGlobalEventStreamSettings(data, userId, root) {
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
+		let client;
+		if(data.enabled === true) {
+			client = await cl.generateEventStreamingClient(root);
+			if(!client) throw Boom.badRequest('Unable to generate a client at this time.');
+		}
+		if(data.enabled === false) {
+			await cl.deleteEventStreamingClient(root);
+		}
+		const lastSaved = await this.getLatestPluginOptions(true);
+		if(data.currentVersion !== lastSaved.version) {
+			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
+		}
+		delete data.currentVersion;
+		const authScopes = data.authScopes;
+		delete data.authScopes;
+		const update = JSON.parse(JSON.stringify(lastSaved));
+		if (data?.enabled === false) {
+			update.eventStream = {
+				enabled: false
+			};
+		} else {
+			await eStream.validateProvider(data?.provider);
+			update.eventStream = data;
+			update.eventStream.provider.auth = {
+				issuerUrl: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}`,
+				clientId: client.client_id,
+				rootRef: root.id || root._id,
+				audience: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}/streaming`,
+				scope: authScopes
+			};
+		}
+		const saved = await dal.updatePlugins(lastSaved.version+1, update, userId);
+		let output = {
+			eventStream: {
+				version: lastSaved.version+1,
+				...saved.eventStream
+			}
+		};
+		if(output.eventStream?.provider?.auth?.clientId && client.client_secret){
+			output = JSON.parse(JSON.stringify(output));
+			output.eventStream.provider.auth.clientSecret = client.client_secret;
+		}
+		return output;
+	},
+	async getLatestPluginOptions(bustCache = false) {
+		let cache;
+		if (bustCache !== true) {
+			cache = await helper.getGlobalSettingsCache();
+		}
+		if(cache) return cache;
+		const latest = await dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
+		await helper.setGlobalSettingsCache(latest);
+		return latest;
 	},
 	// @notTested
 	async auditPluginOptions() {

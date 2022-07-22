@@ -16,13 +16,13 @@ import ModelC from '../src/api/oidc/models/client';
 import ModelIAT from '../src/api/oidc/models/initialAccessToken';
 import ModelRat from '../src/api/oidc/models/registrationAccessToken';
 import ModelS from '../src/api/oidc/models/session';
+import Group from '../src/api/authGroup/model';
 
 //Libs
 import iat from '../src/api/oidc/initialAccess/iat';
 import rat from '../src/api/oidc/regAccess/rat';
 import client from '../src/api/oidc/client/clients';
 import session from '../src/api/oidc/session/session';
-import account from "../src/api/accounts/account";
 
 const mockingoose = require('mockingoose');
 const config = require('../src/config');
@@ -38,6 +38,7 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 		ModelC.Query.prototype.findOneAndUpdate.mockClear();
 		ModelIAT.Query.prototype.save.mockClear();
 		ModelIAT.Query.prototype.findOne.mockClear();
+		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
 	});
 
 	it('Generate Client - grp has primaryDomain', async () => {
@@ -281,6 +282,7 @@ describe('OIDC OP interface functions - IAT', () => {
 		mockingoose.resetAll();
 		ModelIAT.Query.prototype.save.mockClear();
 		ModelIAT.Query.prototype.findOne.mockClear();
+		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
 	});
 
 	it('generateIAT - create an initial access token', async () => {
@@ -376,6 +378,7 @@ describe('OIDC OP interface functions - Registration Access Token', () => {
 		ModelRat.Query.prototype.findOne.mockClear();
 		ModelRat.Query.prototype.findOneAndUpdate.mockClear();
 		ModelRat.Query.prototype.findOneAndRemove.mockClear();
+		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
 	});
 
 	it('regAccessToken - create a registration access token', async () => {
@@ -469,11 +472,13 @@ describe('OIDC OP interface functions - Registration Access Token', () => {
 	});
 });
 
+
 describe('OIDC OP interface functions - Session', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockingoose.resetAll();
 		ModelS.Query.prototype.deleteMany.mockClear();
+		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
 	});
 
 	it('remove session by account Id', async () => {

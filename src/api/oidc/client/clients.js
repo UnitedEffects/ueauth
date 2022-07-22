@@ -119,6 +119,33 @@ export default {
 		return fixed;
 	},
 
+	async deleteEventStreamingClient(authGroup) {
+		const check = await dal.getOneByName(authGroup, `${authGroup.id}_Global_Event_Streaming`);
+		if(check) return dal.deleteOne(authGroup, check._id);
+		return null;
+	},
+
+	async generateEventStreamingClient(authGroup) {
+		const check = await dal.getOneByName(authGroup, `${authGroup.id}_Global_Event_Streaming`);
+		if(check) await dal.deleteOne(authGroup, check._id);
+		const client = new (oidc(authGroup).Client)({
+			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),
+			'client_secret_expires_at': 0,
+			'client_id_issued_at': Date.now(),
+			'client_id': uuid(),
+			'client_name': `${authGroup.id}_Global_Event_Streaming`,
+			'grant_types': ['client_credentials'],
+			'response_types': [],
+			'redirect_uris': [],
+			'auth_group': authGroup.id,
+			'scope': 'core:read core:write'
+		});
+		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
+		const add = new Adapter('client');
+		await add.upsert(client.clientId, fixed);
+		return fixed;
+	},
+
 	async generateClientCredentialToken(authGroup, client, scope, audience) {
 		if(!authGroup) throw new Error('authGroupId not defined');
 		const cl = JSON.parse(JSON.stringify(client));
@@ -137,7 +164,6 @@ export default {
 			data: qs.stringify(data),
 			url: `${iss}/token`,
 		};
-
 		return axios(options);
 	},
 	// @notTested

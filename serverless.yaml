@@ -47,6 +47,7 @@ provider:
     UI_CORE_AUDIENCE_ORIGIN: ${env:UI_CORE_AUDIENCE_ORIGIN, file(./.env/env.${self:custom.local_env}.json):UI_CORE_AUDIENCE_ORIGIN}
     UI_PKCE_REQUIRED: ${env:UI_PKCE_REQUIRED, file(./.env/env.${self:custom.local_env}.json):UI_PKCE_REQUIRED}
     CORE_SCOPES: ${env:CORE_SCOPES, file(./.env/env.${self:custom.local_env}.json):CORE_SCOPES}
+    RESTRICTED_SCOPES: ${env:RESTRICTED_SCOPES, file(./.env/env.${self:custom.local_env}.json):RESTRICTED_SCOPES}
     STATIC_ASSETS: ${env:STATIC_ASSETS, file(./.env/env.${self:custom.local_env}.json):STATIC_ASSETS}
     CUSTOM_FONTS_URL: ${env:CUSTOM_FONTS_URL, file(./.env/env.${self:custom.local_env}.json):CUSTOM_FONTS_URL}
     ROOT_GROUP_REGISTRATION_UI_URL: ${env:ROOT_GROUP_REGISTRATION_UI_URL, file(./.env/env.${self:custom.local_env}.json):ROOT_GROUP_REGISTRATION_UI_URL}
