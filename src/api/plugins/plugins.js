@@ -152,7 +152,8 @@ export default {
 			cache = await helper.getGlobalSettingsCache();
 		}
 		if(cache) return cache;
-		const latest = await dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
+		//const latest = await dal.getLatestPlugins({ 'createdAt': -1, 'version': -1 });
+		const latest = await dal.getLatestPlugins({ 'version': -1 });
 		await helper.setGlobalSettingsCache(latest);
 		return latest;
 	},
