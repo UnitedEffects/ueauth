@@ -174,7 +174,8 @@ describe('Plugins', () => {
 			mockingoose(Model).toReturn(plg, 'findOne');
 			const spy = jest.spyOn(dal, 'getLatestPlugins');
 			const result = await plugins.getLatestPluginOptions(true);
-			expect(spy).toHaveBeenCalledWith({ 'createdAt': -1, 'version': -1 });
+			//expect(spy).toHaveBeenCalledWith({ 'createdAt': -1, 'version': -1 });
+			expect(spy).toHaveBeenCalledWith({ 'version': -1 });
 			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
 			expect(result).toMatchObject(expected);
 		} catch (error) {
