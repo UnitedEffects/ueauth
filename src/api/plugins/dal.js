@@ -16,7 +16,8 @@ export default {
 		return Plugins.findOne({}, {}, { sort });
 	},
 	async auditPluginOptions() {
-		return Plugins.find({}, {}, {sort: { 'createdAt': -1, 'version': -1 }});
+		//return Plugins.find({}, {}, {sort: { 'createdAt': -1, 'version': -1 }});
+		return Plugins.find({}, {}, {sort: { 'version': -1 }});
 	},
 	async updatePlugins(version, record, userId) {
 		let plugin;

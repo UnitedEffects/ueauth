@@ -137,5 +137,9 @@ export default {
 		producer.send({
 			data: Buffer.from(msg),
 		});
-	}
+	},
+	async clean() {
+		await Client.closeInstance();
+		await pulsarProducers.clearAll();
+	},
 };
