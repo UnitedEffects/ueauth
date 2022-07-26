@@ -108,6 +108,7 @@ export default {
 		}
 		if(data.enabled === false) {
 			await cl.deleteEventStreamingClient(root);
+			await eStream.clean();
 		}
 		const lastSaved = await this.getLatestPluginOptions(true);
 		if(data.currentVersion !== lastSaved.version) {

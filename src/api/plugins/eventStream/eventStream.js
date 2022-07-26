@@ -60,6 +60,10 @@ export default {
 			console.error(error);
 			return undefined;
 		}
-
+	},
+	async clean() {
+		const settings = await plugins.getLatestPluginOptions();
+		const stream = await generalInterfaceSelector(settings.eventStream.provider.type);
+		return stream.clean();
 	}
 };

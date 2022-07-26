@@ -37,6 +37,9 @@ class AGProducer {
 		await producer.close();
 		this.producerList.delete(agId);
 	}
+	async clearAll() {
+		this.producerList.clear();
+	}
 }
 
 export default AGProducer;
