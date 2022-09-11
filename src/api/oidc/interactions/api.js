@@ -479,9 +479,25 @@ const api = {
 			}
 
 			if (req.body?.action === 'email') {
+				const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
+				if(req.body?.email) {
+					const checkAcc = await acc.getAccountByEmailOrUsername(authGroup, req.body.email);
+					if(!checkAcc || (checkAcc.verified !== true && authGroup.config.requireVerified === true)) {
+						// account does not exist or is not verified
+						const message = (checkAcc?.verified === false) ? 'Account is not yet verified. Click the button below to resend verification email.' : 'Email not recognized...';
+						params.emailScreen = true;
+						params.api = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC)?authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}`;
+						if(checkAcc?.verified === false) params.sendVerifyButton = true;
+						return res.render('login/login',
+							interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
+								{
+									...params,
+									login_hint: req.body.email
+								}, message));
+					}
+				}
 				if (!req.body?.email) params.emailScreen = true;
 				else params.email = req.body.email;
-				const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
 				if(client.client_allow_org_federation===true && authGroup && req.body?.email) {
 					try {
 						let organization;
@@ -627,9 +643,13 @@ const api = {
 				account.blocked === true ||
 				account.active !== true ||
 				(account.verified !== true && authGroup.config.requireVerified === true)) {
+				const message = (account?.verified === false) ? 'Account is not yet verified. Click the button below to resend verification email.' : 'Invalid email address';
 				params.emailScreen = true;
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Invalid email address'));
+				params.api = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC)?authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}`;
+				if(account?.verified === false) params.sendVerifyButton = true;
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, message));
 			}
+
 			if(account.mfa?.enabled === true) {
 				const metaChallenge = {
 					event: 'MAGIC_LINK',

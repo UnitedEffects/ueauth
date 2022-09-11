@@ -383,6 +383,36 @@ const api = {
 		}
 	},
 
+	async resendVerifyEmail(req, res, next) {
+		let result;
+		try {
+			if(!req.params.group) throw Boom.preconditionRequired('Must provide authGroup');
+			if(!req.body.email) throw Boom.preconditionRequired('Must provide email address');
+			if(req.globalSettings.notifications.enabled === false) {
+				throw Boom.methodNotAllowed('There is no Global Notification Plugin enabled. You will need the admin to reset your password directly and inform you of the new password');
+			}
+			if(req.authGroup.pluginOptions.notification.enabled === false) {
+				throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+			}
+			if(req.authGroup.config.centralPasswordReset === false) {
+				throw Boom. methodNotAllowed('Your admin has opted to not allow non-authenticated self-service resets');
+			}
+			const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email);
+			if(!user) throw Boom.notFound('This email address is not registered with our system');
+			result = await acct.resetOrVerify(req.authGroup, req.globalSettings, user, [], undefined, false, req.customDomain);
+			return res.respond(say.noContent(RESOURCE));
+		} catch(error) {
+			if(result) {
+				await n.deleteNotification(req.authGroup, result.id);
+			}
+			if(error.isAxiosError) {
+				return next(Boom.failedDependency('There is an error with the global notifications service plugin - contact the admin'));
+			}
+			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
+			return next(error);
+		}
+	},
+
 	async resetPassword(req, res, next) {
 		let result;
 		try {
@@ -393,6 +423,9 @@ const api = {
 			}
 			if(req.authGroup.pluginOptions.notification.enabled === false) {
 				throw Boom.methodNotAllowed('Your admin has not enabled notifications. You will need the admin to reset your password directly and inform you of the new password');
+			}
+			if(req.authGroup.config.centralPasswordReset === false) {
+				throw Boom. methodNotAllowed('Your admin has opted to not allow non-authenticated self-service resets');
 			}
 			const user = await acct.getAccountByEmailOrUsername(req.authGroup.id, req.body.email, req.authGroup.config.requireVerified);
 			if(!user) throw Boom.notFound('This email address is not registered with our system');
