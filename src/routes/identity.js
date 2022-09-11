@@ -357,5 +357,11 @@ router.post('/:group/operations/reset-user-password', [
 	m.getGlobalPluginSettings,
 	m.isWhitelisted
 ], account.resetPassword);
+router.post('/:group/operations/resend-verify-email', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+	m.isWhitelisted
+], account.resendVerifyEmail);
 
 export default router;
