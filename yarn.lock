@@ -5009,10 +5009,10 @@ joi@^17.4.2:
   dependencies:
     "@panva/asn1.js" "^1.0.0"
 
-jose@^3.14.0:
-  version "3.20.3"
-  resolved "https://registry.yarnpkg.com/jose/-/jose-3.20.3.tgz#a074f684b07e49b35c075d97561883e3c637abf2"
-  integrity sha512-Z4a5Nl4pmGivdSgaq+a5EbNjrvSO4vtBTmVy5C3HNxWfJ92aG8DTNZrQywowxyOlSqdX/BmCPAy/ieElXDM3pw==
+jose@^3.20.4:
+  version "3.20.4"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-3.20.4.tgz#f5b6559cf2625efca098e472257525c6f3d302be"
+  integrity sha512-PRnyOQwWGD3EZnnSpKOOLqQ0RT9chbB8f8AzY4bEHY0I2FCtrcp1ojG0nBgAMn2MtuPpE3wOwIhhW0G7AGzbLw==
 
 jose@^4.1.4:
   version "4.7.0"
