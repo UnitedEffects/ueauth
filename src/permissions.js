@@ -82,7 +82,7 @@ export default {
 				if (req.user?.initialAccessToken) return next();
 				// ensure there are permissions... there should at least be member info
 				if (!req.permissions) throw Boom.unauthorized();
-				// if root user, they have priority
+				// if root user (not client), they have priority
 				if (req.permissions?.groupAccess?.includes('super')) {
 					if (config.FULL_SUPER_CONTROL === true) return next();
 					if (superAccess(req)) return next();
@@ -362,6 +362,32 @@ export default {
 				req.permissions.roles = roleFilter;
 			}
 
+			// duplicate permissions for core products of root if this is a super-client
+			if(req.permissions.groupAccess.includes('client-super') &&
+				req.permissions.apiAgent === true &&
+				req.user?.subject_group.name === 'root') {
+
+				const corePerms = [];
+				if(req.permissions?.core?.productCodedIds) {
+					req.permissions.core.productCodedIds.map(pid => {
+						req.permissions.permissions.map((p) => {
+							if(!p.includes(pid)) {
+								if(p.includes(':::')){
+									const t = p.split(':::');
+									if(t.length > 1) corePerms.push(`${pid}:::${t[1]}`)
+								} else if(p.includes('::')) {
+									corePerms.push(`${pid}:::${p}`)
+								}
+							}
+						})
+					})
+				}
+
+				req.permissions.permissions = [
+					...req.permissions.permissions,
+					...corePerms
+				]
+			}
 			req.permissions.permissions = [...new Set(req.permissions.permissions)];
 			return next();
 		} catch (error) {
