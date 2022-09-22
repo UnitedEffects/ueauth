@@ -233,6 +233,7 @@ const api = {
 			await cl.simplePatch(req.params.id, result.associatedClient, update);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
+			console.error(error);
 			if(result) {
 				await group.removeAliasDns(req.params.id, req.user.sub || 'ROOT_SYSTEM_ADMIN');
 			}

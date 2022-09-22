@@ -370,19 +370,22 @@ export default {
 				const corePerms = [];
 				if(req.permissions?.core?.productCodedIds) {
 					req.permissions.core.productCodedIds.map(pid => {
-						req.permissions.permissions.map((p) => {
-							if(!p.includes(pid)) {
-								if(p.includes(':::')){
-									const t = p.split(':::');
-									if(t.length > 1) corePerms.push(`${pid}:::${t[1]}`)
-								} else if(p.includes('::')) {
-									corePerms.push(`${pid}:::${p}`)
+						if(req.permissions?.permissions) {
+							req.permissions.permissions.map((p) => {
+								if(!p.includes(pid)) {
+									if(p.includes(':::')){
+										const t = p.split(':::');
+										if(t.length > 1) corePerms.push(`${pid}:::${t[1]}`)
+									} else if(p.includes('::')) {
+										corePerms.push(`${pid}:::${p}`)
+									}
 								}
-							}
-						})
+							})
+						}
 					})
 				}
 
+				req.permissions.permissions = req.permissions.permissions || [];
 				req.permissions.permissions = [
 					...req.permissions.permissions,
 					...corePerms
