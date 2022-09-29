@@ -216,7 +216,7 @@ export default {
 			recipientUserId: user.id,
 			recipientEmail: user.email,
 			recipientSms: (user.phone && user.phone.txt) ? user.phone.txt : undefined,
-			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/verifyaccount?code=${iAccessToken.jti}`,
+			screenUrl: `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/${authGroup.id}/verifyaccount?code=${iAccessToken.jti}&user=${user.id}`,
 			subject: `${authGroup.name} - Verify and Claim Your New Account`,
 			message: `You have been added to the authentication group '${authGroup.name}'. Please click the button below or copy past the link in a browser to verify your identity and set your password.`,
 			meta: {

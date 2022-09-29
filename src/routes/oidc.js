@@ -118,6 +118,7 @@ router.get('/:group/verifyaccount', [
 	jsonParser,
 	m.setNoCache,
 	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
 	m.iatQueryCodeAuth,
 ], account.verifyAccountScreen);
 router.get('/:group/recoveraccount', [
