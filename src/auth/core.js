@@ -222,10 +222,19 @@ const core = {
 			// Assumes this is only ever used for Browser based requests
 			console.error(error);
 			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+			let user;
+			if(req.query.user) {
+				try {
+					user = await account.getAccount(req.authGroup, req.query.user, true);
+					await account.resetOrVerify(req.authGroup, req.globalSettings, user,[], (req.user) ? req.user.sub : undefined, false, req.customDomain);
+				} catch (error) {
+					// do nothing
+				}
+			}
 			return res.render('response/response', {
 				title: 'Uh oh...',
-				message: 'Invalid Verify Account Link',
-				details: 'This page requires special access. Your account link may have expired or you may have copied it incorrectly. Check your email or mobile device for the link. If you think here is an issue, you can contact your platform administrator.',
+				message: (user) ? 'Invalid or expired Link. Sending a new one. Check your email.' : 'Invalid Verify Account Link',
+				details: `This page requires special access. ${(user) ? 'Your account link may have expired. We are attempting to send you a fresh link. Check your email. If you continue to have issues, contact your platform administrator.' : 'Your account link may have expired or you may have copied it incorrectly. Check your email or mobile device for the link. If you think here is an issue, you can contact your platform administrator.'}`,
 				authGroup: safeAG,
 				authGroupLogo: authGroup.config.ui.skin.logo || undefined,
 				splashImage: authGroup.config.ui.skin.splashImage || undefined,
