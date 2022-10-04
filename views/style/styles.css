@@ -246,6 +246,11 @@ input:focus + label, input:not(:placeholder-shown) + label {
 	font-size: 14px;
 }
 
+.description-verify {
+	text-align: left;
+	font-size: 20px;
+}
+
 .utility-panel button {
 	width: 100%;
 }
