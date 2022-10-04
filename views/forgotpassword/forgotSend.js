@@ -103,4 +103,17 @@ window.addEventListener( 'load', function () {
 			resend(data);
 		});
 	}
+	const confirmPassword = $( "#confirm-password" );
+	const password = $( "#password" );
+	const forgotForm = $( "#forgot" );
+	confirmPassword.change(function() {
+		const classes = forgotForm.attr('class').split(/\s+/);
+		if(confirmPassword.val() === password.val()) {
+			forgotForm.addClass('matches');
+		} else {
+			if(classes.includes('matches')) {
+				forgotForm.removeClass('matches');
+			}
+		}
+	});
 } );
