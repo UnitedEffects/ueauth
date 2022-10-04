@@ -109,7 +109,9 @@ window.addEventListener( 'load', function () {
 	confirmPassword.change(function() {
 		const classes = forgotForm.attr('class').split(/\s+/);
 		if(confirmPassword.val() === password.val()) {
-			forgotForm.addClass('matches');
+			if(!classes.includes('matches')){
+				forgotForm.addClass('matches');
+			}
 		} else {
 			if(classes.includes('matches')) {
 				forgotForm.removeClass('matches');

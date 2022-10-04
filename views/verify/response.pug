@@ -14,8 +14,8 @@ block content
                 p.org-name=authGroup.name
             p#title.header=title
             div#message=message
-            h2#instruct.description.center.m-t-20-imp You are verified and can close this window without changing/creating a password if you wish. Remember that you can always login with Magic Links.
-            a.btn.btn-custom.m-t-20(href='/'+authGroup.id+'/forgotpassword') I'd like a new password
+            h2#instruct.description-verify.center.m-t-20-imp You are verified and can close this window without changing your password if you wish. Remember that you can always login with Magic Links.
+            a.btn.btn-custom.m-t-20(href='/'+authGroup.id+'/forgotpassword') I'd like a new password anyway
             .tandc.p-b-20.center.width-auto
                 if (authGroup && authGroup.primaryTOS)
                     a(href=(authGroup.primaryTOS)) Terms of Service

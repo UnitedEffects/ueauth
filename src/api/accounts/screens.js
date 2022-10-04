@@ -32,7 +32,7 @@ const screens = {
 	verifyScreen(safeAg, authGroup, email) {
 		return {
 			title: 'Account Verified',
-			message: `Congrats ${email}! You have successfully verified this account. If you need to claim your account or if you do not know your password, you should click the button below.`,
+			message: `Congrats ${email}! You have successfully verified this account.`,
 			authGroup: safeAg,
 			...screens.baseSettings(authGroup)
 		};
