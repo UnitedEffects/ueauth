@@ -154,6 +154,9 @@ const api = {
 				req.body.modifiedBy = req.user.sub;
 			}
 			req.body.authGroup = req.authGroup.id;
+			if(req.body.core === true) {
+				await permissions.enforceRoot(req.permissions);
+			}
 			const result = await prod.writeProduct(req.body);
 			return res.respond(say.created(result, RESOURCE));
 		} catch (error) {

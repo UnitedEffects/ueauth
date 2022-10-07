@@ -9423,6 +9423,10 @@ components:
           type: string
           format: uri
           description: the url of this product
+        core:
+          type: boolean
+          default: false
+          description: only root users are allowed to set this true
         type:
           type: string
           description: optional categorization of the product

@@ -49,3 +49,5 @@ src/jwks-old.json
 src/jwks.json
 debugging/
 docker-compose.yml
+.DS_Store
+*/.DS_Store
