@@ -44,11 +44,12 @@ const papi = {
 		return output;
 	},
 
-	async bulkAdd(authGroup, product, array, user) {
+	async bulkAdd(authGroup, product, array, user, core = false) {
 		const permissions = [];
 		array.map((p) => {
 			const perm = {
 				...p,
+				core,
 				authGroup,
 				product
 			};

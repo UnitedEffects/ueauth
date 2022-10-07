@@ -120,7 +120,7 @@ const api = {
 			if (req.user && req.user.sub) {
 				user = req.user.sub;
 			}
-			const result = await perm.bulkAdd(req.authGroup.id, req.product.id, req.body, user);
+			const result = await perm.bulkAdd(req.authGroup.id, req.product.id, req.body, user, req.product.core);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.permission.error', error);
