@@ -126,6 +126,10 @@ export default {
 		const result = await dal.checkProduct(authGroup, productId);
 		if(result.length === 0) return false;
 		return result;
+	},
+
+	async getOrgCount(authGroup) {
+		return dal.getOrgCount(authGroup);
 	}
 };
 

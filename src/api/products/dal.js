@@ -12,6 +12,9 @@ export default {
 		query.query.authGroup = g;
 		return Product.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
+	async getProductCount(authGroup) {
+		return Product.find({ authGroup }).countDocuments();
+	},
 	async getTheseProducts(authGroup, idArray) {
 		return Product.find({ _id: { $in: idArray}, authGroup })
 			.select({ _id: 1, codedId: 1, authGroup: 1, name: 1, description: 1, b2c: 1, url: 1, core: 1 });

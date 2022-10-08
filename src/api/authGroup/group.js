@@ -3,6 +3,9 @@ import Boom from '@hapi/boom';
 import dal from './dal';
 import plugins from '../plugins/plugins';
 import helper from '../../helper';
+import accounts from '../accounts/account';
+import products from '../products/product';
+import orgs from '../orgs/orgs';
 import k from './generate-keys';
 import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
@@ -387,6 +390,18 @@ const agp = {
 		delete safeAG.owner;
 		delete safeAG.metadata;
 		return { safeAG, authGroup };
+	},
+	async getAGStats(authGroup) {
+		const activeUsers = await accounts.getActiveAccountCount(authGroup);
+		const b2bUsers = await accounts.getActiveB2BCount(authGroup);
+		const prods = await products.getProductCount(authGroup);
+		const organizations = await orgs.getOrgCount(authGroup);
+		return {
+			activeUsers,
+			b2bUsers,
+			products: prods,
+			organizations
+		}
 	}
 };
 

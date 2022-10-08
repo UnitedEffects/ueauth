@@ -9,6 +9,9 @@ export default {
 		query.query.authGroup = g;
 		return Organization.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
+	async getOrgCount(authGroup) {
+		return Organization.find({ authGroup }).countDocuments();
+	},
 	async getOrg(authGroup, id) {
 		return Organization.findOne( { $or: [{ _id: id }, { externalId: id }, { alias: id.toLowerCase() }], authGroup });
 	},

@@ -102,6 +102,9 @@ export default {
 		if(!result) throw Boom.notFound(id);
 		ueEvents.emit(authGroup, 'ue.product.edit', result);
 		return result;
+	},
+	async getProductCount(authGroup) {
+		return dal.getProductCount(authGroup);
 	}
 };
 

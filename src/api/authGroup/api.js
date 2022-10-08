@@ -324,6 +324,15 @@ const api = {
 		} catch (error) {
 			next(error);
 		}
+	},
+	async stats(req, res, next) {
+		try {
+			if (!req.authGroup) throw Boom.badRequest('AuthGroup not defined');
+			const result = await group.getAGStats(req.authGroup);
+			return res.respond(say.ok(result, RESOURCE));
+		} catch(error) {
+			next(error);
+		}
 	}
 };
 
