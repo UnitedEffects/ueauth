@@ -9530,6 +9530,10 @@ components:
         description:
           type: string
           description: roles description
+        core:
+          type: boolean
+          default: false
+          description: must be a root user to set core true
         permissions:
           type: array
           items:

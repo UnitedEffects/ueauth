@@ -10,6 +10,7 @@ import eStreams from '../plugins/eventStream/eventStream';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import cryptoRandomString from 'crypto-random-string';
+import domain from "../domains/domain";
 
 const config = require('../../config');
 
@@ -363,6 +364,14 @@ const agp = {
 			});
 			if(bFound) {
 				core = permissions.core;
+			}
+		}
+		if(core?.org?.id) {
+			try {
+				const d = await domain.getOrgAdminDomain(ag, core.org.id)
+				if(d) core.primaryDomain = JSON.parse(JSON.stringify(d)).id;
+			} catch (e) {
+				//do nothing
 			}
 		}
 		return core;
