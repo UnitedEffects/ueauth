@@ -3,6 +3,9 @@ import Boom from '@hapi/boom';
 import dal from './dal';
 import plugins from '../plugins/plugins';
 import helper from '../../helper';
+import accounts from '../accounts/account';
+import products from '../products/product';
+import orgs from '../orgs/orgs';
 import k from './generate-keys';
 import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
@@ -10,6 +13,7 @@ import eStreams from '../plugins/eventStream/eventStream';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import cryptoRandomString from 'crypto-random-string';
+import domain from "../domains/domain";
 
 const config = require('../../config');
 
@@ -365,6 +369,14 @@ const agp = {
 				core = permissions.core;
 			}
 		}
+		if(core?.org?.id) {
+			try {
+				const d = await domain.getOrgAdminDomain(ag, core.org.id)
+				if(d) core.primaryDomain = JSON.parse(JSON.stringify(d)).id;
+			} catch (e) {
+				//do nothing
+			}
+		}
 		return core;
 	},
 	async safeAuthGroup(ag) {
@@ -378,6 +390,18 @@ const agp = {
 		delete safeAG.owner;
 		delete safeAG.metadata;
 		return { safeAG, authGroup };
+	},
+	async getAGStats(authGroup) {
+		const activeUsers = await accounts.getActiveAccountCount(authGroup);
+		const b2bUsers = await accounts.getActiveB2BCount(authGroup);
+		const prods = await products.getProductCount(authGroup);
+		const organizations = await orgs.getOrgCount(authGroup);
+		return {
+			activeUsers,
+			b2bUsers,
+			products: prods,
+			organizations
+		}
 	}
 };
 

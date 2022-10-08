@@ -73,7 +73,8 @@ const api = {
 			if(!req.product) throw Boom.forbidden('Roles must be associated to one product');
 			if(req.permissions.enforceOwn === true) throw Boom.forbidden();
 			if(req.body.core === true) await permissions.enforceRoot(req.permissions);
-			if (req.user && req.user.sub) {
+			if(req.body.permissions.length) await permissions.enforceRoot(req.permissions);
+			if (req.user?.sub) {
 				req.body.createdBy = req.user.sub;
 				req.body.modifiedBy = req.user.sub;
 			}

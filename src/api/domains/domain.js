@@ -65,6 +65,9 @@ export default {
 		const result = await dal.updateAdminDomainAssociatedProducts(authGroup, organization);
 		ueEvents.emit(authGroup, 'ue.domain.edit', result);
 		return result;
+	},
+	async getOrgAdminDomain(authGroup, orgId) {
+		return dal.getOrgAdminDomain(authGroup, orgId);
 	}
 };
 

@@ -4,6 +4,13 @@ import Organization from '../orgs/model';
 import Domain from '../domains/model';
 
 export default {
+	async getActiveAccountCount(authGroup) {
+		return Account.find({ authGroup, active: true }).countDocuments();
+	},
+	async getActiveB2BCount(authGroup) {
+		const query = { authGroup, active: true, 'access.0': { $exists: true } };
+		return Account.find(query).countDocuments();
+	},
 	async writeAccount(data) {
 		const account =  new Account(data);
 		return account.save();

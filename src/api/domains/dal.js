@@ -28,6 +28,10 @@ export default {
 	async checkProducts(authGroup, organization, productId) {
 		return Domain.find({ authGroup, organization, associatedOrgProducts: productId }).select({ _id: 1, name: 1, description: 1, active: 1, externalId: 1 });
 	},
+	async getOrgAdminDomain(authGroup, orgId) {
+		const query = {authGroup, organization: orgId, core: true, 'meta.admin': orgId };
+		return Domain.findOne(query);
+	},
 	async updateAdminDomainAssociatedProducts(authGroup, org) {
 		const query = {authGroup, organization: org._id || org.id, core: true, 'meta.admin': org._id || org.id };
 		return Domain.findOneAndUpdate(query, { associatedOrgProducts: org.associatedProducts }, { new: true });

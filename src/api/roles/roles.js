@@ -18,7 +18,8 @@ export default {
 	},
 	async writeRole(data) {
 		data.custom = false;
-		data.permissions = [];
+		//limiting this as a function of root permissions in the controller
+		//data.permissions = [];
 		const output = await dal.writeRole(data);
 		ueEvents.emit(data.authGroup, 'ue.role.create', output);
 		return output;

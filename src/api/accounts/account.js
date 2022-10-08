@@ -358,6 +358,12 @@ export default {
 		if(user.email) data.formats.push('email');
 		if(user.phone && user.phone.txt) data.formats.push('sms');
 		return n.notify(globalSettings, data, authGroup);
+	},
+	async getActiveAccountCount(authGroup) {
+		return dal.getActiveAccountCount(authGroup);
+	},
+	async getActiveB2BCount(authGroup) {
+		return dal.getActiveB2BCount(authGroup);
 	}
 };
 
