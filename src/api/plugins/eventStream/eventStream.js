@@ -1,6 +1,7 @@
 import plugins from '../plugins';
 import Boom from '@hapi/boom';
 import pulsar from './pulsar/interface';
+import nats from './nats/interface';
 
 
 async function activeInterfaceSelector(ag, global) {
@@ -14,6 +15,8 @@ async function activeInterfaceSelector(ag, global) {
 		switch (provider.type.toLowerCase()) {
 		case 'pulsar':
 			return { i: pulsar, provider };
+		case 'nats':
+			return { i: nats, provider };
 		default:
 			throw Boom.failedDependency('Unknown event stream provider type');
 		}
@@ -25,6 +28,8 @@ async function generalInterfaceSelector(providerType) {
 	switch (providerType.toLowerCase()) {
 	case 'pulsar':
 		return pulsar;
+	case 'nats':
+		return nats;
 	default:
 		throw Boom.failedDependency('Unknown event stream provider type');
 	}
@@ -61,8 +66,10 @@ export default {
 			return undefined;
 		}
 	},
-	async clean() {
-		const settings = await plugins.getLatestPluginOptions();
+	async clean(latest) {
+		let settings;
+		if(!latest) settings = await plugins.getLatestPluginOptions();
+		settings = latest;
 		const stream = await generalInterfaceSelector(settings.eventStream.provider.type);
 		return stream.clean();
 	}

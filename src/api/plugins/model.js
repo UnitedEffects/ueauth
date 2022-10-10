@@ -2,6 +2,17 @@ import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 
 mongoose.set('useCreateIndex', true);
+const authSchema = new mongoose.Schema({
+	issuerUrl: String,
+	clientId: String,
+	rootRef: String, // a copy of the ROOT AG ID
+	audience: String,
+	scope: String,
+	userSeed: String,
+	userPublicKey: String,
+	jwtIssuer: String,
+	authGroup: String
+}, { strict: false, _id: false });
 const pluginConfig = new mongoose.Schema({
 	createdAt: {
 		type: Date,
@@ -31,7 +42,11 @@ const pluginConfig = new mongoose.Schema({
 		provider: {
 			type: {
 				type: String,
-				enum: ['pulsar']
+				enum: ['pulsar', 'nats']
+			},
+			oauthRequired: {
+				type: Boolean,
+				default: false
 			},
 			masterStream: {
 				enabled: {
@@ -40,13 +55,7 @@ const pluginConfig = new mongoose.Schema({
 				},
 				streamPath: String
 			},
-			auth: {
-				issuerUrl: String,
-				clientId: String,
-				rootRef: String, // a copy of the ROOT AG ID
-				audience: String,
-				scope: String
-			},
+			auth: authSchema,
 			//use client credentials for API requests
 			restAuth: {
 				type: Boolean,

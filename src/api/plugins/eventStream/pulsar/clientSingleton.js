@@ -51,7 +51,7 @@ class PulsarClient {
 	}
 	
 	static closeInstance() {
-		if (!PulsarClient.instance) {
+		if (PulsarClient.instance) {
 			PulsarClient.instance.close();
 		}
 	}
