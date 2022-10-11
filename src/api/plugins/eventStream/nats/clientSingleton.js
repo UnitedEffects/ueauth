@@ -26,36 +26,50 @@ class NatsClient {
 		throw new Error('Use NatsClient.getInstance()');
 	}
 
+	static creds(seed, jwt) {
+		return credentials(seed, jwt);
+	}
+
 	static async getInstance(provider) {
-		if (!NatsClient.instance?.nc) {
-			console.info('DEFININIG INSTANCE*********************');
+		if (!NatsClient.instance) {
 			const connectionSettings = {
 				servers: provider.streamUrl,
 				debug: true
 			};
+			if(provider.clientConfig?.inbox) {
+				connectionSettings.inboxPrefix = provider.clientConfig.inbox;
+			}
+			let nc, js;
+			let go = true;
 			if(provider.streamAuth === true) {
+				go = false;
 				const seed = provider.auth?.userSeed;
 				let jwt;
 				if(provider.clientConfig.coreSimpleStream !== true) jwt = provider.auth?.jwt;
 				else {
-					//jwt = await getJwt(provider.auth);
+					// todo - getJwt will not work locally...
+					// jwt = await getJwt(provider.auth); //todo cache...
 					// todo - switch to other...
-					jwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJleHAiOjE2NjU0NDQ0NDgsIm5hbWUiOiI4ZDJjOGEyYi1jOTFkLTQ3NWItYWYyZS01Yjg0MGE2ZDE0NjQtVUVBdXRoX1Jvb3QgTG9nIEFjY2VzcyAoZGV2KS1uMXhQU1NXRzFvYkhPc1E5SlVzUTkiLCJzdWIiOiJVQk5LUElEU1VBVzdBRlM2S0NQM1JYQVhYMkU2NUVaNDNHNDczSVcyQVVSQ05GRjNTTzVONVBPTiIsIm5hdHMiOnsicHViIjp7ImFsbG93IjpbInVlLnN5cy4qLnVlYXV0aCIsIiRKUy5BUEkuSU5GTyIsIiRKUy5BUEkuU1RSRUFNLk5BTUVTIiwiJEpTLkFQSS5TVFJFQU0uSU5GTy51ZS1zeXN0ZW0iLCIkSlMuQVBJLlNUUkVBTS5NU0cuR0VULnVlLXN5c3RlbSIsIiRKUy5BUEkuQ09OU1VNRVIuTkFNRVMudWUtc3lzdGVtIiwiJEpTLkFDSy51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVLj4iLCIkSlMuQVBJLkNPTlNVTUVSLklORk8udWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMF9VRS1TWVNURU1fRjVySkRvTUxFVSIsIiRKUy5BUEkuQ09OU1VNRVIuTVNHLk5FWFQudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMF9VRS1TWVNURU1fRjVySkRvTUxFVSIsIiRKUy5BUEkuQ09OU1VNRVIuRFVSQUJMRS5DUkVBVEUudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMF9VRS1TWVNURU1fRjVySkRvTUxFVSIsIiRKUy5BUEkuQ09OU1VNRVIuREVMRVRFLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTBfVUUtU1lTVEVNX0Y1ckpEb01MRVUiLCIkSlMuQUNLLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHcuPiIsIiRKUy5BUEkuQ09OU1VNRVIuSU5GTy51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0xX1VFLVNZU1RFTV9lZ1pEWGtYdHR3IiwiJEpTLkFQSS5DT05TVU1FUi5NU0cuTkVYVC51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0xX1VFLVNZU1RFTV9lZ1pEWGtYdHR3IiwiJEpTLkFQSS5DT05TVU1FUi5EVVJBQkxFLkNSRUFURS51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0xX1VFLVNZU1RFTV9lZ1pEWGtYdHR3IiwiJEpTLkFQSS5DT05TVU1FUi5ERUxFVEUudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMV9VRS1TWVNURU1fZWdaRFhrWHR0dyJdLCJkZW55IjpbIiRTWVMuPiIsIl9JTkJPWC4-Il19LCJzdWIiOnsiYWxsb3ciOlsidWUuc3lzLioudWVhdXRoIiwiX0lOQk9YX3VlLXN5c3RlbV94ZHd2YWFBdVhZLj4iXSwiZGVueSI6WyIkU1lTLj4iLCJfSU5CT1guPiJdfSwicmVzcCI6eyJtYXgiOjF9LCJiZWFyZXJfdG9rZW4iOmZhbHNlLCJhbGxvd19yZXNwb25zZXMiOnRydWUsImlzc3Vlcl9hY2NvdW50IjoiQUQzRDZaSTM2T0dXNU5JRlhLS1hUUUtHTkJaTUVNWk5UUExHTE5FVlU2VjNZUU1UM0pLUVdLNEciLCJ0eXBlIjoidXNlciIsInZlcnNpb24iOjJ9LCJhdWQiOiJOQVRTIiwiaXNzIjoiQURHQ05FRzJYVVVDQzNNMzZENzVQSlJWRUtUREhNN0VNUFpWVERUUlNLRUZHNENPMkJBRVhHVEgiLCJpYXQiOjE2NjU0NDA4NDksImp0aSI6Imc5NGhHSEtWYnFyZURETDIifQ.6k6FneKjy4b0y8bvHKQ8zs3G6geze3NZhRo0uH0B5_jfKOBTnu0lV0ELS7MJAK5MvYn4q34Ug0mukbVU4ATXCA';
+					jwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJleHAiOjE2NjU1NDA2MTIsIm5hbWUiOiI4ZDJjOGEyYi1jOTFkLTQ3NWItYWYyZS01Yjg0MGE2ZDE0NjQtVUVBdXRoX1Jvb3QgTG9nIEFjY2VzcyAoZGV2KS1uMXhQU1NXRzFvYkhPc1E5SlVzUTkiLCJzdWIiOiJVQk5LUElEU1VBVzdBRlM2S0NQM1JYQVhYMkU2NUVaNDNHNDczSVcyQVVSQ05GRjNTTzVONVBPTiIsIm5hdHMiOnsiZGF0YSI6LTEsInBheWxvYWQiOi0xLCJzdWJzIjotMSwic3JjIjpbXSwidGltZXMiOltdLCJsb2NhbGUiOiIiLCJwdWIiOnsiYWxsb3ciOlsidWUuc3lzLioudWVhdXRoIiwiJEpTLkFQSS5JTkZPIiwiJEpTLkFQSS5TVFJFQU0uTkFNRVMiLCIkSlMuQVBJLlNUUkVBTS5JTkZPLnVlLXN5c3RlbSIsIiRKUy5BUEkuU1RSRUFNLk1TRy5HRVQudWUtc3lzdGVtIiwiJEpTLkFQSS5DT05TVU1FUi5OQU1FUy51ZS1zeXN0ZW0iLCIkSlMuQUNLLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTBfVUUtU1lTVEVNX0Y1ckpEb01MRVUuPiIsIiRKUy5BUEkuQ09OU1VNRVIuSU5GTy51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVIiwiJEpTLkFQSS5DT05TVU1FUi5NU0cuTkVYVC51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVIiwiJEpTLkFQSS5DT05TVU1FUi5EVVJBQkxFLkNSRUFURS51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVIiwiJEpTLkFQSS5DT05TVU1FUi5ERUxFVEUudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMF9VRS1TWVNURU1fRjVySkRvTUxFVSIsIiRKUy5BQ0sudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMV9VRS1TWVNURU1fZWdaRFhrWHR0dy4-IiwiJEpTLkFQSS5DT05TVU1FUi5JTkZPLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHciLCIkSlMuQVBJLkNPTlNVTUVSLk1TRy5ORVhULnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHciLCIkSlMuQVBJLkNPTlNVTUVSLkRVUkFCTEUuQ1JFQVRFLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHciLCIkSlMuQVBJLkNPTlNVTUVSLkRFTEVURS51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0xX1VFLVNZU1RFTV9lZ1pEWGtYdHR3Il0sImRlbnkiOlsiJFNZUy4-IiwiX0lOQk9YLj4iXX0sInN1YiI6eyJhbGxvdyI6WyJ1ZS5zeXMuKi51ZWF1dGgiLCJfSU5CT1hfdWUtc3lzdGVtX3hkd3ZhYUF1WFkuPiJdLCJkZW55IjpbIiRTWVMuPiIsIl9JTkJPWC4-Il19LCJyZXNwIjp7Im1heCI6MTAwfSwiYmVhcmVyX3Rva2VuIjpmYWxzZSwiYWxsb3dlZF9jb25uZWN0aW9uX3R5cGVzIjpbXSwiYWxsb3dfcmVzcG9uc2VzIjp0cnVlLCJpc3N1ZXJfYWNjb3VudCI6IkFEM0Q2WkkzNk9HVzVOSUZYS0tYVFFLR05CWk1FTVpOVFBMR0xORVZVNlYzWVFNVDNKS1FXSzRHIiwidHlwZSI6InVzZXIiLCJ2ZXJzaW9uIjoyfSwiYXVkIjoiTkFUUyIsImlzcyI6IkFER0NORUcyWFVVQ0MzTTM2RDc1UEpSVkVLVERITTdFTVBaVlREVFJTS0VGRzRDTzJCQUVYR1RIIiwiaWF0IjoxNjY1NTA0NjEyLCJqdGkiOiIxYmJkY0ZzS08wYVZmQitYIn0.T-uAiPJ3KUFE0ErULemgZT7XHXTCSRtiYigDFp40ieHdkRZKfdfBz80h9gk6ydAwKOfhnbx7glPhscZwep-WBQ';
 				}
-				if(!seed) throw new Error('Authorization not configured for NATS');
-				if(!jwt) throw new Error('Authorization not configured for NATS');
 				connectionSettings.authenticator = credsAuthenticator(new TextEncoder().encode(credentials(seed, jwt)));
+				if(jwt && seed) {
+					go = true;
+				}
 			}
-			if(provider.clientConfig?.inbox) {
-				connectionSettings.inboxPrefix = provider.clientConfig.inbox;
+
+			if(go === true) {
+				nc = await connect(connectionSettings);
+				js = await nc.jetstream();
 			}
-			console.info(connectionSettings);
-			const nc = await connect(connectionSettings);
-			console.info('NATS CONNECTED');
-			const js = await nc.jetstream();
+
 			const sc = StringCodec();
-			NatsClient.instance = {nc, js, sc};
-		} else console.info('FOUND INSTANCE****************************');
+			//todo
+			// cache this and set it to reset after 5 min if its not set...
+			// figure out expired connections...
+			if(nc) NatsClient.instance = {nc, js, sc};
+			else NatsClient.instance = 'NOT OPERATIONAL';
+		}
 		return NatsClient.instance;
 	}
 	
@@ -76,16 +90,16 @@ async function getJwt(settings) {
 		const userPublicKey = settings.userPublicKey;
 		const expires = settings.expires || 36000;
 		const group = settings.authGroup;
-		const client = cl.getOneByAgId(group, clientId);
-		if(!client) throw new Error(`Could not authorize nats - Core Client ${clientId} not found`);
-		console.info(client); //todo delete this...
+		const c = await cl.getOneByAgId(group, clientId);
+		if(!c) throw new Error(`Could not authorize nats - Core Client ${clientId} not found`);
+		const client = JSON.parse(JSON.stringify(c));
 		const secret = client.payload?.client_secret;
 		if(!secret) throw new Error('Could not find the client secret');
 		const token = await getCC(group, url, clientId, secret);
-		console.info(token); //todo delete
+		if(!token) throw new Error('Unable to get a token');
 		const options = {
 			method: 'post',
-			url: `${url}/${group}/shared/simple/access-op/jwt`,
+			url: `${url}/api/${group}/shared/simple/access-op/jwt`,
 			headers: {
 				'content-type': 'application/json',
 				'authorization': `bearer ${token}`
@@ -96,14 +110,12 @@ async function getJwt(settings) {
 				expires
 			}
 		};
-		console.info(options); //todo delete
 		const result = await axios(options);
 		if(!result?.data?.data?.jwt) throw new Error('Unable to get a NATS user jwt');
-		console.info(result.data);
 		return result.data.data.jwt;
 	} catch (error) {
-		console.error(error);
-		throw error;
+		console.error(error?.response?.data || error);
+		return undefined;
 	}
 }
 
@@ -127,9 +139,7 @@ async function getCC(group, issuer, id, secret) {
 	try {
 		const url = `${config.PROTOCOL}://${config.SWAGGER}/${group}/token`;
 		const aud = `${config.PROTOCOL}://${config.SWAGGER}/${group}`;
-		const jwt = await getSecretJwt(url, id, secret, aud);
-		console.info('secret JWT');
-		console.info(jwt); //todo delete
+		const jwt = await getSecretJwt(id, secret, aud);
 		const options = {
 			method: 'post',
 			url,
@@ -140,7 +150,7 @@ async function getCC(group, issuer, id, secret) {
 				grant_type: 'client_credentials',
 				client_assertion_type: CLIENT_ASSERTION_TYPE,
 				client_assertion: jwt,
-				audience: `${issuer}/${group}`,
+				audience: `${issuer}/api/${group}`,
 				scope: 'access'
 			})
 		};

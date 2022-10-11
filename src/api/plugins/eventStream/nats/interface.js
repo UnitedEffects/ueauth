@@ -43,15 +43,22 @@ export default {
 	},
 	async publishMaster(group, emit, provider) {
 		const nats = await NATS.getInstance(provider);
-		const { subject, streamName } = getMasterStreamSub(provider.masterStream.streamPath);
-		return pub(nats, emit, subject, streamName);
+		if(nats.js) {
+			const { subject, streamName } = getMasterStreamSub(provider.masterStream.streamPath);
+			return pub(nats, emit, subject, streamName);
+		}
+		throw new Error('NATS NOT OPERATIONAL');
 	},
 	async publish(group, emit, provider) {
-		// todo - step back and open/close connection right here to see if that works...
+		//todo
+		// reset connection on auth expired?
 		const nats = await NATS.getInstance(provider);
-		const streamName = provider.clientConfig.stream;
-		const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);
-		return pub(nats, emit, subject, streamName);
+		if(nats.js) {
+			const streamName = provider.clientConfig.stream;
+			const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);
+			return pub(nats, emit, subject, streamName);
+		}
+		throw new Error('NATS NOT OPERATIONAL');
 	},
 	async clean() {
 		await NATS.drainInstance();
