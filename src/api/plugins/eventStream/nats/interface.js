@@ -71,6 +71,7 @@ async function pub(nats, emit, subject, streamName) {
 	try {
 		await nats.js.publish(subject, nats.sc.encode(data), options);
 	} catch (e) {
+		console.info(e);
 		throw nats.nc.protocol.lastError;
 	}
 }
