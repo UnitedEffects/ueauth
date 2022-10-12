@@ -4,8 +4,10 @@ import qs from 'querystring';
 import { v4 as uuid } from 'uuid';
 import axios from 'axios';
 import cl from '../../../oidc/client/clients';
+import cache from './cache';
 
 const config = require('../../../../config');
+
 const CLIENT_ASSERTION_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
 
 function credentials(seed, jwt) {
@@ -30,45 +32,93 @@ class NatsClient {
 		return credentials(seed, jwt);
 	}
 
-	static async getInstance(provider) {
-		if (!NatsClient.instance) {
+	static async pushOneMessage(provider, data, subject, streamName) {
+		let nc, jwt;
+		try {
 			const connectionSettings = {
 				servers: provider.streamUrl,
-				debug: true
+				//debug: true
 			};
 			if(provider.clientConfig?.inbox) {
 				connectionSettings.inboxPrefix = provider.clientConfig.inbox;
 			}
-			let nc, js;
-			let go = true;
 			if(provider.streamAuth === true) {
-				go = false;
 				const seed = provider.auth?.userSeed;
-				let jwt;
 				if(provider.clientConfig.coreSimpleStream !== true) jwt = provider.auth?.jwt;
 				else {
-					// todo - getJwt will not work locally...
-					// jwt = await getJwt(provider.auth); //todo cache...
-					// todo - switch to other...
-					jwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJleHAiOjE2NjU1NDA2MTIsIm5hbWUiOiI4ZDJjOGEyYi1jOTFkLTQ3NWItYWYyZS01Yjg0MGE2ZDE0NjQtVUVBdXRoX1Jvb3QgTG9nIEFjY2VzcyAoZGV2KS1uMXhQU1NXRzFvYkhPc1E5SlVzUTkiLCJzdWIiOiJVQk5LUElEU1VBVzdBRlM2S0NQM1JYQVhYMkU2NUVaNDNHNDczSVcyQVVSQ05GRjNTTzVONVBPTiIsIm5hdHMiOnsiZGF0YSI6LTEsInBheWxvYWQiOi0xLCJzdWJzIjotMSwic3JjIjpbXSwidGltZXMiOltdLCJsb2NhbGUiOiIiLCJwdWIiOnsiYWxsb3ciOlsidWUuc3lzLioudWVhdXRoIiwiJEpTLkFQSS5JTkZPIiwiJEpTLkFQSS5TVFJFQU0uTkFNRVMiLCIkSlMuQVBJLlNUUkVBTS5JTkZPLnVlLXN5c3RlbSIsIiRKUy5BUEkuU1RSRUFNLk1TRy5HRVQudWUtc3lzdGVtIiwiJEpTLkFQSS5DT05TVU1FUi5OQU1FUy51ZS1zeXN0ZW0iLCIkSlMuQUNLLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTBfVUUtU1lTVEVNX0Y1ckpEb01MRVUuPiIsIiRKUy5BUEkuQ09OU1VNRVIuSU5GTy51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVIiwiJEpTLkFQSS5DT05TVU1FUi5NU0cuTkVYVC51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVIiwiJEpTLkFQSS5DT05TVU1FUi5EVVJBQkxFLkNSRUFURS51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0wX1VFLVNZU1RFTV9GNXJKRG9NTEVVIiwiJEpTLkFQSS5DT05TVU1FUi5ERUxFVEUudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMF9VRS1TWVNURU1fRjVySkRvTUxFVSIsIiRKUy5BQ0sudWUtc3lzdGVtLlJFU0VSVkVEX0NPTlNVTUVSX1VFQXV0aFJvb3QtMV9VRS1TWVNURU1fZWdaRFhrWHR0dy4-IiwiJEpTLkFQSS5DT05TVU1FUi5JTkZPLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHciLCIkSlMuQVBJLkNPTlNVTUVSLk1TRy5ORVhULnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHciLCIkSlMuQVBJLkNPTlNVTUVSLkRVUkFCTEUuQ1JFQVRFLnVlLXN5c3RlbS5SRVNFUlZFRF9DT05TVU1FUl9VRUF1dGhSb290LTFfVUUtU1lTVEVNX2VnWkRYa1h0dHciLCIkSlMuQVBJLkNPTlNVTUVSLkRFTEVURS51ZS1zeXN0ZW0uUkVTRVJWRURfQ09OU1VNRVJfVUVBdXRoUm9vdC0xX1VFLVNZU1RFTV9lZ1pEWGtYdHR3Il0sImRlbnkiOlsiJFNZUy4-IiwiX0lOQk9YLj4iXX0sInN1YiI6eyJhbGxvdyI6WyJ1ZS5zeXMuKi51ZWF1dGgiLCJfSU5CT1hfdWUtc3lzdGVtX3hkd3ZhYUF1WFkuPiJdLCJkZW55IjpbIiRTWVMuPiIsIl9JTkJPWC4-Il19LCJyZXNwIjp7Im1heCI6MTAwfSwiYmVhcmVyX3Rva2VuIjpmYWxzZSwiYWxsb3dlZF9jb25uZWN0aW9uX3R5cGVzIjpbXSwiYWxsb3dfcmVzcG9uc2VzIjp0cnVlLCJpc3N1ZXJfYWNjb3VudCI6IkFEM0Q2WkkzNk9HVzVOSUZYS0tYVFFLR05CWk1FTVpOVFBMR0xORVZVNlYzWVFNVDNKS1FXSzRHIiwidHlwZSI6InVzZXIiLCJ2ZXJzaW9uIjoyfSwiYXVkIjoiTkFUUyIsImlzcyI6IkFER0NORUcyWFVVQ0MzTTM2RDc1UEpSVkVLVERITTdFTVBaVlREVFJTS0VGRzRDTzJCQUVYR1RIIiwiaWF0IjoxNjY1NTA0NjEyLCJqdGkiOiIxYmJkY0ZzS08wYVZmQitYIn0.T-uAiPJ3KUFE0ErULemgZT7XHXTCSRtiYigDFp40ieHdkRZKfdfBz80h9gk6ydAwKOfhnbx7glPhscZwep-WBQ';
+					jwt = await getJwt(provider.auth);
 				}
 				connectionSettings.authenticator = credsAuthenticator(new TextEncoder().encode(credentials(seed, jwt)));
-				if(jwt && seed) {
-					go = true;
-				}
 			}
-
-			if(go === true) {
-				nc = await connect(connectionSettings);
-				js = await nc.jetstream();
-			}
-
+			nc = await connect(connectionSettings);
+			const js = await nc.jetstream();
 			const sc = StringCodec();
-			//todo
-			// cache this and set it to reset after 5 min if its not set...
-			// figure out expired connections...
-			if(nc) NatsClient.instance = {nc, js, sc};
-			else NatsClient.instance = 'NOT OPERATIONAL';
+			const msg = (typeof data === 'object') ? JSON.stringify(data) : data;
+			const options = { msgID: uuid(), expect: { streamName } };
+			await js.publish(subject, sc.encode(msg), options);
+			await nc.drain();
+		} catch (error) {
+			if(nc) await nc.drain();
+			throw error;
+		}
+	}
+
+	static async setInstance(provider) {
+		if(NatsClient.instance.nc) NatsClient.instance.nc.close();
+		const connectionSettings = {
+			servers: provider.streamUrl,
+			//debug: true
+		};
+		if(provider.clientConfig?.inbox) {
+			connectionSettings.inboxPrefix = provider.clientConfig.inbox;
+		}
+		let nc, js, jwt;
+		if(provider.streamAuth === true) {
+			const seed = provider.auth?.userSeed;
+			if(provider.clientConfig.coreSimpleStream !== true) jwt = provider.auth?.jwt;
+			else {
+				jwt = await getJwt(provider.auth);
+			}
+			connectionSettings.authenticator = credsAuthenticator(new TextEncoder().encode(credentials(seed, jwt)));
+		}
+		try {
+			nc = await connect(connectionSettings);
+			js = await nc.jetstream();
+		} catch(e) {
+			console.error(e);
+		}
+		const sc = StringCodec();
+		if(nc) NatsClient.instance = {nc, js, sc};
+		return NatsClient.instance;
+	}
+
+	static resetInstance(resetCount = false) {
+		if(resetCount === true) cache.resetCount();
+		if(NatsClient.instance.nc) NatsClient.instance.nc.close();
+		delete NatsClient.instance;
+	}
+
+	static async getInstance(provider) {
+		if (!NatsClient.instance) {
+			NatsClient.instance = 'NOT OPERATIONAL';
+			let i = await cache.count();
+			const base = 10000;
+			if(i < 15) {
+				console.info(`resetting after ${(i*base)/1000} seconds to attempt nats connection again`);
+				setTimeout(async () => {
+					console.info('checking...');
+					if(NatsClient.instance === 'NOT OPERATIONAL') {
+						console.info('killing instance to try again...');
+						this.resetInstance();
+					}
+				}, i*base);
+			} else {
+				console.error(`COULD NOT ESTABLISH A NATS CONNECTION - GIVING UP AFTER ${i} ATTEMPTS`);
+				console.error('************************************');
+				console.info(JSON.stringify(provider, null, 2));
+			}
+			// async call to try and set it...
+			this.setInstance(provider);
 		}
 		return NatsClient.instance;
 	}
@@ -84,6 +134,8 @@ class NatsClient {
 
 async function getJwt(settings) {
 	try {
+		let uJwt = await cache.findJwt();
+		if(uJwt) return uJwt;
 		if(!settings) throw new Error('NATS configuration requires streamAuth');
 		const url = settings.jwtIssuer;
 		const clientId = settings.clientId;
@@ -112,6 +164,7 @@ async function getJwt(settings) {
 		};
 		const result = await axios(options);
 		if(!result?.data?.data?.jwt) throw new Error('Unable to get a NATS user jwt');
+		await cache.setJwt(result.data.data.jwt);
 		return result.data.data.jwt;
 	} catch (error) {
 		console.error(error?.response?.data || error);
@@ -139,6 +192,10 @@ async function getCC(group, issuer, id, secret) {
 	try {
 		const url = `${config.PROTOCOL}://${config.SWAGGER}/${group}/token`;
 		const aud = `${config.PROTOCOL}://${config.SWAGGER}/${group}`;
+		// below is for local debug only
+		// const url = `https://qa.uecore.io/${group}/token`;
+		// const aud = `https://qa.uecore.io/${group}`;
+
 		const jwt = await getSecretJwt(id, secret, aud);
 		const options = {
 			method: 'post',

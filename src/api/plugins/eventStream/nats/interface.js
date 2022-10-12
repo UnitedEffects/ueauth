@@ -42,24 +42,15 @@ export default {
 		};
 	},
 	async publishMaster(group, emit, provider) {
-		const nats = await NATS.getInstance(provider);
-		if(nats.js) {
-			const { subject, streamName } = getMasterStreamSub(provider.masterStream.streamPath);
-			return pub(nats, emit, subject, streamName);
-		}
-		throw new Error('NATS NOT OPERATIONAL');
+		const { subject, streamName } = getMasterStreamSub(provider.masterStream.streamPath);
+		return safePub(emit, subject, streamName, provider);
 	},
 	async publish(group, emit, provider) {
-		//todo
-		// reset connection on auth expired?
-		const nats = await NATS.getInstance(provider);
-		if(nats.js) {
-			const streamName = provider.clientConfig.stream;
-			const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);
-			return pub(nats, emit, subject, streamName);
-		}
-		throw new Error('NATS NOT OPERATIONAL');
+		const streamName = provider.clientConfig.stream;
+		const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);
+		return safePub(emit, subject, streamName, provider);
 	},
+
 	async clean() {
 		await NATS.drainInstance();
 	}
@@ -77,5 +68,36 @@ function getMasterStreamSub(groupId, path) {
 async function pub(nats, emit, subject, streamName) {
 	const data = (typeof emit === 'object') ? JSON.stringify(emit) : emit;
 	const options = { msgID: uuid(), expect: { streamName } };
-	return nats.js.publish(subject, nats.sc.encode(data), options);
+	try {
+		await nats.js.publish(subject, nats.sc.encode(data), options);
+	} catch (e) {
+		throw nats.nc.protocol.lastError;
+	}
+}
+
+async function safePub(emit, subject, streamName, provider) {
+	try {
+		let nats = await NATS.getInstance(provider);
+		if(nats.js) {
+			return pub(nats, emit, subject, streamName);
+		}
+		throw new Error('STREAMING NOT CURRENTLY AVAILABLE');
+	} catch (e) {
+		if(e.code === 'AUTHENTICATION_EXPIRED') {
+			//attempting resets....
+			NATS.resetInstance(true);
+			NATS.getInstance(provider);
+			return oneOff(provider, emit, subject, streamName);
+		}
+		throw e;
+	}
+}
+
+async function oneOff(provider, emit, subject, streamName) {
+	console.info('attempting one off write');
+	try {
+		return NATS.pushOneMessage(provider, emit, subject, streamName);
+	} catch(e) {
+		throw new Error('NATS NOT OPERATIONAL');
+	}
 }
