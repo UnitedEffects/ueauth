@@ -42,7 +42,7 @@ export default {
 		};
 	},
 	async publishMaster(group, emit, provider) {
-		const { subject, streamName } = getMasterStreamSub(provider.masterStream.streamPath);
+		const { subject, streamName } = getMasterStreamSub(group, provider.masterStream.streamPath);
 		return safePub(emit, subject, streamName, provider);
 	},
 	async publish(group, emit, provider) {
@@ -57,11 +57,11 @@ export default {
 };
 
 function getMasterStreamSub(groupId, path) {
-	const full = path.split('::');
-	if(full.length !== 2) throw new Error('Master stream is not configured correctly with the path for NATS');
+	const full = path?.split('::');
+	if(full?.length !== 2) throw new Error('Master stream is not configured correctly with the path for NATS');
 	return {
-		streamName: path[0],
-		subject: path[1].replace(/{authGroup}/g, groupId)
+		streamName: full[0],
+		subject: full[1].replace(/{authGroup}/g, groupId)
 	};
 }
 
