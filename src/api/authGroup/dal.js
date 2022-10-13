@@ -1,12 +1,19 @@
+import Boom from '@hapi/boom';
 import Group from './model';
-import ueEvents from "../../events/ueEvents";
+import ueEvents from '../../events/ueEvents';
 
 export default {
 	async write(data) {
 		const group = new Group(data);
 		// we publish first to ensure we don't ever create a local record without an async streamed record
 		// this only matters if the externalStreaming plugin and masterStream option are enabled
-		await ueEvents.master(group._id, 'ue.group.create', group);
+		try {
+			await ueEvents.master(group._id, 'ue.group.create', group);
+		} catch (error) {
+			console.error(error);
+			throw Boom.failedDependency('Master streaming is enabled but did not work. Rolling back request to avoid falling out of sync with event record');
+		}
+
 		return group.save();
 	},
 	async get(query) {

@@ -101,16 +101,20 @@ export default {
 	},
 	async toggleGlobalEventStreamSettings(data, userId, root) {
 		if(root.prettyName !== 'root') throw Boom.unauthorized();
+		const lastSaved = await this.getLatestPluginOptions(true);
 		let client;
 		if(data.enabled === true) {
-			client = await cl.generateEventStreamingClient(root);
-			if(!client) throw Boom.badRequest('Unable to generate a client at this time.');
+			if(data.oauthRequired === true) {
+				client = await cl.generateEventStreamingClient(root);
+				if(!client) throw Boom.badRequest('Unable to generate a client at this time.');
+			}
 		}
 		if(data.enabled === false) {
-			await cl.deleteEventStreamingClient(root);
-			await eStream.clean();
+			if(lastSaved.eventStream?.provider?.oauthRequired === true) {
+				await cl.deleteEventStreamingClient(root);
+			}
+			await eStream.clean(lastSaved);
 		}
-		const lastSaved = await this.getLatestPluginOptions(true);
 		if(data.currentVersion !== lastSaved.version) {
 			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
 		}
@@ -125,13 +129,21 @@ export default {
 		} else {
 			await eStream.validateProvider(data?.provider);
 			update.eventStream = data;
-			update.eventStream.provider.auth = {
-				issuerUrl: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}`,
-				clientId: client.client_id,
-				rootRef: root.id || root._id,
-				audience: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}/streaming`,
-				scope: authScopes
-			};
+			if(data.oauthRequired === true) {
+				const oauth = {
+					issuerUrl: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}`,
+					clientId: client.client_id,
+					rootRef: root.id || root._id,
+					audience: `${config.PROTOCOL}://${config.SWAGGER}/${root._id||root.id}/streaming`,
+					scope: authScopes
+				};
+				if(update.eventStream?.provider?.auth) {
+					update.eventStream.provider.auth = {
+						...update.eventStream.provider.auth,
+						...oauth
+					};
+				} else update.eventStream.provider.auth = oauth;
+			}
 		}
 		const saved = await dal.updatePlugins(lastSaved.version+1, update, userId);
 		let output = {
@@ -140,7 +152,7 @@ export default {
 				...saved.eventStream
 			}
 		};
-		if(output.eventStream?.provider?.auth?.clientId && client.client_secret){
+		if(output.eventStream?.provider?.auth?.clientId && client?.client_secret){
 			output = JSON.parse(JSON.stringify(output));
 			output.eventStream.provider.auth.clientSecret = client.client_secret;
 		}

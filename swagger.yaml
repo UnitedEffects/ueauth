@@ -9992,6 +9992,22 @@ components:
               type: string
               enum:
                 - pulsar
+                - nats
+            oauthRequired:
+              type: boolean
+              description: should an oauth client be created for this configuration?
+            auth:
+              type: object
+              description: if there are specific authorizations required beyond ueauth for the interface, add them here. Not all of the examples are applicable to the providers offered. Please note that if you specific 'oauthRequired' the following values will be overwritten if you provide them in this object - clientId, audience, scope, rootRef, issueUrl
+              example:
+                jwt: 'your-big-jwt'
+                userSeed: 'your-account-seed (nats)'
+                userPublicKey: 'your-public-key (nats)'
+                apiKey: 'your-api-key'
+                clientId: 'Your client ID'
+                audience: 'Your audience'
+                jwtIssuer: 'https://streams.uecore.io'
+                expires: 3600
             adminUrl:
               type: string
               format: uri
@@ -10034,21 +10050,30 @@ components:
                   default: false
                 streamPath:
                   type: string
-                  description: this is the topic or stream address to publish master stream content
+                  description: this is the topic or stream address to publish master stream content. For NATS use 'stream::subject'
             setupConfig:
               type: object
-              example:
-                adminRoles: []
-                clusterList: ['dev-cluster']
+              description: any initialization configs required for the specific streaming solution - see documentation
+              # NOT NEEDED FOR NATS
+              # PULSAR EXAMPLE
+              #example:
+              #  adminRoles: []
+              #  clusterList: ['dev-cluster']
             clientConfig:
               type: object
-              description: the example is pulsar specific - this is not a required input as defaults are present
+              description: any client configurations required for the specific streaming solution - see documentation
+              # NATS EXAMPLE
               example:
-                operationTimeoutSeconds: 30
-                ioThreads: 1
-                tlsTrustCertsFilePath: /my/path
-                tlsValidateHostname: false
-                tlsAllowInsecureConnection: false
+                stream: 'your-stream'
+                subject: 'sub.{authGroup}.logs'
+                coreSimpleStream: true
+              # PULSAR EXAMPLE
+              #example:
+              #  operationTimeoutSeconds: 30
+              #  ioThreads: 1
+              #  tlsTrustCertsFilePath: /my/path
+              #  tlsValidateHostname: false
+              #  tlsAllowInsecureConnection: false
 
 # MFA CHALLENGE
     writeMfaChallenge:
