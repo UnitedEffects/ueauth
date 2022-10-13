@@ -181,7 +181,7 @@ const api = {
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
 			authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 			splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
-			clientName: (client.clientId === authGroup.associatedClient) ? client?.clientName : undefined,
+			clientName: (client.clientId === authGroup.associatedClient) ? undefined : client.clientName,
 			clientUri: (authGroup.associatedClient === client?.clientId) ?
 				`https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` : client?.clientUri,
 			initiateLoginUri: client?.initiateLoginUri,
