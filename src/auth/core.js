@@ -222,19 +222,23 @@ const core = {
 			// Assumes this is only ever used for Browser based requests
 			console.error(error);
 			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
-			let user;
+			let user, sent;
 			if(req.query.user) {
 				try {
 					user = await account.getAccount(req.authGroup, req.query.user, true);
-					await account.resetOrVerify(req.authGroup, req.globalSettings, user,[], (req.user) ? req.user.sub : undefined, false, req.customDomain);
+					if(user.verified !== true) {
+						sent = await account.resetOrVerify(req.authGroup, req.globalSettings, user,[], (req.user) ? req.user.sub : undefined, false, req.customDomain);
+					}
 				} catch (error) {
 					// do nothing
 				}
 			}
+			const message = (user && sent) ? 'Invalid or expired Link. Sending a new one. Check your email.' : (user?.verified === true) ? 'You are already verified!' : 'Invalid Verify Account Link';
+			const details = (user && sent) ? 'Your account link may have expired. We are attempting to send you a fresh link. Check your email. If you continue to have issues, contact your platform administrator.' : (user?.verified === true) ? `Feel free to close this window, there's nothing more to do here. You should navigate to your desired ${req.authGroup.name} application to login.` : 'Your account link may have expired or you may have copied it incorrectly. Check your email or mobile device for the link. If you think here is an issue, you can contact your platform administrator.';
 			return res.render('response/response', {
-				title: 'Uh oh...',
-				message: (user) ? 'Invalid or expired Link. Sending a new one. Check your email.' : 'Invalid Verify Account Link',
-				details: `This page requires special access. ${(user) ? 'Your account link may have expired. We are attempting to send you a fresh link. Check your email. If you continue to have issues, contact your platform administrator.' : 'Your account link may have expired or you may have copied it incorrectly. Check your email or mobile device for the link. If you think here is an issue, you can contact your platform administrator.'}`,
+				title: (user && sent) ? 'Sit tight...' : (user?.verified === true) ? 'Great news.' : 'Uh oh...',
+				message,
+				details,
 				authGroup: safeAG,
 				authGroupLogo: authGroup.config.ui.skin.logo || undefined,
 				splashImage: authGroup.config.ui.skin.splashImage || undefined,
