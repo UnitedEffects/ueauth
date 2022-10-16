@@ -1,6 +1,7 @@
 import Boom from '@hapi/boom';
 import { v4 as uuid } from 'uuid';
 import NATS from './clientSingleton';
+import cache from './cache';
 
 
 export default {
@@ -65,33 +66,34 @@ function getMasterStreamSub(groupId, path) {
 	};
 }
 
-async function pub(nats, emit, subject, streamName) {
+async function pub(nats, emit, subject, streamName, provider) {
 	const data = (typeof emit === 'object') ? JSON.stringify(emit) : emit;
 	const options = { msgID: uuid(), expect: { streamName } };
 	try {
 		await nats.js.publish(subject, nats.sc.encode(data), options);
 	} catch (e) {
-		console.info(e);
-		throw nats.nc.protocol.lastError;
+		await cache.clearJwt();
+		try {
+			NATS.resetInstance(true);
+			NATS.getInstance(provider);
+			return oneOff(provider, emit, subject, streamName);
+		} catch(e) {
+			console.info(e);
+			throw e;
+		}
 	}
 }
 
 async function safePub(emit, subject, streamName, provider) {
-	try {
-		let nats = await NATS.getInstance(provider);
-		if(nats.js) {
-			return pub(nats, emit, subject, streamName);
-		}
-		throw new Error('STREAMING NOT CURRENTLY AVAILABLE');
-	} catch (e) {
-		if(e.code === 'AUTHENTICATION_EXPIRED') {
-			//attempting resets....
-			NATS.resetInstance(true);
-			NATS.getInstance(provider);
-			return oneOff(provider, emit, subject, streamName);
-		}
-		throw e;
+	let nats = await NATS.getInstance(provider, {
+		subject,
+		streamName,
+		data: emit
+	});
+	if(nats.js) {
+		return pub(nats, emit, subject, streamName, provider);
 	}
+	throw new Error('STREAMING NOT CURRENTLY AVAILABLE');
 }
 
 async function oneOff(provider, emit, subject, streamName) {

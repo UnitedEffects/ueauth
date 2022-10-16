@@ -8,6 +8,9 @@ export default {
 		if(jwt) {
 			const decoded = await JWT.decode(jwt, {});
 			if(decoded.exp > (Date.now()/1000)){
+				console.info('cached jwt was expired...');
+				console.info('resetting...');
+				console.info(jwt);
 				await this.clearJwt();
 				return undefined;
 			}

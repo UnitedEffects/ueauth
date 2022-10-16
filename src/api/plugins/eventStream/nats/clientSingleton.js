@@ -37,7 +37,7 @@ class NatsClient {
 		try {
 			const connectionSettings = {
 				servers: provider.streamUrl,
-				//debug: true
+				debug: true
 			};
 			if(provider.clientConfig?.inbox) {
 				connectionSettings.inboxPrefix = provider.clientConfig.inbox;
@@ -98,9 +98,13 @@ class NatsClient {
 		delete NatsClient.instance;
 	}
 
-	static async getInstance(provider) {
+	static async getInstance(provider, failover = undefined) {
 		if (!NatsClient.instance) {
 			NatsClient.instance = 'NOT OPERATIONAL';
+			console.info('first time so the primary path will not work');
+			if(failover) {
+				this.pushOneMessage(provider, failover.data, failover.subject, failover.streamName);
+			}
 			let i = await cache.count();
 			const base = 10000;
 			if(i < 15) {
@@ -135,12 +139,15 @@ class NatsClient {
 async function getJwt(settings) {
 	try {
 		let uJwt = await cache.findJwt();
-		if(uJwt) return uJwt;
+		if(uJwt) {
+			console.info('got a jwt...');
+			return uJwt;
+		} else console.info('got undefined....');
 		if(!settings) throw new Error('NATS configuration requires streamAuth');
 		const url = settings.jwtIssuer;
 		const clientId = settings.clientId;
 		const userPublicKey = settings.userPublicKey;
-		const expires = settings.expires || 36000;
+		const expires = settings.expires || 3600;
 		const group = settings.authGroup;
 		const c = await cl.getOneByAgId(group, clientId);
 		if(!c) throw new Error(`Could not authorize nats - Core Client ${clientId} not found`);
