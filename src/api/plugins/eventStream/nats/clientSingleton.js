@@ -37,7 +37,7 @@ class NatsClient {
 		try {
 			const connectionSettings = {
 				servers: provider.streamUrl,
-				//debug: true
+				debug: (config.ENV !== 'production')
 			};
 			if(provider.clientConfig?.inbox) {
 				connectionSettings.inboxPrefix = provider.clientConfig.inbox;
@@ -67,7 +67,7 @@ class NatsClient {
 		if(NatsClient.instance.nc) NatsClient.instance.nc.close();
 		const connectionSettings = {
 			servers: provider.streamUrl,
-			//debug: true
+			debug: (config.ENV !== 'production')
 		};
 		if(provider.clientConfig?.inbox) {
 			connectionSettings.inboxPrefix = provider.clientConfig.inbox;
@@ -98,9 +98,12 @@ class NatsClient {
 		delete NatsClient.instance;
 	}
 
-	static async getInstance(provider) {
+	static async getInstance(provider, failover = undefined) {
 		if (!NatsClient.instance) {
 			NatsClient.instance = 'NOT OPERATIONAL';
+			if(failover) {
+				this.pushOneMessage(provider, failover.data, failover.subject, failover.streamName);
+			}
 			let i = await cache.count();
 			const base = 10000;
 			if(i < 15) {
@@ -140,7 +143,7 @@ async function getJwt(settings) {
 		const url = settings.jwtIssuer;
 		const clientId = settings.clientId;
 		const userPublicKey = settings.userPublicKey;
-		const expires = settings.expires || 36000;
+		const expires = settings.expires || 3600;
 		const group = settings.authGroup;
 		const c = await cl.getOneByAgId(group, clientId);
 		if(!c) throw new Error(`Could not authorize nats - Core Client ${clientId} not found`);
