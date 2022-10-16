@@ -37,7 +37,7 @@ class NatsClient {
 		try {
 			const connectionSettings = {
 				servers: provider.streamUrl,
-				debug: true
+				debug: (config.ENV !== 'production')
 			};
 			if(provider.clientConfig?.inbox) {
 				connectionSettings.inboxPrefix = provider.clientConfig.inbox;
@@ -67,7 +67,7 @@ class NatsClient {
 		if(NatsClient.instance.nc) NatsClient.instance.nc.close();
 		const connectionSettings = {
 			servers: provider.streamUrl,
-			//debug: true
+			debug: (config.ENV !== 'production')
 		};
 		if(provider.clientConfig?.inbox) {
 			connectionSettings.inboxPrefix = provider.clientConfig.inbox;
@@ -101,7 +101,6 @@ class NatsClient {
 	static async getInstance(provider, failover = undefined) {
 		if (!NatsClient.instance) {
 			NatsClient.instance = 'NOT OPERATIONAL';
-			console.info('first time so the primary path will not work');
 			if(failover) {
 				this.pushOneMessage(provider, failover.data, failover.subject, failover.streamName);
 			}
@@ -139,10 +138,7 @@ class NatsClient {
 async function getJwt(settings) {
 	try {
 		let uJwt = await cache.findJwt();
-		if(uJwt) {
-			console.info('got a jwt...');
-			return uJwt;
-		} else console.info('got undefined....');
+		if(uJwt) return uJwt;
 		if(!settings) throw new Error('NATS configuration requires streamAuth');
 		const url = settings.jwtIssuer;
 		const clientId = settings.clientId;
