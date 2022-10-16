@@ -65,6 +65,7 @@ class NatsClient {
 
 	static async setInstance(provider) {
 		if(NatsClient.instance.nc) NatsClient.instance.nc.close();
+		await cache.clearJwt();
 		const connectionSettings = {
 			servers: provider.streamUrl,
 			debug: (config.ENV !== 'production')
@@ -86,6 +87,19 @@ class NatsClient {
 			js = await nc.jetstream();
 		} catch(e) {
 			console.error(e);
+		}
+		if(nc) {
+			(async (provider) => {
+				for await (const s of nc.status()) {
+					switch (s.data) {
+					case 'AUTHORIZATION_VIOLATION':
+					case 'AUTHENTICATION_EXPIRED':
+						await this.setInstance(provider);
+						break;
+					default:
+					}
+				}
+			})(provider).then();
 		}
 		const sc = StringCodec();
 		if(nc) NatsClient.instance = {nc, js, sc};
