@@ -1,7 +1,6 @@
 import {v4 as uuid} from 'uuid';
 import helper from '../helper';
 import eStream from '../api/plugins/eventStream/eventStream';
-import {help} from "serverless/lib/cli/commands-schema/common-options/global";
 const config = require('../config');
 
 const OP_EVENTS = {

@@ -1,4 +1,4 @@
-import events from 'events';
+import events from './events';
 import factory from './factory';
 
 const config = require('../config');
