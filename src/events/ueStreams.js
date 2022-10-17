@@ -37,9 +37,9 @@ class UEStreams {
 	}
 }
 
-function eventEmitter(stream, groupId) {
+async function eventEmitter(stream, groupId) {
 	const clean = config.EVENT_EMITTER_CLEAN_SENSITIVE;
-	const list = factory.getEventList();
+	const list = await factory.getEventList(groupId);
 	console.info(`Building API Listeners for AG: ${groupId}`);
 	list.forEach((item) => {
 		if(factory.items[item]){

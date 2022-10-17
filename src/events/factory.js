@@ -165,10 +165,18 @@ const OP_EVENTS = {
 	]
 };
 
-function getEventList() {
+async function getEventList(groupId) {
+	let eventsToLoad = {};
+	if(config.DISABLE_STREAMS !== true) {
+		eventsToLoad = config.EVENT_EMITTER;
+		if(groupId) {
+			const group = await helper.getAGFromCache(groupId);
+			if(group?.config?.logEventGroups) eventsToLoad = group.config.logEventGroups;
+		}
+	}
 	const list = [];
-	Object.keys(config.EVENT_EMITTER).map((key) => {
-		if(config.EVENT_EMITTER[key] === true) list.push(key);
+	Object.keys(eventsToLoad).map((key) => {
+		if(eventsToLoad[key] === true) list.push(key);
 	});
 	return list;
 }

@@ -240,6 +240,108 @@ const authGroup = new mongoose.Schema({
 				default: ms('10d') / 1000
 			}
 		},
+		logEventGroups: {
+			general: {
+				type: Boolean,
+				default: false
+			},
+			accessToken: {
+				type: Boolean,
+				default: true
+			},
+			authorization: {
+				type: Boolean,
+				default: false
+			},
+			backchannel: {
+				type: Boolean,
+				default: false
+			},
+			clientCredentials: {
+				type: Boolean,
+				default: false
+			},
+			deviceCode: {
+				type: Boolean,
+				default: false
+			},
+			session: {
+				type: Boolean,
+				default: true
+			},
+			grant: {
+				type: Boolean,
+				default: false
+			},
+			iat: {
+				type: Boolean,
+				default: true
+			},
+			uiInteraction: {
+				type: Boolean,
+				default: false
+			},
+			replayDetection: {
+				type: Boolean,
+				default: true
+			},
+			pushedAuthorization: {
+				type: Boolean,
+				default: true
+			},
+			refreshToken: {
+				type: Boolean,
+				default: false
+			},
+			registration: {
+				type: Boolean,
+				default: true
+			},
+			account: {
+				type: Boolean,
+				default: true
+			},
+			group: {
+				type: Boolean,
+				default: true
+			},
+			pluginNotification: {
+				type: Boolean,
+				default: true
+			},
+			organization: {
+				type: Boolean,
+				default: true
+			},
+			domain: {
+				type: Boolean,
+				default: true
+			},
+			product: {
+				type: Boolean,
+				default: true
+			},
+			access: {
+				type: Boolean,
+				default: true
+			},
+			role: {
+				type: Boolean,
+				default: true
+			},
+			permission: {
+				type: Boolean,
+				default: true
+			},
+			orgProfile: {
+				type: Boolean,
+				default: false
+			},
+			securedProfile: {
+				type: Boolean,
+				default: false
+			},
+		},
 		federate: {
 			oidc: [federatedOIDC],
 			oauth2: [federatedOauth2],
