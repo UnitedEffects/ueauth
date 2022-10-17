@@ -7,7 +7,7 @@ const et = {
 		const groupId = group.id || group._id;
 		if(config.ENV !== 'production') console.info(`Building OP Listeners for AG: ${groupId}`);
 		const clean = config.EVENT_EMITTER_CLEAN_SENSITIVE;
-		const list = factory.getEventList();
+		const list = await factory.getEventList(groupId);
 		list.forEach((item) => {
 			factory.items[item].forEach((event) => {
 				const temp = provider._events;

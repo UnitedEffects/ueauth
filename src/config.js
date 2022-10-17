@@ -115,21 +115,22 @@ const config = {
 	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
 	// You can set the custom domain header you want to use to track incoming upstream request domains
 	CUSTOM_DOMAIN_PROXY_HEADER: process.env.CUSTOM_DOMAIN_PROXY_HEADER || envVars.CUSTOM_DOMAIN_PROXY_HEADER || 'x-host',
-	// You can decide which events are actually emitted below. This is the only configuration that requires hardcoded updates.
+	// This is a default/backup of the event emitter options generally defined per AuthGroup.
+	DISABLE_STREAMS: envVars.DISABLE_STREAMS || false,
 	EVENT_EMITTER: (envVars && envVars.DISABLE_STREAMS === true) ? {} :{
 		general: true,
 		accessToken: true,
-		authorization: true,
-		backchannel: true,
-		clientCredentials: true,
-		deviceCode: true,
+		authorization: false,
+		backchannel: false,
+		clientCredentials: false,
+		deviceCode: false,
 		session: true,
 		grant: true,
 		iat: true,
-		uiInteraction: true,
+		uiInteraction: false,
 		replayDetection: true,
 		pushedAuthorization: true,
-		refreshToken: true,
+		refreshToken: false,
 		registration: true,
 		account: true,
 		group: true,
@@ -142,7 +143,6 @@ const config = {
 		permission: true,
 		orgProfile: true,
 		securedProfile: true,
-
 	},
 	SECURITY_POLICY: {
 		// eslint-disable-next-line quotes

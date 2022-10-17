@@ -132,6 +132,21 @@ export default {
 	async setGlobalSettingsCache(data) {
 		await myCache.set('globalSettings', JSON.stringify(data), 300);
 	},
+	// this is only used in the event factor and could be merged with the next method later
+	async getAGFromCache(groupId) {
+		let grp = myCache.get(`AG:${groupId}`);
+		if(!grp) {
+			grp = await group.getOneByEither(groupId);
+			if(grp) {
+				const holdThis = JSON.parse(JSON.stringify(grp));
+				holdThis._id = grp._id;
+				holdThis.owner = grp.owner;
+				holdThis.active = grp.active;
+				myCache.set(`AG:${groupId}`, JSON.stringify(holdThis), 300);
+			}
+		}
+		return (this.isJson(grp)) ? JSON.parse(grp) : grp;
+	},
 	async cacheAG(reset, prefix, id, mustBeActive = true) {
 		let result;
 		const cache = (reset) ? undefined : await myCache.get(`${prefix}:${id}`);

@@ -8580,6 +8580,60 @@ components:
         #keys:
         #  type: array
         #  description: These are the encryption keys of the authgroup. Manual entry is not recommended.
+        logEventGroups:
+          type: object
+          description: these groupings represent events that will either be written to console or streamed (depending on config) when true
+          properties:
+            general:
+              type: boolean
+            accessToken:
+              type: boolean
+            authorization:
+              type: boolean
+            backchannel:
+              type: boolean
+            clientCredentials:
+              type: boolean
+            deviceCode:
+              type: boolean
+            session:
+              type: boolean
+            grant:
+              type: boolean
+            iat:
+              type: boolean
+            uiInteraction:
+              type: boolean
+            replayDetection:
+              type: boolean
+            pushedAuthorization:
+              type: boolean
+            refreshToken:
+              type: boolean
+            registration:
+              type: boolean
+            account:
+              type: boolean
+            group:
+              type: boolean
+            pluginNotification:
+              type: boolean
+            organization:
+              type: boolean
+            domain:
+              type: boolean
+            product:
+              type: boolean
+            access:
+              type: boolean
+            role:
+              type: boolean
+            permission:
+              type: boolean
+            orgProfile:
+              type: boolean
+            securedProfile:
+              type: boolean
         ttl:
           type: object
           description: milliseconds before expiration on all properties
