@@ -9,7 +9,6 @@ import dal from '../src/api/authGroup/dal';
 import group from '../src/api/authGroup/group';
 import { AccountMocks, GroupMocks, PluginMocks, Tokens } from './models';
 import t from './testhelper';
-import Group from "../src/api/authGroup/model";
 
 const mockingoose = require('mockingoose');
 
