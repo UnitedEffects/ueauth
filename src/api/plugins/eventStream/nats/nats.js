@@ -17,6 +17,7 @@ export default {
 		let nc, jwt;
 		try {
 			const connectionSettings = {
+				name: 'ueauth-one-off',
 				servers: provider.streamUrl,
 				debug: (config.ENV !== 'production')
 			};
