@@ -72,5 +72,19 @@ export default {
 		settings = latest;
 		const stream = await generalInterfaceSelector(settings.eventStream.provider.type);
 		return stream.clean();
+	},
+	async describe(latest) {
+		let settings;
+		if(!latest) settings = await plugins.getLatestPluginOptions();
+		settings = latest;
+		const stream = await generalInterfaceSelector(settings.eventStream.provider.type);
+		return stream.describe();
+	},
+	async startup(latest) {
+		let settings;
+		if(!latest) settings = await plugins.getLatestPluginOptions();
+		settings = latest;
+		const stream = await generalInterfaceSelector(settings.eventStream.provider.type);
+		return stream.startup(settings?.eventStream?.provider);
 	}
 };

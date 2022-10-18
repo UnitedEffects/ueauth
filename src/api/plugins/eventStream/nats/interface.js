@@ -1,8 +1,10 @@
 import Boom from '@hapi/boom';
 import { v4 as uuid } from 'uuid';
-import NATS from './clientSingleton';
-import cache from './cache';
-
+//import NATS from './clientSingleton';
+//import cache from './cache1';
+import n from './cache/nats';
+import napi from './nats';
+import Nats from './startup';
 
 export default {
 	async validateSettings(provider) {
@@ -43,17 +45,60 @@ export default {
 		};
 	},
 	async publishMaster(group, emit, provider) {
-		const { subject, streamName } = getMasterStreamSub(group, provider.masterStream.streamPath);
-		return safePub(emit, subject, streamName, provider);
+		const nats = n.getInstance();
+		const {subject, streamName} = getMasterStreamSub(group, provider.masterStream.streamPath);
+		try {
+			if(process.env.UE_STREAM_EVENTS === 'on' && nats.nc) {
+				return pub(nats, emit, subject, streamName, provider);
+			}
+			throw new Error('STREAMING REQUESTED BUT IS NOT AVAILABLE - CHECK AG SETTINGS');
+		} catch (e) {
+			try {
+				console.info('attempting one off');
+				return napi.pushOneMessage(provider, emit, subject, streamName);
+			} catch (e) {
+				console.error(e);
+			}
+			throw new Error('STREAMING REQUESTED BUT IS NOT AVAILABLE - CHECK AG SETTINGS');
+		}
+
 	},
 	async publish(group, emit, provider) {
+		const nats = n.getInstance();
 		const streamName = provider.clientConfig.stream;
 		const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);
-		return safePub(emit, subject, streamName, provider);
+		try {
+			if(process.env.UE_STREAM_EVENTS === 'on' && nats.nc) {
+				console.info('publishing');
+				return pub(nats, emit, subject, streamName, provider);
+			}
+			throw Error;
+		} catch (e) {
+			try {
+				console.info('attempting one off');
+				return napi.pushOneMessage(provider, emit, subject, streamName);
+			} catch (e) {
+				console.error(e);
+			}
+			throw new Error('STREAMING REQUESTED BUT IS NOT AVAILABLE - CHECK AG SETTINGS');
+		}
 	},
-
 	async clean() {
-		await NATS.drainInstance();
+		const nats = n.getInstance();
+		if(nats.nc) {
+			await nats.nc.drain();
+		}
+	},
+	async describe() {
+		return {
+			name: 'nats',
+			startup: true
+		};
+	},
+	async startup(provider) {
+		console.info('calling startup');
+		const nats = new Nats(provider);
+		return nats.connect();
 	}
 };
 
@@ -66,41 +111,8 @@ function getMasterStreamSub(groupId, path) {
 	};
 }
 
-async function pub(nats, emit, subject, streamName, provider) {
+async function pub(nats, emit, subject, streamName) {
 	const data = (typeof emit === 'object') ? JSON.stringify(emit) : emit;
 	const options = { msgID: uuid(), expect: { streamName } };
-	try {
-		await nats.js.publish(subject, nats.sc.encode(data), options);
-	} catch (e) {
-		await cache.clearJwt();
-		try {
-			NATS.resetInstance(true);
-			NATS.getInstance(provider);
-			return oneOff(provider, emit, subject, streamName);
-		} catch(e) {
-			console.info(e);
-			throw e;
-		}
-	}
-}
-
-async function safePub(emit, subject, streamName, provider) {
-	let nats = await NATS.getInstance(provider, {
-		subject,
-		streamName,
-		data: emit
-	});
-	if(nats.js) {
-		return pub(nats, emit, subject, streamName, provider);
-	}
-	throw new Error('STREAMING NOT CURRENTLY AVAILABLE');
-}
-
-async function oneOff(provider, emit, subject, streamName) {
-	console.info('attempting one off write');
-	try {
-		return NATS.pushOneMessage(provider, emit, subject, streamName);
-	} catch(e) {
-		throw new Error('NATS NOT OPERATIONAL');
-	}
+	return nats.js.publish(subject, nats.sc.encode(data), options);
 }

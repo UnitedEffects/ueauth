@@ -47,11 +47,13 @@ class PulsarClient {
 			if(auth) clientConfig['authentication'] = auth;
 			PulsarClient.instance = new Pulsar.Client(clientConfig);
 		}
+		process.env.UE_STREAM_EVENTS = 'on';
 		return PulsarClient.instance;
 	}
 	
 	static closeInstance() {
 		if (PulsarClient.instance) {
+			process.env.UE_STREAM_EVENTS = 'off';
 			PulsarClient.instance.close();
 		}
 	}

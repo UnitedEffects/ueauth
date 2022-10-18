@@ -4,6 +4,8 @@ require('regenerator-runtime');
 const app = require('../app').default;
 
 const connection = require('../connection').default;
+const plugins = require('../api/plugins/plugins').default;
+
 const config = require('../config');
 
 let mongoConnect = config.MONGO;
@@ -42,6 +44,14 @@ function onError(error) {
 }
 
 console.info(`Connection string: ${mongoConnect}`);
+
+connection.onConnect( () => {
+	plugins.checkEventStreamingOnStartup().catch((error) => {
+		console.error('COULD NOT ESTABLISH STREAM CONNECTION AS DESCRIBED BY PROVIDER');
+		//console.info(error);
+	});
+});
+
 connection.create(mongoConnect, config.REPLICA);
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);

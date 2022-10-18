@@ -142,4 +142,15 @@ export default {
 		await Client.closeInstance();
 		await pulsarProducers.clearAll();
 	},
+	async describe() {
+		return {
+			name: 'pulsar',
+			startup: false,
+			namespace: NAMESPACE,
+			topic: TOPIC
+		};
+	},
+	async startup(provider) {
+		return null;
+	}
 };
