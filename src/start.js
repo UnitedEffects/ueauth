@@ -1,7 +1,7 @@
 const app = require('./app').default;
 
 const connection = require('./connection').default;
-const plugins = require('../api/plugins/plugins').default;
+const plugins = require('./api/plugins/plugins').default;
 
 const config = require('./config');
 
