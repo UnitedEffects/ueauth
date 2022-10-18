@@ -46,7 +46,7 @@ class NatsConnector {
 			//todo configurations to allow non-auth...
 			this.jwt = await this.getJwt();
 			this.creds = creds(this.seed, this.jwt);
-			this.nc = await connect({ name: 'ueauth', servers: this.nats, authenticator: credsAuthenticator(new TextEncoder().encode(this.creds)), inboxPrefix: this.inbox, debug: this.debug });
+			this.nc = await connect({ name: `ueauth-${config.ENV}`, servers: this.nats, authenticator: credsAuthenticator(new TextEncoder().encode(this.creds)), inboxPrefix: this.inbox, debug: this.debug });
 			this.js = await this.nc.jetstream();
 			this.jsm = await this.nc.jetstreamManager();
 			await this.jsm.streams.info(this.stream);
