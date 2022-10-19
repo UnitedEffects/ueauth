@@ -72,7 +72,7 @@ class NatsConnector {
 				console.info('THERE WAS A PROBLEM CONNECTING TO NATS - SETTING UP RETRY FOR 20 ATTEMPTS');
 				setTimeout(async () => {
 					if(this.count < 20) {
-						console.info(`Trying again - ${this.count}`);
+						console.info(`Trying startup nats connection again - ${this.count}`);
 						this.count = this.count + 1;
 						await this.connect();
 					} else console.info('20 attempts failed, giving up until restart');
@@ -136,10 +136,10 @@ function creds(seed, jwt) {
 async function getSecretJwt(id, secret, aud, minutes = 1) {
 	const clientSecret = secret;
 	const clientId = id;
-
+	const expVariable = Math.floor(Math.random() * 60) + 30;
 	const claims = {
 		iat: Math.floor(Date.now()/1000),
-		exp: Math.floor(Date.now()/1000 + (minutes*60)),
+		exp: Math.floor(Date.now()/1000 + (minutes*expVariable)),
 		iss: clientId,
 		aud,
 		sub: clientId,
