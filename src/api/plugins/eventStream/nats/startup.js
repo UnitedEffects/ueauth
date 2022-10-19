@@ -1,17 +1,11 @@
 import {connect, credsAuthenticator, StringCodec} from 'nats';
-import axios from 'axios';
-import { v4 as uuid } from 'uuid';
-import JWT from 'jsonwebtoken';
-import qs from 'querystring';
 import cache from './cache/cache';
 import n from './cache/nats';
+import napi from './nats';
 import cl from '../../../oidc/client/clients';
 const config = require('../../../../config');
 
-const CACHE_NAME = 'NATS';
-const CACHE_KEY = 'nats-jwt';
-const CACHE_CLIENT_SECRET_KEY = 'nats-client-secret';
-const CLIENT_ASSERTION_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+const { CACHE_NAME, NATS_CACHE_KEY, NATS_CACHE_CLIENT_SECRET_KEY } = napi.keys();
 const sc = StringCodec();
 
 class NatsConnector {
@@ -25,14 +19,14 @@ class NatsConnector {
 		this.natsCId = provider.auth?.clientId;
 		this.stream = provider.clientConfig.stream;
 		this.count = 0;
-		this.debug = true; //(config.ENV !== 'production');
+		this.debug = (config.ENV !== 'production');
 	}
 	async connect() {
 		try {
-			await cache.clear(CACHE_NAME, CACHE_KEY);
+			await cache.clear(CACHE_NAME, NATS_CACHE_KEY);
 			n.clearInstance();
 			if(this.nc) await this.nc.close();
-			this.natsCSecret = await cache.find(CACHE_NAME, CACHE_CLIENT_SECRET_KEY);
+			this.natsCSecret = await cache.find(CACHE_NAME, NATS_CACHE_CLIENT_SECRET_KEY);
 			if(!this.natsCSecret) {
 				const c = await cl.getOneByAgId(this.group, this.natsCId);
 				if(!c) throw new Error(`Could not authorize nats - Core Client ${this.natsCId} not found`);
@@ -40,12 +34,12 @@ class NatsConnector {
 				if(client?.payload?.client_secret) {
 					this.natsCSecret = client.payload?.client_secret;
 					if(!this.natsCSecret) throw new Error('Could not find the client secret');
-					await cache.set(CACHE_NAME, CACHE_CLIENT_SECRET_KEY, this.natsCSecret);
+					await cache.set(CACHE_NAME, NATS_CACHE_CLIENT_SECRET_KEY, this.natsCSecret);
 				}
 			}
 			//todo configurations to allow non-auth...
 			this.jwt = await this.getJwt();
-			this.creds = creds(this.seed, this.jwt);
+			this.creds = napi.credentials(this.seed, this.jwt);
 			this.nc = await connect({ name: `ueauth-${config.ENV}-${config.VERSION}`, servers: this.nats, authenticator: credsAuthenticator(new TextEncoder().encode(this.creds)), inboxPrefix: this.inbox, debug: this.debug });
 			this.js = await this.nc.jetstream();
 			this.jsm = await this.nc.jetstreamManager();
@@ -84,100 +78,22 @@ class NatsConnector {
 	}
 	async getJwt() {
 		try {
-			let uJwt = await cache.find(CACHE_NAME, CACHE_KEY);
+			let uJwt = await cache.find(CACHE_NAME, NATS_CACHE_KEY);
 			if(uJwt) return uJwt;
 			const url = this.natsJwtIssuer;
 			const clientId = this.natsCId;
 			const userPublicKey = this.upk;
-			const expires = 3600;
+			const expires = 86400;
 			const group = this.group;
 			const secret = this.natsCSecret;
-			const token = await getCC(group, url, clientId, secret);
-			if(!token) throw new Error('Unable to get a token');
-			const options = {
-				method: 'post',
-				url: `${url}/api/${group}/shared/simple/access-op/jwt`,
-				headers: {
-					'content-type': 'application/json',
-					'authorization': `bearer ${token}`
-				},
-				data: {
-					publicKey: userPublicKey,
-					coreClientId: clientId,
-					expires
-				}
-			};
-			const result = await axios(options);
+			const result = await napi.callJWTIssuer(group, url, clientId, secret, userPublicKey, expires);
 			if(!result?.data?.data?.jwt) throw new Error('Unable to get a NATS user jwt');
-			await cache.set(CACHE_NAME, CACHE_KEY, result.data.data.jwt, expires);
+			await cache.set(CACHE_NAME, NATS_CACHE_KEY, result.data.data.jwt, expires);
 			return result.data.data.jwt;
 		} catch (error) {
 			console.error(error?.response?.data || error);
 			throw error;
 		}
-	}
-}
-
-function creds(seed, jwt) {
-	return `-----BEGIN NATS USER JWT-----
-    ${jwt}
-  ------END NATS USER JWT------
-
-************************* IMPORTANT *************************
-  NKEY Seed printed below can be used sign and prove identity.
-  NKEYs are sensitive and should be treated as secrets.
-
-  -----BEGIN USER NKEY SEED-----
-    ${seed}
-  ------END USER NKEY SEED------
-`;
-}
-
-async function getSecretJwt(id, secret, aud, minutes = 1) {
-	const clientSecret = secret;
-	const clientId = id;
-	const expVariable = Math.floor(Math.random() * 60) + 30;
-	const claims = {
-		iat: Math.floor(Date.now()/1000),
-		exp: Math.floor(Date.now()/1000 + (minutes*expVariable)),
-		iss: clientId,
-		aud,
-		sub: clientId,
-		jti: uuid()
-	};
-
-	return JWT.sign(claims, clientSecret);
-}
-
-async function getCC(group, issuer, id, secret) {
-	try {
-		const url = `${config.PROTOCOL}://${config.SWAGGER}/${group}/token`;
-		const aud = `${config.PROTOCOL}://${config.SWAGGER}/${group}`;
-		// below is for local debug only
-		//const url = `https://qa.uecore.io/${group}/token`;
-		//const aud = `https://qa.uecore.io/${group}`;
-
-		const jwt = await getSecretJwt(id, secret, aud);
-		const options = {
-			method: 'post',
-			url,
-			headers: {
-				'content-type': 'application/x-www-form-urlencoded'
-			},
-			data: qs.stringify({
-				grant_type: 'client_credentials',
-				client_assertion_type: CLIENT_ASSERTION_TYPE,
-				client_assertion: jwt,
-				audience: `${issuer}/api/${group}`,
-				scope: 'access'
-			})
-		};
-		const data = await axios(options);
-		return data?.data?.access_token;
-	} catch (error) {
-		if(error.isAxiosError) console.error(error?.response?.data);
-		else console.error(error);
-		throw error;
 	}
 }
 
