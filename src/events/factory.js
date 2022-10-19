@@ -229,7 +229,7 @@ function processProviderStream(provider, event, clean, group, UE = false) {
 				// not waiting for this
 				eStream.publish(AG, emit).catch((error) => {
 					console.error('UNABLE TO STREAM EXTERNALLY - NOT THROWING ERROR - OUTPUTTING TO CONSOLE INSTEAD');
-					if(config.ENV !== 'production') console.error(error);
+					if(config.ENV !== 'production') console.error(error?.response?.data || error);
 					console.info(JSON.stringify(emit, null, 2));
 				});
 			} else console.info(JSON.stringify(emit, null, 2));

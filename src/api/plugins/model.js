@@ -13,6 +13,7 @@ const authSchema = new mongoose.Schema({
 	jwtIssuer: String,
 	authGroup: String
 }, { strict: false, _id: false });
+
 const pluginConfig = new mongoose.Schema({
 	createdAt: {
 		type: Date,

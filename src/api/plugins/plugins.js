@@ -172,6 +172,17 @@ export default {
 	// @notTested
 	async auditPluginOptions() {
 		return dal.auditPluginOptions();
+	},
+	async checkEventStreamingOnStartup() {
+		const latest = await this.getLatestPluginOptions(true);
+		if(latest?.eventStream?.enabled === true) {
+			const describe = await eStream.describe(latest);
+			console.info(describe);
+			if(describe.startup === true) {
+				return eStream.startup(latest);
+			}
+		}
+		return null;
 	}
 };
 

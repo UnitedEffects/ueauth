@@ -3,9 +3,12 @@ const env = process.env.NODE_ENV || 'dev';
 const dir = (fs.existsSync('./.env')) ? '.env' : '.env_ci';
 const envVars = require(`../${dir}/env.${env}`);
 
+const p = require('../package.json');
+
 const config = {
 	// Simple assignment of the current environment: test, dev, qa, production, etc...
 	ENV: process.env.NODE_ENV || envVars.NODE_ENV || 'dev',
+	VERSION: p.version,
 	// Protocol for the deployed service: https vs http
 	PROTOCOL: process.env.PROTOCOL || envVars.PROTOCOL || 'http',
 	// Mongo connection string. Highly recommend this be encrypted as a secret in any deployment

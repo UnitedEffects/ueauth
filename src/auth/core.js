@@ -71,6 +71,8 @@ const core = {
 		}
 		if(!issuer.includes(decoded.iss)) {
 			// check iss
+			console.info('received iss: ', decoded.iss);
+			console.info('expected one of these - ', issuer);
 			throw Boom.unauthorized('Token issuer not recognized');
 		}
 		if(!decoded.group) {
