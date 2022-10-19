@@ -14,10 +14,11 @@ const CLIENT_ASSERTION_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-b
 
 export default {
 	async pushOneMessage(provider, data, subject, streamName) {
-		let nc, jwt;
+		let nc, jwt, connectionSettings;
+		let creds;
 		try {
-			const connectionSettings = {
-				name: `ueauth-one-off-${config.ENV}`,
+			connectionSettings = {
+				name: `ueauth-one-off-${config.ENV}-${config.VERSION}`,
 				servers: provider.streamUrl,
 				debug: (config.ENV !== 'production')
 			};
@@ -30,17 +31,23 @@ export default {
 				else {
 					jwt = await getJwt(provider.auth);
 				}
+				//todo delete
+				creds = credentials(seed, jwt);
 				connectionSettings.authenticator = credsAuthenticator(new TextEncoder().encode(credentials(seed, jwt)));
 			}
 			nc = await connect(connectionSettings);
 			const js = await nc.jetstream();
 			const sc = StringCodec();
 			const msg = (typeof data === 'object') ? JSON.stringify(data) : data;
+			console.info('publishing one off', JSON.stringify(data, null, 2));
 			const options = { msgID: uuid(), expect: { streamName } };
 			await js.publish(subject, sc.encode(msg), options);
 			await nc.drain();
 		} catch (error) {
 			if(nc) await nc.drain();
+			console.info('Something went wrong with one off pub', connectionSettings, error);
+			//todo delete
+			console.info(creds);
 			throw error;
 		}
 	}
@@ -50,9 +57,11 @@ function credentials(seed, jwt) {
 	return `-----BEGIN NATS USER JWT-----
     ${jwt}
   ------END NATS USER JWT------
+
 ************************* IMPORTANT *************************
   NKEY Seed printed below can be used sign and prove identity.
   NKEYs are sensitive and should be treated as secrets.
+
   -----BEGIN USER NKEY SEED-----
     ${seed}
   ------END USER NKEY SEED------
