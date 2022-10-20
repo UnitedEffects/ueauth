@@ -10,7 +10,8 @@ const et = {
 	},
 	emit(groupId, event, data) {
 		const e = `${event}:${groupId}`;
-		ueStreams.find(groupId).emit(e, data);
+		ueStreams.find(groupId)
+			.then((ues) => ues.emit(e, data));
 	},
 	async master(group, event, data) {
 		const emit = {

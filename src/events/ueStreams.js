@@ -26,11 +26,11 @@ class UEStreams {
 		this.streamList[agId] = new events.EventEmitter();
 		return this.streamList[agId];
 	}
-	find(agId) {
+	async find(agId) {
 		const myStream = this.streamList[agId];
 		if(!myStream) {
 			const ns = this.newStream(agId);
-			eventEmitter(ns, agId);
+			await eventEmitter(ns, agId);
 			return ns;
 		}
 		return myStream;

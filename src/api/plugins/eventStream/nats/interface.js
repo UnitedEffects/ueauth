@@ -66,8 +66,16 @@ export default {
 	},
 	async startup(provider) {
 		console.info('calling startup');
-		const nats = new Nats(provider);
-		return nats.connect();
+		let nCheck;
+		try {
+			nCheck = n.getInstance();
+		} catch (e) {
+			// do nothing;
+		}
+		if(!nCheck?.nc) {
+			const nats = new Nats(provider);
+			return nats.connect();
+		}
 	}
 };
 
