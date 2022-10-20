@@ -26,11 +26,11 @@ class UEStreams {
 		this.streamList[agId] = new events.EventEmitter();
 		return this.streamList[agId];
 	}
-	find(agId) {
+	async find(agId) {
 		const myStream = this.streamList[agId];
 		if(!myStream) {
 			const ns = this.newStream(agId);
-			eventEmitter(ns, agId);
+			await eventEmitter(ns, agId);
 			return ns;
 		}
 		return myStream;
@@ -43,11 +43,11 @@ async function eventEmitter(stream, groupId) {
 	console.info(`Building API Listeners for AG: ${groupId}`);
 	list.forEach((item) => {
 		if(factory.items[item]){
-			factory.items[item].forEach((event) => {
+			factory.items[item].forEach(async (event) => {
 				const e = `${event}:${groupId}`;
 				const temp = stream._events;
 				if(!Object.keys(temp).includes(e)) {
-					factory.processProviderStream(stream, e, clean, groupId, true);
+					await factory.processProviderStream(stream, e, clean, groupId, true);
 				}
 			});
 		}

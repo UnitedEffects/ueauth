@@ -47,6 +47,7 @@ export default {
 		await safePub(nats, emit, subject, streamName, provider);
 	},
 	async publish(group, emit, provider) {
+		console.info('called publish  -  ', emit);
 		const nats = n.getInstance();
 		const streamName = provider.clientConfig.stream;
 		const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);
@@ -66,8 +67,16 @@ export default {
 	},
 	async startup(provider) {
 		console.info('calling startup');
-		const nats = new Nats(provider);
-		return nats.connect();
+		let nCheck;
+		try {
+			nCheck = n.getInstance();
+		} catch (e) {
+			// do nothing;
+		}
+		if(!nCheck?.nc) {
+			const nats = new Nats(provider);
+			return nats.connect();
+		}
 	}
 };
 
