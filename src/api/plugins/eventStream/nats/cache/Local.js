@@ -2,7 +2,7 @@ import NodeCache from 'node-cache';
 import h from '../../../../../helper';
 
 const DEFAULT_TTL_S  = 60*60*24; //24h
-const MAX_ALLOWED = 10;
+const MAX_ALLOWED = 1000;
 
 class LocalCache {
 	constructor(name, ttl= DEFAULT_TTL_S, max = MAX_ALLOWED) {
@@ -25,6 +25,12 @@ class LocalCache {
 		const val = this.instance().get(key);
 		if(h.isJson(val)) return JSON.parse(val);
 		return val;
+	}
+	async stats() {
+		return this.instance().getStats();
+	}
+	async keys() {
+		return this.instance().keys();
 	}
 	async save(key, val, ttl = this.defaultTTL) {
 		const data = (typeof val === 'object' && h.isJson(JSON.stringify(val))) ? JSON.stringify(val) : val;

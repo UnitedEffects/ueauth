@@ -1,5 +1,4 @@
 import Boom from '@hapi/boom';
-import { v4 as uuid } from 'uuid';
 import n from './cache/nats';
 import napi from './nats';
 import Nats from './startup';
@@ -83,20 +82,26 @@ function getMasterStreamSub(groupId, path) {
 
 async function pub(nats, emit, subject, streamName) {
 	const data = (typeof emit === 'object') ? JSON.stringify(emit) : emit;
-	const options = { msgID: uuid(), expect: { streamName } };
-	return nats.js.publish(subject, nats.sc.encode(data), options);
+	const resp =  await napi.pub(nats, data, subject, streamName);
+	if(resp?.seq) {
+		await napi.sendBuffer();
+	}
+	return resp;
 }
 
 async function safePub(nats, emit, subject, streamName, provider) {
 	try {
 		if(process.env.UE_STREAM_EVENTS === 'on' && nats.nc) {
-			return pub(nats, emit, subject, streamName, provider);
+			const result = await pub(nats, emit, subject, streamName, provider);
+			if(result?.seq) {
+				return result;
+			}
 		}
 		throw Error;
 	} catch (e) {
 		try {
-			console.info('attempting one off');
-			return napi.pushOneMessage(provider, emit, subject, streamName);
+			console.info('attempting to buffer message for later');
+			return napi.bufferMessage(provider, emit, subject, streamName);
 		} catch (e) {
 			console.error(e.response?.data || e);
 		}

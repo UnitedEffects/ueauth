@@ -38,5 +38,5 @@ export default {
 	},
 	async getInstance(cName) {
 		return getInstance(cName);
-	}
+	},
 };
