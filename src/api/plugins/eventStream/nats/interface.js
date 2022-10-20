@@ -47,7 +47,6 @@ export default {
 		await safePub(nats, emit, subject, streamName, provider);
 	},
 	async publish(group, emit, provider) {
-		console.info('called publish  -  ', emit);
 		const nats = n.getInstance();
 		const streamName = provider.clientConfig.stream;
 		const subject = provider.clientConfig.subject.replace(/{authGroup}/g, group.id);

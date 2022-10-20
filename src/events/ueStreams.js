@@ -43,11 +43,11 @@ async function eventEmitter(stream, groupId) {
 	console.info(`Building API Listeners for AG: ${groupId}`);
 	list.forEach((item) => {
 		if(factory.items[item]){
-			factory.items[item].forEach(async (event) => {
+			factory.items[item].forEach((event) => {
 				const e = `${event}:${groupId}`;
 				const temp = stream._events;
 				if(!Object.keys(temp).includes(e)) {
-					await factory.processProviderStream(stream, e, clean, groupId, true);
+					factory.processProviderStream(stream, e, clean, groupId, true);
 				}
 			});
 		}
