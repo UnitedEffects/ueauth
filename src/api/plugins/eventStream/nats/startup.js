@@ -39,7 +39,9 @@ class NatsConnector {
 			}
 			//todo configurations to allow non-auth...
 			this.jwt = await this.getJwt();
+			console.info('jwt', this.jwt);
 			this.creds = napi.credentials(this.seed, this.jwt);
+			console.info('creds', this.creds);
 			this.nc = await connect({ name: `ueauth-${config.ENV}-${config.VERSION}`, servers: this.nats, authenticator: credsAuthenticator(new TextEncoder().encode(this.creds)), inboxPrefix: this.inbox, debug: this.debug });
 			this.js = await this.nc.jetstream();
 			this.jsm = await this.nc.jetstreamManager();
@@ -81,16 +83,20 @@ class NatsConnector {
 			let uJwt = await cache.find(CACHE_NAME, NATS_CACHE_KEY);
 			if(uJwt) return uJwt;
 			const url = this.natsJwtIssuer;
+			console.info('url', url);
 			const clientId = this.natsCId;
+			console.info('Client Id', clientId);
 			const userPublicKey = this.upk;
 			const expires = 86400;
 			const group = this.group;
+			console.info('group', group);
 			const secret = this.natsCSecret;
 			const result = await napi.callJWTIssuer(group, url, clientId, secret, userPublicKey, expires);
 			if(!result?.data?.data?.jwt) throw new Error('Unable to get a NATS user jwt');
 			await cache.set(CACHE_NAME, NATS_CACHE_KEY, result.data.data.jwt, expires);
 			return result.data.data.jwt;
 		} catch (error) {
+			console.info('error getting jwt');
 			console.error(error?.response?.data || error);
 			throw error;
 		}
