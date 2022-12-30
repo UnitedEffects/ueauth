@@ -5,7 +5,7 @@ mongoose.set('useCreateIndex', true);
 const permissionSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	createdBy: {
 		type: String,

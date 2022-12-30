@@ -19,11 +19,11 @@ const identitySchema = new mongoose.Schema({
 const accountSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedBy: {
 		type: String,

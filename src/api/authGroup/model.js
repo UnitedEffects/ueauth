@@ -100,11 +100,11 @@ const federatedOIDC = new mongoose.Schema({
 const authGroup = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	securityExpiration: {
 		type: Date,

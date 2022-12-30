@@ -17,7 +17,7 @@ const authSchema = new mongoose.Schema({
 const pluginConfig = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: Date.now,
 	},
 	createdBy: {
 		type: String,

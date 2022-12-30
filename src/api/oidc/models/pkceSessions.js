@@ -13,7 +13,7 @@ const payloadSchema = new mongoose.Schema({
 const pkceSession = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: Date.now,
 		expires: 100
 	},
 	_id: {

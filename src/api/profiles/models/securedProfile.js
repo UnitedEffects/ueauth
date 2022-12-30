@@ -6,7 +6,7 @@ mongoose.set('useCreateIndex', true);
 const profileSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	createdBy: {
 		type: String,
@@ -14,7 +14,7 @@ const profileSchema = new mongoose.Schema({
 	},
 	modifiedAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedBy: {
 		type: String,

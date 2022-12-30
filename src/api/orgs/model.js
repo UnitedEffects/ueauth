@@ -77,7 +77,7 @@ const federatedOIDC = new mongoose.Schema({
 const orgSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	createdBy: {
 		type: String,
@@ -85,7 +85,7 @@ const orgSchema = new mongoose.Schema({
 	},
 	modifiedAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedBy: {
 		type: String,

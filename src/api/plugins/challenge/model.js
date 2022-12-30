@@ -6,7 +6,7 @@ mongoose.set('useCreateIndex', true);
 const transactionChallengeSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: Date.now,
 		expires: 600
 	},
 	_id: {

@@ -6,7 +6,7 @@ mongoose.set('useCreateIndex', true);
 const requestProfile = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: Date.now,
 		expires: '7d'
 	},
 	createdBy: {
@@ -15,7 +15,7 @@ const requestProfile = new mongoose.Schema({
 	},
 	modifiedAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedBy: {
 		type: String,
