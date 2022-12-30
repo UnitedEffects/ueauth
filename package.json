@@ -92,7 +92,7 @@
     "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",
     "pug": "^3.0.1",
-    "qs": "^6.10.1",
+    "qs": "^6.10.3",
     "serverless-http": "^2.3.2",
     "uuid": "^8.3.2",
     "yamljs": "^0.3.0"
