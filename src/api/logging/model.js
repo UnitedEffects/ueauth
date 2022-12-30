@@ -5,7 +5,7 @@ mongoose.set('useCreateIndex', true);
 const logSchema = new mongoose.Schema({
 	logTimestamp: {
 		type: Date,
-		default: Date.now(),
+		default: Date.now,
 		expires: '30d'
 	},
 	code: {

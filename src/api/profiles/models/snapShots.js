@@ -6,7 +6,7 @@ mongoose.set('useCreateIndex', true);
 const snapShotSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now(),
+		default: Date.now,
 		expires: '24h'
 	},
 	createdBy: {

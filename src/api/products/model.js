@@ -15,7 +15,7 @@ const metaSchema = new mongoose.Schema({
 const productSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	createdBy: {
 		type: String,
@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema({
 	},
 	modifiedAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now
 	},
 	modifiedBy: {
 		type: String,
