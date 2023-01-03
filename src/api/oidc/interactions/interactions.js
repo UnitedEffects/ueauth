@@ -48,7 +48,8 @@ const api = {
 			});
 		}
 		const loginButtons = loginOptions.filter((option) => {
-			return (client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
+			//todo remove not
+			return (!client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
 		});
 		const altLogin = (params.passwordless === true || loginButtons.length !== 0);
 		return {

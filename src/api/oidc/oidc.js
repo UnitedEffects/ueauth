@@ -122,8 +122,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},
 			backchannelLogout: {
-				enabled: true,
-				ack: 'draft-07'
+				enabled: true
 			},
 			rpInitiatedLogout: {
 				enabled: true,

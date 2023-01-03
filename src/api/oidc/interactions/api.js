@@ -15,6 +15,7 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
+import saml2 from 'saml2-js';
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -228,6 +229,12 @@ const api = {
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
 					return next();
+				case 'saml':
+					console.info('here...');
+					console.info(spec);
+					req.authSpec = spec;
+					req.fedConfig = myConfig;
+					return next();
 				default:
 					throw Boom.badRequest('unknown specification for SSO requested');
 				}
@@ -257,6 +264,48 @@ const api = {
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
 			switch (req.authSpec.toLowerCase()) {
+			case 'saml':
+				const certificate = '-----BEGIN CERTIFICATE-----\n' +
+					'MIIC4jCCAcoCCQC33wnybT5QZDANBgkqhkiG9w0BAQsFADAyMQswCQYDVQQGEwJV\n' +
+					'SzEPMA0GA1UECgwGQm94eUhRMRIwEAYDVQQDDAlNb2NrIFNBTUwwIBcNMjIwMjI4\n' +
+					'MjE0NjM4WhgPMzAyMTA3MDEyMTQ2MzhaMDIxCzAJBgNVBAYTAlVLMQ8wDQYDVQQK\n' +
+					'DAZCb3h5SFExEjAQBgNVBAMMCU1vY2sgU0FNTDCCASIwDQYJKoZIhvcNAQEBBQAD\n' +
+					'ggEPADCCAQoCggEBALGfYettMsct1T6tVUwTudNJH5Pnb9GGnkXi9Zw/e6x45DD0\n' +
+					'RuRONbFlJ2T4RjAE/uG+AjXxXQ8o2SZfb9+GgmCHuTJFNgHoZ1nFVXCmb/Hg8Hpd\n' +
+					'4vOAGXndixaReOiq3EH5XvpMjMkJ3+8+9VYMzMZOjkgQtAqO36eAFFfNKX7dTj3V\n' +
+					'pwLkvz6/KFCq8OAwY+AUi4eZm5J57D31GzjHwfjH9WTeX0MyndmnNB1qV75qQR3b\n' +
+					'2/W5sGHRv+9AarggJkF+ptUkXoLtVA51wcfYm6hILptpde5FQC8RWY1YrswBWAEZ\n' +
+					'NfyrR4JeSweElNHg4NVOs4TwGjOPwWGqzTfgTlECAwEAATANBgkqhkiG9w0BAQsF\n' +
+					'AAOCAQEAAYRlYflSXAWoZpFfwNiCQVE5d9zZ0DPzNdWhAybXcTyMf0z5mDf6FWBW\n' +
+					'5Gyoi9u3EMEDnzLcJNkwJAAc39Apa4I2/tml+Jy29dk8bTyX6m93ngmCgdLh5Za4\n' +
+					'khuU3AM3L63g7VexCuO7kwkjh/+LqdcIXsVGO6XDfu2QOs1Xpe9zIzLpwm/RNYeX\n' +
+					'UjbSj5ce/jekpAw7qyVVL4xOyh8AtUW1ek3wIw1MJvEgEPt0d16oshWJpoS1OT8L\n' +
+					'r/22SvYEo3EmSGdTVGgk3x3s+A0qWAqTcyjr7Q4s/GKYRFfomGwz0TZ4Iw1ZN99M\n' +
+					'm0eo2USlSRTVl7QHRTuiuSThHpLKQQ==\n' +
+					'-----END CERTIFICATE-----\n'
+				const sp_options = {
+					entity_id: 'https://saml.example.com/entityid',
+					private_key: 'test-key',
+					certificate,
+					assert_endpoint: "https://sp.example.com/assert"
+				};
+				const sp = new saml2.ServiceProvider(sp_options);
+				console.info(sp);
+				const idp_options = {
+					sso_login_url: "https://mocksaml.com/saml/login",
+					sso_logout_url: "https://mocksaml.com/saml/logout",
+					certificates: [certificate]
+				};
+				const idp = new saml2.IdentityProvider(idp_options);
+				return sp.create_login_request_url(idp, {}, function(err, login_url, request_id) {
+					if (err != null) {
+						console.info('error', err);
+						return res.sendStatus(303);
+					}
+					console.info(login_url);
+					console.info(request_id);
+					return res.redirect(login_url);
+				});
 			case 'oidc': {
 				const callbackParams = req.authClient.callbackParams(req);
 				const myConfig = req.fedConfig;
