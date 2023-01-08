@@ -246,9 +246,15 @@ const api = {
 	},
 	async postCallBackLogin(req, res, next) {
 		try {
+			console.info('post', JSON.stringify(req.body, null, 2));
+			const body = JSON.parse(JSON.stringify(req.body));
+			//if SAML, mapping state
+			if(req.body?.RelayState && !req.body?.state) {
+				body.state = req.body.RelayState
+			}
 			let path = `${req.path}?`;
-			Object.keys(req.body).map((key) => {
-				path = `${path}${key}=${req.body[key]}&`;
+			Object.keys(body).map((key) => {
+				path = `${path}${key}=${body[key]}&`;
 			});
 			return res.redirect(path);
 		} catch (error) {
@@ -263,42 +269,91 @@ const api = {
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
+			const myConfig = req.fedConfig;
 			switch (req.authSpec.toLowerCase()) {
-			case 'saml':
-				const certificate = '-----BEGIN CERTIFICATE-----\n' +
-					'MIIC4jCCAcoCCQC33wnybT5QZDANBgkqhkiG9w0BAQsFADAyMQswCQYDVQQGEwJV\n' +
-					'SzEPMA0GA1UECgwGQm94eUhRMRIwEAYDVQQDDAlNb2NrIFNBTUwwIBcNMjIwMjI4\n' +
-					'MjE0NjM4WhgPMzAyMTA3MDEyMTQ2MzhaMDIxCzAJBgNVBAYTAlVLMQ8wDQYDVQQK\n' +
-					'DAZCb3h5SFExEjAQBgNVBAMMCU1vY2sgU0FNTDCCASIwDQYJKoZIhvcNAQEBBQAD\n' +
-					'ggEPADCCAQoCggEBALGfYettMsct1T6tVUwTudNJH5Pnb9GGnkXi9Zw/e6x45DD0\n' +
-					'RuRONbFlJ2T4RjAE/uG+AjXxXQ8o2SZfb9+GgmCHuTJFNgHoZ1nFVXCmb/Hg8Hpd\n' +
-					'4vOAGXndixaReOiq3EH5XvpMjMkJ3+8+9VYMzMZOjkgQtAqO36eAFFfNKX7dTj3V\n' +
-					'pwLkvz6/KFCq8OAwY+AUi4eZm5J57D31GzjHwfjH9WTeX0MyndmnNB1qV75qQR3b\n' +
-					'2/W5sGHRv+9AarggJkF+ptUkXoLtVA51wcfYm6hILptpde5FQC8RWY1YrswBWAEZ\n' +
-					'NfyrR4JeSweElNHg4NVOs4TwGjOPwWGqzTfgTlECAwEAATANBgkqhkiG9w0BAQsF\n' +
-					'AAOCAQEAAYRlYflSXAWoZpFfwNiCQVE5d9zZ0DPzNdWhAybXcTyMf0z5mDf6FWBW\n' +
-					'5Gyoi9u3EMEDnzLcJNkwJAAc39Apa4I2/tml+Jy29dk8bTyX6m93ngmCgdLh5Za4\n' +
-					'khuU3AM3L63g7VexCuO7kwkjh/+LqdcIXsVGO6XDfu2QOs1Xpe9zIzLpwm/RNYeX\n' +
-					'UjbSj5ce/jekpAw7qyVVL4xOyh8AtUW1ek3wIw1MJvEgEPt0d16oshWJpoS1OT8L\n' +
-					'r/22SvYEo3EmSGdTVGgk3x3s+A0qWAqTcyjr7Q4s/GKYRFfomGwz0TZ4Iw1ZN99M\n' +
-					'm0eo2USlSRTVl7QHRTuiuSThHpLKQQ==\n' +
-					'-----END CERTIFICATE-----\n'
+				case 'saml':
+				console.info(req.body);
+				console.info(req.params);
+				console.info(req.query);
+				const certificate = 'SECRET CERT' //in debug file
+
+				//todo cert and private_key for SP are different than IDP. work on that.
 				const sp_options = {
-					entity_id: 'https://saml.example.com/entityid',
+					entity_id: 'https://qa.ueauth.io',
 					private_key: 'test-key',
 					certificate,
-					assert_endpoint: "https://sp.example.com/assert"
+					assert_endpoint: "https://qa.ueauth.io/root/interaction/callback/saml/custom/saml-1",
+					//audience: 'https://testing.com',
+					force_authn: false, //
+					//auth_context: { comparison: "exact", class_refs: ["urn:oasis:names:tc:SAML:1.0:am:password"] },
+					//nameid_format: "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+					//sign_get_request: false,
+					allow_unencrypted_assertion: true
 				};
 				const sp = new saml2.ServiceProvider(sp_options);
-				console.info(sp);
 				const idp_options = {
-					sso_login_url: "https://mocksaml.com/saml/login",
-					sso_logout_url: "https://mocksaml.com/saml/logout",
+					sso_login_url: "https://accounts.google.com/o/saml2/idp?idpid=C030bepx0",
+					sso_logout_url: "https://accounts.google.com/o/saml2/idp?idpid=C030bepx0",
 					certificates: [certificate]
 				};
 				const idp = new saml2.IdentityProvider(idp_options);
-				return sp.create_login_request_url(idp, {}, function(err, login_url, request_id) {
-					if (err != null) {
+				if(req.body?.SAMLResponse) {
+					console.info('THIS IS A RESPONSE');
+					const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
+					if(state !== req.body.state) {
+						console.error(`Unexpected Session State: ${state} vs. ${req.body.state}`);
+						return res.render('login/login',
+							interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
+								{
+									...params,
+									login_hint: req.body.email
+								}, 'Security issue with federated login - try again later.'));
+
+					}
+					const options = {request_body: req.body};
+					return sp.post_assert(idp, options, async function(err, saml_response) {
+						//todo need to try/catch this or async the parent...
+						if (err) {
+							console.info('error', err);
+							return res.sendStatus(500);
+						}
+
+						// todo Save name_id and session_index for logout
+						// todo Note:  In practice these should be saved in the user session, not globally.
+						const name_id = saml_response.user.name_id;
+						const session_index = saml_response.user.session_index;
+
+						console.info(JSON.stringify(saml_response, null, 2));
+
+						const account = await Account.findByFederated(authGroup,
+							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+							{
+								id: name_id,
+								email: (saml_response.user.attributes.email) ?
+									(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length) ?
+										saml_response.user.attributes.email[0] : saml_response.user.attributes.email : name_id,
+								...saml_response.user.attributes
+							}, req.providerOrg);
+
+						console.info(account);
+
+						const result = {
+							login: {
+								accountId: account.accountId,
+							},
+						};
+						return provider.interactionFinished(req, res, result, {
+							mergeWithLastSubmission: false,
+						});
+					});
+				}
+				const relay_state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
+				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
+				return sp.create_login_request_url(idp, {
+					relay_state
+				}, function(err, login_url, request_id) {
+					if (err) {
 						console.info('error', err);
 						return res.sendStatus(303);
 					}
@@ -308,7 +363,7 @@ const api = {
 				});
 			case 'oidc': {
 				const callbackParams = req.authClient.callbackParams(req);
-				const myConfig = req.fedConfig;
+				//const myConfig = req.fedConfig;
 				callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if (!Object.keys(callbackParams).length) {
 					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
@@ -395,7 +450,7 @@ const api = {
 			}
 			case 'oauth2':
 				// we are only supporting authorization_code for oauth2 for now
-				const myConfig = req.fedConfig;
+				//const myConfig = req.fedConfig;
 				let state;
 				let issuer;
 				let profile;

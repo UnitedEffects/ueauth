@@ -54,26 +54,28 @@ html
             div(id='loading')
         script(nonce=nonce).
             function parseQuery(queryString) {
-                var query = {};
-                var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+                const query = {};
+                const pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
                 //todo if pairs
-                for (var i = 0; i < pairs.length; i++) {
-                    var pair = pairs[i].split('=');
-                    query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+                for (let i = 0; i < pairs.length; i++) {
+                    if(pairs[i] && pairs[i].includes('=')){
+                        let pair = pairs[i].split('=');
+                        console.info('pair', pair);
+                        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+                    }
                 }
                 return query;
             }
-            var fields = parseQuery(window.location.search || window.location.hash.slice(1));
+            const fields = parseQuery(window.location.search || window.location.hash.slice(1));
             fields.upstream = '#{upstream}'
-            console.log(fields);
-            var uid = fields.state.split('|')[0]
-            var authGroup = '#{authGroup}'
-            var form = document.createElement('form');
+            const uid = fields.state.split('|')[0]
+            const authGroup = '#{authGroup}'
+            const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/' + authGroup + '/interaction/' + uid + '/federated';
             Object.keys(fields).forEach((key) => {
                 if (key) { // empty fragment will yield {"":""};
-                    var input = document.createElement('input');
+                    const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = key;
                     input.value = fields[key];
@@ -82,7 +84,7 @@ html
             });
             document.body.appendChild(form);
             try {
-                var url = window.location.href.slice(0, -Math.max(window.location.hash.length, 1));
+                const url = window.location.href.slice(0, -Math.max(window.location.hash.length, 1));
                 window.history.replaceState({}, window.document.title, url);
             } catch(err) {
                 console.log('error');
