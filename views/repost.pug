@@ -60,7 +60,6 @@ html
                 for (let i = 0; i < pairs.length; i++) {
                     if(pairs[i] && pairs[i].includes('=')){
                         let pair = pairs[i].split('=');
-                        console.info('pair', pair);
                         query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
                     }
                 }

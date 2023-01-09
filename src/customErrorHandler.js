@@ -27,6 +27,8 @@ export default {
 			const nE = await log.record(error, config.PERSIST_HTTP_ERRORS);
 			error.id = nE._id || nE.id;
 			if(nE.persisted === false) error.persisted = false;
+			//todo delete
+			console.error('oidc logger', error);
 			return error;
 		} catch (error) {
 			console.error('issue parsing oidc error');

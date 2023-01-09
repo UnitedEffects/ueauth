@@ -48,6 +48,7 @@ const api = {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
+			console.info('AUTHORIZE', intDetails);
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
@@ -58,7 +59,7 @@ const api = {
 			}
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
-
+			console.info('AUTH CLIENT', client);
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
@@ -89,6 +90,11 @@ const api = {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
+				console.info('session', session);
+				console.info('client', client);
+				console.info('prompt', prompt);
+				console.info('uid', uid);
+				console.info('params', params);
 				return res.render('interaction/interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
@@ -229,11 +235,30 @@ const api = {
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
 					return next();
-				case 'saml':
-					console.info('here...');
-					console.info(spec);
+					case 'saml':
+					//todo cert and private_key for SP are different than IDP. work on that.
+					//todo metadata file...
+					const assert_endpoint = `${req.provider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
+					const sp_options = {
+						entity_id:  req.provider.issuer,
+						private_key: 'test-key',
+						certificate: myConfig.certificates[0],
+						assert_endpoint
+					};
+					const sp = new saml2.ServiceProvider(sp_options);
+					const idp_options = {
+						sso_login_url: myConfig.ssoLoginUrl,
+						sso_logout_url: myConfig.ssoLogoutUrl,
+						certificates: myConfig.certificates,
+						sign_get_request: myConfig.signRequest,
+						allow_unencrypted_assertion: myConfig.allowUnencryptedAssertion,
+						force_authn: myConfig.forceLogin
+					};
+					const idp = new saml2.IdentityProvider(idp_options);
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
+					req.samlSP = sp;
+					req.samlIdP = idp;
 					return next();
 				default:
 					throw Boom.badRequest('unknown specification for SSO requested');
@@ -246,9 +271,8 @@ const api = {
 	},
 	async postCallBackLogin(req, res, next) {
 		try {
-			console.info('post', JSON.stringify(req.body, null, 2));
 			const body = JSON.parse(JSON.stringify(req.body));
-			//if SAML, mapping state
+			// If this is a SAML post, map the RelayState to state
 			if(req.body?.RelayState && !req.body?.state) {
 				body.state = req.body.RelayState
 			}
@@ -264,106 +288,95 @@ const api = {
 	async federated(req, res, next) {
 		try {
 			const provider = req.provider;
-			const { prompt: { name } } = await provider.interactionDetails(req, res);
-			assert.equal(name, 'login');
+			//const { prompt: { name } } = await provider.interactionDetails(req, res);
+			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const client = await provider.Client.find(params.client_id);
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
 			const myConfig = req.fedConfig;
-			switch (req.authSpec.toLowerCase()) {
-				case 'saml':
-				console.info(req.body);
-				console.info(req.params);
-				console.info(req.query);
-				const certificate = 'SECRET CERT' //in debug file
 
-				//todo cert and private_key for SP are different than IDP. work on that.
-				const sp_options = {
-					entity_id: 'https://qa.ueauth.io',
-					private_key: 'test-key',
-					certificate,
-					assert_endpoint: "https://qa.ueauth.io/root/interaction/callback/saml/custom/saml-1",
-					//audience: 'https://testing.com',
-					force_authn: false, //
-					//auth_context: { comparison: "exact", class_refs: ["urn:oasis:names:tc:SAML:1.0:am:password"] },
-					//nameid_format: "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
-					//sign_get_request: false,
-					allow_unencrypted_assertion: true
-				};
-				const sp = new saml2.ServiceProvider(sp_options);
-				const idp_options = {
-					sso_login_url: "https://accounts.google.com/o/saml2/idp?idpid=C030bepx0",
-					sso_logout_url: "https://accounts.google.com/o/saml2/idp?idpid=C030bepx0",
-					certificates: [certificate]
-				};
-				const idp = new saml2.IdentityProvider(idp_options);
+			switch (req.authSpec.toLowerCase()) {
+			case 'saml':
+				const samlError = () => res.render('login/login',
+					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
+						{
+							...params
+						}, 'Security issue with SAML federated login - try again later.'));
+				const sp = req.samlSP;
+				const idp =	req.samlIdP;
 				if(req.body?.SAMLResponse) {
-					console.info('THIS IS A RESPONSE');
+					// Callback
 					const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
+
 					if(state !== req.body.state) {
 						console.error(`Unexpected Session State: ${state} vs. ${req.body.state}`);
-						return res.render('login/login',
-							interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
-								{
-									...params,
-									login_hint: req.body.email
-								}, 'Security issue with federated login - try again later.'));
-
+						return samlError();
 					}
+
 					const options = {request_body: req.body};
-					return sp.post_assert(idp, options, async function(err, saml_response) {
-						//todo need to try/catch this or async the parent...
-						if (err) {
-							console.info('error', err);
-							return res.sendStatus(500);
-						}
 
-						// todo Save name_id and session_index for logout
-						// todo Note:  In practice these should be saved in the user session, not globally.
-						const name_id = saml_response.user.name_id;
-						const session_index = saml_response.user.session_index;
-
-						console.info(JSON.stringify(saml_response, null, 2));
-
-						const account = await Account.findByFederated(authGroup,
-							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-							{
-								id: name_id,
-								email: (saml_response.user.attributes.email) ?
-									(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length) ?
-										saml_response.user.attributes.email[0] : saml_response.user.attributes.email : name_id,
-								...saml_response.user.attributes
-							}, req.providerOrg);
-
-						console.info(account);
-
-						const result = {
-							login: {
-								accountId: account.accountId,
-							},
-						};
-						return provider.interactionFinished(req, res, result, {
-							mergeWithLastSubmission: false,
-						});
-					});
-				}
-				const relay_state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
-				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
-				return sp.create_login_request_url(idp, {
-					relay_state
-				}, function(err, login_url, request_id) {
-					if (err) {
-						console.info('error', err);
-						return res.sendStatus(303);
+					let saml_response;
+					try {
+						saml_response = await interactions.samlAssert(sp, idp, options);
+						console.info('SAML RESPONSE HERE', saml_response)
+					} catch(err) {
+						console.error('No SAML response received', err);
+						return samlError();
 					}
-					console.info(login_url);
-					console.info(request_id);
-					return res.redirect(login_url);
-				});
+
+					const samlId = saml_response.user.name_id || saml_response.user.id;
+					const email = (saml_response.user.attributes.email) ?
+						(!Array.isArray(saml_response.user.attributes.email)) ? saml_response.user.attributes.email :
+							(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length)
+								? saml_response.user.attributes.email[0] : null : null
+					// todo validate email regex
+					if(!email) {
+						console.error('SAML responses did not map email');
+						return samlError();
+					}
+					const id = (saml_response.user.attributes.userId) ?
+						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
+							(Array.isArray(saml_response.user.attributes.userId) && saml_response.user.attributes.userId.length)
+								? saml_response.user.attributes.userId[0] : samlId || email : samlId || email;
+					if(!id) {
+						console.error('SAML responses did not map a user ID');
+						return samlError();
+					}
+					const account = await Account.findByFederated(authGroup,
+						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+						{
+							id,
+							email,
+							samlId,
+							...saml_response.user?.attributes
+						}, req.providerOrg);
+
+					console.info('ACCOUNT HERE', account);
+					const result = {
+						login: {
+							accountId: account.accountId,
+						},
+					};
+					console.info('RESULT HERE', result);
+					return provider.interactionFinished(req, res, result, {
+						mergeWithLastSubmission: false,
+					});
+				} else {
+					// request
+					const relay_state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
+					try {
+						const samlReq = await interactions.samlLogin(sp, idp, { relay_state });
+						return res.redirect(samlReq.loginUrl);
+					} catch(err) {
+						console.error('Error while trying to initiate login', err);
+						return samlError();
+					}
+				}
 			case 'oidc': {
 				const callbackParams = req.authClient.callbackParams(req);
-				//const myConfig = req.fedConfig;
 				callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if (!Object.keys(callbackParams).length) {
 					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
@@ -802,6 +815,8 @@ const api = {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const interactionDetails = await provider.interactionDetails(req, res);
 			const result = await interactions.confirmAuthorization(provider, interactionDetails, req.authGroup);
+			console.info('confirm-intDetials', interactionDetails);
+			console.info('confirm', result);
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 		} catch (err) {
 			next(err);

@@ -57,6 +57,52 @@ const federatedOauth2 = new mongoose.Schema({
 	profileUri: String
 }, { _id: false, strict: false });
 
+const federatedSAML = new mongoose.Schema({
+	name: {
+		type: String,
+		required: true
+	},
+	provider: {
+		type: String,
+		required: true,
+		enum: ['google', 'microsoft', 'custom']
+	},
+	buttonType: {
+		type: String,
+		default: 'standard',
+		enum: ['linkedin', 'standard']
+	},
+	buttonText: {
+		type: String,
+		default: 'Federated Sign-in'
+	},
+	certificates: {
+		type: [String],
+		required: true
+	},
+	ssoLoginUrl: {
+		type: String,
+		required: true
+	},
+	ssoLogoutUrl: {
+		type: String,
+		required: true
+	},
+	idpEntityId: String,
+	forceLogin: {
+		type: Boolean,
+		default: false
+	},
+	signRequest: {
+		type: Boolean,
+		default: false
+	},
+	allowUnencryptedAssertion: {
+		type: Boolean,
+		default: true
+	}
+}, { _id: false, strict: false });
+
 const federatedOIDC = new mongoose.Schema({
 	name: {
 		type: String,
@@ -345,7 +391,7 @@ const authGroup = new mongoose.Schema({
 		federate: {
 			oidc: [federatedOIDC],
 			oauth2: [federatedOauth2],
-			saml: [Object]
+			saml: [federatedSAML]
 		},
 		mfaChallenge: {
 			enable: {

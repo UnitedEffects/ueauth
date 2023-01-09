@@ -3,6 +3,46 @@ import { v4 as uuid } from 'uuid';
 import h from '../../helper';
 mongoose.set('useCreateIndex', true);
 
+const federatedSAML = new mongoose.Schema({
+	name: {
+		type: String,
+		required: true
+	},
+	buttonType: {
+		type: String,
+		default: 'standard',
+		enum: ['linkedin', 'standard']
+	},
+	buttonText: {
+		type: String,
+		default: 'Federated Sign-in'
+	},
+	certificates: {
+		type: [String],
+		required: true
+	},
+	ssoLoginUrl: {
+		type: String,
+		required: true
+	},
+	ssoLogoutUrl: {
+		type: String,
+		required: true
+	},
+	forceLogin: {
+		type: Boolean,
+		default: false
+	},
+	signRequest: {
+		type: Boolean,
+		default: false
+	},
+	allowUnencryptedAssertion: {
+		type: Boolean,
+		default: true
+	}
+}, { _id: false, strict: false });
+
 const federatedOauth2 = new mongoose.Schema({
 	name: {
 		type: String,
@@ -163,7 +203,7 @@ const orgSchema = new mongoose.Schema({
 	sso: {
 		oidc: federatedOIDC,
 		oauth2: federatedOauth2,
-		saml: Object
+		saml: federatedSAML
 	},
 	ssoEmailDomain: String,
 	ssoAddAccountToOrg: {

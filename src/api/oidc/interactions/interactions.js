@@ -48,8 +48,7 @@ const api = {
 			});
 		}
 		const loginButtons = loginOptions.filter((option) => {
-			//todo remove not
-			return (!client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
+			return (client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
 		});
 		const altLogin = (params.passwordless === true || loginButtons.length !== 0);
 		return {
@@ -79,6 +78,22 @@ const api = {
 				prompt: debug(prompt)
 			}
 		};
+	},
+	samlLogin(sp, idp, options) {
+		return new Promise((resolve, reject) => {
+			return sp.create_login_request_url(idp, options, (err, login_url, request_id) => {
+				if(err) return reject(err);
+				return resolve({ loginUrl: login_url, reqId: request_id });
+			});
+		});
+	},
+	samlAssert(sp, idp, options) {
+		return new Promise((resolve, reject) => {
+			return sp.post_assert(idp, options, (err, saml_response) => {
+				if(err) return reject(err);
+				return resolve(saml_response);
+			});
+		});
 	},
 	pwdlessLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
 		return {

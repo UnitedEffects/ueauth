@@ -109,6 +109,9 @@ const mid = {
 	async parseKoaOIDC(ctx, next) {
 		await next();
 		if(ctx.response && ctx.response.body && ctx.response.body.error) {
+			//todo delete
+			console.error('request', ctx.request);
+			console.error('response', ctx.response);
 			const error = {
 				error: ctx.response.body.error,
 				message: 'OIDC'
