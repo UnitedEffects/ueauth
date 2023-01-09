@@ -281,8 +281,8 @@ const api = {
 	async federated(req, res, next) {
 		try {
 			const provider = req.provider;
-			//const { prompt: { name } } = await provider.interactionDetails(req, res);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			assert.equal(prompt.name, 'login');
 			const client = await provider.Client.find(params.client_id);
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
