@@ -48,7 +48,6 @@ const api = {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
-			console.info('AUTHORIZE', intDetails);
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const { uid, prompt, params, session } = intDetails;
 			params.passwordless = false;
@@ -59,7 +58,6 @@ const api = {
 			}
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
-			console.info('AUTH CLIENT', client);
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
@@ -90,11 +88,6 @@ const api = {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
-				console.info('session', session);
-				console.info('client', client);
-				console.info('prompt', prompt);
-				console.info('uid', uid);
-				console.info('params', params);
 				return res.render('interaction/interaction', interactions.consentLogin(authGroup, client, debug, session, prompt, uid, params));
 			}
 			default:
@@ -320,7 +313,6 @@ const api = {
 					let saml_response;
 					try {
 						saml_response = await interactions.samlAssert(sp, idp, options);
-						console.info('SAML RESPONSE HERE', saml_response)
 					} catch(err) {
 						console.error('No SAML response received', err);
 						return samlError();
@@ -353,13 +345,12 @@ const api = {
 							...saml_response.user?.attributes
 						}, req.providerOrg);
 
-					console.info('ACCOUNT HERE', account);
 					const result = {
 						login: {
 							accountId: account.accountId,
 						},
 					};
-					console.info('RESULT HERE', result);
+
 					return provider.interactionFinished(req, res, result, {
 						mergeWithLastSubmission: false,
 					});
@@ -815,8 +806,6 @@ const api = {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const interactionDetails = await provider.interactionDetails(req, res);
 			const result = await interactions.confirmAuthorization(provider, interactionDetails, req.authGroup);
-			console.info('confirm-intDetials', interactionDetails);
-			console.info('confirm', result);
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 		} catch (err) {
 			next(err);
