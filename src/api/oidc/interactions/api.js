@@ -454,7 +454,6 @@ const api = {
 			}
 			case 'oauth2':
 				// we are only supporting authorization_code for oauth2 for now
-				//const myConfig = req.fedConfig;
 				let state;
 				let issuer;
 				let profile;
