@@ -22,7 +22,7 @@ const querystring = require('querystring');
 const { inspect } = require('util');
 const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
-
+const emailRegex = /(?:[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 const ClientOAuth2 = require('client-oauth2');
 
 const {
@@ -229,20 +229,18 @@ const api = {
 					req.fedConfig = myConfig;
 					return next();
 					case 'saml':
-					//todo cert and private_key for SP are different than IDP. work on that.
-					//todo metadata file...
 					const assert_endpoint = `${req.provider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 					const sp_options = {
 						entity_id:  req.provider.issuer,
-						private_key: 'test-key',
-						certificate: myConfig.certificates[0],
+						private_key: myConfig.spPrivateKey,
+						certificate: myConfig.spCertificate,
 						assert_endpoint
 					};
 					const sp = new saml2.ServiceProvider(sp_options);
 					const idp_options = {
 						sso_login_url: myConfig.ssoLoginUrl,
 						sso_logout_url: myConfig.ssoLogoutUrl,
-						certificates: myConfig.certificates,
+						certificates: myConfig.idpCertificates,
 						sign_get_request: myConfig.signRequest,
 						allow_unencrypted_assertion: myConfig.allowUnencryptedAssertion,
 						force_authn: myConfig.forceLogin
@@ -259,6 +257,7 @@ const api = {
 			}
 			throw Boom.badRequest('upstream data is missing');
 		} catch (error) {
+			console.info('ERROR', error);
 			next(error);
 		}
 	},
@@ -291,11 +290,11 @@ const api = {
 
 			switch (req.authSpec.toLowerCase()) {
 			case 'saml':
-				const samlError = () => res.render('login/login',
+				const samlError = (error) => res.render('login/login',
 					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
 						{
 							...params
-						}, 'Security issue with SAML federated login - try again later.'));
+						}, `Security issue with SAML federated login - ${error}. Try again later.`));
 				const sp = req.samlSP;
 				const idp =	req.samlIdP;
 				if(req.body?.SAMLResponse) {
@@ -305,7 +304,7 @@ const api = {
 
 					if(state !== req.body.state) {
 						console.error(`Unexpected Session State: ${state} vs. ${req.body.state}`);
-						return samlError();
+						return samlError('This does not appear to be the correct browser window');
 					}
 
 					const options = {request_body: req.body};
@@ -315,7 +314,7 @@ const api = {
 						saml_response = await interactions.samlAssert(sp, idp, options);
 					} catch(err) {
 						console.error('No SAML response received', err);
-						return samlError();
+						return samlError('SAML IdP did not respond');
 					}
 
 					const samlId = saml_response.user.name_id || saml_response.user.id;
@@ -323,10 +322,13 @@ const api = {
 						(!Array.isArray(saml_response.user.attributes.email)) ? saml_response.user.attributes.email :
 							(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length)
 								? saml_response.user.attributes.email[0] : null : null
-					// todo validate email regex
 					if(!email) {
 						console.error('SAML responses did not map email');
-						return samlError();
+						return samlError('SAML response does not include email');
+					}
+					if(!emailRegex.test(email)) {
+						console.error('SAML responses email is wrong', email);
+						return samlError('SAML response provided email but it is in the wrong format');
 					}
 					const id = (saml_response.user.attributes.userId) ?
 						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
@@ -334,7 +336,7 @@ const api = {
 								? saml_response.user.attributes.userId[0] : samlId || email : samlId || email;
 					if(!id) {
 						console.error('SAML responses did not map a user ID');
-						return samlError();
+						return samlError('SAML response could not identify an ID for the user');
 					}
 					const account = await Account.findByFederated(authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
@@ -360,10 +362,11 @@ const api = {
 					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
 					try {
 						const samlReq = await interactions.samlLogin(sp, idp, { relay_state });
+						if(!samlReq) throw 'Could not get a login url - this could be a configuration issue';
 						return res.redirect(samlReq.loginUrl);
 					} catch(err) {
 						console.error('Error while trying to initiate login', err);
-						return samlError();
+						return samlError('could not initiate federated SAML login');
 					}
 				}
 			case 'oidc': {
@@ -826,11 +829,11 @@ const api = {
 		try {
 			const action = ctx.oidc.urlFor('end_session_confirm');
 			let skipPrompt = false;
-			if (ctx.req.query && ctx.req.query.skipPrompt && ctx.req.query.skipPrompt === 'true') {
+			if (ctx?.req?.query?.skipPrompt === 'true') {
 				// this must be set at the client level and only works if there is a redirectUrl present
-				if (ctx.oidc && ctx.oidc.client && ctx.oidc.client.client_optional_skip_logout_prompt === true) {
+				if (ctx?.oidc?.client?.client_optional_skip_logout_prompt === true) {
 					// post_logout_redirect_uri further requires an id_token_hint or client_id
-					if(ctx.req.query.post_logout_redirect_uri) {
+					if(ctx?.req?.query?.post_logout_redirect_uri) {
 						skipPrompt = true;
 					}
 				}
@@ -845,10 +848,10 @@ const api = {
 				basedir: 'path/for/pug/extends',
 			});
 			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, client, skipPrompt);
-			if (ctx.req.query && ctx.req.query.onCancel) {
+			if (ctx?.req?.query?.onCancel) {
 				options.onCancel = ctx.req.query.onCancel;
 			}
-			if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
+			if (ctx?.req?.query?.json === 'true') {
 				// enable REST response
 				ctx.type='json';
 				ctx.body = {
@@ -872,9 +875,15 @@ const api = {
 	async postLogoutSuccessSource(ctx) {
 		try {
 			const { authGroup } = await safeAuthGroup(ctx.authGroup);
-			let {
-				clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientId
-			} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+
+			const clientName = (ctx.oidc.client) ? ctx.oidc.client.clientName : null;
+			const clientId = (ctx.oidc.client) ? ctx.oidc.client.clientId : null;
+			let clientUri = (ctx.oidc.client) ? ctx.oidc.client.clientUri : null;
+			const initiateLoginUri = (ctx.oidc.client) ? ctx.oidc.client.initiateLoginUri : null;
+			const logoUri = (ctx.oidc.client) ? ctx.oidc.client.logoUri : null;
+			const policyUri = (ctx.oidc.client) ? ctx.oidc.client.policyUri : null;
+			const tosUri = (ctx.oidc.client) ? ctx.oidc.client.tosUri : null;
+
 			if(authGroup.associatedClient === clientId) {
 				clientUri = `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}`;
 			}

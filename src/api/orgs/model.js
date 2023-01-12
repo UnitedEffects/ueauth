@@ -11,14 +11,22 @@ const federatedSAML = new mongoose.Schema({
 	buttonType: {
 		type: String,
 		default: 'standard',
-		enum: ['linkedin', 'standard']
+		enum: ['google', 'microsoft', 'standard']
 	},
 	buttonText: {
 		type: String,
 		default: 'Federated Sign-in'
 	},
-	certificates: {
+	idpCertificates: {
 		type: [String],
+		required: true
+	},
+	spCertificate: {
+		type: String,
+		required: true
+	},
+	spPrivateKey: {
+		type: String,
 		required: true
 	},
 	ssoLoginUrl: {

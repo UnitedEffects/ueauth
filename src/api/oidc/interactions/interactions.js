@@ -1,9 +1,9 @@
 import Boom from '@hapi/boom';
 import dal from './dal';
 import acct from '../../accounts/account';
-import iat from "../initialAccess/iat";
-import n from "../../plugins/notifications/notifications";
-import plugins from "../../plugins/plugins";
+import iat from '../initialAccess/iat';
+import n from '../../plugins/notifications/notifications';
+import plugins from '../../plugins/plugins';
 
 const config = require('../../../config');
 const { strict: assert } = require('assert');
@@ -85,6 +85,8 @@ const api = {
 				if(err) return reject(err);
 				return resolve({ loginUrl: login_url, reqId: request_id });
 			});
+		}).catch(error => {
+			throw error;
 		});
 	},
 	samlAssert(sp, idp, options) {
@@ -93,6 +95,8 @@ const api = {
 				if(err) return reject(err);
 				return resolve(saml_response);
 			});
+		}).catch(error => {
+			throw error;
 		});
 	},
 	pwdlessLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {
@@ -197,7 +201,7 @@ const api = {
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
 			authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 			splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
-			clientName: (client.clientId === authGroup.associatedClient) ? undefined : client.clientName,
+			clientName: (client?.clientId === authGroup.associatedClient) ? undefined : client?.clientName,
 			clientUri: (authGroup.associatedClient === client?.clientId) ?
 				`https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` : client?.clientUri,
 			initiateLoginUri: client?.initiateLoginUri,
@@ -210,7 +214,7 @@ const api = {
 				primaryTOS: authGroup.primaryTOS,
 				primaryDomain: authGroup.primaryDomain
 			},
-			message: `Are you sure you want to sign-out from ${(client.clientId === authGroup.associatedClient) ? authGroup.name : client.clientName}?`,
+			message: `Are you sure you want to sign-out from ${(client?.clientId === authGroup.associatedClient) ? authGroup.name : client?.clientName}?`,
 			formId: 'op.logoutForm',
 			actionUrl: action,
 			secret,
