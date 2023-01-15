@@ -7087,20 +7087,6 @@ safe-buffer@5.2.1, safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@^5.1.2, s
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
 
-saml2-js@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/saml2-js/-/saml2-js-4.0.1.tgz#72ce2e935410df73750eb4ae51d9436c8b9a4c90"
-  integrity sha512-tVg2LFsIGLhf6d2I/nFdcXz8akQ+JJqiuhudNbaEqK18az3/ueDMu/RC8nr8QDnDmgBMieFqUwSMxgWr9hYErg==
-  dependencies:
-    "@xmldom/xmldom" "^0.8.6"
-    async "^3.2.0"
-    debug "^4.3.0"
-    underscore "^1.8.0"
-    xml-crypto "^3.0.1"
-    xml-encryption "^3.0.2"
-    xml2js "^0.4.0"
-    xmlbuilder2 "^2.4.0"
-
 saslprep@^1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/saslprep/-/saslprep-1.0.3.tgz#4c02f946b56cf54297e347ba1093e7acac4cf226"
@@ -7947,6 +7933,20 @@ typedarray-to-buffer@^3.1.5:
   integrity sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==
   dependencies:
     is-typedarray "^1.0.0"
+
+ue.saml2-js@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/ue.saml2-js/-/ue.saml2-js-4.0.2.tgz#f698bc191fb5b7edfca6b0d36c4aa943fad6f849"
+  integrity sha512-n/xnpgOvTvKYnGC/Zuyff5bYl5HYd/p7qSauNNPuSZq2m7b5sWniasfRVzBAVq5rCoK1FCQxmuRMOIEAgvmxZA==
+  dependencies:
+    "@xmldom/xmldom" "^0.8.6"
+    async "^3.2.0"
+    debug "^4.3.0"
+    underscore "^1.8.0"
+    xml-crypto "^3.0.1"
+    xml-encryption "^3.0.2"
+    xml2js "^0.4.0"
+    xmlbuilder2 "^2.4.0"
 
 unbzip2-stream@^1.0.9:
   version "1.4.3"

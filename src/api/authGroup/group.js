@@ -199,7 +199,7 @@ const agp = {
 				if(!sp.spCertificate || !sp.spPrivateKey) {
 					const { pemCert, pemKey } = pem.getPem();
 					patched.config.federate.saml[i].spCertificate = pemCert;
-					patched.config.federate.saml[i].spCertificate = pemKey;
+					patched.config.federate.saml[i].spPrivateKey = pemKey;
 				}
 			})
 		}

@@ -8722,6 +8722,10 @@ components:
         federate:
           type: object
           properties:
+            saml:
+              type: array
+              items:
+                $ref: '#/components/schemas/federatedSAML'
             oidc:
               type: array
               items:
@@ -9708,6 +9712,8 @@ components:
           type: object
           description: while the API may define multiple options, you can only ever have one of these at a time on an organization
           properties:
+            saml:
+              $ref: '#/components/schemas/ssoSamlSpec'
             oidc:
               $ref: '#/components/schemas/ssoOidcSpec'
             oauth2:
@@ -9865,6 +9871,43 @@ components:
                 items:
                   type: object
 
+    ssoSamlSpec:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - idpCertificates
+        - ssoLoginUrl
+        - ssoLogoutUrl
+      properties:
+        name:
+          type: string
+          description: unique name to label this federated SAML connection
+        buttonText:
+          type: string
+        idpCertificates:
+          type: array
+          description: these are pem certificate contents provided by the SAML IdP. Make sure to escape all new lines (\n) with a double backslash (\\n) before attempting to write to API.
+          items:
+            type: string
+        ssoLoginUrl:
+          type: string
+          format: uri
+        ssoLogoutUrl:
+          type: string
+          format: uri
+        idpEntityId:
+          type: string
+        forceLogin:
+          type: boolean
+          default: false
+        signRequest:
+          type: boolean
+          default: false
+        allowUnencryptedAssertion:
+          type: boolean
+          default: true
+
     ssoOidcSpec:
       type: object
       additionalProperties: false
@@ -9972,6 +10015,34 @@ components:
         profileUri:
           type: string
           format: uri
+
+    federatedSAML:
+      type: object
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/ssoSamlSpec'
+      required:
+        - name
+        - provider
+        - idpCertificates
+        - ssoLoginUrl
+        - ssoLogoutUrl
+      properties:
+        provider:
+          type: string
+          description: is this a social provider like google or a custom OP you're connecting to?
+          enum: # as we add more standards, add them here...
+            - google
+            - microsoft
+            - custom
+        buttonType:
+          type: string
+          description: if this is a social connection, we can use that platform's logo if desired. standard means its a default system button with your text
+          default: standard
+          enum:
+            - google
+            - microsoft
+            - standard
 
     federatedOIDC:
       type: object

@@ -80,13 +80,11 @@ const api = {
 		};
 	},
 	samlLogin(sp, idp, options) {
-		return new Promise((resolve, reject) => {
+		return new Promise( (resolve, reject) => {
 			return sp.create_login_request_url(idp, options, (err, login_url, request_id) => {
 				if(err) return reject(err);
 				return resolve({ loginUrl: login_url, reqId: request_id });
 			});
-		}).catch(error => {
-			throw error;
 		});
 	},
 	samlAssert(sp, idp, options) {
@@ -95,8 +93,6 @@ const api = {
 				if(err) return reject(err);
 				return resolve(saml_response);
 			});
-		}).catch(error => {
-			throw error;
 		});
 	},
 	pwdlessLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined) {

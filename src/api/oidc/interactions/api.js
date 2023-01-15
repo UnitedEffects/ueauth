@@ -15,7 +15,7 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
-import saml2 from 'saml2-js';
+import saml2 from 'ue.saml2-js';
 
 const config = require('../../../config');
 const querystring = require('querystring');
