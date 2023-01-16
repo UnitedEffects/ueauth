@@ -16,7 +16,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
 import saml2 from 'ue.saml2-js';
-import { v4 as uuid } from 'uuid';
+import { validate as uuidValidate } from 'uuid';
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -155,7 +155,7 @@ const api = {
 			if(provider.includes('org:')) {
 				//normalize provider...
 				const orgId = provider.split(':')[1];
-				if(!uuid.validate(orgId)) {
+				if(!uuidValidate(orgId)) {
 					const org = JSON.parse(JSON.stringify(await org.getOrg(authGroup.id, orgId)));
 					provider = `org:${org.id}`;
 				}
