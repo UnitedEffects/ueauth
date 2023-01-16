@@ -321,12 +321,13 @@ const api = {
 					}
 
 					const options = {request_body: req.body};
-
+					console.error('*********OPTIONS: ', JSON.stringify(options, null, 2));
+					console.error('*********SP-ORG: ', sp);
 					let saml_response;
 					try {
 						saml_response = await interactions.samlAssert(sp, idp, options);
 					} catch(err) {
-						console.error('No SAML response received', err);
+						console.error('No SAML response received', err, JSON.stringify(err, null, 2));
 						return samlError('SAML IdP did not respond');
 					}
 
