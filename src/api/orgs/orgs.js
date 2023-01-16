@@ -104,11 +104,11 @@ export default {
 		if(patched.alias) patched.alias = patched.alias.toLowerCase();
 
 		// if SAML has been added, we must issue crt and key for the connection
-		if(patched?.org?.sso?.saml) {
-			if(!patched.org.sso.saml.spCertificate || !patched.org.sso.saml.spPrivateKey) {
+		if(patched?.sso?.saml) {
+			if(!patched.sso.saml.spCertificate || !patched.sso.saml.spPrivateKey) {
 				const { pemCert, pemKey } = pem.getPem();
-				patched.org.sso.saml.spCertificate = pemCert;
-				patched.org.sso.saml.spCertificate = pemKey;
+				patched.sso.saml.spCertificate = pemCert;
+				patched.sso.saml.spCertificate = pemKey;
 			}
 		}
 
