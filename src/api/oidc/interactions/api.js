@@ -237,7 +237,7 @@ const api = {
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
 					return next();
-					case 'saml':
+				case 'saml':
 					const assert_endpoint = `${req.provider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 					const sp_options = {
 						entity_id:  req.provider.issuer,
@@ -321,13 +321,11 @@ const api = {
 					}
 
 					const options = {request_body: req.body};
-					console.error('*********OPTIONS: ', JSON.stringify(options, null, 2));
-					console.error('*********SP-ORG: ', sp);
 					let saml_response;
 					try {
 						saml_response = await interactions.samlAssert(sp, idp, options);
 					} catch(err) {
-						console.error('No SAML response received', err, JSON.stringify(err, null, 2));
+						console.error('No SAML response received', JSON.stringify(err, null, 2));
 						return samlError('SAML IdP did not respond');
 					}
 
@@ -344,6 +342,7 @@ const api = {
 						console.error('SAML responses email is wrong', email);
 						return samlError('SAML response provided email but it is in the wrong format');
 					}
+					console.info('PARSED EMAIL ', email);
 					const id = (saml_response.user.attributes.userId) ?
 						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
 							(Array.isArray(saml_response.user.attributes.userId) && saml_response.user.attributes.userId.length)
@@ -352,13 +351,13 @@ const api = {
 						console.error('SAML responses did not map a user ID');
 						return samlError('SAML response could not identify an ID for the user');
 					}
+					console.info('PARSED ID ', id);
 					const account = await Account.findByFederated(authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
 						{
 							id,
 							email,
-							samlId,
-							...saml_response.user?.attributes
+							idpId: samlId
 						}, req.providerOrg);
 
 					const result = {

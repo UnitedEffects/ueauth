@@ -111,9 +111,7 @@ class Account {
 
 			// if the organization intends to add the federated account, ensure there is not an email domain issue
 			if(organization && organization.ssoAddAccountToOrg === true && organization.restrictEmailDomains === true) {
-				console.info('dom check 1', profile);
-				console.info('dom check', profile?.email);
-				console.info('dom check', profile?.email?.toLowerCase());
+				console.info('dom check', profile);
 				const domainCheck = profile?.email?.toLowerCase().split('@')[1];
 				if(!organization.emailDomains.includes(domainCheck)) {
 					console.info('throwing whitelist error');
