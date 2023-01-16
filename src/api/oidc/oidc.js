@@ -111,7 +111,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
-		extraParams: ['audience'],
+		extraParams: ['audience', 'federated_redirect'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -131,7 +131,6 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 			encryption: { enabled: true },
 			deviceFlow: {
-				//todo customize
 				enabled: g.config.deviceFlow
 			},
 			registration: {

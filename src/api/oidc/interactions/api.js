@@ -84,7 +84,7 @@ const api = {
 				return res.render('login/login', options);
 			}
 			case 'consent': {
-				if(client.client_skip_consent === true) {
+				if(client.client_skip_consent === true || params.federated_redirect === true) {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
@@ -280,14 +280,18 @@ const api = {
 	async federated(req, res, next) {
 		try {
 			const provider = req.provider;
+			const { authGroup } = await safeAuthGroup(req.authGroup);
+
+			const i = await provider.Interaction.find(req.params.uid);
+			i.params.federated_redirect = true;
+			await i.save(authGroup.config.ttl.interaction);
+
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			assert.equal(prompt.name, 'login');
 			const client = await provider.Client.find(params.client_id);
-			const { authGroup } = await safeAuthGroup(req.authGroup);
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
 			const myConfig = req.fedConfig;
-
 			switch (req.authSpec.toLowerCase()) {
 			case 'saml':
 				const samlError = (error) => res.render('login/login',
@@ -352,7 +356,6 @@ const api = {
 							accountId: account.accountId,
 						},
 					};
-
 					return provider.interactionFinished(req, res, result, {
 						mergeWithLastSubmission: false,
 					});
@@ -618,7 +621,7 @@ const api = {
 						} else {
 							organization = await org.getOrgBySsoEmailDomain(authGroup, req.body.email);
 						}
-						if(organization.ssoLimit === true) params.ssoPriority = true;
+						if(organization?.ssoLimit === true) params.ssoPriority = true;
 						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
 						console.error(error);

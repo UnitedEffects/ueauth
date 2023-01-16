@@ -40,6 +40,7 @@ export default {
 			'client_id_issued_at': Date.now(),
 			'client_id': uuid(),
 			'client_name': config.PLATFORM_NAME,
+			'client_skip_consent': true,
 			'grant_types': ['client_credentials', 'authorization_code', 'refresh_token'],
 			'response_types': ['code'],
 			'redirect_uris': [`https://${config.UI_URL}`, `https://${config.UI_URL}${config.UI_LOGIN_REDIRECT_PATH}`, `https://${config.UI_URL}${config.UI_REFRESH_REDIRECT_PATH}`],
