@@ -257,7 +257,7 @@ const api = {
 			}
 			throw Boom.badRequest('upstream data is missing');
 		} catch (error) {
-			console.info('ERROR', error);
+			console.error('ERROR', error);
 			next(error);
 		}
 	},
