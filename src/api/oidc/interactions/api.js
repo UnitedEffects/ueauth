@@ -16,6 +16,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
 import saml2 from 'ue.saml2-js';
+import { v4 as uuid } from 'uuid';
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -150,7 +151,15 @@ const api = {
 			// note: organization sso callbacks should be /callback/{spec}/org:org_id/${name}
 			const nonce = res.locals.cspNonce;
 			const spec = req.params.spec;
-			const provider = req.params.provider;
+			let provider = req.params.provider;
+			if(provider.includes('org:')) {
+				//normalize provider...
+				const orgId = provider.split(':')[1];
+				if(!uuid.validate(orgId)) {
+					const org = JSON.parse(JSON.stringify(await org.getOrg(authGroup.id, orgId)));
+					provider = `org:${org.id}`;
+				}
+			}
 			const name = req.params.name;
 			//validate AG
 			return res.render('repost', { layout: false, upstream: `${spec}.${provider}.${name}`, nonce, authGroup: req.authGroup.id });
@@ -933,7 +942,7 @@ async function checkProvider(upstream, ag) {
 	if (upstream.length !== 3) throw Boom.badData(`Unknown upstream: ${upstream}`);
 	const authGroup = JSON.parse(JSON.stringify(ag));
 	const spec = upstream[0];
-	const provider = upstream[1];
+	let provider = upstream[1];
 	const name = upstream[2].replace(/_/g, ' ');
 	let organization = undefined;
 	if(provider.includes('org:')) {
