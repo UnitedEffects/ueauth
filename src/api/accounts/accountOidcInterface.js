@@ -94,6 +94,7 @@ class Account {
 		}
 		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
 		const profile = cleanProfile(JSON.parse(JSON.stringify(claims)));
+		console.info('PROFILE******** ', profile);
 		if(!account && authGroup.locked === true) {
 			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
 		}
@@ -110,8 +111,12 @@ class Account {
 
 			// if the organization intends to add the federated account, ensure there is not an email domain issue
 			if(organization && organization.ssoAddAccountToOrg === true && organization.restrictEmailDomains === true) {
-				const domainCheck = profile.email.toLowerCase().split('@')[1];
+				console.info('dom check 1', profile);
+				console.info('dom check', profile?.email);
+				console.info('dom check', profile?.email?.toLowerCase());
+				const domainCheck = profile?.email?.toLowerCase().split('@')[1];
 				if(!organization.emailDomains.includes(domainCheck)) {
+					console.info('throwing whitelist error');
 					throw Boom.forbidden('Email domain is not whitelisted for the organization');
 				}
 			}
