@@ -156,7 +156,7 @@ const api = {
 				//normalize provider...
 				const orgId = provider.split(':')[1];
 				if(!uuidValidate(orgId)) {
-					const o = JSON.parse(JSON.stringify(await org.getOrg(authGroup.id, orgId)));
+					const o = JSON.parse(JSON.stringify(await org.getOrg(req.authGroup.id || req.authGroup._id, orgId)));
 					provider = `org:${o.id}`;
 				}
 			}
