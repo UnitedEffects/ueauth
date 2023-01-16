@@ -108,7 +108,7 @@ export default {
 			if(!patched.sso.saml.spCertificate || !patched.sso.saml.spPrivateKey) {
 				const { pemCert, pemKey } = pem.getPem();
 				patched.sso.saml.spCertificate = pemCert;
-				patched.sso.saml.spCertificate = pemKey;
+				patched.sso.saml.spPrivateKey = pemKey;
 			}
 		}
 

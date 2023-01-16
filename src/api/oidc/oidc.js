@@ -111,7 +111,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
-		extraParams: ['audience', 'federated_redirect'],
+		extraParams: ['audience', 'federated_redirect', 'org', 'orgs'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
