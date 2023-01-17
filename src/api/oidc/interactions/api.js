@@ -945,7 +945,7 @@ async function checkProvider(upstream, ag) {
 	if (upstream.length !== 3) throw Boom.badData(`Unknown upstream: ${upstream}`);
 	const authGroup = JSON.parse(JSON.stringify(ag));
 	const spec = upstream[0];
-	let provider = upstream[1];
+	const provider = upstream[1];
 	const name = upstream[2].replace(/_/g, ' ');
 	let organization = undefined;
 	if(provider.includes('org:')) {
