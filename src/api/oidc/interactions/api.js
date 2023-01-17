@@ -342,7 +342,6 @@ const api = {
 						console.error('SAML responses email is wrong', email);
 						return samlError('SAML response provided email but it is in the wrong format');
 					}
-					console.info('PARSED EMAIL ', email);
 					const id = (saml_response.user.attributes.userId) ?
 						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
 							(Array.isArray(saml_response.user.attributes.userId) && saml_response.user.attributes.userId.length)
@@ -351,14 +350,18 @@ const api = {
 						console.error('SAML responses did not map a user ID');
 						return samlError('SAML response could not identify an ID for the user');
 					}
-					console.info('PARSED ID ', id);
-					const account = await Account.findByFederated(authGroup,
-						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-						{
-							id,
-							email,
-							idpId: samlId
-						}, req.providerOrg);
+					let account;
+					try {
+						account = await Account.findByFederated(authGroup,
+							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+							{
+								id,
+								email,
+								idpId: samlId
+							}, req.providerOrg);
+					} catch (error) {
+						return samlError(`Unable to login using federation - ${ error?.message || error}`)
+					}
 
 					const result = {
 						login: {

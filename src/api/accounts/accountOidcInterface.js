@@ -94,7 +94,6 @@ class Account {
 		}
 		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
 		const profile = cleanProfile(JSON.parse(JSON.stringify(claims)));
-		console.info('PROFILE******** ', profile);
 		if(!account && authGroup.locked === true) {
 			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
 		}
@@ -103,7 +102,7 @@ class Account {
 		let organization;
 		if(orgSSO) {
 			try {
-				organization = await orgs.getOrg(authGroup.id, orgSSO);
+				organization = JSON.parse(JSON.stringify(await orgs.getOrg(authGroup.id, orgSSO)));
 			} catch (e) {
 				console.error(e);
 				throw Boom.badRequest(`An org was specified for this federated login but could not be resolved: ${orgSSO}`);
@@ -111,10 +110,8 @@ class Account {
 
 			// if the organization intends to add the federated account, ensure there is not an email domain issue
 			if(organization && organization.ssoAddAccountToOrg === true && organization.restrictEmailDomains === true) {
-				console.info('dom check', profile);
 				const domainCheck = profile?.email?.toLowerCase().split('@')[1];
 				if(!organization.emailDomains.includes(domainCheck)) {
-					console.info('throwing whitelist error');
 					throw Boom.forbidden('Email domain is not whitelisted for the organization');
 				}
 			}
@@ -166,14 +163,16 @@ class Account {
 			}
 
 			// if we are here and an organization has been specified with addAccount true, we can do so
-			if(organization && organization.ssoAddAccountToOrg) {
+			if(organization?.ssoAddAccountToOrg) {
 				const orgAccess = createAccessObject(organization);
 				if(!account.access) account.access = [];
 				let access = [];
+				console.info('organization, ', organization);
+				console.info('access', JSON.stringify(account.access, null, 2));
 				access = account.access.filter((a) => {
 					return (a.organization.id === organization.id);
 				});
-				if(access.length === 0) {
+				if(!access.length) {
 					account.access.push(orgAccess);
 				}
 			}
