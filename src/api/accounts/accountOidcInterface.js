@@ -92,8 +92,8 @@ class Account {
 		if(claims.id && !claims.sub) {
 			claims.sub = claims.id;
 		}
-		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
-		console.info('FOUND ACCOUNT', JSON.stringify(account, null, 2));
+		let account = await acct.getAccountAccessByEmailOrUsername(authGroup.id, claims.email);
+		console.info('FOUND ACCOUNT', account);
 		const profile = cleanProfile(JSON.parse(JSON.stringify(claims)));
 		if(!account && authGroup.locked === true) {
 			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
@@ -167,10 +167,10 @@ class Account {
 			if(organization?.ssoAddAccountToOrg) {
 				const orgAccess = createAccessObject(organization);
 				console.info('organization, ', organization);
-				console.info('access', JSON.stringify(account, null, 2));
+				console.info('access', account);
 				if(!account.access) account.access = [];
 				let access = [];
-				console.info('access - after', JSON.stringify(account, null, 2));
+				console.info('access - after', account);
 				access = account.access.filter((a) => {
 					return (a.organization.id === organization.id);
 				});
