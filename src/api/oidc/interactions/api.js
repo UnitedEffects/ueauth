@@ -295,9 +295,8 @@ const api = {
 			i.params.federated_redirect = true;
 			await i.save(authGroup.config.ttl.interaction);
 
-			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const { prompt } = await provider.interactionDetails(req, res);
 			assert.equal(prompt.name, 'login');
-			const client = await provider.Client.find(params.client_id);
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
 			const myConfig = req.fedConfig;
@@ -305,14 +304,6 @@ const api = {
 			case 'saml':
 				const samlError = (error) => {
 					res.redirect(`/${authGroup.id}/interaction/${req.params.uid}?flash=Security issue with SAML federated login - ${error}. Try again later.`);
-					/*
-					res.render('login/login',
-						interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
-							{
-								...params
-							}, `Security issue with SAML federated login - ${error}. Try again later.`));
-
-					 */
 				}
 				const sp = req.samlSP;
 				const idp =	req.samlIdP;
@@ -330,7 +321,6 @@ const api = {
 					let saml_response;
 					try {
 						saml_response = await interactions.samlAssert(sp, idp, options);
-						console.info('SAML RESPONSE', saml_response);
 					} catch(err) {
 						console.error('No SAML response received', JSON.stringify(err, null, 2));
 						return samlError('SAML IdP did not respond');
@@ -347,7 +337,7 @@ const api = {
 					}
 					if(!emailRegex.test(email)) {
 						console.error('SAML responses email is wrong', email);
-						return samlError('SAML response provided email but it is in the wrong format');
+						return samlError(`SAML response provided email but it is in the wrong format, '${email}'`);
 					}
 					const id = (saml_response.user.id) ? (saml_response.user.id) : (saml_response.user.attributes.userId) ?
 						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
