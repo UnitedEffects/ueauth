@@ -324,6 +324,7 @@ const api = {
 					let saml_response;
 					try {
 						saml_response = await interactions.samlAssert(sp, idp, options);
+						console.info('SAML RESPONSE', saml_response);
 					} catch(err) {
 						console.error('No SAML response received', JSON.stringify(err, null, 2));
 						return samlError('SAML IdP did not respond');
@@ -978,7 +979,7 @@ async function checkProvider(upstream, ag) {
 	const option = agSpecs.filter((config) => {
 		return (config.provider.toLowerCase() === provider.toLowerCase() && config.name.toLowerCase() === name.toLowerCase());
 	});
-	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${name}`);
+	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${provider}`);
 	return { spec, provider, name, myConfig: option[0]};
 }
 
