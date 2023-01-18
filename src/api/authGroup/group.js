@@ -14,6 +14,7 @@ import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import cryptoRandomString from 'crypto-random-string';
 import domain from "../domains/domain";
+import pem from './generate-pem';
 
 const config = require('../../config');
 
@@ -189,6 +190,18 @@ const agp = {
 			if (globalSettings?.eventStream?.provider?.lockStreamingOnceActive === true) {
 				throw Boom.methodNotAllowed('The service admin has locked the event streaming API. You must contact the admin to disable it.');
 			}
+		}
+
+		// if SAML has been added, we must issue crt and key for the connection
+		if(patched?.config?.federate?.saml && Array.isArray(patched.config.federate.saml) && patched.config.federate.saml.length) {
+			const safeSearch = patched.config.federate.saml;
+			safeSearch.map((sp, i) => {
+				if(!sp.spCertificate || !sp.spPrivateKey) {
+					const { pemCert, pemKey } = pem.getPem();
+					patched.config.federate.saml[i].spCertificate = pemCert;
+					patched.config.federate.saml[i].spPrivateKey = pemKey;
+				}
+			})
 		}
 
 		patched.modifiedBy = user;

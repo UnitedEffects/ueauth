@@ -114,12 +114,18 @@ function includeSSORedirectURIs(data, aliasDns) {
 				output.sso[key].redirectUris = [];
 				output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output.id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
 				if(output.externalId) {
-					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					if(key !== 'saml') {
+						// saml assertion will not allow external id
+						output.sso[key].redirectUris.push(`${config.PROTOCOL}://${config.SWAGGER}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+					}
 				}
 				if(aliasDns) {
 					output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output.id}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
 					if(output.externalId) {
-						output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+						if(key !== 'saml') {
+							// saml assertion will not allow external id
+							output.sso[key].redirectUris.push(`${config.PROTOCOL}://${aliasDns}/${data.authGroup}/interaction/callback/${key}/org:${output.externalId}/${connect.name.replace(/ /g, '_').toLowerCase()}`);
+						}
 					}
 				}
 			}

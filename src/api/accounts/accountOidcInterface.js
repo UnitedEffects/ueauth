@@ -92,7 +92,7 @@ class Account {
 		if(claims.id && !claims.sub) {
 			claims.sub = claims.id;
 		}
-		let account = await acct.getAccountByEmailOrUsername(authGroup.id, claims.email);
+		let account = await acct.getAccountAccessByEmailOrUsername(authGroup.id, claims.email);
 		const profile = cleanProfile(JSON.parse(JSON.stringify(claims)));
 		if(!account && authGroup.locked === true) {
 			throw Boom.forbidden('The Federated Account does not exist and can not be added because the Auth Group is locked');
@@ -102,7 +102,7 @@ class Account {
 		let organization;
 		if(orgSSO) {
 			try {
-				organization = await orgs.getOrg(authGroup.id, orgSSO);
+				organization = JSON.parse(JSON.stringify(await orgs.getOrg(authGroup.id, orgSSO)));
 			} catch (e) {
 				console.error(e);
 				throw Boom.badRequest(`An org was specified for this federated login but could not be resolved: ${orgSSO}`);
@@ -110,7 +110,7 @@ class Account {
 
 			// if the organization intends to add the federated account, ensure there is not an email domain issue
 			if(organization && organization.ssoAddAccountToOrg === true && organization.restrictEmailDomains === true) {
-				const domainCheck = profile.email.toLowerCase().split('@')[1];
+				const domainCheck = profile?.email?.toLowerCase().split('@')[1];
 				if(!organization.emailDomains.includes(domainCheck)) {
 					throw Boom.forbidden('Email domain is not whitelisted for the organization');
 				}
@@ -163,14 +163,13 @@ class Account {
 			}
 
 			// if we are here and an organization has been specified with addAccount true, we can do so
-			if(organization && organization.ssoAddAccountToOrg) {
+			if(organization?.ssoAddAccountToOrg) {
 				const orgAccess = createAccessObject(organization);
 				if(!account.access) account.access = [];
-				let access = [];
-				access = account.access.filter((a) => {
+				const access = account.access.filter((a) => {
 					return (a.organization.id === organization.id);
 				});
-				if(access.length === 0) {
+				if(!access.length) {
 					account.access.push(orgAccess);
 				}
 			}

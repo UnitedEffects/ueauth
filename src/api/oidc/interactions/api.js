@@ -15,13 +15,15 @@ import path from 'path';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
+import saml2 from 'ue.saml2-js';
+import { validate as uuidValidate } from 'uuid';
 
 const config = require('../../../config');
 const querystring = require('querystring');
 const { inspect } = require('util');
 const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
-
+const emailRegex = /(?:[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 const ClientOAuth2 = require('client-oauth2');
 
 const {
@@ -57,7 +59,6 @@ const api = {
 			}
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
-
 			if(client.auth_group !== req.authGroup.id) {
 				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
 			}
@@ -84,7 +85,7 @@ const api = {
 				return res.render('login/login', options);
 			}
 			case 'consent': {
-				if(client.client_skip_consent === true) {
+				if(client.client_skip_consent === true || params.federated_redirect === true) {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
@@ -150,7 +151,15 @@ const api = {
 			// note: organization sso callbacks should be /callback/{spec}/org:org_id/${name}
 			const nonce = res.locals.cspNonce;
 			const spec = req.params.spec;
-			const provider = req.params.provider;
+			let provider = req.params.provider;
+			if(provider.includes('org:')) {
+				//normalize provider...
+				const orgId = provider.split(':')[1];
+				if(!uuidValidate(orgId)) {
+					const o = JSON.parse(JSON.stringify(await org.getOrg(req.authGroup.id || req.authGroup._id, orgId)));
+					provider = `org:${o.id}`;
+				}
+			}
 			const name = req.params.name;
 			//validate AG
 			return res.render('repost', { layout: false, upstream: `${spec}.${provider}.${name}`, nonce, authGroup: req.authGroup.id });
@@ -228,20 +237,49 @@ const api = {
 					req.authSpec = spec;
 					req.fedConfig = myConfig;
 					return next();
+				case 'saml':
+					const assert_endpoint = `${req.provider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
+					const sp_options = {
+						entity_id:  req.provider.issuer,
+						private_key: myConfig.spPrivateKey,
+						certificate: myConfig.spCertificate,
+						assert_endpoint
+					};
+					const sp = new saml2.ServiceProvider(sp_options);
+					const idp_options = {
+						sso_login_url: myConfig.ssoLoginUrl,
+						sso_logout_url: myConfig.ssoLogoutUrl,
+						certificates: myConfig.idpCertificates,
+						sign_get_request: myConfig.signRequest,
+						allow_unencrypted_assertion: myConfig.allowUnencryptedAssertion,
+						force_authn: myConfig.forceLogin
+					};
+					const idp = new saml2.IdentityProvider(idp_options);
+					req.authSpec = spec;
+					req.fedConfig = myConfig;
+					req.samlSP = sp;
+					req.samlIdP = idp;
+					return next();
 				default:
 					throw Boom.badRequest('unknown specification for SSO requested');
 				}
 			}
 			throw Boom.badRequest('upstream data is missing');
 		} catch (error) {
+			console.error('ERROR', error);
 			next(error);
 		}
 	},
 	async postCallBackLogin(req, res, next) {
 		try {
+			const body = JSON.parse(JSON.stringify(req.body));
+			// If this is a SAML post, map the RelayState to state
+			if(req.body?.RelayState && !req.body?.state) {
+				body.state = req.body.RelayState
+			}
 			let path = `${req.path}?`;
-			Object.keys(req.body).map((key) => {
-				path = `${path}${key}=${req.body[key]}&`;
+			Object.keys(body).map((key) => {
+				path = `${path}${key}=${body[key]}&`;
 			});
 			return res.redirect(path);
 		} catch (error) {
@@ -251,15 +289,100 @@ const api = {
 	async federated(req, res, next) {
 		try {
 			const provider = req.provider;
-			const { prompt: { name } } = await provider.interactionDetails(req, res);
-			assert.equal(name, 'login');
 			const { authGroup } = await safeAuthGroup(req.authGroup);
+
+			const i = await provider.Interaction.find(req.params.uid);
+			i.params.federated_redirect = true;
+			await i.save(authGroup.config.ttl.interaction);
+
+			const { prompt } = await provider.interactionDetails(req, res);
+			assert.equal(prompt.name, 'login');
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			let callbackUrl;
+			const myConfig = req.fedConfig;
 			switch (req.authSpec.toLowerCase()) {
+			case 'saml':
+				const samlError = (error) => {
+					res.redirect(`/${authGroup.id}/interaction/${req.params.uid}?flash=Security issue with SAML federated login - ${error}. Try again later.`);
+				}
+				const sp = req.samlSP;
+				const idp =	req.samlIdP;
+				if(req.body?.SAMLResponse) {
+					// Callback
+					const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
+
+					if(state !== req.body.state) {
+						console.error(`Unexpected Session State: ${state} vs. ${req.body.state}`);
+						return samlError('This does not appear to be the correct browser window');
+					}
+
+					const options = {request_body: req.body};
+					let saml_response;
+					try {
+						saml_response = await interactions.samlAssert(sp, idp, options);
+					} catch(err) {
+						console.error('No SAML response received', JSON.stringify(err, null, 2));
+						return samlError('SAML IdP did not respond');
+					}
+
+					const samlId = saml_response.user.name_id || saml_response.user.id;
+					const email = (saml_response.user.email) ? saml_response.user.email : (saml_response.user.attributes.email) ?
+						(!Array.isArray(saml_response.user.attributes.email)) ? saml_response.user.attributes.email :
+							(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length)
+								? saml_response.user.attributes.email[0] : null : null
+					if(!email) {
+						console.error('SAML responses did not map email');
+						return samlError('SAML response does not include email');
+					}
+					if(!emailRegex.test(email)) {
+						console.error('SAML responses email is wrong', email);
+						return samlError(`SAML response provided email but it is in the wrong format, '${email}'`);
+					}
+					const id = (saml_response.user.id) ? (saml_response.user.id) : (saml_response.user.attributes.userId) ?
+						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
+							(Array.isArray(saml_response.user.attributes.userId) && saml_response.user.attributes.userId.length)
+								? saml_response.user.attributes.userId[0] : samlId || email : samlId || email;
+					if(!id) {
+						console.error('SAML responses did not map a user ID');
+						return samlError('SAML response could not identify an ID for the user');
+					}
+					let account;
+					try {
+						account = await Account.findByFederated(authGroup,
+							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
+							{
+								id,
+								email,
+								idpId: samlId
+							}, req.providerOrg);
+					} catch (error) {
+						return samlError(`Unable to login using federation - ${ error?.message || error}`)
+					}
+
+					const result = {
+						login: {
+							accountId: account.accountId,
+						},
+					};
+					return provider.interactionFinished(req, res, result, {
+						mergeWithLastSubmission: false,
+					});
+				} else {
+					// request
+					const relay_state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
+					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
+					try {
+						const samlReq = await interactions.samlLogin(sp, idp, { relay_state });
+						if(!samlReq) throw 'Could not get a login url - this could be a configuration issue';
+						return res.redirect(samlReq.loginUrl);
+					} catch(err) {
+						console.error('Error while trying to initiate login', err);
+						return samlError('could not initiate federated SAML login');
+					}
+				}
 			case 'oidc': {
 				const callbackParams = req.authClient.callbackParams(req);
-				const myConfig = req.fedConfig;
 				callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if (!Object.keys(callbackParams).length) {
 					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
@@ -346,7 +469,6 @@ const api = {
 			}
 			case 'oauth2':
 				// we are only supporting authorization_code for oauth2 for now
-				const myConfig = req.fedConfig;
 				let state;
 				let issuer;
 				let profile;
@@ -508,7 +630,7 @@ const api = {
 						} else {
 							organization = await org.getOrgBySsoEmailDomain(authGroup, req.body.email);
 						}
-						if(organization.ssoLimit === true) params.ssoPriority = true;
+						if(organization?.ssoLimit === true) params.ssoPriority = true;
 						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
 						console.error(error);
@@ -719,11 +841,11 @@ const api = {
 		try {
 			const action = ctx.oidc.urlFor('end_session_confirm');
 			let skipPrompt = false;
-			if (ctx.req.query && ctx.req.query.skipPrompt && ctx.req.query.skipPrompt === 'true') {
+			if (ctx?.req?.query?.skipPrompt === 'true') {
 				// this must be set at the client level and only works if there is a redirectUrl present
-				if (ctx.oidc && ctx.oidc.client && ctx.oidc.client.client_optional_skip_logout_prompt === true) {
+				if (ctx?.oidc?.client?.client_optional_skip_logout_prompt === true) {
 					// post_logout_redirect_uri further requires an id_token_hint or client_id
-					if(ctx.req.query.post_logout_redirect_uri) {
+					if(ctx?.req?.query?.post_logout_redirect_uri) {
 						skipPrompt = true;
 					}
 				}
@@ -738,10 +860,10 @@ const api = {
 				basedir: 'path/for/pug/extends',
 			});
 			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, client, skipPrompt);
-			if (ctx.req.query && ctx.req.query.onCancel) {
+			if (ctx?.req?.query?.onCancel) {
 				options.onCancel = ctx.req.query.onCancel;
 			}
-			if (ctx.req.query && ctx.req.query.json && ctx.req.query.json === 'true') {
+			if (ctx?.req?.query?.json === 'true') {
 				// enable REST response
 				ctx.type='json';
 				ctx.body = {
@@ -765,9 +887,15 @@ const api = {
 	async postLogoutSuccessSource(ctx) {
 		try {
 			const { authGroup } = await safeAuthGroup(ctx.authGroup);
-			let {
-				clientName, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientId
-			} = ctx.oidc.client || {}; // client is defined if the user chose to stay logged in with the OP
+
+			const clientName = (ctx.oidc.client) ? ctx.oidc.client.clientName : null;
+			const clientId = (ctx.oidc.client) ? ctx.oidc.client.clientId : null;
+			let clientUri = (ctx.oidc.client) ? ctx.oidc.client.clientUri : null;
+			const initiateLoginUri = (ctx.oidc.client) ? ctx.oidc.client.initiateLoginUri : null;
+			const logoUri = (ctx.oidc.client) ? ctx.oidc.client.logoUri : null;
+			const policyUri = (ctx.oidc.client) ? ctx.oidc.client.policyUri : null;
+			const tosUri = (ctx.oidc.client) ? ctx.oidc.client.tosUri : null;
+
 			if(authGroup.associatedClient === clientId) {
 				clientUri = `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}`;
 			}
@@ -847,7 +975,7 @@ async function checkProvider(upstream, ag) {
 	const option = agSpecs.filter((config) => {
 		return (config.provider.toLowerCase() === provider.toLowerCase() && config.name.toLowerCase() === name.toLowerCase());
 	});
-	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${name}`);
+	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${provider}`);
 	return { spec, provider, name, myConfig: option[0]};
 }
 

@@ -111,7 +111,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
-		extraParams: ['audience'],
+		extraParams: ['audience', 'federated_redirect', 'org', 'orgs'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -122,8 +122,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			clientCredentials: {enabled: true},
 			userinfo: {enabled: true},
 			backchannelLogout: {
-				enabled: true,
-				ack: 'draft-07'
+				enabled: true
 			},
 			rpInitiatedLogout: {
 				enabled: true,
@@ -132,7 +131,6 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 			encryption: { enabled: true },
 			deviceFlow: {
-				//todo customize
 				enabled: g.config.deviceFlow
 			},
 			registration: {
