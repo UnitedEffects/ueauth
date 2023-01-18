@@ -303,11 +303,17 @@ const api = {
 			const myConfig = req.fedConfig;
 			switch (req.authSpec.toLowerCase()) {
 			case 'saml':
-				const samlError = (error) => res.render('login/login',
-					interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
-						{
-							...params
-						}, `Security issue with SAML federated login - ${error}. Try again later.`));
+				const samlError = (error) => {
+					res.redirect(`/${authGroup.id}/interaction/${req.params.uid}?flash=Security issue with SAML federated login - ${error}. Try again later.`);
+					/*
+					res.render('login/login',
+						interactions.standardLogin(authGroup, client, debug, prompt, session, uid,
+							{
+								...params
+							}, `Security issue with SAML federated login - ${error}. Try again later.`));
+
+					 */
+				}
 				const sp = req.samlSP;
 				const idp =	req.samlIdP;
 				if(req.body?.SAMLResponse) {
@@ -331,7 +337,7 @@ const api = {
 					}
 
 					const samlId = saml_response.user.name_id || saml_response.user.id;
-					const email = (saml_response.user.attributes.email) ?
+					const email = (saml_response.user.email) ? saml_response.user.email : (saml_response.user.attributes.email) ?
 						(!Array.isArray(saml_response.user.attributes.email)) ? saml_response.user.attributes.email :
 							(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length)
 								? saml_response.user.attributes.email[0] : null : null
@@ -343,7 +349,7 @@ const api = {
 						console.error('SAML responses email is wrong', email);
 						return samlError('SAML response provided email but it is in the wrong format');
 					}
-					const id = (saml_response.user.attributes.userId) ?
+					const id = (saml_response.user.id) ? (saml_response.user.id) : (saml_response.user.attributes.userId) ?
 						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
 							(Array.isArray(saml_response.user.attributes.userId) && saml_response.user.attributes.userId.length)
 								? saml_response.user.attributes.userId[0] : samlId || email : samlId || email;
