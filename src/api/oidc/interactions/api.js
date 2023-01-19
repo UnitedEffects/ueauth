@@ -71,7 +71,7 @@ const api = {
 				if(params.org && client.client_allow_org_federation === true && authGroup) {
 					try {
 						const organization = await org.getOrg(authGroup, params.org);
-						if(organization.ssoLimit === true) params.ssoPriority = true;
+						if(organization?.ssoLimit === true) params.ssoPriority = true;
 						await orgSSO(req, res, organization, params, client, authGroup);
 					} catch(error) {
 						console.error(error)
