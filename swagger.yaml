@@ -25,6 +25,8 @@ info:
 tags:
   - name: Auth Groups
     description: Auth Groups are a pool of globally unique users
+  - name: Interactions
+    description: Interaction API to manage logins externally
   - name: OIDC
     description: Some Key OIDC endpoints (not all) - see <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>
   - name: Users
@@ -78,6 +80,47 @@ tags:
   - name: Health
 
 paths:
+  # Interactions
+  /api/{group}/interaction:
+    post:
+      tags:
+        - Interactions
+      summary: Create an interaction record
+      description: This API allows you to bypass the centralize OIDC /auth endpoint and define an interaction which can be used to define your own local login screens
+      parameters:
+        - name: group
+          in: path
+          description: id, prettyName, or aliasDnsUI value for the AuthGroup
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                # todo
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              # todo
+              type: object
+        description: Account data to be written
+        required: true
   # Functional APIs
   /api/group-info/{group}:
     get:

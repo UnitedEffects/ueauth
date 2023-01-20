@@ -3,7 +3,7 @@ import path from 'path';
 import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
-import { Root, Identity, Access, OIDC, Profiles, Challenge, Stats } from './routes';
+import { Root, Identity, Access, OIDC, Profiles, Challenge, Stats, Int } from './routes';
 import middle from './middleware';
 
 const config = require('./config');
@@ -34,6 +34,7 @@ app.use('/api', Identity);
 app.use('/api', Access);
 app.use('/api', Profiles);
 app.use('/api', Stats);
+app.use('/api', Int);
 
 // catch 404 and other errors
 app.use(middle.catch404);

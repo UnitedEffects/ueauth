@@ -17,6 +17,7 @@ import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
 import saml2 from 'ue.saml2-js';
 import { validate as uuidValidate } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -45,6 +46,35 @@ async function safeAuthGroup(ag) {
 }
 
 const api = {
+	async createInt(req, res, next) {
+		try {
+			const provider = await oidc(req.authGroup, req.customDomain);
+			const jti = uuid();
+			/*
+				{
+					client_id: "45a37a5f-a295-4705-9b7e-3efde55c5bf6",
+					redirect_uri: "http://localhost:3000/oauth2-redirect.html",
+					response_type: "code",
+					scope: "openid access email",
+					state: "VGh1IEphbiAxOSAyMDIzIDIyOjA3OjI4IEdNVC0wNTAwIChFYXN0ZXJuIFN0YW5kYXJkIFRpbWUp"
+				}
+				a.co get UID —> send login request to b.co/custom —> lookup UID and if good create cookies on b.co —> continue with normal login flow
+			 */
+			//todo validate body...?
+			const interaction = new provider.Interaction(jti, {
+				returnTo: `${provider.issuer}/auth/${jti}`,
+				prompt: {
+					name: 'login',
+					reasons: ['no_session']
+				},
+				params: req.body
+			});
+			await interaction.save(600);
+			res.json(interaction);
+		} catch (error) {
+			return next(error);
+		}
+	},
 	async getInt(req, res, next) {
 		try {
 			const provider = await oidc(req.authGroup, req.customDomain);

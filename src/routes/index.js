@@ -5,3 +5,4 @@ export { default as OIDC  } from './oidc';
 export { default as Profiles } from './profiles';
 export { default as Challenge } from './mfa';
 export { default as Stats } from './stats';
+export { default as Int } from './interactions';
