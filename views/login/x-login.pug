@@ -1,0 +1,47 @@
+extends ../uelayout
+block content
+    script.
+        function setCookie(cname, cvalue, ttl, path) {
+            const d = new Date();
+            d.setTime(d.getTime() + (ttl));
+            let expires = "expires=" + d.toUTCString();
+            document.cookie = `${cname}=${cvalue}; ${expires}; path=${path};`;
+        }
+
+        /*
+            "root_interaction": "ZJfnM5tH8ZkOY6750hFLS",
+            "root_interaction.sig": "SAQQQ2HodSQh8nNQo1NQo-z9cKM",
+            "root_interaction.legacy": "ZJfnM5tH8ZkOY6750hFLS",
+            "root_interaction.legacy.sig": "UAWGyxVoL7DPxt0qPkN9MRVBckk",
+            "qALg6VCMXfTPsNHpnEvkk.organizations": "theboeffect"
+         */
+
+        setCookie('root_interaction', 'ZJfnM5tH8ZkOY6750hFLS', 3000, '/')
+        setCookie('root_interaction.sig', 'SAQQQ2HodSQh8nNQo1NQo-z9cKM', 3000, '/')
+        setCookie('root_interaction.legacy', 'ZJfnM5tH8ZkOY6750hFLS', 3000, '/')
+        setCookie('root_interaction.legacy.sig', 'UAWGyxVoL7DPxt0qPkN9MRVBckk', 3000, '/')
+        setCookie('qALg6VCMXfTPsNHpnEvkk.organizations', 'theboeffect', 3000, '/')
+
+    body.bg.flex
+        .panel.middle-panel.width-auto
+            .credential-container
+                form#mainLogin(autocomplete='off', action='http://localhost:3000/qALg6VCMXfTPsNHpnEvkk/interaction/ZJfnM5tH8ZkOY6750hFLS/login', method='post')
+                    p.sign-in Sign in
+                    .credentials
+                        div
+                            input(type='text' hidden name='root_interaction' value='ZJfnM5tH8ZkOY6750hFLS')
+                        div
+                            input(type='text' hidden name='root_interaction.sig' value='SAQQQ2HodSQh8nNQo1NQo-z9cKM')
+                        div
+                            input(type='text' hidden name='root_interaction.legacy' value='ZJfnM5tH8ZkOY6750hFLS')
+                        div
+                            input(type='text' hidden name='root_interaction.legacy.sig' value='UAWGyxVoL7DPxt0qPkN9MRVBckk')
+                        div
+                            input(type='text' hidden name='qALg6VCMXfTPsNHpnEvkk.organizations' value='theboeffect')
+                        div
+                            input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
+                            label(for='email') Email
+                        div
+                            input#password.m-t-10(type='password' name='password' placeholder='Password' autofocus='autofocus'  autocomplete='current-password')
+                            label(for='password') Password
+                        button.btn-custom.btn-signin(type='submit' form='mainLogin') Login

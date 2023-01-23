@@ -103,7 +103,7 @@ function oidcConfig(g, aliasDns = undefined) {
 		scopes: BASE_SCOPES.concat(coreScopes).concat(g.config.scopes),
 		interactions: {
 			async url(ctx, interaction) {
-				if(ctx.request && ctx.request.query && ctx.request.query.org) {
+				if(ctx.request?.query?.org) {
 					interaction.params.org = ctx.request.query.org;
 					await interaction.save(g.config.ttl.interaction);
 				}
@@ -111,7 +111,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
-		extraParams: ['audience', 'federated_redirect', 'org', 'orgs'],
+		extraParams: ['audience', 'federated_redirect', 'org', 'orgs', 'embedded'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -464,9 +464,9 @@ function oidcConfig(g, aliasDns = undefined) {
 				signed: true
 			},
 			short: {
-				httpOnly: true,
+				httpOnly: true, //todo true
 				overwrite: true,
-				sameSite: 'lax',
+				sameSite: 'none', //todo lax
 				signed: true
 			},
 			names: {

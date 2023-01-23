@@ -22,6 +22,9 @@ router.post('/:group/token/initial-access', [
 /**
  * OP Defined Interactions
  */
+// todo delete
+router.get('/x-login', interactions.tempLogin);
+
 // primary interaction controller
 router.get('/:group/interaction/:uid', [
 	jsonParser,
@@ -41,6 +44,7 @@ router.get('/:group/interaction/:uid/abort', [
 	m.setNoCache,
 	m.validateAuthGroup
 ], interactions.abort);
+
 // login interaction
 router.post('/:group/interaction/:uid/login', [
 	jsonParser,

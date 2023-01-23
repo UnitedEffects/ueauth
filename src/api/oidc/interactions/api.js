@@ -17,7 +17,7 @@ import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
 import saml2 from 'ue.saml2-js';
 import { validate as uuidValidate } from 'uuid';
-import { v4 as uuid } from 'uuid';
+import epochTime from "oidc-provider/lib/helpers/epoch_time";
 
 const config = require('../../../config');
 const querystring = require('querystring');
@@ -46,33 +46,12 @@ async function safeAuthGroup(ag) {
 }
 
 const api = {
-	async createInt(req, res, next) {
+	//todo delete this...
+	async tempLogin(req, res, next) {
 		try {
-			const provider = await oidc(req.authGroup, req.customDomain);
-			const jti = uuid();
-			/*
-				{
-					client_id: "45a37a5f-a295-4705-9b7e-3efde55c5bf6",
-					redirect_uri: "http://localhost:3000/oauth2-redirect.html",
-					response_type: "code",
-					scope: "openid access email",
-					state: "VGh1IEphbiAxOSAyMDIzIDIyOjA3OjI4IEdNVC0wNTAwIChFYXN0ZXJuIFN0YW5kYXJkIFRpbWUp"
-				}
-				a.co get UID —> send login request to b.co/custom —> lookup UID and if good create cookies on b.co —> continue with normal login flow
-			 */
-			//todo validate body...?
-			const interaction = new provider.Interaction(jti, {
-				returnTo: `${provider.issuer}/auth/${jti}`,
-				prompt: {
-					name: 'login',
-					reasons: ['no_session']
-				},
-				params: req.body
-			});
-			await interaction.save(600);
-			res.json(interaction);
+			return res.render('login/x-login');
 		} catch (error) {
-			return next(error);
+			next(error);
 		}
 	},
 	async getInt(req, res, next) {
@@ -80,7 +59,9 @@ const api = {
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const intDetails = await provider.interactionDetails(req, res);
 			const { authGroup } = await safeAuthGroup(req.authGroup);
-			const { uid, prompt, params, session } = intDetails;
+			const { uid, prompt, params, session, result } = intDetails;
+			console.info('here');
+			console.info(intDetails);
 			params.passwordless = false;
 			params.emailScreen = true;
 			if (authGroup?.pluginOptions?.notification.enabled === true &&
@@ -112,6 +93,9 @@ const api = {
 					...interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params)
 				};
 				if(req.query.flash) options.flash = req.query.flash;
+				if(params.embedded && !result?.login) {
+					return res.json({ secure: req.cookies, uid, interaction: intDetails, uiOptions: options });
+				}
 				return res.render('login/login', options);
 			}
 			case 'consent': {
@@ -602,9 +586,14 @@ const api = {
 	},
 	async login(req, res, next) {
 		try {
-			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
+			console.info('Logging in....');
 			const provider = await oidc(req.authGroup, req.customDomain);
-			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			//const { uid, prompt, params, session, returnTo }  = await provider.Interaction.find(req.params.uid);
+			const interaction = await provider.Interaction.find(req.params.uid);
+			const { uid, prompt, params, session } = interaction;
+			//todo expired should redirect back with error
+			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
+			//const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
 			const { authGroup } = await safeAuthGroup(req.authGroup);
 			if (authGroup?.pluginOptions?.notification?.enabled === true &&
@@ -757,7 +746,39 @@ const api = {
 				const client = await provider.Client.find(params.client_id);
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
 			}
-			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+			if(params?.embedded) {
+				console.info('HERE')
+				//todo validate cookie data?
+				console.info(req.body);
+				const cookies = JSON.parse(JSON.stringify(req.body));
+				// todo - get this
+				const path1 = `/${authGroup.prettyName}/auth/${req.params.uid}`;
+				const path2 = `/${authGroup.id}/interaction/${req.params.uid}`;
+				const path3 = `/${authGroup.id}/interaction/${req.params.uid}/login`;
+				const path4 = `/${authGroup.id}/auth/${req.params.uid}`;
+				const cookieOptions = {
+					maxAge: 3000,
+					httpOnly: true, //todo true
+					overwrite: true,
+					sameSite: 'lax', //todo lax
+				}
+				delete cookies.email;
+				delete cookies.password;
+				Object.keys(cookies).map((c, ) => {
+					console.info(c, cookies[c]);
+					res.cookie(c, cookies[c], { ...cookieOptions, path: path1 });
+					res.cookie(c, cookies[c], { ...cookieOptions, path: path2 });
+					res.cookie(c, cookies[c], { ...cookieOptions, path: path3 });
+					res.cookie(c, cookies[c], { ...cookieOptions, path: path4 });
+				})
+				console.info(res.cookies);
+				interaction.result = result;
+				console.info(interaction);
+				console.info(provider.cookieName('resume'))
+				await interaction.save(3000)
+				return res.render('embedded-relay', { returnTo: interaction?.returnTo });
+			}
+			return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);
 		}
