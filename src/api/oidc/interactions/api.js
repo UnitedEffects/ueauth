@@ -1,5 +1,5 @@
 import oidc from '../oidc';
-import { generators } from 'openid-client';
+import openid, { generators } from 'openid-client';
 import axios from 'axios';
 import Account from '../../accounts/accountOidcInterface';
 import acc from '../../accounts/account';
@@ -64,6 +64,12 @@ const api = {
 			}
 			switch (prompt.name) {
 			case 'login': {
+				if(client.client_skip_to_federated) {
+					const result = await api.establishFedClient(authGroup, client.client_skip_to_federated, provider);
+					console.info(result);
+					req = api.setFederatedReq(req, result);
+					return api.federated(req, res, next);
+				}
 				if(!params.org && client.client_allow_org_self_identify === true && authGroup) {
 					params.selfIdentify = true;
 					params.orgs = req.cookies[`${authGroup.id}.organizations`]?.split(',');
@@ -167,15 +173,105 @@ const api = {
 			next (error);
 		}
 	},
+	//todo move this...
+	async establishFedClient(authGroup, upstreamBody, opProvider) {
+		const upstream = upstreamBody.split('.');
+		const {spec, provider, name, myConfig} = await checkProvider(upstream, authGroup);
+		const out = {
+			spec,
+			provider,
+			name,
+			myConfig
+		};
+		if(provider?.toLowerCase().includes('org:')) {
+			const org = provider.toLowerCase().split(':');
+			if(org.length === 2) {
+				out.providerOrg = org[1];
+			}
+		}
+		switch (spec.toLowerCase()) {
+			case 'oidc':
+				if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+				if(myConfig.PKCE === false && !myConfig.client_secret) {
+					throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+				}
+				out.redirectUri = `${opProvider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
+				const openid = require('openid-client');
+				out.issuer = await openid.Issuer.discover(myConfig.discovery_url);
+				out.clientOptions = {
+					client_id: myConfig.client_id,
+					response_types: [myConfig.response_type],
+					redirect_uris: [out.redirectUri],
+					grant_types: [myConfig.grant_type]
+				};
+				if(myConfig.PKCE === false) {
+					out.clientOptions.client_secret = myConfig.client_secret;
+				} else {
+					out.clientOptions.token_endpoint_auth_method = 'none';
+				}
+				out.client = new out.issuer.Client(out.clientOptions);
+				return out;
+			case 'oauth2':
+				if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
+				if(myConfig.PKCE === false && !myConfig.client_secret) {
+					throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
+				}
+				out.authIssuer = {
+					clientId: myConfig.client_id,
+					accessTokenUri: myConfig.accessTokenUri,
+					authorizationUri: myConfig.authorizationUri,
+					scopes: myConfig.scopes
+				};
+				if(myConfig.PKCE === false) {
+					out.authIssuer.clientSecret = myConfig.client_secret;
+				} else {
+					out.authIssuer.token_endpoint_auth_method = 'none';
+				}
+				return out;
+			case 'saml':
+				const assert_endpoint = `${opProvider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
+				const sp_options = {
+					entity_id:  opProvider.issuer,
+					private_key: myConfig.spPrivateKey,
+					certificate: myConfig.spCertificate,
+					assert_endpoint
+				};
+				out.sp = new saml2.ServiceProvider(sp_options);
+				const idp_options = {
+					sso_login_url: myConfig.ssoLoginUrl,
+					sso_logout_url: myConfig.ssoLogoutUrl,
+					certificates: myConfig.idpCertificates,
+					sign_get_request: myConfig.signRequest,
+					allow_unencrypted_assertion: myConfig.allowUnencryptedAssertion,
+					force_authn: myConfig.forceLogin
+				};
+				out.idp = new saml2.IdentityProvider(idp_options);
+				return out;
+			default:
+				throw Boom.badRequest('unknown specification for SSO requested');
+		}
+	},
+	//todo move this too
+	setFederatedReq(req, result) {
+		req.providerOrg = result.providerOrg;
+		req.authSpec = result.spec;
+		req.fedConfig = result.myConfig;
+		if(result.spec.toLowerCase() === 'oidc') {
+			req.authIssuer = result.issuer;
+			req.authClient = result.client;
+			req.authSpec = result.spec;
+		}
+		if(result.spec.toLowerCase() === 'saml') {
+			req.samlSP = result.sp;
+			req.samlIdP = result.idp;
+		}
+		return req;
+	},
 	async oidcFederationClient(req, res, next) {
 		try {
 			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
 			if (req.authIssuer) return next();
 			const { authGroup } = await safeAuthGroup(req.authGroup);
-			let redirectUri;
-			let issuer;
-			let clientOptions;
-			let client;
 			let upstreamBody = req.body.upstream;
 			if(!upstreamBody) {
 				const spec = req.params.spec;
@@ -184,85 +280,10 @@ const api = {
 				upstreamBody = `${spec}.${provider}.${name}`;
 			}
 			if(upstreamBody) {
-				const upstream = upstreamBody.split('.');
-				const {spec, provider, name, myConfig} = await checkProvider(upstream, authGroup);
-				if(provider?.toLowerCase().includes('org:')) {
-					const org = provider.toLowerCase().split(':');
-					if(org.length === 2) {
-						req.providerOrg = org[1];
-					}
-				}
-				switch (spec.toLowerCase()) {
-				case 'oidc':
-					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
-					if(myConfig.PKCE === false && !myConfig.client_secret) {
-						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
-					}
-					redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
-					const openid = require('openid-client');
-					issuer = await openid.Issuer.discover(myConfig.discovery_url);
-					clientOptions = {
-						client_id: myConfig.client_id,
-						response_types: [myConfig.response_type],
-						redirect_uris: [redirectUri],
-						grant_types: [myConfig.grant_type]
-					};
-					if(myConfig.PKCE === false) {
-						clientOptions.client_secret = myConfig.client_secret;
-					} else {
-						clientOptions.token_endpoint_auth_method = 'none';
-					}
-					client = new issuer.Client(clientOptions);
-					req.authIssuer = issuer;
-					req.authClient = client;
-					req.authSpec = spec;
-					req.fedConfig = myConfig;
-					return next();
-				case 'oauth2':
-					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
-					if(myConfig.PKCE === false && !myConfig.client_secret) {
-						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
-					}
-					req.authIssuer = {
-						clientId: myConfig.client_id,
-						accessTokenUri: myConfig.accessTokenUri,
-						authorizationUri: myConfig.authorizationUri,
-						scopes: myConfig.scopes
-					};
-					if(myConfig.PKCE === false) {
-						req.authIssuer.clientSecret = myConfig.client_secret;
-					} else {
-						req.authIssuer.token_endpoint_auth_method = 'none';
-					}
-					req.authSpec = spec;
-					req.fedConfig = myConfig;
-					return next();
-				case 'saml':
-					const assert_endpoint = `${req.provider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
-					const sp_options = {
-						entity_id:  req.provider.issuer,
-						private_key: myConfig.spPrivateKey,
-						certificate: myConfig.spCertificate,
-						assert_endpoint
-					};
-					const sp = new saml2.ServiceProvider(sp_options);
-					const idp_options = {
-						sso_login_url: myConfig.ssoLoginUrl,
-						sso_logout_url: myConfig.ssoLogoutUrl,
-						certificates: myConfig.idpCertificates,
-						sign_get_request: myConfig.signRequest,
-						allow_unencrypted_assertion: myConfig.allowUnencryptedAssertion,
-						force_authn: myConfig.forceLogin
-					};
-					const idp = new saml2.IdentityProvider(idp_options);
-					req.authSpec = spec;
-					req.fedConfig = myConfig;
-					req.samlSP = sp;
-					req.samlIdP = idp;
-					return next();
-				default:
-					throw Boom.badRequest('unknown specification for SSO requested');
-				}
+				const result = await api.establishFedClient(authGroup, upstreamBody, req.provider);
+				console.info(result);
+				req = api.setFederatedReq(req, result);
+				return next();
 			}
 			throw Boom.badRequest('upstream data is missing');
 		} catch (error) {
@@ -498,6 +519,8 @@ const api = {
 						};
 					}
 					issuer = new ClientOAuth2(oauthOptions);
+					console.info(oauthOptions);
+					console.info(issuer);
 					return res.redirect(issuer.code.getUri());
 				}
 
