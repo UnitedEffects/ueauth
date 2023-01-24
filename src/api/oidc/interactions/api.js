@@ -64,10 +64,10 @@ const api = {
 			}
 			switch (prompt.name) {
 			case 'login': {
-				if(client.client_skip_to_federated) {
+				if(client?.client_skip_to_federated) {
+					req.provider = provider;
 					const result = await api.establishFedClient(authGroup, client.client_skip_to_federated, provider);
-					console.info(result);
-					req = api.setFederatedReq(req, result);
+					api.setFederatedReq(req, result);
 					return api.federated(req, res, next);
 				}
 				if(!params.org && client.client_allow_org_self_identify === true && authGroup) {
@@ -256,16 +256,17 @@ const api = {
 		req.providerOrg = result.providerOrg;
 		req.authSpec = result.spec;
 		req.fedConfig = result.myConfig;
+		req.authClient = result.client;
 		if(result.spec.toLowerCase() === 'oidc') {
 			req.authIssuer = result.issuer;
-			req.authClient = result.client;
-			req.authSpec = result.spec;
+		}
+		if(result.spec.toLowerCase() === 'oauth2') {
+			req.authIssuer = result.authIssuer;
 		}
 		if(result.spec.toLowerCase() === 'saml') {
 			req.samlSP = result.sp;
 			req.samlIdP = result.idp;
 		}
-		return req;
 	},
 	async oidcFederationClient(req, res, next) {
 		try {
@@ -281,8 +282,7 @@ const api = {
 			}
 			if(upstreamBody) {
 				const result = await api.establishFedClient(authGroup, upstreamBody, req.provider);
-				console.info(result);
-				req = api.setFederatedReq(req, result);
+				api.setFederatedReq(req, result);
 				return next();
 			}
 			throw Boom.badRequest('upstream data is missing');
@@ -519,8 +519,6 @@ const api = {
 						};
 					}
 					issuer = new ClientOAuth2(oauthOptions);
-					console.info(oauthOptions);
-					console.info(issuer);
 					return res.redirect(issuer.code.getUri());
 				}
 

@@ -295,6 +295,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				'client_federation_options',
 				'client_allow_org_federation',
 				'client_allow_org_self_identify',
+				'client_skip_to_federated',
 				'dynamic_scope'
 			],
 			validator(ctx, key, value, metadata) {
