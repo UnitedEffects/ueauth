@@ -1,5 +1,5 @@
 import oidc from '../oidc';
-import openid, { generators } from 'openid-client';
+import { generators } from 'openid-client';
 import axios from 'axios';
 import Account from '../../accounts/accountOidcInterface';
 import acc from '../../accounts/account';
