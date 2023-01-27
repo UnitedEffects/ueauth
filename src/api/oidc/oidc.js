@@ -165,16 +165,20 @@ function oidcConfig(g, aliasDns = undefined) {
 							} else {
 								const id = ctx.authGroup._id || ctx.authGroup.id;
 								if(ctx.authGroup.associatedClient === ctx.oidc.entities.Client.clientId){
-									// we are going to let federation updates to happen regardless
+									// we are going to let a few through
 									const altered = await objectCamel(JSON.parse(JSON.stringify(properties)));
 									altered.auth_group = altered.authGroup;
 									delete altered.authGroup;
 									const changes = await compareJSON(JSON.parse(JSON.stringify(ctx.oidc.entities.Client)), altered);
 									let error = false;
-									console.info('Found Diff', changes);
 									Object.keys(changes).map((key) => {
-										if(key !== 'clientAllowOrgFederation' && key !== 'clientFederationOptions') {
-											console.info('Updated Key', key);
+										if( key !== 'clientAllowOrgFederation' &&
+											key !== 'clientFederationOptions' &&
+											key !== 'clientSkipConsent' &&
+											key !== 'clientAllowOrgSelfIdentify' &&
+											key !== 'clientSkipToFederated' &&
+											key !== 'clientOptionalSkipLogoutPrompt'
+										) {
 											error = true;
 										}
 									});
@@ -292,10 +296,10 @@ function oidcConfig(g, aliasDns = undefined) {
 				'auth_group',
 				'client_name',
 				'client_label',
-				'client_skip_consent',
 				'register_url',
-				'client_optional_skip_logout_prompt',
 				'associated_product',
+				'client_skip_consent',
+				'client_optional_skip_logout_prompt',
 				'client_federation_options',
 				'client_allow_org_federation',
 				'client_allow_org_self_identify',
