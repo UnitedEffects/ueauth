@@ -171,8 +171,10 @@ function oidcConfig(g, aliasDns = undefined) {
 									delete altered.authGroup;
 									const changes = await compareJSON(JSON.parse(JSON.stringify(ctx.oidc.entities.Client)), altered);
 									let error = false;
+									console.info('Found Diff', changes);
 									Object.keys(changes).map((key) => {
 										if(key !== 'clientAllowOrgFederation' && key !== 'clientFederationOptions') {
+											console.info('Updated Key', key);
 											error = true;
 										}
 									});
