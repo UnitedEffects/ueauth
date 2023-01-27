@@ -123,8 +123,7 @@ const api = {
 			const nonce = crypto.randomBytes(32).toString('hex');
 			setCookie(res, myConfig, 'state', state,{ path, sameSite: 'strict' });
 			setCookie(res, myConfig, 'nonce', nonce,{ path, sameSite: 'strict' });
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, nonce, { path, sameSite: 'strict' });
+
 			res.status = 303;
 			const authUrlOptions = {
 				state,
@@ -160,19 +159,14 @@ const api = {
 			const myConfig = req.fedConfig;
 			const provider = req.provider;
 			const callbackUrl = `${provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
-			//const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
 			const state = getCookie(req, myConfig, 'state');
 			setCookie(res, myConfig, 'state', null, { path });
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
 			const nonce = getCookie(req, myConfig, 'nonce');
 			setCookie(res, myConfig, 'nonce', null, { path });
-			//const nonce = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`];
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, { path });
 
 			if(myConfig.provider.toLowerCase() === 'apple') {
 				if(req.body.state !== state) {
 					return fedError(`State mismatch. Expected ${state} and received ${req.body.state}`);
-					//throw Boom.badRequest(`State mismatch. Expected ${state} and received ${req.body.state}`);
 				}
 				const id_token = req.body.id_token;
 				if(id_token) {
@@ -180,7 +174,6 @@ const api = {
 					const profile = JSON.parse(JSON.stringify(claims.payload));
 					if(profile.nonce !== nonce) {
 						return fedError(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
-						//throw Boom.badRequest(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
 					}
 					const account = await Account.findByFederated(authGroup,
 						`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
@@ -196,7 +189,6 @@ const api = {
 				}
 				console.error('Currently, OIDC with Apple requires an id_token response on authorize');
 				return fedError('Apple authorization response was unexpected');
-				//throw Boom.badRequest('Currently, OIDC with Apple requires an id_token response on authorize');
 			}
 
 			const callbackOptions = {
@@ -208,7 +200,6 @@ const api = {
 				const session = await interactions.getPKCESession(authGroup.id, state);
 				if(!session) {
 					return fedError('PKCE session not found');
-					//throw Boom.badRequest('PKCE Session not found');
 				}
 				callbackOptions.code_verifier = session.payload?.code_verifier;
 			}
@@ -246,7 +237,7 @@ const api = {
 			const callbackUrl = `${req.provider.issuer}/interaction/callback/${req.authSpec.toLowerCase()}/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 			const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 			setCookie(res, myConfig, 'state', state,{ path, sameSite: 'strict' });
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
+
 			const oauthOptions = {
 				...req.authIssuer,
 				redirectUri: callbackUrl,
@@ -284,9 +275,7 @@ const api = {
 			const state = getCookie(req, myConfig, 'state');
 			setCookie(res, myConfig, 'state', null, { path });
 			setCookie(res, myConfig, 'nonce', null, { path });
-			//const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, {path});
-			//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, {path});
+
 			const oauthCallback = {
 				...req.authIssuer,
 				redirectUri: callbackUrl,
@@ -296,7 +285,6 @@ const api = {
 				const session = await interactions.getPKCESession(authGroup.id, state);
 				if (!session) {
 					return fedError('PKCE session not found');
-					//throw Boom.badRequest('PKCE Session not found');
 				}
 				oauthCallback.body = {
 					code_verifier: session.payload.code_verifier
@@ -313,7 +301,6 @@ const api = {
 			});
 			if (!profResp.data) {
 				return fedError('Unable to retrieve user data from federated provider');
-				//throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
 			}
 			let profile = JSON.parse(JSON.stringify(profResp.data));
 			if (myConfig.provider === 'linkedin') {
@@ -374,7 +361,7 @@ const api = {
 		const myConfig = req.fedConfig;
 		const relay_state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
 		setCookie(res, myConfig, 'state', relay_state, { path, sameSite: 'strict' });
-		//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
+
 		try {
 			const samlReq = await interactions.samlLogin(sp, idp, { relay_state });
 			if(!samlReq) throw 'Could not get a login url - this could be a configuration issue';
@@ -390,9 +377,8 @@ const api = {
 		const provider = req.provider;
 		const myConfig = req.fedConfig;
 
-		const state = getCookie(req, myConfig, 'state'); //req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
+		const state = getCookie(req, myConfig, 'state');
 		setCookie(res, myConfig, 'state', null, { path });
-		//res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
 
 		if(state !== req.body.state) {
 			console.error(`Unexpected Session State: ${state} vs. ${req.body.state}`);
