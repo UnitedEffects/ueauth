@@ -4,6 +4,8 @@ import acct from '../../accounts/account';
 import iat from '../initialAccess/iat';
 import n from '../../plugins/notifications/notifications';
 import plugins from '../../plugins/plugins';
+import fed from './federation';
+import fedCache from '../models/cacheFederatedTokens';
 
 const config = require('../../../config');
 const { strict: assert } = require('assert');
@@ -31,22 +33,7 @@ const api = {
 		return data;
 	},
 	standardLogin(authGroup, client, debug, prompt, session, uid, params, flash = undefined, mfa = undefined) {
-		const loginOptions = [];
-		// designing for OIDC only for now, we will incorporate others as they are added
-		if(authGroup.config.federate) {
-			Object.keys(authGroup.config.federate).map((key) => {
-				if(authGroup.config.federate[key]) {
-					authGroup.config.federate[key].map((connect) => {
-						loginOptions.push({
-							code: `${key}.${connect.provider}.${connect.name.replace(/ /g, '_')}`.toLowerCase(),
-							upstream: connect.provider,
-							button: connect.buttonType,
-							text: connect.buttonText
-						});
-					});
-				}
-			});
-		}
+		const loginOptions = fed.getFederationCodesFromAG(authGroup);
 		const loginButtons = loginOptions.filter((option) => {
 			return (client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
 		});
@@ -172,7 +159,26 @@ const api = {
 				grant.addResourceScope(indicator, scopes.join(' '));
 			}
 		}
-
+		// if a federated token was found and saved, cache it to send to token claims later
+		if(params.federated_token) {
+			try {
+				if(intDetails?.session?.uid) {
+					const ft = new fedCache({
+						expiresAt: new Date(Date.now() + authGroup.config.ttl.session*1000),
+						payload: {
+							authGroup: authGroup.id,
+							accountId: accountId,
+							clientId: params.client_id,
+							sessionUid: intDetails.session.uid,
+							federatedToken: params.federated_token
+						}
+					});
+					await ft.save();
+				}
+			} catch (error) {
+				console.error('Unable to cache original federated token', error);
+			}
+		}
 		return { consent: { grantId: await grant.save() } };
 	},
 	async oidcRenderErrorOptions(authGroup, out, safeAG) {

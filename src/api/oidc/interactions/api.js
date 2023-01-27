@@ -1,6 +1,4 @@
 import oidc from '../oidc';
-import { generators } from 'openid-client';
-import axios from 'axios';
 import Account from '../../accounts/accountOidcInterface';
 import acc from '../../accounts/account';
 import group from '../../authGroup/group';
@@ -12,10 +10,8 @@ import n from '../../plugins/notifications/notifications';
 import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
 import challenges from '../../plugins/challenge/challenge';
-import saml2 from 'ue.saml2-js';
+import fed from './federation';
 import { validate as uuidValidate } from 'uuid';
 
 const config = require('../../../config');
@@ -23,14 +19,13 @@ const querystring = require('querystring');
 const { inspect } = require('util');
 const isEmpty = require('lodash/isEmpty');
 const { strict: assert } = require('assert');
-const emailRegex = /(?:[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-const ClientOAuth2 = require('client-oauth2');
 
 const {
 	errors: { CustomOIDCProviderError },
 } = require('oidc-provider');
 
 const keys = new Set();
+
 const debug = (obj) => querystring.stringify(Object.entries(obj).reduce((acc, [key, value]) => {
 	keys.add(key);
 	if (isEmpty(value)) return acc;
@@ -64,6 +59,14 @@ const api = {
 			}
 			switch (prompt.name) {
 			case 'login': {
+				if(client?.client_skip_to_federated) {
+					req.provider = provider;
+					if(fed.validateFedCodeExists(authGroup, client.client_skip_to_federated)) {
+						const result = await fed.establishFedClient(authGroup, client.client_skip_to_federated, provider);
+						fed.setFederatedReq(req, result);
+						return api.federated(req, res, next);
+					}
+				}
 				if(!params.org && client.client_allow_org_self_identify === true && authGroup) {
 					params.selfIdentify = true;
 					params.orgs = req.cookies[`${authGroup.id}.organizations`]?.split(',');
@@ -167,15 +170,12 @@ const api = {
 			next (error);
 		}
 	},
+
 	async oidcFederationClient(req, res, next) {
 		try {
 			if(!req.provider) req.provider = await oidc(req.authGroup, req.customDomain);
 			if (req.authIssuer) return next();
 			const { authGroup } = await safeAuthGroup(req.authGroup);
-			let redirectUri;
-			let issuer;
-			let clientOptions;
-			let client;
 			let upstreamBody = req.body.upstream;
 			if(!upstreamBody) {
 				const spec = req.params.spec;
@@ -184,85 +184,9 @@ const api = {
 				upstreamBody = `${spec}.${provider}.${name}`;
 			}
 			if(upstreamBody) {
-				const upstream = upstreamBody.split('.');
-				const {spec, provider, name, myConfig} = await checkProvider(upstream, authGroup);
-				if(provider?.toLowerCase().includes('org:')) {
-					const org = provider.toLowerCase().split(':');
-					if(org.length === 2) {
-						req.providerOrg = org[1];
-					}
-				}
-				switch (spec.toLowerCase()) {
-				case 'oidc':
-					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
-					if(myConfig.PKCE === false && !myConfig.client_secret) {
-						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
-					}
-					redirectUri = `${req.provider.issuer}/interaction/callback/${spec.toLowerCase()}/${provider.toLowerCase()}/${name.toLowerCase().replace(/ /g, '_')}`;
-					const openid = require('openid-client');
-					issuer = await openid.Issuer.discover(myConfig.discovery_url);
-					clientOptions = {
-						client_id: myConfig.client_id,
-						response_types: [myConfig.response_type],
-						redirect_uris: [redirectUri],
-						grant_types: [myConfig.grant_type]
-					};
-					if(myConfig.PKCE === false) {
-						clientOptions.client_secret = myConfig.client_secret;
-					} else {
-						clientOptions.token_endpoint_auth_method = 'none';
-					}
-					client = new issuer.Client(clientOptions);
-					req.authIssuer = issuer;
-					req.authClient = client;
-					req.authSpec = spec;
-					req.fedConfig = myConfig;
-					return next();
-				case 'oauth2':
-					if(!myConfig.client_id) throw Boom.badImplementation('SSO implementation incomplete - missing client id');
-					if(myConfig.PKCE === false && !myConfig.client_secret) {
-						throw Boom.badImplementation('SSO implementation incomplete - PKCE = false but no client secret is provided');
-					}
-					req.authIssuer = {
-						clientId: myConfig.client_id,
-						accessTokenUri: myConfig.accessTokenUri,
-						authorizationUri: myConfig.authorizationUri,
-						scopes: myConfig.scopes
-					};
-					if(myConfig.PKCE === false) {
-						req.authIssuer.clientSecret = myConfig.client_secret;
-					} else {
-						req.authIssuer.token_endpoint_auth_method = 'none';
-					}
-					req.authSpec = spec;
-					req.fedConfig = myConfig;
-					return next();
-				case 'saml':
-					const assert_endpoint = `${req.provider.issuer}/interaction/callback/saml/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
-					const sp_options = {
-						entity_id:  req.provider.issuer,
-						private_key: myConfig.spPrivateKey,
-						certificate: myConfig.spCertificate,
-						assert_endpoint
-					};
-					const sp = new saml2.ServiceProvider(sp_options);
-					const idp_options = {
-						sso_login_url: myConfig.ssoLoginUrl,
-						sso_logout_url: myConfig.ssoLogoutUrl,
-						certificates: myConfig.idpCertificates,
-						sign_get_request: myConfig.signRequest,
-						allow_unencrypted_assertion: myConfig.allowUnencryptedAssertion,
-						force_authn: myConfig.forceLogin
-					};
-					const idp = new saml2.IdentityProvider(idp_options);
-					req.authSpec = spec;
-					req.fedConfig = myConfig;
-					req.samlSP = sp;
-					req.samlIdP = idp;
-					return next();
-				default:
-					throw Boom.badRequest('unknown specification for SSO requested');
-				}
+				const result = await fed.establishFedClient(authGroup, upstreamBody, req.provider);
+				fed.setFederatedReq(req, result);
+				return next();
 			}
 			throw Boom.badRequest('upstream data is missing');
 		} catch (error) {
@@ -295,274 +219,39 @@ const api = {
 			i.params.federated_redirect = true;
 			await i.save(authGroup.config.ttl.interaction);
 
-			const { prompt } = await provider.interactionDetails(req, res);
+			const { prompt, params } = await provider.interactionDetails(req, res);
+			console.info(params);
 			assert.equal(prompt.name, 'login');
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
-			let callbackUrl;
-			const myConfig = req.fedConfig;
+			const fedError = (error) => {
+				res.redirect(`/${authGroup.id}/interaction/${req.params.uid}?flash=Security issue with federated login - ${error}. Try again later.`);
+			}
 			switch (req.authSpec.toLowerCase()) {
 			case 'saml':
-				const samlError = (error) => {
-					res.redirect(`/${authGroup.id}/interaction/${req.params.uid}?flash=Security issue with SAML federated login - ${error}. Try again later.`);
-				}
-				const sp = req.samlSP;
-				const idp =	req.samlIdP;
 				if(req.body?.SAMLResponse) {
 					// Callback
-					const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
-					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
-
-					if(state !== req.body.state) {
-						console.error(`Unexpected Session State: ${state} vs. ${req.body.state}`);
-						return samlError('This does not appear to be the correct browser window');
-					}
-
-					const options = {request_body: req.body};
-					let saml_response;
-					try {
-						saml_response = await interactions.samlAssert(sp, idp, options);
-					} catch(err) {
-						console.error('No SAML response received', JSON.stringify(err, null, 2));
-						return samlError('SAML IdP did not respond');
-					}
-
-					const samlId = saml_response.user.name_id || saml_response.user.id;
-					const email = (saml_response.user.email) ? saml_response.user.email : (saml_response.user.attributes.email) ?
-						(!Array.isArray(saml_response.user.attributes.email)) ? saml_response.user.attributes.email :
-							(Array.isArray(saml_response.user.attributes.email) && saml_response.user.attributes.email.length)
-								? saml_response.user.attributes.email[0] : null : null
-					if(!email) {
-						console.error('SAML responses did not map email');
-						return samlError('SAML response does not include email');
-					}
-					if(!emailRegex.test(email)) {
-						console.error('SAML responses email is wrong', email);
-						return samlError(`SAML response provided email but it is in the wrong format, '${email}'`);
-					}
-					const id = (saml_response.user.id) ? (saml_response.user.id) : (saml_response.user.attributes.userId) ?
-						(!Array.isArray(saml_response.user.attributes.userId)) ? saml_response.user.attributes.userId :
-							(Array.isArray(saml_response.user.attributes.userId) && saml_response.user.attributes.userId.length)
-								? saml_response.user.attributes.userId[0] : samlId || email : samlId || email;
-					if(!id) {
-						console.error('SAML responses did not map a user ID');
-						return samlError('SAML response could not identify an ID for the user');
-					}
-					let account;
-					try {
-						account = await Account.findByFederated(authGroup,
-							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-							{
-								id,
-								email,
-								idpId: samlId
-							}, req.providerOrg);
-					} catch (error) {
-						return samlError(`Unable to login using federation - ${ error?.message || error}`)
-					}
-
-					const result = {
-						login: {
-							accountId: account.accountId,
-						},
-					};
-					return provider.interactionFinished(req, res, result, {
-						mergeWithLastSubmission: false,
-					});
+					return fed.federateSamlCb(req, res, authGroup, path, fedError);
 				} else {
 					// request
-					const relay_state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
-					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, relay_state, { path, sameSite: 'strict' });
-					try {
-						const samlReq = await interactions.samlLogin(sp, idp, { relay_state });
-						if(!samlReq) throw 'Could not get a login url - this could be a configuration issue';
-						return res.redirect(samlReq.loginUrl);
-					} catch(err) {
-						console.error('Error while trying to initiate login', err);
-						return samlError('could not initiate federated SAML login');
-					}
+					return fed.federateSamlReq(req, res, path, fedError);
 				}
 			case 'oidc': {
 				const callbackParams = req.authClient.callbackParams(req);
-				callbackUrl = `${req.provider.issuer}/interaction/callback/oidc/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if (!Object.keys(callbackParams).length) {
-					const state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
-					const nonce = crypto.randomBytes(32).toString('hex');
-					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, nonce, { path, sameSite: 'strict' });
-					res.status = 303;
-					const authUrlOptions = {
-						state,
-						nonce,
-						scope: `openid ${myConfig.scopes.join(' ')}`.trim()
-					};
-					if(myConfig.PKCE === true) {
-						const code_verifier = generators.codeVerifier();
-						const code_challenge = generators.codeChallenge(code_verifier);
-						await interactions.savePKCESession({
-							payload: {
-								state,
-								auth_group: req.authGroup.id,
-								code_challenge,
-								code_verifier
-							}
-						});
-						authUrlOptions.code_challenge = code_challenge;
-						authUrlOptions.code_challenge_method = 'S256';
-					}
-
-					//because apple is apple
-					if(myConfig.provider === 'apple') authUrlOptions.response_mode = 'form_post';
-
-					return res.redirect(req.authClient.authorizationUrl(authUrlOptions));
+					// request
+					return fed.federateOidcReq(req, res, authGroup, callbackParams, path, fedError);
 				}
 				// callback
-				const state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
-				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, { path });
-				const nonce = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`];
-				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, { path });
-
-				if(myConfig.provider.toLowerCase() === 'apple') {
-					if(req.body.state !== state) throw Boom.badRequest(`State mismatch. Expected ${state} and received ${req.body.state}`);
-					const id_token = req.body.id_token;
-					if(id_token) {
-						const claims = jwt.decode(id_token, {complete: true});
-						const profile = JSON.parse(JSON.stringify(claims.payload));
-						if(profile.nonce !== nonce) throw Boom.badRequest(`Nonce mismatch. Expected ${nonce} and received ${profile.nonce}`);
-						const account = await Account.findByFederated(authGroup,
-							`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-							profile, req.providerOrg);
-						const result = {
-							login: {
-								accountId: account.accountId,
-							},
-						};
-						return provider.interactionFinished(req, res, result, {
-							mergeWithLastSubmission: false,
-						});
-					}
-					throw Boom.badRequest('Currently, OIDC with Apple requires an id_token response on authorize');
-				}
-
-				const callbackOptions = {
-					state,
-					nonce,
-					response_type: myConfig.response_type
-				};
-				if(myConfig.PKCE === true) {
-					const session = await interactions.getPKCESession(authGroup.id, state);
-					if(!session) throw Boom.badRequest('PKCE Session not found');
-					callbackOptions.code_verifier = session.payload.code_verifier;
-				}
-				const tokenSet = await req.authClient.callback(callbackUrl, callbackParams, callbackOptions);
-				const profile = (tokenSet.access_token) ? await req.authClient.userinfo(tokenSet) : tokenSet.claims();
-				const account = await Account.findByFederated(authGroup,
-					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-					profile, req.providerOrg);
-				const result = {
-					login: {
-						accountId: account.accountId,
-					},
-				};
-				return provider.interactionFinished(req, res, result, {
-					mergeWithLastSubmission: false,
-				});
+				return fed.federateOidcCb(req, res, authGroup, path, params, fedError);
 			}
 			case 'oauth2':
 				// we are only supporting authorization_code for oauth2 for now
-				let state;
-				let issuer;
-				let profile;
-				callbackUrl = `${req.provider.issuer}/interaction/callback/${req.authSpec.toLowerCase()}/${myConfig.provider.toLowerCase()}/${myConfig.name.toLowerCase().replace(/ /g, '_')}`;
 				if(req.body && !req.body.code) {
-					state = `${req.params.uid}|${crypto.randomBytes(32).toString('hex')}`;
-					res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, state, { path, sameSite: 'strict' });
-					const oauthOptions = {
-						...req.authIssuer,
-						redirectUri: callbackUrl,
-						state
-					};
-					if(myConfig.PKCE === true) {
-						const code_verifier = generators.codeVerifier();
-						const code_challenge = generators.codeChallenge(code_verifier);
-						await interactions.savePKCESession({
-							payload: {
-								state,
-								auth_group: authGroup.id,
-								code_challenge,
-								code_verifier
-							}
-						});
-						oauthOptions.query = {
-							code_challenge,
-							code_challenge_method: 'S256'
-						};
-					}
-					issuer = new ClientOAuth2(oauthOptions);
-					return res.redirect(issuer.code.getUri());
+					//request
+					return fed.federateOauth2Req(req, res, authGroup, path, fedError);
 				}
-
-				state = req.cookies[`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`];
-				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.state`, null, {path});
-				res.cookie(`${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}.nonce`, null, {path});
-				const oauthCallback = {
-					...req.authIssuer,
-					redirectUri: callbackUrl,
-					state
-				};
-				if (myConfig.PKCE === true) {
-					const session = await interactions.getPKCESession(authGroup.id, state);
-					if (!session) throw Boom.badRequest('PKCE Session not found');
-					oauthCallback.body = {
-						code_verifier: session.payload.code_verifier
-					};
-				}
-				issuer = new ClientOAuth2(oauthCallback);
-				const tokenset = await issuer.code.getToken(`${callbackUrl}?code=${req.body.code}&state=${req.body.state}`);
-				const profResp = await axios({
-					method: 'get',
-					url: myConfig.profileUri,
-					headers: {
-						'Authorization': `Bearer ${tokenset.accessToken}`
-					}
-				});
-				if (!profResp.data) throw Boom.badImplementation('unable to retrieve profile data from oaut2 provider');
-				profile = JSON.parse(JSON.stringify(profResp.data));
-				if (myConfig.provider === 'linkedin') {
-					//todo - make this nicer...
-					const emailResp = await axios({
-						method: 'get',
-						url: 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))',
-						headers: {
-							'Authorization': `Bearer ${tokenset.accessToken}`
-						}
-					});
-					if (emailResp && emailResp.data && emailResp.data.elements && emailResp.data.elements.length) {
-						const data = emailResp.data.elements[0];
-						if (data['handle~'] && data['handle~'].emailAddress) {
-							profile.email = data['handle~'].emailAddress;
-						}
-					}
-				}
-				if (profile && profile.data && profile.data.id) {
-					profile = profile.data;
-				}
-				if (!profile.id && !profile.sub) {
-					throw Boom.badData('Identities require an ID or Sub property and neither were provided by the provider profile', profile);
-				}
-				if (!profile.email) {
-					throw Boom.badData('We apologize but this provider did not return an email address. Unqiue email is required for all auth');
-				}
-				const account = await Account.findByFederated(authGroup,
-					`${req.authSpec}.${myConfig.provider}.${myConfig.name.replace(/ /g, '_')}`.toLowerCase(),
-					profile, req.providerOrg);
-				const result = {
-					login: {
-						accountId: account.accountId,
-					},
-				};
-				return provider.interactionFinished(req, res, result, {
-					mergeWithLastSubmission: false,
-				});
+				//callback
+				return fed.federateOauth2Cb(req, res, authGroup, path, params, fedError);
 			default:
 				throw Boom.badRequest('Unknown Federation Specification');
 			}
@@ -680,9 +369,10 @@ const api = {
 
 			const result = {
 				login: {
-					accountId: account?.accountId
+					accountId: account?.accountId,
 				},
 			};
+
 			if(authGroup?.config?.mfaChallenge?.enable !== true &&
 				account?.mfaEnabled === true) {
 				await log.error(`Account ${account.accountId} has MFA enabled but the operating AuthGroup ${authGroup.id} does not. The user's expectation of security may be compromised`);
@@ -727,6 +417,7 @@ const api = {
 				const client = await provider.Client.find(params.client_id);
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: true, instructions }));
 			}
+
 			await provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			next(err);
@@ -937,47 +628,6 @@ const api = {
 		ctx.body = await pug.render('response/response', { ...options, nonce: ctx.res.locals.cspNonce });
 	}
 };
-
-async function checkProvider(upstream, ag) {
-	if (upstream.length !== 3) throw Boom.badData(`Unknown upstream: ${upstream}`);
-	const authGroup = JSON.parse(JSON.stringify(ag));
-	const spec = upstream[0];
-	const provider = upstream[1];
-	const name = upstream[2].replace(/_/g, ' ');
-	let organization = undefined;
-	if(provider.includes('org:')) {
-		const orgId = provider.split(':')[1];
-		organization = JSON.parse(JSON.stringify(await org.getOrg(authGroup.id, orgId)));
-		if(!authGroup.config.federate) {
-			authGroup.config.federate = {};
-		}
-		if(!authGroup.config.federate[spec]) {
-			authGroup.config.federate[spec] = [];
-		}
-		if(organization?.sso && organization?.sso[spec]){
-			organization.sso[spec].provider = provider;
-			authGroup.config.federate[spec].push(organization.sso[spec]);
-		}
-	}
-	let agSpecs = [];
-	if(authGroup.config && authGroup.config.federate) {
-		Object.keys(authGroup.config.federate).map((key) => {
-			if(key.toLowerCase() === spec.toLowerCase()) {
-				agSpecs = authGroup.config.federate[key];
-			}
-		});
-	}
-
-	if(agSpecs.length === 0) {
-		throw Boom.badData(`Unsupported spec ${spec} or provider ${provider}`);
-	}
-
-	const option = agSpecs.filter((config) => {
-		return (config.provider.toLowerCase() === provider.toLowerCase() && config.name.toLowerCase() === name.toLowerCase());
-	});
-	if(option.length === 0) throw Boom.badData(`Unsupported provider with name: ${provider}`);
-	return { spec, provider, name, myConfig: option[0]};
-}
 
 export default api;
 

@@ -8,6 +8,7 @@ import clientAccess from '../oidc/client/access';
 import intApi from './interactions/api';
 import IAT from './models/initialAccessToken';
 import UEProvider from './ueProvider';
+import fedTok from './models/cacheFederatedTokens';
 const config = require('../../config');
 const MongoAdapter = require('./dal');
 
@@ -31,7 +32,8 @@ const ACCESS_SCOPES = [
 ];
 const BASE_SCOPES = [
 	'openid',
-	'offline_access'].concat(ACCESS_SCOPES);
+	'offline_access',
+	'federated_token'].concat(ACCESS_SCOPES);
 
 async function introspectionAllowedPolicy(ctx, client, token) {
 	return !(client.introspectionEndpointAuthMethod === 'none' && token.clientId !== ctx.oidc.client.clientId);
@@ -111,7 +113,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			},
 		},
 		acrValues: g.config.acrValues || [],
-		extraParams: ['audience', 'federated_redirect', 'org', 'orgs'],
+		extraParams: ['audience', 'federated_redirect', 'org', 'orgs', 'federated_token'],
 		features: {
 			devInteractions: {enabled: false}, //THIS SHOULD NEVER BE TRUE
 			introspection: {
@@ -163,14 +165,20 @@ function oidcConfig(g, aliasDns = undefined) {
 							} else {
 								const id = ctx.authGroup._id || ctx.authGroup.id;
 								if(ctx.authGroup.associatedClient === ctx.oidc.entities.Client.clientId){
-									// we are going to let federation updates to happen regardless
+									// we are going to let a few through
 									const altered = await objectCamel(JSON.parse(JSON.stringify(properties)));
 									altered.auth_group = altered.authGroup;
 									delete altered.authGroup;
 									const changes = await compareJSON(JSON.parse(JSON.stringify(ctx.oidc.entities.Client)), altered);
 									let error = false;
 									Object.keys(changes).map((key) => {
-										if(key !== 'clientAllowOrgFederation' && key !== 'clientFederationOptions') {
+										if( key !== 'clientAllowOrgFederation' &&
+											key !== 'clientFederationOptions' &&
+											key !== 'clientSkipConsent' &&
+											key !== 'clientAllowOrgSelfIdentify' &&
+											key !== 'clientSkipToFederated' &&
+											key !== 'clientOptionalSkipLogoutPrompt'
+										) {
 											error = true;
 										}
 									});
@@ -288,13 +296,14 @@ function oidcConfig(g, aliasDns = undefined) {
 				'auth_group',
 				'client_name',
 				'client_label',
-				'client_skip_consent',
 				'register_url',
-				'client_optional_skip_logout_prompt',
 				'associated_product',
+				'client_skip_consent',
+				'client_optional_skip_logout_prompt',
 				'client_federation_options',
 				'client_allow_org_federation',
 				'client_allow_org_self_identify',
+				'client_skip_to_federated',
 				'dynamic_scope'
 			],
 			validator(ctx, key, value, metadata) {
@@ -504,10 +513,26 @@ function oidcConfig(g, aliasDns = undefined) {
 			}
 			// backing up claim before attempting access inclusion
 			const backup = JSON.parse(JSON.stringify(claims));
-			// getting access information for the user
 			if(token.scope) {
 				try {
 					const scopes = token.scope.split(' ');
+					// check for federated_token scope and pull in the OG token into a claim
+					if(scopes.includes('federated_token')) {
+						try {
+							const ft = await fedTok.findOne({
+								'payload.authGroup': ctx.authGroup.id,
+								'payload.accountId': ctx.oidc.grant.accountId,
+								'payload.clientId': ctx.oidc.grant.clientId,
+								'payload.sessionUid': ctx.oidc.entities.AuthorizationCode.sessionUid
+							});
+							if(ft?.payload?.federatedToken) {
+								claims['x-federated-token'] = ft.payload.federatedToken;
+							}
+						} catch (error) {
+							console.error('unable to pull federated token', error);
+						}
+					}
+					// checking for access
 					let bAccess = false;
 					scopes.map((s) => {
 						if(ACCESS_SCOPES.includes(s)) {
