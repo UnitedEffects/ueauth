@@ -12,9 +12,10 @@ import product from './api/products/product';
 import account from './api/accounts/account';
 import access from './permissions';
 import mongoose from 'mongoose';
-import swag from './swagger';
+import spec from './swagger';
 import plugins from './api/plugins/plugins';
 
+const { doc: swag } = spec;
 const config = require('./config');
 
 const p = require('../package.json');

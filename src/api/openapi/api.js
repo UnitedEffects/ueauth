@@ -1,13 +1,15 @@
-import swagger from '../../swagger';
+import spec from '../../swagger';
 import modify from './swag';
 const pJson = require('../../../package.json');
 
+const { prod, doc: swagger } = spec;
+
 export default {
 	async serveSwaggerUI(req, res, next) {
-	    try {
+		try {
 			return res.render('swagger', { title: pJson.name, group: req.params.group || undefined });
 		} catch (e) {
-	        next(e);
+			next(e);
 		}
 	},
 	async serveApiJson(req, res) {
@@ -20,18 +22,28 @@ export default {
 			return res.json(swagger);
 		}
 	},
+	async serveCleanApiJson(req, res) {
+		try{
+			let swag = JSON.parse(JSON.stringify(prod));
+			swag = modify.updateSwag(swag, req.authGroup, req.params, req.customDomain);
+			return res.json(swag);
+		}catch (error) {
+			console.info(error);
+			return res.json(prod);
+		}
+	},
 	async reDocApi(req, res, next) {
-	    try {
+		try {
 			return res.render('api', { title: pJson.name, group: req.params.group || undefined });
 		} catch (e) {
-	        next(e);
+			next(e);
 		}
 	},
 	async oauth2Redirect(req, res, next) {
-	    try {
+		try {
 			return res.render('openapi-redirect');
 		} catch (e) {
-	        next(e);
+			next(e);
 		}
 	}
 };

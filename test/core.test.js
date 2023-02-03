@@ -9,11 +9,13 @@ import t from './testhelper';
 import { OpenApiValidator } from 'express-openapi-validate';
 jest.mock('express-openapi-validate');
 
-import swag from '../src/swagger';
+import spec from '../src/swagger';
 import errorHandler from '../src/customErrorHandler';
 import m from '../src/middleware';
 import helper from '../src/helper';
 import connect from '../src/connection';
+
+const { doc: swag } = spec;
 
 describe('Error handler tests', () => {
 	test('make sure error handler returns 404', async () => {

@@ -36,10 +36,12 @@ router.get('/ready-check', m.health);
 router.get('/:group/api', m.validateAuthGroup, openapi.reDocApi);
 router.get('/:group/swagger', m.validateAuthGroup, openapi.serveSwaggerUI);
 router.get('/:group/swagger.json', m.validateAuthGroup, openapi.serveApiJson);
+router.get('/:group/cleanapi.json', m.validateAuthGroup, openapi.serveCleanApiJson);
 
 router.get('/api', m.validateHostDomain, openapi.reDocApi);
 router.get('/swagger', m.validateHostDomain, openapi.serveSwaggerUI);
 router.get('/swagger.json', m.validateHostDomain, openapi.serveApiJson);
+router.get('/cleanapi.json', m.validateHostDomain, openapi.serveCleanApiJson);
 router.get('/oauth2-redirect.html', m.validateHostDomain, openapi.oauth2Redirect);
 
 export default router;
