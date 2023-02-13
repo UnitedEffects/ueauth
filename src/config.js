@@ -118,8 +118,9 @@ const config = {
 	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
 	// You can set the custom domain header you want to use to track incoming upstream request domains
 	CUSTOM_DOMAIN_PROXY_HEADER: process.env.CUSTOM_DOMAIN_PROXY_HEADER || envVars.CUSTOM_DOMAIN_PROXY_HEADER || 'x-host',
-	// This is a default/backup of the event emitter options generally defined per AuthGroup.
 	DISABLE_STREAMS: envVars.DISABLE_STREAMS || false,
+	INIT_AG_WITH_STREAMS: (process.env.INIT_AG_WITH_STREAMS === 'true') || envVars.INIT_AG_WITH_STREAMS || true,
+	// This is a default/backup of the event emitter options generally defined per AuthGroup.
 	EVENT_EMITTER: (envVars && envVars.DISABLE_STREAMS === true) ? {} :{
 		general: true,
 		accessToken: true,

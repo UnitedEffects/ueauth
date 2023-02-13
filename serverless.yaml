@@ -57,6 +57,7 @@ provider:
     ACCESS_OBJECT_SIZE_LIMIT: ${env:ACCESS_OBJECT_SIZE_LIMIT, file(./.env/env.${self:custom.local_env}.json):ACCESS_OBJECT_SIZE_LIMIT}
     SECURITY_FRAME_ANCESTORS: ${env:SECURITY_FRAME_ANCESTORS, file(./.env/env.${self:custom.local_env}.json):SECURITY_FRAME_ANCESTORS}
     CUSTOM_DOMAIN_PROXY_HEADER: ${env:CUSTOM_DOMAIN_PROXY_HEADER, file(./.env/env.${self:custom.local_env}.json):CUSTOM_DOMAIN_PROXY_HEADER}
+    INIT_AG_WITH_STREAMS: ${env:INIT_AG_WITH_STREAMS, file(./.env/env.${self:custom.local_env}.json):INIT_AG_WITH_STREAMS}
 
 package:
   patterns:
