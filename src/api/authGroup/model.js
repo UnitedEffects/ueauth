@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import cryptoRandomString from "crypto-random-string";
+import cryptoRandomString from 'crypto-random-string';
 import { nanoid } from 'nanoid';
 import keys from './generate-keys';
 import ms from 'ms';
@@ -421,7 +421,7 @@ const authGroup = new mongoose.Schema({
 		externalStreaming: {
 			enabled: {
 				type: Boolean,
-				default: false
+				default: config.INIT_AG_WITH_STREAMS || false,
 			}
 		},
 		notification: {
