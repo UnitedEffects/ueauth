@@ -10,6 +10,30 @@ import httpProxy from './http-proxy/interface';
 
 const config = require('../../../config');
 
+function switchInterface(provider) {
+	switch (provider.type.toLowerCase()) {
+	case 'http-proxy':
+		return { pInterface: httpProxy, provider: provider };
+	case 'privakeySuper':
+	case 'privakey':
+		return { pInterface: privakey, provider: provider };
+	default:
+		throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
+	}
+}
+
+async function initInterface(global, type) {
+	let settings;
+	if(!global) {
+		settings = await plugins.getLatestPluginOptions();
+	} else settings = JSON.parse(JSON.stringify(global));
+	const provider = settings.mfaChallenge.providers.filter((p) => {
+		return (p.type === type);
+	});
+	if(!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
+	return switchInterface(provider[0]);
+}
+
 async function interfaceSelector(ag, global) {
 	let settings;
 	if(!global) {
@@ -21,14 +45,7 @@ async function interfaceSelector(ag, global) {
 			return (p.type === ag.config.mfaChallenge.type);
 		});
 		if(!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
-		switch (provider[0].type.toLowerCase()) {
-		case 'http-proxy':
-			return { pInterface: httpProxy, provider: provider[0] };
-		case 'privakey':
-			return { pInterface: privakey, provider: provider[0] };
-		default:
-			throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
-		}
+		return switchInterface(provider[0]);
 	}
 	return undefined;
 }
@@ -126,6 +143,14 @@ const chApi = {
 			}));
 		}
 		return warnings;
+	},
+	async initGroup(ag, global, type) {
+		const { pInterface, provider } = await initInterface(global, type);
+		if(pInterface) return pInterface.initGroup(ag, type, provider);
+		throw Boom.badRequest('MFA is not enabled for this Auth Group');
+	},
+	async cleanup(ag) {
+		//todo remove meta data
 	}
 };
 

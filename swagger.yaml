@@ -10215,6 +10215,15 @@ components:
           enum:
             - http-proxy
             - privakey
+            - privakeySuper
+        privakeySuper:
+          type: object
+          description: If this is a privakeySuper configuration, use these credentials to initialize accounts for authgroups. You'll need to contact privakey for this configuration.
+          properties:
+            id:
+              type: string
+            key:
+              type: string
         api:
           type: object
           description: required for the proxy configuration. Do not include for privakey configuration.

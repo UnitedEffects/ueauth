@@ -2,6 +2,7 @@ import axios from 'axios';
 import qs from 'qs';
 import Boom from '@hapi/boom';
 import dal from '../dal';
+import pInit from './initApi';
 import events from '../eventProcessor';
 
 const config = require('../../../../config');
@@ -252,6 +253,23 @@ const pkApi = {
 			}
 		};
 		return axios(options);
+	},
+	async initGroup(authGroup, type, provider) {
+		if(type === 'privakeySuper') {
+			// todo make sure provider id + Key exist for super
+			const privakey = {};
+			// call createCompany
+			const company = await pInit.createCompany();
+			// call createAppSpace
+			const appSpace = await pInit.createAppSpace();
+			// call createReqOrigin
+			const reqOrigin = await pInit.createReqOrigin();
+			// call createAccessKey
+			const keys = await pInit.createAccessKey();
+			// call addCallBack
+			const result = await pInit.addCallback();
+			// todo save the above to AG
+		}
 	}
 };
 
