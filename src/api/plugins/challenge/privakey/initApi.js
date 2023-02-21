@@ -138,7 +138,7 @@ export default {
 			.replace('{{requestOriginGuid}}', oId);
 		const method = 'POST';
 		const data = {
-			keyType: 'hmac'
+			keyType: 'basic'
 		};
 		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
 		const options = {
