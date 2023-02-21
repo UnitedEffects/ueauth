@@ -39,6 +39,16 @@ export default {
 			};
 		} else {
 			switch(data.type.toLowerCase()) {
+			case 'privakeysuper':
+				lastSaved = setupMFA(lastSaved, data.type.toLowerCase());
+				lastSaved.mfaChallenge.providers.push({
+					type: data.type.toLowerCase(),
+					privakeySuper: {
+						id: data.privakeySuper.id,
+						key: data.privakeySuper.key
+					},
+				});
+				break;
 			case 'privakey':
 				lastSaved = setupMFA(lastSaved, data.type.toLowerCase());
 				lastSaved.mfaChallenge.providers.push({
@@ -174,15 +184,17 @@ export default {
 		return dal.auditPluginOptions();
 	},
 	async checkEventStreamingOnStartup() {
-		const latest = await this.getLatestPluginOptions(true);
-		if(latest?.eventStream?.enabled === true) {
-			const describe = await eStream.describe(latest);
-			console.info(describe);
-			if(describe.startup === true) {
-				return eStream.startup(latest);
+		if(config.DISABLE_STREAMS !== true) {
+			const latest = await this.getLatestPluginOptions(true);
+			if(latest?.eventStream?.enabled === true) {
+				const describe = await eStream.describe(latest);
+				console.info(describe);
+				if(describe.startup === true) {
+					return eStream.startup(latest);
+				}
 			}
+			return null;
 		}
-		return null;
 	}
 };
 

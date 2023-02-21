@@ -111,7 +111,7 @@ const pluginConfig = new mongoose.Schema({
 		providers: [{
 			type: {
 				type: String,
-				enum: ['http-proxy', 'privakey', 'privakeySuper'],
+				enum: ['http-proxy', 'privakey', 'privakeysuper'],
 				required: true
 			},
 			privakeySuper: {

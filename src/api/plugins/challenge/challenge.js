@@ -14,7 +14,7 @@ function switchInterface(provider) {
 	switch (provider.type.toLowerCase()) {
 	case 'http-proxy':
 		return { pInterface: httpProxy, provider: provider };
-	case 'privakeySuper':
+	case 'privakeysuper':
 	case 'privakey':
 		return { pInterface: privakey, provider: provider };
 	default:
@@ -148,9 +148,6 @@ const chApi = {
 		const { pInterface, provider } = await initInterface(global, type);
 		if(pInterface) return pInterface.initGroup(ag, type, provider);
 		throw Boom.badRequest('MFA is not enabled for this Auth Group');
-	},
-	async cleanup(ag) {
-		//todo remove meta data
 	}
 };
 

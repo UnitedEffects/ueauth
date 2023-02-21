@@ -3,8 +3,7 @@ import Boom from '@hapi/boom';
 import dal from '../dal';
 import group from '../../../authGroup/group';
 import client from '../../../oidc/client/clients';
-import acc from '../../../accounts/account';
-import events from "../eventProcessor";
+import events from '../eventProcessor';
 
 const config = require('../../../../config');
 
@@ -189,6 +188,10 @@ const httpProxyApi = {
 			}
 		};
 		return axios(options);
+	},
+	async initGroup(authGroup, type, provider) {
+		// just here for consistency with the interface
+		return undefined;
 	}
 };
 

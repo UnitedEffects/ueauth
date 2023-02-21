@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { nanoid } from 'nanoid';
 import crypto from 'crypto-js';
+import Boom from '@hapi/boom';
 
+const config = require('../../../../config');
 const API = {
 	domain: 'https://cloud.privakey.com',
 	createCompany: '/admin/api/companies/new',
@@ -21,7 +23,6 @@ function constructAuthHeader(identifier, timestamp, signature) {
         timestamp +
         intraHeaderDelimiter +
         signature;
-	console.info('Auth header: ' + result);
 	return result;
 }
 
@@ -33,7 +34,6 @@ function getUTCTimeStamp() {
 }
 
 function calculateHmac(data, secretKey) {
-	console.info(`calculating hmac from data: '${data} \nsecretKey: ${secretKey}`);
 	const hmac = crypto.HmacSHA256(data, secretKey);
 	return hmac.toString(crypto.enc.Base64);
 }
@@ -41,7 +41,6 @@ function calculateHmac(data, secretKey) {
 function generateHmac(id, key, method, route, postbody) {
 	const identifier = id;
 	const secretKey = key;
-	console.info(`input: id ${identifier}, key ${secretKey}, route ${route}, method ${method}, body ${postbody}`);
 	let dataToSign;
 	const timestamp = getUTCTimeStamp();
 	let signature;
@@ -54,16 +53,16 @@ function generateHmac(id, key, method, route, postbody) {
 		dataToSign = method + route + timestamp + identifier + postbody;
 		signature = calculateHmac(dataToSign, secretKey);
 	}
-	console.info('signature:' + signature);
 	return constructAuthHeader(identifier, timestamp, signature);
 }
 
 export default {
 	async createCompany(id, key, groupId) {
+		const name = `${groupId}_${nanoid(6)}`;
 		const url = `${API.domain}${API.createCompany}`;
 		const method = 'POST';
 		const data = {
-			name: `${groupId}_${nanoid(6)}`
+			name: (config.ENV !== 'production') ? `test_${name}` : name
 		};
 		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
 		const options = {
@@ -76,20 +75,107 @@ export default {
 			data
 		};
 		const result = await axios(options);
-		console.info(result.status);
-		console.info(result.headers);
-		return { status: result.status, data: result.headers };
+		if(!result?.headers?.location) throw Boom.failedDependency('Could not create a company');
+		const location = result.headers.location.split('/');
+		return { status: result.status, id: location[location.length-1], name: data.name };
 	},
-	async createAppSpace() {
-
+	async createAppSpace(id, key, groupId, cId, logo) {
+		const name = `${groupId}_prod`;
+		const url = `${API.domain}${API.createAppSpace}`.replace('{{companyGuid}}', cId);
+		const method = 'POST';
+		const data = {
+			idpType: 'simple',
+			name,
+			brandInfo: {
+				url: logo,
+				color: '#F0B700'
+			},
+			useUniversalApp: true
+		};
+		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
+		const options = {
+			url,
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				authorization: hmac
+			},
+			data
+		};
+		const result = await axios(options);
+		if(!result?.headers?.location) throw Boom.failedDependency('Could not create an app space');
+		const location = result.headers.location.split('/');
+		return { status: result.status, id: location[location.length-1] };
 	},
-	async createReqOrigin() {
-
+	async createReqOrigin(id, key, groupId, cId, aId) {
+		const name = `${groupId}_origin`;
+		const url = `${API.domain}${API.createReqOrigin}`
+			.replace('{{companyGuid}}', cId)
+			.replace('{{appSpaceGuid}}', aId);
+		const method = 'POST';
+		const data = {
+			name
+		};
+		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
+		const options = {
+			url,
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				authorization: hmac
+			},
+			data
+		};
+		const result = await axios(options);
+		if(!result?.headers?.location) throw Boom.failedDependency('Could not create an origin');
+		const location = result.headers.location.split('/');
+		return { status: result.status, id: location[location.length-1] };
 	},
-	async createAccessKey() {
-
+	async createAccessKey(id, key, groupId, cId, aId, oId) {
+		const url = `${API.domain}${API.createGenKey}`
+			.replace('{{companyGuid}}', cId)
+			.replace('{{appSpaceGuid}}', aId)
+			.replace('{{requestOriginGuid}}', oId);
+		const method = 'POST';
+		const data = {
+			keyType: 'hmac'
+		};
+		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
+		const options = {
+			url,
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				authorization: hmac
+			},
+			data
+		};
+		const result = await axios(options);
+		if(!result?.data?.key) throw Boom.failedDependency('Could not complete the transaction to issue key for origin');
+		return { status: result.status, data: { id: oId, key: result.data.key} };
 	},
-	async addCallback() {
-
+	async addCallback(id, key, groupId, cId, aId, oId) {
+		const url = `${API.domain}${API.addCallback}`
+			.replace('{{companyGuid}}', cId)
+			.replace('{{appSpaceGuid}}', aId)
+			.replace('{{requestOriginGuid}}', oId);
+		const method = 'POST';
+		const data = {
+			callbackUrl: `${config.SWAGGER}/api/{*}/mfa/callback`
+		};
+		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
+		const options = {
+			url,
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				authorization: hmac
+			},
+			data
+		};
+		const result = await axios(options);
+		if(!result?.headers?.location) throw Boom.failedDependency('Could not create a callback');
+		const location = result.headers.location.split('/');
+		return { status: result.status, id: location[location.length-1] };
 	}
 };

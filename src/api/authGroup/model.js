@@ -11,12 +11,13 @@ mongoose.set('useCreateIndex', true);
 const mfaMeta = new mongoose.Schema({
 	// supporting privakey interface
 	privakeyClient: String,
-	privaKeySecret: String,
+	privakeySecret: String,
 	privakeyLoginId: String,
 	privakey: {
-		companyGuid: String,
-		appSpaceGuid: String,
-		requestOriginGuid: String
+		companyName: String,
+		companyId: String,
+		appSpaceId: String,
+		callbackId: String
 	}
 	// strict is false so this object can be used for any integration or additional data capture
 }, { _id: false, strict: false });

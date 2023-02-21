@@ -144,10 +144,13 @@ const agp = {
 				if(check.length === 0) {
 					throw Boom.badRequest(`Unsupported MFA type requested ${patched.config.mfaChallenge.type}`);
 				}
-				await challenge.initGroup(group, globalSettings, patched.config.mfaChallenge.type);
-			}
-			if(patched.config?.mfaChallenge?.enable === false) {
-				await challenge.cleanup(group);
+				const meta = await challenge.initGroup(group, globalSettings, patched.config.mfaChallenge.type);
+				patched.config.mfaChallenge.meta = meta;
+			} else {
+				patched.config.mfaChallenge = {
+					enable: false,
+					required: false
+				}
 			}
 		}
 
