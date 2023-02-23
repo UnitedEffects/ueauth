@@ -11,8 +11,14 @@ mongoose.set('useCreateIndex', true);
 const mfaMeta = new mongoose.Schema({
 	// supporting privakey interface
 	privakeyClient: String,
-	privaKeySecret: String,
-	privakeyLoginId: String
+	privakeySecret: String,
+	privakeyLoginId: String,
+	privakey: {
+		companyName: String,
+		companyId: String,
+		appSpaceId: String,
+		callbackId: String
+	}
 	// strict is false so this object can be used for any integration or additional data capture
 }, { _id: false, strict: false });
 
@@ -412,7 +418,7 @@ const authGroup = new mongoose.Schema({
 			},
 			type: {
 				type: String,
-				enum: ['http-proxy', 'privakey']
+				enum: ['http-proxy', 'privakey', 'privakeySuper']
 			},
 			meta: mfaMeta
 		}

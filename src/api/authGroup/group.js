@@ -10,6 +10,7 @@ import k from './generate-keys';
 import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
 import eStreams from '../plugins/eventStream/eventStream';
+import challenge from '../plugins/challenge/challenge';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import cryptoRandomString from 'crypto-random-string';
@@ -128,19 +129,28 @@ const agp = {
 		const patched = jsonPatch.apply_patch(group.toObject(), update);
 
 		// validation for mfaChallenge being enabled
-		if(patched.config?.mfaChallenge?.enable === true) {
-			if(!patched.config?.mfaChallenge?.type) {
-				throw Boom.badRequest('MFA type is required');
-			}
-			if(globalSettings?.mfaChallenge?.enabled !== true ||
-				!globalSettings?.mfaChallenge?.providers) {
-				throw Boom.badRequest('Unable to enable MFA until the Admin provides this feature');
-			}
-			const check = globalSettings.mfaChallenge.providers.filter((p) => {
-				return (p.type === patched.config.mfaChallenge.type);
-			});
-			if(check.length === 0) {
-				throw Boom.badRequest(`Unsupported MFA type requested ${patched.config.mfaChallenge.type}`);
+		if(patched.config?.mfaChallenge?.enable !== group.config?.mfaChallenge?.enable) {
+			if(patched.config?.mfaChallenge?.enable === true) {
+				if(!patched.config?.mfaChallenge?.type) {
+					throw Boom.badRequest('MFA type is required');
+				}
+				if(globalSettings?.mfaChallenge?.enabled !== true ||
+					!globalSettings?.mfaChallenge?.providers) {
+					throw Boom.badRequest('Unable to enable MFA until the Admin provides this feature');
+				}
+				const check = globalSettings.mfaChallenge.providers.filter((p) => {
+					return (p.type === patched.config.mfaChallenge.type);
+				});
+				if(check.length === 0) {
+					throw Boom.badRequest(`Unsupported MFA type requested ${patched.config.mfaChallenge.type}`);
+				}
+				const meta = await challenge.initGroup(group, globalSettings, patched.config.mfaChallenge.type);
+				patched.config.mfaChallenge.meta = meta;
+			} else {
+				patched.config.mfaChallenge = {
+					enable: false,
+					required: false
+				}
 			}
 		}
 

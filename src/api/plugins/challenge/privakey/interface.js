@@ -2,6 +2,7 @@ import axios from 'axios';
 import qs from 'qs';
 import Boom from '@hapi/boom';
 import dal from '../dal';
+import pInit from './initApi';
 import events from '../eventProcessor';
 
 const config = require('../../../../config');
@@ -140,7 +141,7 @@ const pkApi = {
 				});
 			});
 		}
-		const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
+		const callback = `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
 		const transactionId = { uid, accountId: account.accountId };
 		if(meta?.event) transactionId.event = meta.event;
 		const data = {
@@ -252,6 +253,36 @@ const pkApi = {
 			}
 		};
 		return axios(options);
+	},
+	async initGroup(authGroup, type, provider) {
+		if(type.toLowerCase() === 'privakeysuper') {
+			if(!provider.privakeySuper.key) throw Boom.failedDependency('This MFA provider is not set up');
+			const clientID = provider.privakeySuper.id;
+			const clientSecret = provider.privakeySuper.key;
+			const privakey = {};
+			// call createCompany
+			const company = await pInit.createCompany(clientID, clientSecret, authGroup.name);
+			privakey.companyName = company.name;
+			privakey.companyId = company.id;
+			// call createAppSpace
+			// todo default logo....?
+			const appSpace = await pInit.createAppSpace(clientID, clientSecret, authGroup.name, company.id, authGroup.config.ui?.skin?.logo);
+			privakey.appSpaceId = appSpace.id;
+			// call createReqOrigin
+			const reqOrigin = await pInit.createReqOrigin(clientID, clientSecret, authGroup.id, company.id, appSpace.id);
+			// call createAccessKey
+			const keys = await pInit.createAccessKey(clientID, clientSecret, authGroup.id, company.id, appSpace.id, reqOrigin.id);
+			// call addCallBack
+			const cb = await pInit.addCallback(clientID, clientSecret, authGroup.id, company.id, appSpace.id, reqOrigin.id);
+			privakey.callbackId = cb.id;
+			// return metadata to update AG
+			return {
+				privakeyClient: reqOrigin.id,
+				privakeySecret: keys.data.key,
+				privakey
+			};
+		}
+		return undefined;
 	}
 };
 
