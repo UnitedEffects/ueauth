@@ -8,7 +8,7 @@ const connect = {
 		return {
 			keepAlive: true,
 			connectTimeoutMS: 10000,
-			useNewUrlParser: true,
+			useNewUrlParser: true
 		};
 	},
 	replicaCheck(options, replica, env) {

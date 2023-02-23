@@ -461,7 +461,7 @@ const authGroup = new mongoose.Schema({
 	associatedClient: String,
 	_id: {
 		type: String,
-		default: nanoid
+		default: () => nanoid()
 	}
 },{ _id: false });
 
