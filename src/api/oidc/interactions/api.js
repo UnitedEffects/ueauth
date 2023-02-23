@@ -466,30 +466,20 @@ const api = {
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, message));
 			}
 
-			if(account.mfa?.enabled === true) {
-				const metaChallenge = {
-					event: 'MAGIC_LINK',
-					content: {
-						title: 'No-Password Login Request',
-						header: `${authGroup.name} Platform`,
-						body: 'If you initiated this Magic Link Login, Approve below. Otherwise click Decline and change your password.'
-					}
-				};
-				await challenges.sendChallenge(authGroup, req.globalSettings, { accountId: account.id, mfaEnabled: true}, uid, metaChallenge);
-			} else {
-				const meta = {
-					auth_group: authGroup.id,
-					sub: account.id,
-					email: account.email,
-					uid
-				};
-				iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
-				const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
-				await n.notify(req.globalSettings, notificationData, req.authGroup);
-			}
+			const meta = {
+				auth_group: authGroup.id,
+				sub: account.id,
+				email: account.email,
+				uid
+			};
+
+			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
+			const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
+			await n.notify(req.globalSettings, notificationData, req.authGroup);
+
 			return res.render('response/response', {
 				title: 'SUCCESS!',
-				message: 'You should have a password free login link in your email or text messages. If you have MFA enabled, you will need to approve the login first. You may close this window.',
+				message: 'You should have a password free login link in your email or text messages. You may close this window.',
 				authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 				splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
 				authGroup: safeAG
