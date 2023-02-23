@@ -141,7 +141,8 @@ const pkApi = {
 				});
 			});
 		}
-		const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
+		//const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
+		const callback = `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
 		const transactionId = { uid, accountId: account.accountId };
 		if(meta?.event) transactionId.event = meta.event;
 		const data = {
@@ -261,12 +262,12 @@ const pkApi = {
 			const clientSecret = provider.privakeySuper.key;
 			const privakey = {};
 			// call createCompany
-			const company = await pInit.createCompany(clientID, clientSecret, authGroup.id);
+			const company = await pInit.createCompany(clientID, clientSecret, authGroup.name);
 			privakey.companyName = company.name;
 			privakey.companyId = company.id;
 			// call createAppSpace
-			// todo default logo....
-			const appSpace = await pInit.createAppSpace(clientID, clientSecret, authGroup.id, company.id, authGroup.config.ui?.skin?.logo);
+			// todo default logo....?
+			const appSpace = await pInit.createAppSpace(clientID, clientSecret, authGroup.name, company.id, authGroup.config.ui?.skin?.logo);
 			privakey.appSpaceId = appSpace.id;
 			// call createReqOrigin
 			const reqOrigin = await pInit.createReqOrigin(clientID, clientSecret, authGroup.id, company.id, appSpace.id);

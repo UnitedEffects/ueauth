@@ -57,12 +57,11 @@ function generateHmac(id, key, method, route, postbody) {
 }
 
 export default {
-	async createCompany(id, key, groupId) {
-		const name = `${groupId}_${nanoid(6)}`;
+	async createCompany(id, key, name) {
 		const url = `${API.domain}${API.createCompany}`;
 		const method = 'POST';
 		const data = {
-			name: (config.ENV !== 'production') ? `test_${name}` : name
+			name: (config.ENV !== 'production') ? `TEST ${name}` : name
 		};
 		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
 		const options = {
@@ -79,8 +78,7 @@ export default {
 		const location = result.headers.location.split('/');
 		return { status: result.status, id: location[location.length-1], name: data.name };
 	},
-	async createAppSpace(id, key, groupId, cId, logo) {
-		const name = `${groupId}_prod`;
+	async createAppSpace(id, key, name, cId, logo) {
 		const url = `${API.domain}${API.createAppSpace}`.replace('{{companyGuid}}', cId);
 		const method = 'POST';
 		const data = {
