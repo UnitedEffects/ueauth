@@ -141,7 +141,6 @@ const pkApi = {
 				});
 			});
 		}
-		//const callback = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
 		const callback = `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
 		const transactionId = { uid, accountId: account.accountId };
 		if(meta?.event) transactionId.event = meta.event;
