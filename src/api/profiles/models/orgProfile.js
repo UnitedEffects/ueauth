@@ -2,8 +2,6 @@ import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import h from '../../../helper';
 
-mongoose.set('useCreateIndex', true);
-
 const orgProfileSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,

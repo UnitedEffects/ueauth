@@ -2,8 +2,6 @@ import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import h from '../../helper';
 
-mongoose.set('useCreateIndex', true);
-
 const metaSchema = new mongoose.Schema({
 	// this allows us to create unique internal identifiers when required for setup.
 	admin: String

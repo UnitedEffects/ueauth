@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 
-mongoose.set('useCreateIndex', true);
 const logSchema = new mongoose.Schema({
 	logTimestamp: {
 		type: Date,
