@@ -247,7 +247,8 @@ describe('Test connectjs', () => {
 			const mongoOptions = {
 				keepAlive: true,
 				connectTimeoutMS: 10000,
-				useNewUrlParser: true
+				useNewUrlParser: true,
+				useUnifiedTopology: true
 			};
 			const result = connect.connectOptions();
 			expect(result).toStrictEqual(mongoOptions);
@@ -261,13 +262,15 @@ describe('Test connectjs', () => {
 			const mongoOptions = {
 				keepAlive: true,
 				connectTimeoutMS: 10000,
-				useNewUrlParser: true
+				useNewUrlParser: true,
+				useUnifiedTopology: true
 			};
 
 			const copy = {
 				keepAlive: true,
 				connectTimeoutMS: 10000,
 				useNewUrlParser: true,
+				useUnifiedTopology: true,
 				replicaSet: 'rs0'
 			};
 
