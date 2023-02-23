@@ -8,6 +8,7 @@ const connect = {
 		return {
 			keepAlive: true,
 			connectTimeoutMS: 10000,
+			useUnifiedTopology: true,
 			useNewUrlParser: true
 		};
 	},
