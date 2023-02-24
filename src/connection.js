@@ -23,7 +23,7 @@ const connect = {
 		try {
 			mongoose.set('strictQuery', true);
 			let mongoOptions = this.connectOptions();
-			mongoOptions = this.replicaCheck(mongoOptions, replica, 'dev');
+			//mongoOptions = this.replicaCheck(mongoOptions, replica, 'dev');
 			console.error(`mongo connecting - try: ${i}`);
 			i++;
 			await mongoose.connect(`${mongoConnect}?authSource=admin`, mongoOptions);
