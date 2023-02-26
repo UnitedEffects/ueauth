@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 
-mongoose.set('useCreateIndex', true);
 const authSchema = new mongoose.Schema({
 	issuerUrl: String,
 	clientId: String,

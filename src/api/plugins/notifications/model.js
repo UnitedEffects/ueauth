@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 
-mongoose.set('useCreateIndex', true);
-
 const notificationSchema = new mongoose.Schema({
 	_id: {
 		type: String,

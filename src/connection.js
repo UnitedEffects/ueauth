@@ -6,13 +6,10 @@ let i = 0;
 const connect = {
 	connectOptions() {
 		return {
-			keepAlive: 300000,
+			keepAlive: true,
 			connectTimeoutMS: 10000,
 			useNewUrlParser: true,
-			useUnifiedTopology: true,
-			useFindAndModify: false,
-			useCreateIndex: true,
-			promiseLibrary: Promise,
+			useUnifiedTopology: true
 		};
 	},
 	replicaCheck(options, replica, env) {
@@ -24,8 +21,9 @@ const connect = {
 
 	async create(mongoConnect, replica) {
 		try {
+			mongoose.set('strictQuery', true);
 			let mongoOptions = this.connectOptions();
-			mongoOptions = this.replicaCheck(mongoOptions, replica, 'dev');
+			//mongoOptions = this.replicaCheck(mongoOptions, replica, 'dev');
 			console.error(`mongo connecting - try: ${i}`);
 			i++;
 			await mongoose.connect(`${mongoConnect}?authSource=admin`, mongoOptions);

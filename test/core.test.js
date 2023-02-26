@@ -245,13 +245,10 @@ describe('Test connectjs', () => {
 	test('ensure mongoose options are correct', async () => {
 		try {
 			const mongoOptions = {
-				keepAlive: 300000,
+				keepAlive: true,
 				connectTimeoutMS: 10000,
 				useNewUrlParser: true,
-				useUnifiedTopology: true,
-				useFindAndModify: false,
-				useCreateIndex: true,
-				promiseLibrary: Promise
+				useUnifiedTopology: true
 			};
 			const result = connect.connectOptions();
 			expect(result).toStrictEqual(mongoOptions);
@@ -263,23 +260,17 @@ describe('Test connectjs', () => {
 	test('ensure replica set is set depending on configured envirnment - should see it', async () => {
 		try {
 			const mongoOptions = {
-				keepAlive: 300000,
+				keepAlive: true,
 				connectTimeoutMS: 10000,
 				useNewUrlParser: true,
-				useUnifiedTopology: true,
-				useFindAndModify: false,
-				useCreateIndex: true,
-				promiseLibrary: Promise
+				useUnifiedTopology: true
 			};
 
 			const copy = {
-				keepAlive: 300000,
+				keepAlive: true,
 				connectTimeoutMS: 10000,
 				useNewUrlParser: true,
 				useUnifiedTopology: true,
-				useFindAndModify: false,
-				useCreateIndex: true,
-				promiseLibrary: Promise,
 				replicaSet: 'rs0'
 			};
 

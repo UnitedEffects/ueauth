@@ -6,8 +6,6 @@ import ms from 'ms';
 
 const config = require('../../config');
 
-mongoose.set('useCreateIndex', true);
-
 const mfaMeta = new mongoose.Schema({
 	// supporting privakey interface
 	privakeyClient: String,
@@ -463,7 +461,7 @@ const authGroup = new mongoose.Schema({
 	associatedClient: String,
 	_id: {
 		type: String,
-		default: nanoid
+		default: () => nanoid()
 	}
 },{ _id: false });
 

@@ -2,8 +2,6 @@ import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
 
-mongoose.set('useCreateIndex', true);
-
 const identitySchema = new mongoose.Schema({
 	id: {
 		type: String,

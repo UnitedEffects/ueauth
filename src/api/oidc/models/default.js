@@ -2,8 +2,6 @@ import mongoose from 'mongoose';
 import { v4 as uuid } from 'uuid';
 import log from '../../logging/logs';
 
-mongoose.set('useCreateIndex', true);
-
 function dynamic(name) {
     const myModels = mongoose.modelNames();
     if (myModels.includes(name)) {
