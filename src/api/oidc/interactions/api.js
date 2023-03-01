@@ -52,6 +52,9 @@ const api = {
 			req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
+			// let login know if global mfaChallenge is setup and on the AG
+			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
+			req.globalSettings?.mfaChallenge?.enabled === true);
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
 			if(client.auth_group !== req.authGroup.id) {
@@ -220,7 +223,6 @@ const api = {
 			await i.save(authGroup.config.ttl.interaction);
 
 			const { prompt, params } = await provider.interactionDetails(req, res);
-			console.info(params);
 			assert.equal(prompt.name, 'login');
 			const path = `/${authGroup.id}/interaction/${req.params.uid}/federated`;
 			const fedError = (error) => {
@@ -262,6 +264,7 @@ const api = {
 	async login(req, res, next) {
 		try {
 			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
+			if (req.body?.action?.includes('magic-')) return api.setupPasswordFreeOption(req, res, next);
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
@@ -424,8 +427,96 @@ const api = {
 		}
 	},
 
-	async sendPasswordFree(req, res, next) {
+	async setupPasswordFreeOption(req, res, next) {
+		try {
+			const provider = await oidc(req.authGroup, req.customDomain);
+			const { authGroup, safeAG } = await safeAuthGroup(req.authGroup);
+			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
+			const client = await provider.Client.find(params.client_id);
+			const backToLogin = (msg, params) => {
+				params.emailScreen = true;
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, msg));
+			}
+			if(client.auth_group !== authGroup.id) {
+				return backToLogin('The specified login client is not part of the indicated auth group', params);
+			}
+			if(!req.body.accountId) {
+				return backToLogin('Uh oh... something went wrong. Try again later.', params);
+			}
+			const acc = { id: req.body.accountId, email: req.body.accountEmail };
+			switch(req.body.action.toLowerCase()){
+				case 'magic-device':
+					return api.deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, acc, backToLogin)
+				case 'magic-email':
+					const msg = 'You should have a password free login link in your email. You may close this window.';
+					if(!acc.email) {
+						return backToLogin('Uh oh... something went wrong. Try again later.', params);
+					}
+					return api.emailLogin(req, res, authGroup, safeAG, acc, uid, params, msg, backToLogin);
+				default:
+					return backToLogin('Uh oh... something went wrong. Try again later.', params);
+			}
+		} catch (error) {
+			next(error);
+		}
+	},
+
+	async deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, account, error) {
+		let mfaResult;
+		const meta = {
+			content: {
+				title: 'Authorization Request',
+				header: `${authGroup.name} Platform`,
+				body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
+			}
+		};
+		try {
+			mfaResult = await challenges.sendChallenge(authGroup, req.globalSettings, {
+				accountId: account.id,
+				mfaEnabled: true
+			}, uid, meta);
+		} catch (error) {
+			console.error(error);
+		}
+		if(!mfaResult) {
+			params.emailScreen = true;
+			const msg = `The ${authGroup.name} platform could not log you in using your device. Please try again later and if the issue continues, contact the administrator.`;
+			return error(msg, params);
+		}
+		return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.id, pending: true, bindUser: false, providerKey: mfaResult.id }));
+	},
+
+	async emailLogin(req, res, authGroup, safeAG, account, uid, params, message, error) {
 		let iAccessToken;
+		try {
+			const meta = {
+				auth_group: authGroup.id,
+				sub: account.id,
+				email: account.email,
+				uid
+			};
+
+			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
+			const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
+			await n.notify(req.globalSettings, notificationData, req.authGroup);
+
+			return res.render('response/response', {
+				title: 'SUCCESS!',
+				message,
+				authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
+				splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+				authGroup: safeAG
+			});
+		} catch (err) {
+			console.error(err);
+			if(iAccessToken) {
+				await iat.deleteOne(iAccessToken.jti, authGroup.id);
+			}
+			return error('Magic Link login is not available right now. You can try an alternate login or come back later.', params);
+		}
+	},
+
+	async sendPasswordFree(req, res, next) {
 		let _uid;
 		let client;
 		let _params;
@@ -440,17 +531,30 @@ const api = {
 			_session = session;
 			_prompt = prompt;
 			client = await provider.Client.find(params.client_id);
-			if(client.auth_group !== req.authGroup.id) {
-				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+			const backToLogin = (msg, params) => {
+				params.emailScreen = true;
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, msg));
 			}
+			if(client.auth_group !== req.authGroup.id) {
+				return backToLogin('The specified login client is not part of the indicated auth group', params);
+			}
+
+			//verify global magic link
 			params.passwordless = false;
 			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
-			} else {
-				params.emailScreen = true;
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Magic Link login is not available at this time.'));
 			}
+
+			//verify global Challenge MFA
+			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
+			//if both are false, save some time and go back to login
+			if (params.passwordless !== true && params.globalMfa !== true) {
+				return backToLogin('Password-free login is not currently enabled for this platform. Contact your admin to request the change.', params)
+			}
+
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 
 			// ensure that we do not bypass any restrictions
@@ -463,36 +567,39 @@ const api = {
 				params.emailScreen = true;
 				params.api = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC)?authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}`;
 				if(account?.verified === false) params.sendVerifyButton = true;
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, message));
+				return backToLogin(message, params);
 			}
 
-			const meta = {
-				auth_group: authGroup.id,
-				sub: account.id,
-				email: account.email,
-				uid
-			};
+			// Error - enable mfa msg
+			if (params.passwordless !== true && params.globalMfa === true && account?.mfa?.enabled !== true) {
+				return backToLogin('Password-free device login is available but you must first log in normally and enable MFA on your account dashboard to enable it for future logins.', params);
+			}
 
-			iAccessToken = await iat.generateIAT(900, ['auth_group'], authGroup, meta);
-			const notificationData = interactions.passwordLessOptions(authGroup, account, iAccessToken, [], uid, req.customDomain);
-			await n.notify(req.globalSettings, notificationData, req.authGroup);
+			// device flow
+			if (params.passwordless !== true && params.globalMfa === true && account?.mfa?.enabled === true) {
+				return api.deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, account, backToLogin)
+			}
 
-			return res.render('response/response', {
-				title: 'SUCCESS!',
-				message: 'You should have a password free login link in your email or text messages. You may close this window.',
-				authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
-				splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
-				authGroup: safeAG
-			});
+			// modal
+			if (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled === true) {
+				params.passwordFreeOptions = {
+					show: true,
+					account: account.id,
+					accountEmail: account.email,
+					device: true,
+					email: true
+				}
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
+			}
+
+			const message = (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled !== true) ?
+				'You should have a password free login link in your email. You also have the ability to setup password free login using your mobile device. Just enable MFA in your account dashboard once you are logged to activate. You may close this window.' :
+				'You should have a password free login link in your email. You may close this window.';
+			return api.emailLogin(req, res, authGroup, safeAG, account, uid, params, message, backToLogin);
 		} catch (err) {
-			if(iAccessToken) {
-				await iat.deleteOne(iAccessToken.jti, authGroup.id);
-			}
-			if (_uid && client && _params) {
-				_params.emailScreen = true;
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'Magic Link login is not available right now. You can try traditional login or come back later.'));
-			}
-			return next(err);
+			console.error(err);
+			_params.emailScreen = true;
+			return res.render('login/login', interactions.standardLogin(authGroup, client, debug, _prompt, _session, _uid, { ..._params, login_hint: req.body.email }, 'There was a problem with password-free login. Please try again later.'));
 		}
 	},
 

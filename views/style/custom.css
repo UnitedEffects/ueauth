@@ -161,6 +161,10 @@
     padding-left: 10px;
 }
 
+.m-10 {
+    margin: 10px;
+}
+
 /* MFA Instructions */
 
 .instructions {
