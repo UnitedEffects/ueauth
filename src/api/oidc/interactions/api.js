@@ -52,6 +52,9 @@ const api = {
 			req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
+			// let login know if global mfaChallenge is setup and on the AG
+			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
+			req.globalSettings?.mfaChallenge?.enabled === true);
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
 			if(client.auth_group !== req.authGroup.id) {
@@ -440,17 +443,30 @@ const api = {
 			_session = session;
 			_prompt = prompt;
 			client = await provider.Client.find(params.client_id);
-			if(client.auth_group !== req.authGroup.id) {
-				throw Boom.forbidden('The specified login client is not part of the indicated auth group');
+			const backToLogin = (msg, params) => {
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, msg));
 			}
+			if(client.auth_group !== req.authGroup.id) {
+				return backToLogin('The specified login client is not part of the indicated auth group', params);
+			}
+
+			//verify global magic link
 			params.passwordless = false;
 			if (authGroup?.pluginOptions?.notification?.enabled === true &&
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
-			} else {
-				params.emailScreen = true;
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, 'Magic Link login is not available at this time.'));
 			}
+
+			//verify global Challenge MFA
+			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
+			//if both are false, save some time and go back to login
+			if (params.passwordless !== true && params.globalMfa !== true) {
+				params.emailScreen = true;
+				return backToLogin('Password-free login is not currently enabled for this platform. Contact your admin to request the change.', params)
+			}
+
 			const account = await acc.getAccountByEmailOrUsername(authGroup.id, req.body.email);
 
 			// ensure that we do not bypass any restrictions
@@ -463,8 +479,77 @@ const api = {
 				params.emailScreen = true;
 				params.api = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC)?authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}`;
 				if(account?.verified === false) params.sendVerifyButton = true;
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, message));
+				return backToLogin(message, params);
 			}
+
+			// Error - enable mfa msg
+			if (params.globalMfa === true && account?.mfa?.enabled !== true) {
+				params.emailScreen = true;
+				return backToLogin('Password-free device login is available but you must first log in normally and enable MFA on your account dashboard to enable it for future logins.', params);
+			}
+
+			// device flow
+			if (params.passwordless !== true && params.globalMfa === true && account?.mfa?.enabled === true) {
+				//todo device flow
+				console.info('Device flow');
+				let mfaResult;
+				const meta = {
+					content: {
+						title: 'Authorization Request',
+						header: `${authGroup.name} Platform`,
+						body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
+					}
+				};
+				try {
+					mfaResult = await challenges.sendChallenge(authGroup, req.globalSettings, {
+						accountId: account.id,
+						mfaEnabled: true
+					}, uid, meta);
+				} catch (error) {
+					console.error(error);
+				}
+				if(!mfaResult) {
+					params.emailScreen = true;
+					const msg = `The ${authGroup.name} platform could not log you in using your device. Please try again later and if the issue continues, contact the administrator.`;
+					return backToLogin(msg, params);
+				}
+				console.info('MFA RESULT', mfaResult);
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.id, pending: true, bindUser: false, providerKey: mfaResult.id }));
+			}
+
+			// modal
+			if (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled === true) {
+				//todo modal flow
+				console.info('modal flow')
+				let mfaResult;
+				const meta = {
+					content: {
+						title: 'Authorization Request',
+						header: `${authGroup.name} Platform`,
+						body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
+					}
+				};
+				try {
+					mfaResult = await challenges.sendChallenge(authGroup, req.globalSettings, {
+						accountId: account.id,
+						mfaEnabled: true
+					}, uid, meta);
+				} catch (error) {
+					console.error(error);
+				}
+				if(!mfaResult) {
+					params.emailScreen = true;
+					const msg = `The ${authGroup.name} platform could not log you in using your device. Please try again later and if the issue continues, contact the administrator.`;
+					return backToLogin(msg, params);
+				}
+				console.info('MFA RESULT', mfaResult);
+				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.id, pending: true, bindUser: false, providerKey: mfaResult.id }));
+			}
+
+			// otherwise the rest are email flow...
+			// 100 - ok - email flow
+			// 110 - ok - email flow (NOTE ABOUT MFA ENABLE) todo
+			// 101 - ok - email flow
 
 			const meta = {
 				auth_group: authGroup.id,
