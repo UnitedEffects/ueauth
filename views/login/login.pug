@@ -1,11 +1,6 @@
 extends ../uelayout
 
 block content
-    script(type="text/javascript").
-        const gMfa = '#{params.globalMfa}';
-        const pwl = '#{params.passwordless}';
-        console.info(gMfa);
-        console.info(pwl);
     body.bg.flex
         if(align === 'middle')
             .panel.middle-panel.width-auto
