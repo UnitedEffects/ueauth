@@ -571,7 +571,7 @@ const api = {
 			}
 
 			// Error - enable mfa msg
-			if (params.globalMfa === true && account?.mfa?.enabled !== true) {
+			if (params.passwordless !== true && params.globalMfa === true && account?.mfa?.enabled !== true) {
 				return backToLogin('Password-free device login is available but you must first log in normally and enable MFA on your account dashboard to enable it for future logins.', params);
 			}
 
