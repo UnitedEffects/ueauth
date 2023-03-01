@@ -264,7 +264,7 @@ const api = {
 	async login(req, res, next) {
 		try {
 			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
-			if (req.body?.action.includes('magic-')) return api.setupPasswordFreeOption(req, res, next);
+			if (req.body?.action?.includes('magic-')) return api.setupPasswordFreeOption(req, res, next);
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
