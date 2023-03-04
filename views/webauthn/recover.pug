@@ -3,11 +3,12 @@ extends ../uelayout
 block content
     script(nonce=nonce, type="text/javascript").
         let state = '#{state}';
-        const authGroup = '#{authGroup}';
+        const authGroupId = '#{authGroup.id}';
+        const domain = '#{domain}'
     script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
     script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
     script
-        include recovermfa.js
+        include passkey.js
     body.bg.flex
         .panel.middle-panel
             if (flash)
@@ -28,7 +29,7 @@ block content
                     div
                         input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
                         label(for='email') Email
-                    button#recover-button.btn.btn-outline-dark.btn-custom.m-t-20 Continue
+                    button#continue.btn.btn-outline-dark.btn-custom.m-t-20 Continue
             div#notify
                 div#notify-ready
             div#resetting

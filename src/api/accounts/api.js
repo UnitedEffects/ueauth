@@ -860,6 +860,22 @@ const api = {
 			next (error);
 		}
 	},
+	async getAccountLogins(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			if(!req.query.lookup) throw Boom.badRequest('Username, email or phone is required');
+			const user = await acct.getAccountByEmailUsernameOrPhone(req.authGroup.id, req.query.lookup);
+			if(!user) throw Boom.notFound(req.query.lookup);
+			const options = {
+				state: req.query.state,
+				magicLink: (req.globalSettings.notifications.enabled === true && req.authGroup.config.passwordLessSupport === true),
+				device: user.mfa?.enabled
+			};
+			return res.respond(say.ok(options, RESOURCE));
+		} catch (error) {
+			next (error);
+		}
+	}
 };
 
 async function userOperation(req, user, password) {

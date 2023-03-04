@@ -16,9 +16,11 @@ export default {
 					return res.redirect(`${path}?state=${state}`);
 				}
 				state = req.query.state;
+				console.info(safeAG);
 				return res.render('webauthn/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
+					domain: `${config.PROTOCOL}://${config.SWAGGER}`,
 					state,
 					title: 'Passkey Setup Wizard',
 					message: 'You can use this wizard to setup a passkey for login. Passkeys are tied to the browser or device you are using for login and not centrally managed. You will need to go through this setup for each device from which you wish to login.'

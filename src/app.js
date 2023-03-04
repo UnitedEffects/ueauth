@@ -5,7 +5,8 @@ import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import {
 	Root,
-	Identity,
+	Group,
+	Account,
 	Access,
 	OIDC,
 	Profiles,
@@ -41,7 +42,8 @@ app.use('/', Root);
 app.use('/', AccService);
 app.use('/', OIDC);
 app.use('/api', Challenge);
-app.use('/api', Identity);
+app.use('/api', Group);
+app.use('/api', Account);
 app.use('/api', Plugins);
 app.use('/api', Access);
 app.use('/api', Profiles);

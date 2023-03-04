@@ -1,5 +1,6 @@
 export { default as Root } from './root';
-export { default as Identity } from './identity';
+export { default as Group } from './group';
+export { default as Account } from './account';
 export { default as Access } from './access';
 export { default as OIDC  } from './oidc';
 export { default as AccService } from './accService';

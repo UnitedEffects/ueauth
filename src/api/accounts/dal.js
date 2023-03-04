@@ -76,6 +76,19 @@ export default {
 		};
 		return Account.findOneAndUpdate({ _id: id, authGroup }, update, { new: true });
 	},
+	async getAccountByEmailUsernameOrPhone(authGroup, data) {
+		const query = {
+			authGroup,
+			blocked: false,
+			active: true,
+			verified: true,
+			$or: [
+				{ email: data },
+				{ username: data },
+				{ phone: data }
+			]};
+		return Account.findOne(query).select({ access: 0 });
+	},
 	async getAccountByEmailOrUsername(authGroup, email, verifiedRequired = false, hideAccess = true) {
 		const query = { authGroup, blocked: false, active: true, $or: [
 			{ email },

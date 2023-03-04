@@ -1,4 +1,36 @@
 window.addEventListener( 'load', async function () {
+    const jNotify = $('#notify');
+    const jResetting = $('#resetting');
+    const jBasicInfo = $('#getInfo');
+    const emailInput = $('#email');
+    const passwordInput = $('#password');
+    const continueButton = $('#continue');
+    let username;
+    let password;
+    function showSpinner() {
+        $('#loading').css({ visibility: 'visible', position: 'inherit' });
+    }
+    function hideSpinner() {
+        $('#loading').css({ visibility: 'hidden', position: 'absolute' });
+    }
+    continueButton.on('click', async (event) => {
+        return findUser(state, event);
+    });
+    async function findUser(state, event) {
+        event.preventDefault();
+        if(!username) username = emailInput.val();
+        const options = {
+            method: 'get',
+            url: `${domain}/api/${authGroupId}/account/login/options?lookup=${username}&state=${state}`
+        };
+        //showSpinner();
+        const result = await axios(options);
+        console.info(result.data);
+        if(result?.data?.state !== state) {
+            //todo error
+            console.error('problem');
+        }
+    }
 	/*
 	let token;
 	let notifyUrl;
