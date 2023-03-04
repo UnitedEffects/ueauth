@@ -49,12 +49,12 @@ export default {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
 					state,
-					title: 'MFA Recovery Wizard',
-					message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.',
+					title: 'Device Setup Wizard',
+					message: 'You can use this wizard to connect or reconnect your account to your device so you can use MFA or login with your device. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.',
 					request: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/instructions`
 				});
 			}
-			throw Boom.forbidden(`MFA recovery is not available on the ${authGroup.name} Platform`);
+			throw Boom.forbidden(`Device recovery is not available on the ${authGroup.name} Platform`);
 		} catch (error) {
 			next(error);
 		}

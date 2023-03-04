@@ -7951,6 +7951,15 @@ components:
       description: these are plugin configurations
       additionalProperties: false
       properties:
+        webAuthN:
+          type: object
+          properties:
+            enable:
+              type: boolean
+            type:
+              type: string
+            meta:
+              type: object
         externalStreaming:
           type: object
           properties:

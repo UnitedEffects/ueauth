@@ -428,6 +428,17 @@ const authGroup = new mongoose.Schema({
 				default: config.INIT_AG_WITH_STREAMS || false,
 			}
 		},
+		webAuthN: {
+			enable: {
+				type: Boolean,
+				default: false
+			},
+			type: {
+				type: String,
+				enum: ['privakey']
+			},
+			meta: Object
+		},
 		notification: {
 			enabled: {
 				type: Boolean,

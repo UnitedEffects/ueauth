@@ -26,6 +26,7 @@ export default {
 			version,
 			notifications: record?.notifications,
 			mfaChallenge: record?.mfaChallenge,
+			webAuthN: record?.webAuthN,
 			eventStream: record?.eventStream,
 			resourceCreationLimiter: record?.resourceCreationLimiter
 		});

@@ -145,6 +145,24 @@ const chApi = {
 		return warnings;
 	},
 	async initGroup(ag, global, type) {
+		let settings;
+		if(!global) {
+			settings = await plugins.getLatestPluginOptions();
+		} else settings = JSON.parse(JSON.stringify(global));
+		const privaCheck = settings.mfaChallenge.providers.filter((p) => {
+			return (p?.type?.toLowerCase() === 'privakey');
+		});
+		// because there is also a privakey webAuthN plugin, we want to use those value if it exists for the AG
+		if( ag.pluginOptions.webAuthN.enable === true && settings.webAuthN.enabled === true) {
+			if( ag.pluginOptions.webAuthN?.type?.toLowerCase() === 'privakey') {
+				if( privaCheck.length &&
+					ag.pluginOptions.webAuthN?.meta?.privakeyClient &&
+					ag.pluginOptions.webAuthN?.meta?.privakeySecret) {
+					return ag.pluginOptions.webAuthN.meta;
+				}
+			}
+		}
+		// otherwise create it...
 		const { pInterface, provider } = await initInterface(global, type);
 		if(pInterface) return pInterface.initGroup(ag, type, provider);
 		throw Boom.badRequest('MFA is not enabled for this Auth Group');

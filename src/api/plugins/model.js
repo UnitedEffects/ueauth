@@ -102,6 +102,20 @@ const pluginConfig = new mongoose.Schema({
 			externalEventBodySchemaUrl: String //only matters if enableValidation = true
 		}
 	},
+	webAuthN: {
+		enabled: {
+			type: Boolean,
+			default: false
+		},
+		providers: [{
+			type: {
+				type: String,
+				enum: ['privakey'],
+				required: true
+			},
+			setup: Object
+		}]
+	},
 	mfaChallenge: {
 		enabled: {
 			type: Boolean,

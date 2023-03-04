@@ -641,6 +641,38 @@ paths:
         description: Setting for mfa challenge desired
         required: true
 
+  /api/plugins/global/web-auth-n:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global webAuthN Plugin as Service Owner
+      description: Configure Global webAuthN Plugin as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeWebAuthN'
+        description: Setting for mfa challenge desired
+        required: true
+
   /api/plugins/global/mfa-challenge:
     post:
       tags:
@@ -8552,6 +8584,15 @@ components:
       description: these are plugin configurations
       additionalProperties: false
       properties:
+        webAuthN:
+          type: object
+          properties:
+            enable:
+              type: boolean
+            type:
+              type: string
+            meta:
+              type: object
         externalStreaming:
           type: object
           properties:
@@ -8929,7 +8970,22 @@ components:
                     tlsTrustCertsFilePath: /my/path
                     tlsValidateHostname: false
                     tlsAllowInsecureConnection: false
-
+        webAuthN:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            providers:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    enum:
+                      - privakey
+                  setup:
+                    type: object
         mfaChallenge:
           type: object
           properties:
@@ -8945,6 +9001,7 @@ components:
                     enum:
                       - http-proxy
                       - privakey
+                      - privakeySuper
                   api:
                     type: object
                     description: endpoints for the interface functions
@@ -10197,6 +10254,22 @@ components:
               #  tlsTrustCertsFilePath: /my/path
               #  tlsValidateHostname: false
               #  tlsAllowInsecureConnection: false
+
+# WEBAUTHN
+    writeWebAuthN:
+      type: object
+      required:
+        - enabled
+        - currentVersion
+      properties:
+        enabled:
+          type: boolean
+        currentVersion:
+          type: number
+        type:
+          type: string
+        setup:
+          type: object
 
 # MFA CHALLENGE
     writeMfaChallenge:

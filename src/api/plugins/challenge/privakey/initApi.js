@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { nanoid } from 'nanoid';
 import crypto from 'crypto-js';
 import Boom from '@hapi/boom';
 
