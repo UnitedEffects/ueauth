@@ -55,7 +55,6 @@ window.addEventListener( 'load', async function () {
 		} catch (error) {
 			onError(error);
 		}
-
 	});
 
 	loginButton.on('click', async (event) => {

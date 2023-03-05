@@ -122,7 +122,7 @@ const agp = {
 		return dal.getOneByEither(q, onlyIncludeActive);
 	},
 
-	async patch(group, update, user, global) {
+	async patch(group, update, user, global, domain) {
 		let globalSettings;
 		if(!global) {
 			globalSettings = await plugins.getLatestPluginOptions(true);
@@ -171,7 +171,7 @@ const agp = {
 				if(check.length === 0) {
 					throw Boom.badRequest(`Unsupported WebAuthN provider type requested ${patched.pluginOptions.webAuthN.type}`);
 				}
-				const meta = await passkey.initGroup(group, globalSettings, patched.pluginOptions.webAuthN.type);
+				const meta = await passkey.initGroup(group, globalSettings, patched.pluginOptions.webAuthN.type, domain);
 				patched.pluginOptions.webAuthN.meta = meta;
 			} else {
 				patched.pluginOptions.webAuthN = {

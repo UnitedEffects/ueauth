@@ -2,6 +2,11 @@ import Boom from '@hapi/boom';
 import pInit from '../../challenge/privakey/initApi';
 
 const pkApi = {
+	async createCallback(authGroup, provider, company, appSpace, reqOrigin, domain) {
+		const clientID = provider.setup.id;
+		const clientSecret = provider.setup.key;
+		return pInit.addWebAuthNCallback(clientID, clientSecret, authGroup, company, appSpace, reqOrigin, domain);
+	},
 	async initGroupPasskey(authGroup, type, provider) {
 		if(!provider.setup.key) throw Boom.failedDependency('This MFA provider is not set up');
 		const clientID = provider.setup.id;

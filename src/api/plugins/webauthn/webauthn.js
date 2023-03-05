@@ -53,11 +53,12 @@ const api = {
 		if(pInterface) return pInterface.finishWebAuthN(provider, ag, data);
 		return undefined;
 	},
-	async initGroup(ag, global, type) {
+	async initGroup(ag, global, type, domain) {
 		let settings;
 		if(!global) {
 			settings = await plugins.getLatestPluginOptions();
 		} else settings = JSON.parse(JSON.stringify(global));
+		const { pInterface, provider, alt } = await initInterface(global, type);
 		const privaCheck = settings.mfaChallenge.providers.filter((p) => {
 			return (p?.type?.toLowerCase() === 'privakey' || p?.type?.toLowerCase() === 'privakeysuper');
 		});
@@ -67,12 +68,16 @@ const api = {
 				if( privaCheck.length &&
 					ag.config.mfaChallenge?.meta?.privakeyClient &&
 					ag.config.mfaChallenge?.meta?.privakeySecret) {
-					return ag.config.mfaChallenge.meta;
+					console.info('matching data...');
+					const meta = JSON.parse(JSON.stringify(ag.config.mfaChallenge.meta));
+					//todo fix reverse on mfa...
+					const wCB = await alt.createCallback(ag.id, provider, meta.privakey.companyId, meta.privakey.appSpaceId, ag.config.mfaChallenge?.meta?.privakeyClient, domain);
+					meta.privakey.callbackId = wCB.id;
+					return meta;
 				}
 			}
 		}
 		// otherwise create it...
-		const { pInterface, provider, alt } = await initInterface(global, type);
 		if(alt) return alt.initGroupPasskey(ag, type, provider);
 		if(pInterface) return pInterface.initGroup(ag, type, provider);
 		throw Boom.badRequest('WebAuthN is not enabled for this Auth Group');
