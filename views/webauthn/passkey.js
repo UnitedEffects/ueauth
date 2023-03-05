@@ -1,36 +1,115 @@
+import {
+	create,
+	supported,
+	parseCreationOptionsFromJSON,
+} from 'https://unpkg.com/@github/webauthn-json@2.1.1/dist/esm/webauthn-json.browser-ponyfill.js';
+
 window.addEventListener( 'load', async function () {
-    const jNotify = $('#notify');
-    const jResetting = $('#resetting');
-    const jBasicInfo = $('#getInfo');
-    const emailInput = $('#email');
-    const passwordInput = $('#password');
-    const continueButton = $('#continue');
-    let username;
-    let password;
-    function showSpinner() {
-        $('#loading').css({ visibility: 'visible', position: 'inherit' });
-    }
-    function hideSpinner() {
-        $('#loading').css({ visibility: 'hidden', position: 'absolute' });
-    }
-    continueButton.on('click', async (event) => {
-        return findUser(state, event);
-    });
-    async function findUser(state, event) {
-        event.preventDefault();
-        if(!username) username = emailInput.val();
-        const options = {
-            method: 'get',
-            url: `${domain}/api/${authGroupId}/account/login/options?lookup=${username}&state=${state}`
-        };
-        //showSpinner();
-        const result = await axios(options);
-        console.info(result.data);
-        if(result?.data?.state !== state) {
-            //todo error
-            console.error('problem');
-        }
-    }
+	const getInfo = $('#getInfo');
+	const instructions = $('#instruct');
+	const altInstructions = $('#altInstructions');
+	const auth = $('#auth');
+	const jNotify = $('#notify');
+	const jResetting = $('#resetting');
+	const jBasicInfo = $('#getInfo');
+	const emailInput = $('#email');
+	const passwordInput = $('#password');
+	const continueButton = $('#continue');
+	const eFlash = $('#flash');
+	const flashContainer = $('#flash-container');
+	const passwordless = $('#passwordless');
+	const magic = $('#magic');
+	const device = $('#device');
+	const loginButton = $('#login');
+	let username;
+	let password;
+
+	function hide(element) {
+		element.addClass('hidden');
+	}
+	function unhide(element) {
+		element.removeClass('hidden');
+	}
+	function showSpinner() {
+		$('#loading').css({ visibility: 'visible', position: 'inherit' });
+	}
+	function hideSpinner() {
+		$('#loading').css({ visibility: 'hidden', position: 'absolute' });
+	}
+	continueButton.on('click', async (event) => {
+		return findUser(state, event);
+	});
+	loginButton.on('click', async (event) => {
+		return getBasicToken(state, event);
+	});
+	async function findUser(state, event) {
+		try {
+			hide(flashContainer);
+			event.preventDefault();
+			if(!username) username = emailInput.val();
+			const options = {
+				method: 'get',
+				url: `${domain}/api/${authGroupId}/account/login/options?lookup=${username}&state=${state}`
+			};
+			showSpinner();
+			const result = await axios(options);
+			console.info(result.data);
+			hideSpinner();
+			if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
+			hide(getInfo);
+			unhide(auth);
+			if(result?.data?.data?.device || result?.data?.data?.magicLink) unhide(passwordless);
+			if(result?.data?.data?.device) unhide(device);
+			if(result?.data?.data?.magicLink) unhide(magic);
+		} catch (error) {
+			hideSpinner();
+			console.error(error);
+			unhide(flashContainer);
+			eFlash.append('<p>There was an error. Please try again later.</p>');
+		}
+	}
+
+	async function getBasicToken(state, event) {
+		try {
+			hide(flashContainer);
+			event.preventDefault();
+			if(!username) username = emailInput.val();
+			if(!password) password = passwordInput.val();
+			const options = {
+				method: 'post',
+				url: `${domain}/${authGroupId}/token/simple-iat`,
+				auth: {
+					username,
+					password
+				},
+				data: {
+					state
+				}
+			};
+			showSpinner();
+			const result = await axios(options);
+			console.info(result.data);
+			hideSpinner();
+			if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
+			return window.location.replace(`${domain}/${authGroupId}/passkey?token=${result.data.data.jti}&state=${state}`);
+		} catch (error) {
+			hideSpinner();
+			console.error(error);
+			unhide(flashContainer);
+			eFlash.append('<p>There was an error. Please try again later.</p>');
+		}
+	}
+
+	//setup on load
+	unhide(getInfo);
+	hide(auth);
+	if(supported()!== true) {
+		hide(getInfo);
+		hide(instructions);
+		unhide(altInstructions);
+		altInstructions.append('<p>This device does not supported passkey login. You may close this window</p>');
+	}
+
 	/*
 	let token;
 	let notifyUrl;

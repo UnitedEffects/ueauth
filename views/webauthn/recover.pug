@@ -5,9 +5,8 @@ block content
         let state = '#{state}';
         const authGroupId = '#{authGroup.id}';
         const domain = '#{domain}'
-    script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
-    script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
-    script
+    script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
+    script(nonce=nonce, type='module')
         include passkey.js
     body.bg.flex
         .panel.middle-panel
@@ -23,6 +22,7 @@ block content
                 p.org-name=authGroup.name
             p#title.header=title
             p#instruct.description=message
+            h3#altInstructions.hidden
             div#getInfo
                 .credentials
                     p To get started, please type in your email address:
@@ -30,9 +30,17 @@ block content
                         input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
                         label(for='email') Email
                     button#continue.btn.btn-outline-dark.btn-custom.m-t-20 Continue
-            div#notify
-                div#notify-ready
-            div#resetting
+            div#auth.hidden
+                .credentials
+                    div#passwordless.hidden
+                        p Looks like there are a couple ways you can verify your identity. Choose one to continue.
+                        button#device.hidden.btn.btn-outline-dark.btn-custom.m-t-20 Use my mobile device
+                        button#magic.hidden.btn.btn-outline-dark.btn-custom.m-t-20 Send magic link email
+                        span.orsi or sign in using
+                    div
+                        input#password(type='password' name='password' placeholder='Password' required='' autofocus='autofocus'  autocomplete='current-password')
+                        label(for='password') Password
+                    button#login.btn.btn-outline-dark.btn-custom.m-t-20 Sign in
             center.m-t-5
                 div#loading.m-t-20.hidden
             .tandc.p-b-20.center.width-auto

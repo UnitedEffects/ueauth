@@ -397,10 +397,27 @@ const mid = {
 	isAuthenticated: authorizer.isAuthenticated,
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,
+	isBasicOrBearer: authorizer.isBasicOrBearer,
 	isSimpleIAT: authorizer.isSimpleIAT,
 	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
 	isWhitelisted: authorizer.isWhitelisted,
-	isPublicOrAuth: authorizer.publicOrAuth
+	isPublicOrAuth: authorizer.publicOrAuth,
+	async isQueryStateAndIAT (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			if(!req.query.token) throw Boom.forbidden();
+			if(!req.query.state) throw Boom.forbidden();
+			const { user, token } = await authorizer.isQueryStateAndIAT(req.query.token, req.authGroup.id, req.query.state);
+			if(!user?.id) throw Boom.forbidden();
+			if(!token?.jti) throw Boom.forbidden();
+			if(token?.state !== req.query.state) throw Boom.forbidden();
+			req.user = user;
+			req.authInfo = token;
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	}
 };
 
 export default mid;

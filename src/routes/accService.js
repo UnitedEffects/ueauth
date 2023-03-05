@@ -63,5 +63,12 @@ router.get('/:group/set-passkey', [
 	m.getGlobalPluginSettings
 ], wANApi.setWebAuthN);
 
+router.get('/:group/passkey', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+	m.isQueryStateAndIAT
+], wANApi.confirmWebAuthN);
 
 export default router;

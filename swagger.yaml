@@ -4810,6 +4810,48 @@ paths:
                 style: form
         required: true
 
+  /{group}/token/simple-iat:
+    post:
+      tags:
+        - OIDC
+      summary: Request an OIDC initial access token (IAT) tied to your account and a state using basic auth or bearer token
+      description: Request an OIDC initial access token (IAT) tied to your account and a state using basic auth or bearer token. This is primarily used for out of band authorizations for account settings.
+      operationId: getSimpleIAT
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/initialAccessToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+        - basic: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/simpleIAT'
+        required: false
+
   /{group}/token/initial-access:
     post:
       tags:
@@ -7974,6 +8016,7 @@ components:
             - generate_password
 
     initialAccessTokenRequest:
+      type: object
       properties:
         email:
           type: string
@@ -7984,6 +8027,13 @@ components:
         expires:
           type: number
           description: Number of seconds after which this token expires. Default is 604800 (7 days).
+
+    simpleIAT:
+      type: object
+      properties:
+        state:
+          type: string
+          description: a value to tie the token to an external state
 
     initialAccessToken:
       properties:

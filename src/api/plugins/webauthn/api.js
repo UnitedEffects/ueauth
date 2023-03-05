@@ -4,6 +4,30 @@ import config from '../../../config';
 import Boom from '@hapi/boom';
 
 export default {
+	async confirmWebAuthN(req, res, next) {
+		try {
+			const { safeAG, authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(authGroup?.pluginOptions?.webAuthN?.enable === true &&
+				req.globalSettings?.webAuthN?.enabled === true) {
+				if(!req.query.state) throw Boom.forbidden();
+				const state = req.query.state;
+				return res.render('webauthn/secureSet', {
+					authGroup: safeAG,
+					authGroupLogo: authGroup.config.ui.skin.logo,
+					domain: `${config.PROTOCOL}://${config.SWAGGER}`,
+					state,
+					token: req.authInfo.jti,
+					email: req.user.email,
+					expires: (req.authInfo.exp) ? new Date(req.authInfo.exp * 1000) : null,
+					title: 'Passkey Setup Wizard',
+					message: 'You can use this wizard to setup a passkey for login. Passkeys are tied to the browser or device you are using for login and not centrally managed. You will need to go through this setup for each device from which you wish to login.'
+				});
+			}
+			throw Boom.failedDependency(`Passkey setup is not available on the ${authGroup.name} Platform`);
+		} catch (error) {
+			next(error);
+		}
+	},
 	async setWebAuthN(req, res, next) {
 		try {
 			const { safeAG, authGroup } = await group.safeAuthGroup(req.authGroup);
@@ -16,7 +40,6 @@ export default {
 					return res.redirect(`${path}?state=${state}`);
 				}
 				state = req.query.state;
-				console.info(safeAG);
 				return res.render('webauthn/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,

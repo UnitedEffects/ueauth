@@ -312,6 +312,7 @@ export default {
 		session: false
 	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
+	isBasicOrBearer: passport.authenticate(['basic', 'oidc'], { session: false }),
 	isOIDCValid: passport.authenticate('oidc-token-validation', { session: false }),
 	isBasic: passport.authenticate('basic', { session: false }),
 	isSimpleIAT: passport.authenticate('simple-iat', { session: false }),
@@ -327,4 +328,13 @@ export default {
 			return core.whitelist(req, res, next);
 		}
 	},
+	async isQueryStateAndIAT(token, authGroupId, state) {
+		const iToken = await iat.getOne(token, authGroupId);
+		if(!iToken) throw Boom.unauthorized('This session may have expired');
+		if(iToken?.payload?.state !== state) throw Boom.forbidden('State does not match');
+		if(!iToken?.payload?.sub) throw Boom.forbidden('No user associated');
+		const user = await account.getAccount(authGroupId, iToken.payload.sub);
+		if(!user) throw Boom.forbidden('Unknown user');
+		return { user, token: iToken.payload };
+	}
 };

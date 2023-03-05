@@ -1,10 +1,9 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import api from '../api/oidc/api';
+import iat from '../api/oidc/initialAccess/api';
 import m from '../middleware';
 import interactions from '../api/oidc/interactions/api';
-//import chApi from '../api/plugins/challenge/api';
-//import account from '../api/accounts/api';
 
 const jsonParser = bodyParser.json();
 const urlParser = bodyParser.urlencoded({extended:true});
@@ -18,6 +17,13 @@ router.post('/:group/token/initial-access', [
 	m.isAuthenticated,
 	m.permissions
 ], api.getInitialAccessToken);
+
+// not on the production api doc
+router.post('/:group/token/simple-iat', [
+	jsonParser,
+	m.validateAuthGroup,
+	m.isBasicOrBearer,
+], iat.simpleIAT);
 
 /**
  * OP Defined Interactions
@@ -96,54 +102,6 @@ router.get('/:group/interaction/:uid/passwordless', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], interactions.noPassLogin);
-
-/**
- * Account Service Endpoints
-
-// Form POST for setting new password
-router.post('/:group/setpass', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.isAuthenticatedOrIAT
-], account.forgot);
-
-router.get('/:group/forgotpassword', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings
-], account.forgotPasswordScreen);
-
-router.get('/:group/verifyaccount', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings,
-	m.iatQueryCodeAuth,
-], account.verifyAccountScreen);
-
-router.get('/:group/recoveraccount', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings
-], account.recoverFromPanic);
-
-router.get('/:group/interaction/:uid/lockaccount', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings,
-], account.panicScreen);
-
-router.get('/:group/recover-mfa', [
-	jsonParser,
-	m.setNoCache,
-	m.validateAuthGroup,
-	m.getGlobalPluginSettings
-], chApi.recover);
-*/
 
 //pass all other requests to the OP caller
 router.use('/:group', m.validateHostDomain, api.oidcCaller);
