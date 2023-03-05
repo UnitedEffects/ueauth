@@ -13,7 +13,9 @@ import {
 	Challenge,
 	Stats,
 	AccService,
-	Plugins
+	Plugins,
+	Notifications,
+	WebAuthN
 } from './routes';
 import middle from './middleware';
 
@@ -45,6 +47,8 @@ app.use('/api', Challenge);
 app.use('/api', Group);
 app.use('/api', Account);
 app.use('/api', Plugins);
+app.use('/api', Notifications);
+app.use('/api', WebAuthN);
 app.use('/api', Access);
 app.use('/api', Profiles);
 app.use('/api', Stats);

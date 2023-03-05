@@ -43,6 +43,16 @@ async function interfaceSelector(ag, global) {
 }
 
 const api = {
+	async bindWebAuthN(ag, global, data) {
+		const { pInterface, provider } = await interfaceSelector(ag, global);
+		if(pInterface) return pInterface.bindWebAuthN(provider, ag, data);
+		return undefined;
+	},
+	async finishWebAuthN(ag, global, data) {
+		const { pInterface, provider } = await interfaceSelector(ag, global);
+		if(pInterface) return pInterface.finishWebAuthN(provider, ag, data);
+		return undefined;
+	},
 	async initGroup(ag, global, type) {
 		let settings;
 		if(!global) {

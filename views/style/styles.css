@@ -183,6 +183,18 @@ input:focus + label, input:not(:placeholder-shown) + label {
 	margin: 0 0 24px 0;
 }
 
+.center {
+	text-align: center;
+}
+
+.smaller {
+	font-size: .7em;
+}
+
+.grey {
+	color: #999;
+}
+
 .fpsw {
 	display: block;
 	text-align: left;

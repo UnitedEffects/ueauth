@@ -61,6 +61,28 @@ async (req, token, next) => {
 	}
 }));
 
+passport.use('iat-user-state', new BearerStrategy({
+	passReqToCallback: true
+},
+async (req, token, next) => {
+	try {
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		if (req.authGroup.active !== true) return next(null, false);
+		if (!req.body.state) return next(null, false);
+		const authGroupId = req.authGroup._id;
+		const state = req.body.state;
+		const access = await iat.getOne(token, authGroupId);
+		if(!access) return next(null, false);
+		if(access?.payload?.state !== state) return next(null, false);
+		if(!access?.payload?.sub) return next(null, false);
+		const user = await account.getAccount(authGroupId, access.payload.sub);
+		if(!user) return next(null, false);
+		return next(null, user, access.payload);
+	} catch (error) {
+		return next(error);
+	}
+}));
+
 passport.use('iat-group-create', new BearerStrategy({
 	passReqToCallback: true
 },
@@ -309,6 +331,9 @@ export default {
 		session: false 
 	}),
 	isAccessOrSimpleIAT: passport.authenticate(['oidc', 'simple-iat'], {
+		session: false
+	}),
+	isAuthenticatedOrIATState: passport.authenticate(['iat-user-state', 'oidc'], {
 		session: false
 	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),

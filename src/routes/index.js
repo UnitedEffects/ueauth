@@ -8,3 +8,5 @@ export { default as Profiles } from './profiles';
 export { default as Challenge } from './mfa';
 export { default as Stats } from './stats';
 export { default as Plugins } from './plugins';
+export { default as Notifications } from './notifications';
+export { default as WebAuthN } from './webauthn';

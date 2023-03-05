@@ -12,6 +12,8 @@ const API = {
 	challenge: '/api/request/add',
 	validate: '/api/request/getRequest',
 	bind: '/api/account/bind',
+	bindWebAuthN: '/api/account/webauthn/bind',
+	finishWebAuthN: '/api/account/webauthn/register',
 	devices: '/api/device/getAll',
 	revoke: '/api/device/revoke'
 };
@@ -98,6 +100,51 @@ const pkApi = {
 		const pkey = await axios(options);
 		if(!pkey?.data?.sessionToken || !pkey?.data?.appSpaceGuid || !pkey?.data?.appSpaceName) {
 			console.error(pkey);
+			throw Boom.failedDependency('Bind request unsuccessful');
+		}
+		return pkey.data;
+	},
+	async bindWebAuthN(provider, authGroup, data) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.bindWebAuthN}`,
+			method: 'put',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.pluginOptions.webAuthN.meta.privakeyClient,
+				password: authGroup.pluginOptions.webAuthN.meta.privakeySecret
+			},
+			data: {
+				accountId: data.accountId,
+				userInfo: JSON.stringify({ name: data.email, displayName: data.email }),
+				domain: data.domain
+			}
+		};
+		const pkey = await axios(options);
+		if(!pkey?.data?.privakeyId) {
+			throw Boom.failedDependency('Bind request unsuccessful');
+		}
+		return pkey.data;
+	},
+	async finishWebAuthN(provider, authGroup, data) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.finishWebAuthN}`,
+			method: 'post',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.pluginOptions.webAuthN.meta.privakeyClient,
+				password: authGroup.pluginOptions.webAuthN.meta.privakeySecret
+			},
+			data
+		};
+		console.info(JSON.stringify(options, null, 2));
+		const pkey = await axios(options);
+		if(!pkey?.data?.privakeyId) {
 			throw Boom.failedDependency('Bind request unsuccessful');
 		}
 		return pkey.data;

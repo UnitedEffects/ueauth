@@ -641,7 +641,7 @@ paths:
         description: Setting for mfa challenge desired
         required: true
 
-  /api/plugins/global/web-auth-n:
+  /api/plugins/global/webauthn:
     post:
       tags:
         - Plugins

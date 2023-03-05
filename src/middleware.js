@@ -395,6 +395,7 @@ const mid = {
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
 	iatQueryCodeAuth: authorizer.iatQueryCodeAuth,
 	isAuthenticated: authorizer.isAuthenticated,
+	isAuthenticatedOrIATState: authorizer.isAuthenticatedOrIATState,
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,
 	isBasicOrBearer: authorizer.isBasicOrBearer,

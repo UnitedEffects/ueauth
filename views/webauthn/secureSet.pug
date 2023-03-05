@@ -4,9 +4,11 @@ block content
     script(nonce=nonce, type="text/javascript").
         let state = '#{state}';
         const authGroupId = '#{authGroup.id}';
-        const domain = '#{domain}'
+        const domain = '#{domain}';
+        const token = `#{token}`;
+        const user = `#{user}`;
     script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
-    script
+    script(nonce=nonce, type='module')
         include passkey.js
     body.bg.flex
         .panel.middle-panel
@@ -24,15 +26,21 @@ block content
             p#instruct.description=message
             div#confirm
                 .credentials
-                    p Your identity is confirmed, #{email}
-                    p Click continue to create passkey for this device.
-                    if (expires)
-                        p This session expires at #{expires}
-                    button#continue.btn.btn-outline-dark.btn-custom.m-t-20 Continue
+                    div Your identity is confirmed, #{email}
+                        div
+                            small.smaller.grey=user
+                    h5 Click continue to create a passkey for this device.
+                        if (expiresDate)
+                            div
+                                small.smaller This session expires on #{expiresDate}
+                                if (expiresTime)
+                                    div
+                                        small.smaller at #{expiresTime}
+                    button#bind.btn.btn-outline-dark.btn-custom.m-t-20 Create Passkey
             div#deviceIssue.hidden
                 .credentials
                     p We're sorry, but this device does not support passkey. You may close this window
-            center.m-t-5
+            .center.m-t-5
                 div#loading.m-t-20.hidden
             .tandc.p-b-20.center.width-auto
                 if (authGroup && authGroup.primaryTOS)
