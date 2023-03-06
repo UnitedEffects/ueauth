@@ -20,6 +20,8 @@ window.addEventListener( 'load', async function () {
 	const loginButton = $('#login');
 	const bindButton = $('#bind');
 	const loading = $('#loading');
+	const confirm = $('#confirm');
+	const success = $('#success');
 
 	let username;
 	let password;
@@ -70,14 +72,18 @@ window.addEventListener( 'load', async function () {
 			// call user bind
 			const binding = await bindWebAuthN(state, event);
 			// call local create
-			console.info(JSON.stringify(binding.registrationOptions, null, 2));
 			const options = await parseCreationOptionsFromJSON({ publicKey: binding.registrationOptions });
 			const credentials = await create(options);
-			console.info(credentials);
 			// finish bind
-			await finishWebAuthN(state, event, credentials);
-			//todo local storage and success + close window message
-			// localStorage.setItem(`${window.location.hostname}:${authGroupId}:${user}`, JSON.stringify({ webauthn: true, accountId: user, authGroup: authGroupId, host: window.location.hostname, created: Date.now() }));
+			const done = await finishWebAuthN(state, event, credentials);
+			console.info('done', done);
+			if(done?.message === 'Registration successful!'){
+				hide(instructions);
+				hide(confirm);
+				unhide(success);
+				localStorage.setItem(`${window.location.host}:${authGroupId}:${user}`, JSON.stringify({ webauthn: true, accountId: user, authGroup: authGroupId, host: window.location.host, created: Date.now() }));
+				console.info('localstorage', localStorage);
+			}
 		} catch (error) {
 			onError(error);
 		}
@@ -165,7 +171,6 @@ window.addEventListener( 'load', async function () {
 		const result = await axios(options);
 		hideSpinner();
 		if(result?.data?.data?.message !== 'Registration successful!') throw new Error('unsuccessful binding');
-		console.info(result.data);
 		return result.data.data;
 	}
 

@@ -182,8 +182,8 @@ export default {
 			.replace('{{requestOriginGuid}}', oId);
 		const method = 'POST';
 		const data = {
-			callbackUrl: (domain.includes('localhost')) ? 'localhost' : domain,
-			type: 'webauthn'
+			callbackUrl: domain,
+			callbackType: 2
 		};
 		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
 		const options = {
@@ -198,6 +198,7 @@ export default {
 		const result = await axios(options);
 		if(!result?.headers?.location) throw Boom.failedDependency('Could not create a callback');
 		const location = result.headers.location.split('/');
+		console.info(result.status);
 		return { status: result.status, id: location[location.length-1] };
 	},
 };

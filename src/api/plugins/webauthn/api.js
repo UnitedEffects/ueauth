@@ -14,8 +14,7 @@ export default {
 			const { authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(!req.user.email) throw Boom.forbidden();
 			//this is really just here for debug and local dev....
-			const domain = (config.SWAGGER.includes('localhost')) ? 'localhost' : `${(req.customDomain) ? req.customDomain : config.SWAGGER}`;
-
+			const domain = `${(req.customDomain) ? req.customDomain : (config.SWAGGER.includes('localhost')) ? 'localhost' : config.SWAGGER }`;
 			const data = {
 				accountId: req.user.id || req.user.sub,
 				email: req.user.email,
@@ -70,8 +69,8 @@ export default {
 					user: req.user.id,
 					expiresDate: exp.toDateString(),
 					expiresTime:exp.toTimeString(),
-					title: 'Passkey Setup Wizard',
-					message: 'You can use this wizard to setup a passkey for login. Passkeys are tied to the browser or device you are using for login and not centrally managed. You will need to go through this setup for each device from which you wish to login.'
+					title: 'Passkey Login Setup Wizard',
+					message: 'You will need to do this for each login device'
 				});
 			}
 			throw Boom.failedDependency(`Passkey setup is not available on the ${authGroup.name} Platform`);
@@ -96,8 +95,8 @@ export default {
 					authGroupLogo: authGroup.config.ui.skin.logo,
 					domain: `${config.PROTOCOL}://${config.SWAGGER}`,
 					state,
-					title: 'Passkey Setup Wizard',
-					message: 'You can use this wizard to setup a passkey for login. Passkeys are tied to the browser or device you are using for login and not centrally managed. You will need to go through this setup for each device from which you wish to login.'
+					title: 'Passkey Login Setup Wizard',
+					message: 'You will need to do this for each login device.'
 				});
 			}
 			throw Boom.failedDependency(`Passkey setup is not available on the ${authGroup.name} Platform`);

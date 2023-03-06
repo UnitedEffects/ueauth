@@ -22,7 +22,8 @@ block content
             if (authGroup && authGroup.name)
                 p.org-name=authGroup.name
             p#title.header=title
-            p#instruct.description=message
+            h5#instruct.center=message
+                p.description.center Setup will overwrite existing passkeys on #{authGroup.name}.
             h3#altInstructions.hidden
             div#getInfo
                 .credentials

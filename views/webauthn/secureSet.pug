@@ -23,7 +23,8 @@ block content
             if (authGroup && authGroup.name)
                 p.org-name=authGroup.name
             p#title.header=title
-            p#instruct.description=message
+            h5#instruct.center=message
+                p.description.center Setup will overwrite existing passkeys on #{authGroup.name}.
             div#confirm
                 .credentials
                     div Your identity is confirmed, #{email}
@@ -40,6 +41,10 @@ block content
             div#deviceIssue.hidden
                 .credentials
                     p We're sorry, but this device does not support passkey. You may close this window
+            div#success.hidden
+                .credentials
+                    h5 You're all set! You may close this window.
+                    p Next time you log into a #{authGroup.name} product with this device, you'll be able to use your passkey. Please note that if you clear your browser history, you may need to do this setup again.
             .center.m-t-5
                 div#loading.m-t-20.hidden
             .tandc.p-b-20.center.width-auto
