@@ -21,4 +21,11 @@ router.post('/:group/webauthn/finish', [
 	m.isAuthenticatedOrIATState
 ], api.finishWebAuthN);
 
+// prepare webAuthN auth req todo swagger
+router.post('/:group/webauthn/authenticate', [
+	//schema
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+], api.reqWebAuthN);
+
 export default router;

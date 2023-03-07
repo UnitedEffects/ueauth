@@ -45,6 +45,7 @@ const api = {
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH,
 			authGroup: authGroup._id || authGroup.id,
+			domain: `${config.PROTOCOL}://${config.SWAGGER}`,
 			authGroupName: (authGroup.name === 'root') ? config.ROOT_COMPANY_NAME : authGroup.name,
 			authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 			splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,

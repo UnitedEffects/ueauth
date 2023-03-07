@@ -3,8 +3,6 @@ import plugins from '../plugins';
 import privakey from '../challenge/privakey/interface';
 import privaPass from './privakey/interface';
 
-const config = require('../../../config');
-
 function switchInterface(provider) {
 	switch (provider.type.toLowerCase()) {
 	case 'privakey':
@@ -43,6 +41,16 @@ async function interfaceSelector(ag, global) {
 }
 
 const api = {
+	async reqWebAuthN(ag, global, data) {
+		const { pInterface, provider } = await interfaceSelector(ag, global);
+		if(pInterface) return pInterface.reqWebAuthN(provider, ag, data);
+		return undefined;
+	},
+	async finishAuth(ag, global, data) {
+		const { pInterface, provider } = await interfaceSelector(ag, global);
+		if(pInterface) return pInterface.finishAuth(provider, ag, data);
+		return undefined;
+	},
 	async bindWebAuthN(ag, global, data) {
 		const { pInterface, provider } = await interfaceSelector(ag, global);
 		if(pInterface) return pInterface.bindWebAuthN(provider, ag, data);
@@ -70,7 +78,6 @@ const api = {
 					ag.config.mfaChallenge?.meta?.privakeySecret) {
 					console.info('matching data...');
 					const meta = JSON.parse(JSON.stringify(ag.config.mfaChallenge.meta));
-					//todo fix reverse on mfa...
 					const wCB = await alt.createCallback(ag.id, provider, meta.privakey.companyId, meta.privakey.appSpaceId, ag.config.mfaChallenge?.meta?.privakeyClient, domain);
 					meta.privakey.callbackId = wCB.id;
 					return meta;

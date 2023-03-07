@@ -2,7 +2,7 @@ import {
 	create,
 	supported,
 	parseCreationOptionsFromJSON,
-} from 'https://unpkg.com/@github/webauthn-json@2.1.1/dist/esm/webauthn-json.browser-ponyfill.js';
+} from 'https://cdn.jsdelivr.net/npm/@github/webauthn-json@2.1.1/dist/esm/webauthn-json.browser-ponyfill.js';
 
 window.addEventListener( 'load', async function () {
 	const getInfo = $('#getInfo');

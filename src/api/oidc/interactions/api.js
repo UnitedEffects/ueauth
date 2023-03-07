@@ -11,6 +11,7 @@ import Boom from '@hapi/boom';
 import Pug from 'koa-pug';
 import path from 'path';
 import challenges from '../../plugins/challenge/challenge';
+import webauthn from '../../plugins/webauthn/webauthn';
 import fed from './federation';
 import { validate as uuidValidate } from 'uuid';
 
@@ -55,6 +56,9 @@ const api = {
 			// let login know if global mfaChallenge is setup and on the AG
 			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
 			req.globalSettings?.mfaChallenge?.enabled === true);
+
+			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
+			req.globalSettings?.webAuthN?.enabled === true);
 
 			const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
 			if(client.auth_group !== req.authGroup.id) {
@@ -263,8 +267,13 @@ const api = {
 	},
 	async login(req, res, next) {
 		try {
+			console.info('we made it here...');
+			console.info(req.body);
 			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
-			if (req.body?.action?.includes('magic-')) return api.setupPasswordFreeOption(req, res, next);
+			if (req.body?.action?.includes('magic-')) {
+				console.info('calling setup....');
+				return api.setupPasswordFreeOption(req, res, next);
+			}
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
@@ -453,6 +462,8 @@ const api = {
 						return backToLogin('Uh oh... something went wrong. Try again later.', params);
 					}
 					return api.emailLogin(req, res, authGroup, safeAG, acc, uid, params, msg, backToLogin);
+				case 'magic-passkey':
+					return api.webAuthNLogin(req, res, authGroup, provider, params, acc, backToLogin);
 				default:
 					return backToLogin('Uh oh... something went wrong. Try again later.', params);
 			}
@@ -460,7 +471,23 @@ const api = {
 			next(error);
 		}
 	},
-
+	async webAuthNLogin(req, res, authGroup, provider, params, account, error) {
+		let credential;
+		try {
+			credential = JSON.parse(req.body.passkeyCredentials);
+			const complete = await webauthn.finishAuth(authGroup, req.globalSettings, {accountId: account.id, credential});
+			if(complete.success !== true) throw complete;
+			const result = {
+				login: {
+					accountId: account.id,
+				},
+			};
+			return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
+		} catch (err) {
+			console.error(err);
+			return error('Passkey could not validate your identity', params);
+		}
+	},
 	async deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, account, error) {
 		let mfaResult;
 		const meta = {
@@ -549,6 +576,10 @@ const api = {
 			//verify global Challenge MFA
 			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
 				req.globalSettings?.mfaChallenge?.enabled === true);
+
+			//verify webauthn
+			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
+				req.globalSettings?.webAuthN?.enabled === true);
 
 			//if both are false, save some time and go back to login
 			if (params.passwordless !== true && params.globalMfa !== true) {
