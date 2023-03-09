@@ -612,14 +612,25 @@ const api = {
 			}
 
 			// modal
+			const localFound = req.body.localPasskey;
+			let jLocal = { webauthn: false };
+			try {
+				jLocal = JSON.parse(localFound);
+			} catch (e) {
+				//do nothing...
+			}
+			params.passwordFreeOptions = {
+				show: true,
+				account: account.id,
+				accountEmail: account.email,
+				email: (params.passwordless === true),
+				device: (params.globalMfa === true && account?.mfa?.enabled === true),
+				passkey: (params.webAuthN === true),
+				localFound: jLocal.webauthn
+			}
+
+			//todo - update all these conditionals
 			if (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled === true) {
-				params.passwordFreeOptions = {
-					show: true,
-					account: account.id,
-					accountEmail: account.email,
-					device: true,
-					email: true
-				}
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
 			}
 

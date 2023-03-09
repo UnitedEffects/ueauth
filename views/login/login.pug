@@ -5,6 +5,7 @@ block content
         let state = '#{state}';
         const authGroupId = '#{authGroup}';
         const domain = '#{domain}';
+        let agWebAuthN = '#{params.webAuthN}'
     script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
     script(nonce=nonce, type='module')
         include passkey.js

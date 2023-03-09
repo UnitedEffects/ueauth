@@ -9,11 +9,16 @@ window.addEventListener( 'load', async function () {
 	const eFlash = $('#flash');
 	const loading = $('#loading'); //todo add to login screen
 	const emailInput = $('#email');
-	const passkeyButton = $('#passkey');
+	const magicButton = $('#magic-email');
 	const pkCreds = $('#pkCreds');
 	const pkAcc = $('#pkAcc');
-
+	const passKeyLink = $('#passkeyLink');
+	const localPasskey = $('#localPasskey');
+	let passKey = supported();
+	let local;
 	let credentials;
+	if(typeof agWebAuthN === 'string') agWebAuthN = (agWebAuthN === 'true');
+	let passwordFreeError = false;
 
 	function hide(element) {
 		element.addClass('hidden');
@@ -40,51 +45,59 @@ window.addEventListener( 'load', async function () {
 		loading.css({ visibility: 'hidden', position: 'absolute' });
 	}
 
-	passkeyButton.on('click', async (event) => {
+	magicButton.on('click', async (event) => {
 		try {
 			const email = emailInput.val();
-			if(email && !credentials) {
-				credentials = await webAuthNAuthenticate(event);
-				const result = await parseRequestOptionsFromJSON({ publicKey: credentials.assertionOptions });
-				const data = await get(result);
-				pkCreds.val(JSON.stringify(data));
-				pkAcc.val(credentials.accountId);
-				passkeyButton.trigger(event.type);
+			if(email && !credentials && passKey === true && agWebAuthN === true && passwordFreeError === false) {
+				//if all of this is true, we will give passkey a try
+				credentials = await webAuthNAuthenticate(event, email);
+				local = localStorage.getItem(`${window.location.host}:${authGroupId}:${credentials.accountId}`);
+				localPasskey.val(local);
+				console.info(local);
+				local = JSON.parse(local);
+				if(local.webauthn === true &&
+					local.accountId === credentials.accountId &&
+					local.authGroup === authGroupId) {
+					const result = await parseRequestOptionsFromJSON({ publicKey: credentials.assertionOptions });
+					const data = await get(result);
+					pkCreds.val(JSON.stringify(data));
+					pkAcc.val(credentials.accountId);
+					magicButton.val('magic-passkey');
+					magicButton.trigger(event.type);
+				}
+				// fallback to the modal
+				magicButton.trigger(event.type);
 			}
 		} catch (error) {
-			console.error(error);
 			pkCreds.val(null);
 			pkAcc.val(null);
 			credentials = null;
-			onError(error);
+			passwordFreeError = true;
+			magicButton.trigger(event.type);
 		}
 	});
 
 
-	async function webAuthNAuthenticate(event) {
+	async function webAuthNAuthenticate(event, email) {
+		event.preventDefault()
 		hide(flashContainer);
-		event.preventDefault();
-		//todo add something to ensure email is required....
-		const email = emailInput.val();
-		if(email) {
-			const options = {
-				method: 'post',
-				url: `${domain}/api/${authGroupId}/webauthn/authenticate`,
-				data: {
-					email
-				}
-			};
-			console.info(options);
-			showSpinner();
-			const result = await axios(options);
-			hideSpinner();
-			//todo generalize response expectations on binding as well
-			if(result?.data?.data?.success !== true) throw new Error('unsuccessful auth request');
-			return result.data.data;
-		}
+		const options = {
+			method: 'post',
+			url: `${domain}/api/${authGroupId}/webauthn/authenticate`,
+			data: {
+				email
+			}
+		};
+		console.info(options);
+		showSpinner();
+		const result = await axios(options);
+		hideSpinner();
+		//todo generalize response expectations on binding as well
+		if(result?.data?.data?.success !== true) throw new Error('unsuccessful auth request');
+		return result.data.data;
 	}
 
-	if(supported()!== true) {
-		console.error('no passkey');
-	}
+	if(supported()) {
+		unhide(passKeyLink);
+	} else hide(passKeyLink);
 });
