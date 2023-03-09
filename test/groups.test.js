@@ -207,7 +207,7 @@ describe('Auth Groups', () => {
 					{ prettyName: grp._id }
 				]
 			};
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -232,7 +232,7 @@ describe('Auth Groups', () => {
 					{ prettyName: grp.prettyName }
 				]
 			};
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -254,7 +254,7 @@ describe('Auth Groups', () => {
 			delete expected.owner;
 			delete expected.__v;
 			const result = await group.switchGroupOwner(grp, updated.owner);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id }, { owner: updated.owner }, { new: true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id }, { owner: updated.owner }, { new: true});
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -348,7 +348,7 @@ describe('Auth Groups', () => {
 			];
 			const result = await group.patch(grp, data, user);
 			//const result = await account.patchAccount(oneGroup, oneAccount._id, update, oneAccount._id, false);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true});
 			const res = JSON.parse(JSON.stringify(result));
 
 			// ignoring these since they are dynamic - we do this by just setting to the actual result so check passes
@@ -397,7 +397,7 @@ describe('Auth Groups', () => {
 			];
 			const result = await group.patch(grp, data, user);
 			//const result = await account.patchAccount(oneGroup, oneAccount._id, update, oneAccount._id, false);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true});
 			const res = JSON.parse(JSON.stringify(result));
 
 			// ignoring these since they are dynamic - we do this by just setting to the actual result so check passes

@@ -104,7 +104,7 @@ describe('Plugins', () => {
 			expect(axios).toHaveBeenCalled();
 			const args = axios.mock.calls[0];
 			expect(args[0]).toMatchObject(expectedOptions);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res._id).toBe(updated._id);
 		} catch (error) {
@@ -152,7 +152,7 @@ describe('Plugins', () => {
 			expect(axios).toHaveBeenCalled();
 			const args = axios.mock.calls[0];
 			expect(args[0]).toMatchObject(expectedOptions);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res._id).toBe(updated._id);
 		} catch (error) {
@@ -198,7 +198,7 @@ describe('Plugins', () => {
 			expect(axios).toHaveBeenCalled();
 			const args = axios.mock.calls[0];
 			expect(args[0]).toMatchObject(expectedOptions);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res._id).toBe(updated._id);
 		} catch (error) {
@@ -283,7 +283,7 @@ describe('Plugins', () => {
 			mockingoose(ModelC).toReturn(client, 'findOne');
 			cl.generateClientCredentialToken.mockResolvedValue(token);
 			const result = await notify.processNotification(global, grp, not._id);
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ _id: not._id, authGroupId: grp._id }, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ _id: not._id, authGroupId: grp._id });
 			const expectedOptions = {
 				method: 'POST',
 				headers: {
@@ -296,7 +296,7 @@ describe('Plugins', () => {
 			const args = axios.mock.calls[0];
 			console.info(args[0]);
 			expect(args[0]).toMatchObject(expectedOptions);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true}, undefined);
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res.id).toBe(updated._id);

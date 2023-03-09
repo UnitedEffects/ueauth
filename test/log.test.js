@@ -99,7 +99,7 @@ describe('Log DAL tests', () => {
             delete expected._id;
             mockingoose(Model).toReturn(oneLog, 'findOne');
             const result = await log.getLog(oneLog._id);
-            expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ "_id": oneLog._id }, undefined);
+            expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ "_id": oneLog._id });
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
@@ -117,7 +117,7 @@ describe('Log DAL tests', () => {
             mockingoose(Model).toReturn(multiLogs, 'find');
             const q = { $filter: "code eq 'ERROR'" };
             const result = await log.getLogs(q);
-            expect(Model.Query.prototype.find).toHaveBeenCalledWith({ code: 'ERROR' }, undefined);
+            expect(Model.Query.prototype.find).toHaveBeenCalledWith({ code: 'ERROR' });
             const res = JSON.parse(JSON.stringify(result));
             expect(res).toMatchObject(expected);
         } catch (error) {
