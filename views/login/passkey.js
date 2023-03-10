@@ -75,39 +75,6 @@ window.addEventListener( 'load', async function () {
 		}
 		magicButton.trigger(event.type);
 	}
-	localStorage.clear();
-	/*
-	magicButton.on('click', async (event) => {
-		try {
-			const email = emailInput.val();
-			if(email && !credentials && passKey === true && agWebAuthN === true && passwordFreeError === false) {
-				//if all of this is true, we will give passkey a try
-				credentials = await webAuthNAuthenticate(event, email);
-				local = localStorage.getItem(`${window.location.host}:${authGroupId}:${credentials.accountId}`);
-				localPasskey.val(local);
-				local = JSON.parse(local);
-				if(local.webauthn === true &&
-					local.accountId === credentials.accountId &&
-					local.authGroup === authGroupId) {
-					const result = await parseRequestOptionsFromJSON({ publicKey: credentials.assertionOptions });
-					const data = await get(result);
-					pkCreds.val(JSON.stringify(data));
-					pkAcc.val(credentials.accountId);
-					magicButton.val('magic-passkey');
-					magicButton.trigger(event.type);
-				}
-				// fallback to the modal
-				magicButton.trigger(event.type);
-			}
-		} catch (error) {
-			pkCreds.val(null);
-			pkAcc.val(null);
-			credentials = null;
-			passwordFreeError = true;
-			magicButton.trigger(event.type);
-		}
-	});
-	 */
 
 	magicButton.on('click', async (event) => {
 		try {
