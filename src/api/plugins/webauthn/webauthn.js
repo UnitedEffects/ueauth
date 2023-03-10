@@ -76,7 +76,6 @@ const api = {
 				if( privaCheck.length &&
 					ag.config.mfaChallenge?.meta?.privakeyClient &&
 					ag.config.mfaChallenge?.meta?.privakeySecret) {
-					console.info('matching data...');
 					const meta = JSON.parse(JSON.stringify(ag.config.mfaChallenge.meta));
 					const wCB = await alt.createCallback(ag.id, provider, meta.privakey.companyId, meta.privakey.appSpaceId, ag.config.mfaChallenge?.meta?.privakeyClient, domain);
 					meta.privakey.callbackId = wCB.id;

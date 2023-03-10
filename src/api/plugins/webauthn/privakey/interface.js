@@ -17,7 +17,6 @@ const pkApi = {
 		privakey.companyName = company.name;
 		privakey.companyId = company.id;
 		// call createAppSpace
-		// todo default logo....?
 		const appSpace = await pInit.createAppSpace(clientID, clientSecret, authGroup.name, company.id, authGroup.config.ui?.skin?.logo);
 		privakey.appSpaceId = appSpace.id;
 		// call createReqOrigin

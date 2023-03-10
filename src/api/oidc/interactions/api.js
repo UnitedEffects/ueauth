@@ -267,13 +267,8 @@ const api = {
 	},
 	async login(req, res, next) {
 		try {
-			console.info('we made it here...');
-			console.info(req.body);
 			if (req.body?.action === 'magic') return api.sendPasswordFree(req, res, next);
-			if (req.body?.action?.includes('magic-')) {
-				console.info('calling setup....');
-				return api.setupPasswordFreeOption(req, res, next);
-			}
+			if (req.body?.action?.includes('magic-')) return api.setupPasswordFreeOption(req, res, next);
 			const provider = await oidc(req.authGroup, req.customDomain);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			params.passwordless = false;
@@ -442,6 +437,21 @@ const api = {
 			const { authGroup, safeAG } = await safeAuthGroup(req.authGroup);
 			const { uid, prompt, params, session } = await provider.interactionDetails(req, res);
 			const client = await provider.Client.find(params.client_id);
+			//verify global magic link
+			params.passwordless = false;
+			if (authGroup?.pluginOptions?.notification?.enabled === true &&
+				req.globalSettings.notifications.enabled === true) {
+				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
+			}
+
+			//verify global Challenge MFA
+			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
+			//verify webauthn
+			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
+				req.globalSettings?.webAuthN?.enabled === true);
+
 			const backToLogin = (msg, params) => {
 				params.emailScreen = true;
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, { ...params, login_hint: req.body.email }, msg));
@@ -485,9 +495,10 @@ const api = {
 			return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: false });
 		} catch (err) {
 			console.error(err);
-			return error('Passkey could not validate your identity', params);
+			return error('Passkey could not validate your identity. Try again later or choose a different method.', params);
 		}
 	},
+
 	async deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, account, error) {
 		let mfaResult;
 		const meta = {
@@ -582,7 +593,7 @@ const api = {
 				req.globalSettings?.webAuthN?.enabled === true);
 
 			//if both are false, save some time and go back to login
-			if (params.passwordless !== true && params.globalMfa !== true) {
+			if (params.passwordless !== true && params.globalMfa !== true && params.webAuthN !== true) {
 				return backToLogin('Password-free login is not currently enabled for this platform. Contact your admin to request the change.', params)
 			}
 
@@ -602,13 +613,27 @@ const api = {
 			}
 
 			// Error - enable mfa msg
-			if (params.passwordless !== true && params.globalMfa === true && account?.mfa?.enabled !== true) {
-				return backToLogin('Password-free device login is available but you must first log in normally and enable MFA on your account dashboard to enable it for future logins.', params);
+			if (params.passwordless !== true && params.webAuthN !== true && params.globalMfa === true && account?.mfa?.enabled !== true) {
+				return backToLogin('Password-free device login is available but you must first setup your device. Click Set Device below on the login screen to proceed.', params);
 			}
 
 			// device flow
-			if (params.passwordless !== true && params.globalMfa === true && account?.mfa?.enabled === true) {
+			if (params.passwordless !== true && params.webAuthN !== true && params.globalMfa === true && account?.mfa?.enabled === true) {
 				return api.deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, account, backToLogin)
+			}
+
+			// WE NEVER GET WEBAUTHN ONLY FLOW HERE...
+
+			// magic link flow
+			if (params.passwordless === true && params.globalMfa !== true && params.webAuthN !== true) {
+				const message = 'You should have a password free login link in your email. You may close this window.';
+				return api.emailLogin(req, res, authGroup, safeAG, account, uid, params, message, backToLogin);
+			}
+
+			// magic link flow when device is available but not enabled
+			if (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled !== true && params.webAuthN !== true) {
+				const message = 'You should have a password free login link in your email. You also have the ability to setup password free login using your mobile device. Just enable MFA in your account dashboard once you are logged to activate. You may close this window.';
+				return api.emailLogin(req, res, authGroup, safeAG, account, uid, params, message, backToLogin);
 			}
 
 			// modal
@@ -619,6 +644,7 @@ const api = {
 			} catch (e) {
 				//do nothing...
 			}
+
 			params.passwordFreeOptions = {
 				show: true,
 				account: account.id,
@@ -629,15 +655,7 @@ const api = {
 				localFound: jLocal.webauthn
 			}
 
-			//todo - update all these conditionals
-			if (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled === true) {
-				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
-			}
-
-			const message = (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled !== true) ?
-				'You should have a password free login link in your email. You also have the ability to setup password free login using your mobile device. Just enable MFA in your account dashboard once you are logged to activate. You may close this window.' :
-				'You should have a password free login link in your email. You may close this window.';
-			return api.emailLogin(req, res, authGroup, safeAG, account, uid, params, message, backToLogin);
+			return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params));
 		} catch (err) {
 			console.error(err);
 			_params.emailScreen = true;
