@@ -76,7 +76,7 @@ window.addEventListener( 'load', async function () {
 			console.info(result);
 			hide(auth);
 			unhide(deviceAuth);
-			await checkDevice(state, result.response.guid, result.accountId);
+			await checkDevice(state, result.response.guid, result.accountId, event);
 		} catch (error) {
 			onError(error);
 		}

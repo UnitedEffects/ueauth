@@ -877,7 +877,8 @@ const api = {
 				query: req.query.lookup,
 				state: req.query.state,
 				magicLink: (req.globalSettings?.notifications?.enabled === true && req.authGroup.config?.passwordLessSupport === true),
-				device: (req.globalSettings?.mfaChallenge?.enabled === true && req.authGroup.config?.mfaChallenge?.enable === true &&  user.mfa?.enabled === true)
+				device: (req.globalSettings?.mfaChallenge?.enabled === true && req.authGroup.config?.mfaChallenge?.enable === true &&  user.mfa?.enabled === true),
+				passkey: (req.globalSettings?.webAuthN?.enabled === true && req.authGroup.pluginOptions?.webAuthN?.enable === true)
 			};
 			return res.respond(say.ok(options, RESOURCE));
 		} catch (error) {
