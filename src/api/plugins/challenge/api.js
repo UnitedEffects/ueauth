@@ -1,4 +1,5 @@
 import challenge from './challenge';
+import states from '../state/state';
 import Boom from '@hapi/boom';
 import acc from '../../accounts/account';
 import group from '../../authGroup/group';
@@ -18,7 +19,7 @@ export default {
 			if(!req.body.state) throw Boom.forbidden();
 			const account = await acct.getAccountByEmailUsernameOrPhone(authGroup.id, req.body.lookup);
 			if(!account) throw Boom.badRequest();
-			const validate = await challenge.findState(authGroup.id, account.id, req.body.state);
+			const validate = await states.findState(authGroup.id, account.id, req.body.state);
 			if(!validate) throw Boom.forbidden();
 			const meta = {
 				content: {

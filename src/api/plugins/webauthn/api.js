@@ -5,7 +5,9 @@ import group from '../../authGroup/group';
 import config from '../../../config';
 import web from './webauthn';
 import acc from '../../accounts/account';
-import challenge from '../challenge/challenge';
+import states from '../state/state';
+import iat from '../../oidc/initialAccess/iat';
+import n from '../notifications/notifications';
 
 const RESOURCE = 'PASSKEY';
 
@@ -105,20 +107,59 @@ export default {
 			next(Boom.failedDependency('It\'s us, not you. Please try again later'));
 		}
 	},
+	async emailVerify(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+			let iAccessToken;
+			try {
+				if(!req.query.state) throw Boom.badRequest('State required');
+				if(!req.query.lookup) throw Boom.badRequest('Email required');
+				const lookup = req.query.lookup;
+				const state = req.query.state;
+				const validate = await states.findStateNoAcc(authGroup.id, state);
+				if(!validate) throw Boom.forbidden();
+				const account = await acc.getAccountByEmailUsernameOrPhone(authGroup.id, lookup);
+				if(!account) throw Boom.forbidden();
+				iAccessToken = await iat.generateSimpleIAT(900, ['auth_group'], authGroup, account, state);
+				const notificationData = emailVerifyNotification(authGroup, account, iAccessToken, state, req.customDomain);
+				await n.notify(req.globalSettings, notificationData, req.authGroup);
+				return res.render('response/response', {
+					title: 'SUCCESS!',
+					message: 'Check your email to continue.',
+					authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
+					splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+					authGroup: safeAG
+				});
+			} catch (e) {
+				console.error(e);
+				if(iAccessToken) {
+					await iat.deleteOne(iAccessToken.jti, authGroup.id);
+				}
+				return res.render('response/response', {
+					title: 'Unable to verify you',
+					message: 'Something went wrong. Wait a bit and then try again.',
+					authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
+					splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+					authGroup: safeAG,
+					passkey: true
+				});
+			}
+		} catch (error) {
+			next(error);
+		}
+	},
 	async setWebAuthN(req, res, next) {
 		try {
 			const { safeAG, authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(authGroup?.pluginOptions?.webAuthN?.enable === true &&
                 req.globalSettings?.webAuthN?.enabled === true) {
 				const state = crypto.randomBytes(32).toString('hex');
-				if(authGroup?.config?.mfaChallenge.enable === true) {
-					// prepare for a device based validation
-					const stateData = {
-						authGroup: req.authGroup.id,
-						stateValue: state
-					};
-					await challenge.saveState(stateData);
-				}
+				const stateData = {
+					authGroup: req.authGroup.id,
+					stateValue: state
+				};
+				await states.saveState(stateData);
 				return res.render('webauthn/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
@@ -135,3 +176,18 @@ export default {
 		}
 	}
 };
+
+function emailVerifyNotification (authGroup, user, iAccessToken, state, customDomain) {
+	return {
+		iss: `${config.PROTOCOL}://${(customDomain) ? customDomain : config.SWAGGER}/${authGroup.id}`,
+		createdBy: `proxy-${user.id}`,
+		type: 'passwordless',
+		formats: ['email'],
+		recipientUserId: user.id,
+		recipientEmail: user.email,
+		recipientSms: user.txt,
+		screenUrl: `${config.PROTOCOL}://${(customDomain) ? customDomain : config.SWAGGER}/${authGroup.id}/passkey?token=${iAccessToken.jti}&state=${state}`,
+		subject: `${authGroup.prettyName} - Passkey Verify Identity`,
+		message: 'You have requested an email identity verification. Click the link to continue. This link will expire in 15 minutes.',
+	};
+}

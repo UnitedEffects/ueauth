@@ -51,15 +51,6 @@ async function interfaceSelector(ag, global) {
 }
 
 const chApi = {
-	async saveState(data) {
-		return dal.saveState(data);
-	},
-	async findState(authGroup, account, state) {
-		return dal.findState(authGroup, account, state);
-	},
-	async addAccountToState(authGroup, state, account) {
-		return 	dal.addAccountToState(authGroup, state, account);
-	},
 	async bindInstructions(ag, global, bindData) {
 		const { pInterface, provider } = await interfaceSelector(ag, global);
 		if(pInterface) return pInterface.bindInstructions(provider, bindData);

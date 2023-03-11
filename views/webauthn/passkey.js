@@ -54,6 +54,14 @@ window.addEventListener( 'load', async function () {
 		loading.css({ visibility: 'hidden', position: 'absolute' });
 	}
 
+	magic.on('click', async (event) => {
+		try {
+			return sendEmail(state, event);
+		} catch (error) {
+			onError(error);
+		}
+	});
+
 	continueButton.on('click', async (event) => {
 		try {
 			return findUser(state, event);
@@ -73,7 +81,6 @@ window.addEventListener( 'load', async function () {
 	device.on('click', async (event) => {
 		try {
 			const result = await sendChallenge(state, event);
-			console.info(result);
 			hide(auth);
 			unhide(deviceAuth);
 			await checkDevice(state, result.response.guid, result.accountId, event);
@@ -91,7 +98,6 @@ window.addEventListener( 'load', async function () {
 			const credentials = await create(options);
 			// finish bind
 			const done = await finishWebAuthN(state, event, credentials);
-			console.info('done', done);
 			if(done?.message === 'Registration successful!'){
 				hide(instructions);
 				hide(confirm);
@@ -104,6 +110,12 @@ window.addEventListener( 'load', async function () {
 		}
 	});
 
+	async function sendEmail(state, event) {
+		event.preventDefault();
+		if(!username) username = emailInput.val();
+		return window.location.replace(`${domain}/${authGroupId}/passkey/email-verify?state=${state}&lookup=${username}`);
+	}
+
 	async function findUser(state, event) {
 		hide(flashContainer);
 		event.preventDefault();
@@ -115,7 +127,6 @@ window.addEventListener( 'load', async function () {
 		};
 		showSpinner();
 		const result = await axios(options);
-		console.info(result.data);
 		hideSpinner();
 		if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
 		hide(getInfo);
@@ -151,7 +162,6 @@ window.addEventListener( 'load', async function () {
 		};
 		showSpinner();
 		const result = await axios(options);
-		console.info(result.data);
 		hideSpinner();
 		if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
 		return window.location.replace(`${domain}/${authGroupId}/passkey?token=${result.data.data.jti}&state=${state}`);
@@ -213,7 +223,6 @@ window.addEventListener( 'load', async function () {
 		showSpinner();
 		const result = await axios(options);
 		hideSpinner();
-		console.info(result.data);
 		return result.data.data;
 	}
 
@@ -227,11 +236,8 @@ window.addEventListener( 'load', async function () {
 		const check = `api/${authGroupId}/mfa/${providerKey}/account/${accountId}/interaction/${state}/status`;
 		try {
 			const result = await axios.get(`${domain}/${check}`);
-			console.info(result.status);
 			if(result.status === 204) {
-				console.info('yay', result.data);
 				const token = await getBasicToken(state, event, { providerKey, accountId });
-				console.info('token', result.data);
 				hideSpinner();
 				if(token?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
 				return window.location.replace(`${domain}/${authGroupId}/passkey?token=${token.data.data.jti}&state=${state}`);

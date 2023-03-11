@@ -71,4 +71,11 @@ router.get('/:group/passkey', [
 	m.isQueryStateAndIAT
 ], wANApi.confirmWebAuthN);
 
+router.get('/:group/passkey/email-verify', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+], wANApi.emailVerify);
+
 export default router;
