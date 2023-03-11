@@ -236,20 +236,20 @@ window.addEventListener( 'load', async function () {
 				if(token?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
 				return window.location.replace(`${domain}/${authGroupId}/passkey?token=${token.data.data.jti}&state=${state}`);
 			}
-			return deviceFailedCheck(state, providerKey, accountId);
+			return deviceFailedCheck(state, providerKey, accountId, event);
 		} catch (e) {
 			console.error(e);
-			return deviceFailedCheck(state, providerKey, accountId);
+			return deviceFailedCheck(state, providerKey, accountId, event);
 		}
 	}
 
-	async function deviceFailedCheck(state, providerKey, accountId) {
+	async function deviceFailedCheck(state, providerKey, accountId, event) {
 		if(count === 0) {
 			hideSpinner();
 			unhide(deviceFail);
 		} else {
 			count = --count;
-			return checkDevice(state, providerKey, accountId);
+			return checkDevice(state, providerKey, accountId, event);
 		}
 	}
 
