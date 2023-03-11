@@ -39,7 +39,7 @@ export default {
 		return new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies }).save().then(async (x) => {
 			const metaData = {
 				auth_group: authGroup.id,
-				sub: user.id,
+				sub: user.id || user.sub,
 				email: user.email,
 				state
 			};
