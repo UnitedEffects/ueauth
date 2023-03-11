@@ -350,11 +350,20 @@ const api = {
 					providerKey: req.body.providerKey
 				});
 				if(status?.state !== 'approved') account.accountId = undefined;
-				else account = {
-					accountId: status.accountId,
-					mfaEnabled: true,
-					mfaProven: true
-				};
+				else {
+					//clear status
+					await challenges.clearStatus({
+						accountId: req.body.accountId,
+						uid,
+						authGroup: authGroup.id,
+						providerKey: req.body.providerKey
+					});
+					account = {
+						accountId: status.accountId,
+						mfaEnabled: true,
+						mfaProven: true
+					};
+				}
 			} else{
 				// in v7 this is referred to as findByLogin
 				account = await Account.authenticate(authGroup, req.body.email, req.body.password);

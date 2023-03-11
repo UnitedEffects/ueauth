@@ -22,7 +22,7 @@ router.post('/:group/token/initial-access', [
 router.post('/:group/token/simple-iat', [
 	jsonParser,
 	m.validateAuthGroup,
-	m.isBasicOrBearer,
+	m.isBasicBearerOrDevice,
 ], iat.simpleIAT);
 
 /**
@@ -55,6 +55,7 @@ router.post('/:group/interaction/:uid/login', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], interactions.login);
+
 // mfa validation
 router.post('/:group/interaction/:uid/confirm-mfa', [
 	jsonParser,

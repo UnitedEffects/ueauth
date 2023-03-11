@@ -12,13 +12,12 @@ router.post('/:group/:function/callback', [
 	m.getGlobalPluginSettings
 ], callback);
 
-// Polling for MFA Session
-// todo whitelist host
+// Polling for Device Session
 router.get('/:group/mfa/:key/account/:account/interaction/:uid/status', [
 	m.validateAuthGroup
 ], challengeApi.status);
 
-// Safe Recovery when MFA is Enabled
+// Safe Recovery when Device is Enabled
 router.post('/:group/mfa/safe-recovery', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings,
@@ -31,6 +30,13 @@ router.post('/:group/mfa/instructions', [
 	m.getGlobalPluginSettings,
 	m.isBasic
 ], challengeApi.getMFAInstruction);
+
+// Initiate a challenge
+// todo swagger
+router.post('/:group/device/challenge', [
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings,
+], challengeApi.sendChallenge);
 
 // In case we design something else for the callback system later
 async function callback(req, res, next) {

@@ -10,11 +10,11 @@ block loginWithMFA
     .credential-container
         p#mfa-pending.sign-in Check your device to login
         .credentials
-        center
-            div#loading
+        .center
+            #loading
         div#mfa
         div#mfa-try-again(style='visibility: hidden')
-            span#reconnect(style="font-size: 20px;").m-t-10 If you need to reconnect your device to your account, use the 'Restore MFA' link below. Otherwise click to retry login.
+            span#reconnect(style="font-size: 20px;").m-t-10 If you need to reconnect your device to your account, use the 'Set Device' link below. Otherwise click to retry.
             div
                 a.btn.btn-outline-dark.federated.m-t-10(href='/' + authGroup + '/interaction/' + uid)
                     i.fas.fa-undo

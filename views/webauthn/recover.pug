@@ -25,14 +25,14 @@ block content
             h5#instruct.center=message
                 p.description.center Setup will overwrite existing passkeys on #{authGroup.name}.
             h3#altInstructions.hidden
-            div#getInfo
+            #getInfo
                 .credentials
                     p To get started, please type in your email address:
                     div
                         input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
                         label(for='email') Email
                     button#continue.btn.btn-outline-dark.btn-custom.m-t-20 Continue
-            div#auth.hidden
+            #auth.hidden
                 .credentials
                     div#passwordless.hidden
                         p Looks like there are a couple ways you can verify your identity. Choose one to continue.
@@ -43,6 +43,12 @@ block content
                         input#password(type='password' name='password' placeholder='Password' required='' autofocus='autofocus'  autocomplete='current-password')
                         label(for='password') Password
                     button#login.btn.btn-outline-dark.btn-custom.m-t-20 Sign in
+            #deviceAuth.hidden
+                .credentials
+                    p Check your device to continue
+                    #device-try-again.hidden
+                        h4 Device identity verification failed
+                        p If you need to reconnect your device to your account, use the 'Set Device' link below. Refresh this page to try again.
             .center.m-t-5
                 div#loading.m-t-20.hidden
             .tandc.p-b-20.center.width-auto
@@ -52,3 +58,4 @@ block content
                     a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
                 if (authGroup && authGroup.primaryEmail)
                     a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}
+                a(href='/' + authGroup + '/recover-mfa' target='_blank') Set Device

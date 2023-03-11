@@ -14,6 +14,7 @@ import access from './permissions';
 import mongoose from 'mongoose';
 import spec from './swagger';
 import plugins from './api/plugins/plugins';
+import challenges from './api/plugins/challenge/challenge';
 
 const { doc: swag } = spec;
 const config = require('./config');
@@ -399,6 +400,31 @@ const mid = {
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,
 	isBasicOrBearer: authorizer.isBasicOrBearer,
+	async isBasicBearerOrDevice (req, res, next) {
+		if(req.body?.providerKey && req.body?.accountId && req.body?.state && req.authGroup) {
+			//this is a confirmation of mfa
+			const status = await challenges.status({
+				accountId: req.body.accountId,
+				uid: req.body.state,
+				authGroup: req.authGroup.id,
+				providerKey: req.body.providerKey
+			});
+			if(status?.state === 'approved') {
+				const acc = await account.getAccount(req.authGroup.id, status.accountId);
+				if(acc) {
+					await challenges.clearStatus({
+						accountId: req.body.accountId,
+						uid: req.body.state,
+						authGroup: req.authGroup.id,
+						providerKey: req.body.providerKey
+					});
+					req.user = acc;
+					return next();
+				}
+			}
+		}
+		return authorizer.isBasicOrBearer(req, res, next);
+	},
 	isSimpleIAT: authorizer.isSimpleIAT,
 	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
 	isWhitelisted: authorizer.isWhitelisted,

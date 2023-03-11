@@ -5,6 +5,7 @@ import group from '../../authGroup/group';
 import config from '../../../config';
 import web from './webauthn';
 import acc from '../../accounts/account';
+import challenge from '../challenge/challenge';
 
 const RESOURCE = 'PASSKEY';
 
@@ -100,7 +101,8 @@ export default {
 			}
 			throw Boom.failedDependency(`Passkey setup is not available on the ${authGroup.name} Platform`);
 		} catch (error) {
-			next(error);
+			console.error(error);
+			next(Boom.failedDependency('It\'s us, not you. Please try again later'));
 		}
 	},
 	async setWebAuthN(req, res, next) {
@@ -108,13 +110,15 @@ export default {
 			const { safeAG, authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(authGroup?.pluginOptions?.webAuthN?.enable === true &&
                 req.globalSettings?.webAuthN?.enabled === true) {
-				let state;
-				if(!req.query.state) {
-					state = crypto.randomBytes(32).toString('hex');
-					const path = req.path;
-					return res.redirect(`${path}?state=${state}`);
+				const state = crypto.randomBytes(32).toString('hex');
+				if(authGroup?.config?.mfaChallenge.enable === true) {
+					// prepare for a device based validation
+					const stateData = {
+						authGroup: req.authGroup.id,
+						stateValue: state
+					};
+					await challenge.saveState(stateData);
 				}
-				state = req.query.state;
 				return res.render('webauthn/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
@@ -126,7 +130,8 @@ export default {
 			}
 			throw Boom.failedDependency(`Passkey setup is not available on the ${authGroup.name} Platform`);
 		} catch (error) {
-			next(error);
+			console.error(error);
+			next(Boom.failedDependency('It\'s us, not you. Please try again later'));
 		}
 	}
 };

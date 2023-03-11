@@ -10,6 +10,35 @@ import acct from '../../accounts/account';
 const config = require('../../../config');
 
 export default {
+	async sendChallenge(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.body.lookup) throw Boom.badRequest();
+			if(!req.body.state) throw Boom.forbidden();
+			const account = await acct.getAccountByEmailUsernameOrPhone(authGroup.id, req.body.lookup);
+			if(!account) throw Boom.badRequest();
+			const validate = await challenge.findState(authGroup.id, account.id, req.body.state);
+			if(!validate) throw Boom.forbidden();
+			const meta = {
+				content: {
+					title: 'Authorization Request',
+					header: `${authGroup.name} Platform`,
+					body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
+				}
+			};
+			const mfaResult = await challenge.sendChallenge(authGroup, req.globalSettings, {
+				accountId: account.id,
+				mfaEnabled: true
+			}, req.body.state, meta);
+			if(!mfaResult) throw Boom.failedDependency('unknown challenge error');
+			const out = JSON.parse(JSON.stringify(mfaResult));
+			out.accountId = account.id;
+			return res.respond(say.ok(out, 'CHALLENGE'));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async status (req, res, next) {
 		try {
 			const accountId = req.params.account;

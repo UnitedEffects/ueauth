@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 
-const config = require('./config');
-
 let i = 0;
 const connect = {
 	connectOptions() {

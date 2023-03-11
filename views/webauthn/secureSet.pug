@@ -54,3 +54,4 @@ block content
                     a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
                 if (authGroup && authGroup.primaryEmail)
                     a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}
+                a(href='/' + authGroup + '/recover-mfa' target='_blank') Set Device

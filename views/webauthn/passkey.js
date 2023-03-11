@@ -5,6 +5,7 @@ import {
 } from 'https://cdn.jsdelivr.net/npm/@github/webauthn-json@2.1.1/dist/esm/webauthn-json.browser-ponyfill.js';
 
 window.addEventListener( 'load', async function () {
+	let count= 15;
 	const getInfo = $('#getInfo');
 	const instructions = $('#instruct');
 	const altInstructions = $('#altInstructions');
@@ -22,6 +23,8 @@ window.addEventListener( 'load', async function () {
 	const loading = $('#loading');
 	const confirm = $('#confirm');
 	const success = $('#success');
+	const deviceAuth = $('#deviceAuth');
+	const deviceFail = $('#device-try-again');
 
 	let username;
 	let password;
@@ -67,6 +70,18 @@ window.addEventListener( 'load', async function () {
 		}
 	});
 
+	device.on('click', async (event) => {
+		try {
+			const result = await sendChallenge(state, event);
+			console.info(result);
+			hide(auth);
+			unhide(deviceAuth);
+			await checkDevice(state, result.response.guid, result.accountId);
+		} catch (error) {
+			onError(error);
+		}
+	});
+
 	bindButton.on('click', async (event) => {
 		try {
 			// call user bind
@@ -92,6 +107,7 @@ window.addEventListener( 'load', async function () {
 	async function findUser(state, event) {
 		hide(flashContainer);
 		event.preventDefault();
+		count = 15;
 		if(!username) username = emailInput.val();
 		const options = {
 			method: 'get',
@@ -109,12 +125,20 @@ window.addEventListener( 'load', async function () {
 		if(result?.data?.data?.magicLink) unhide(magic);
 	}
 
-	async function getBasicToken(state, event) {
+	async function getBasicToken(state, event, device = {}) {
 		hide(flashContainer);
 		event.preventDefault();
 		if(!username) username = emailInput.val();
 		if(!password) password = passwordInput.val();
-		const options = {
+		const options = (device.providerKey && device.accountId) ? {
+			method: 'post',
+			url: `${domain}/${authGroupId}/token/simple-iat`,
+			data: {
+				state,
+				providerKey: device.providerKey,
+				accountId: device.accountId
+			}
+		} : {
 			method: 'post',
 			url: `${domain}/${authGroupId}/token/simple-iat`,
 			auth: {
@@ -172,6 +196,61 @@ window.addEventListener( 'load', async function () {
 		hideSpinner();
 		if(result?.data?.data?.message !== 'Registration successful!') throw new Error('unsuccessful binding');
 		return result.data.data;
+	}
+
+	async function sendChallenge(state, event) {
+		hide(flashContainer);
+		event.preventDefault();
+		if(!username) username = emailInput.val();
+		const options = {
+			method: 'post',
+			url: `${domain}/api/${authGroupId}/device/challenge`,
+			data: {
+				state,
+				lookup: username
+			}
+		};
+		showSpinner();
+		const result = await axios(options);
+		hideSpinner();
+		console.info(result.data);
+		return result.data.data;
+	}
+
+	function delay(ms) {
+		return new Promise(r => setTimeout(r, ms));
+	}
+
+	async function checkDevice(state, providerKey, accountId, event) {
+		showSpinner();
+		await delay(2000);
+		const check = `api/${authGroupId}/mfa/${providerKey}/account/${accountId}/interaction/${state}/status`;
+		try {
+			const result = await axios.get(`${domain}/${check}`);
+			console.info(result.status);
+			if(result.status === 204) {
+				console.info('yay', result.data);
+				const token = await getBasicToken(state, event, { providerKey, accountId });
+				console.info('token', result.data);
+				hideSpinner();
+				if(token?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
+				return window.location.replace(`${domain}/${authGroupId}/passkey?token=${token.data.data.jti}&state=${state}`);
+			}
+			return deviceFailedCheck(state, providerKey, accountId);
+		} catch (e) {
+			console.error(e);
+			return deviceFailedCheck(state, providerKey, accountId);
+		}
+	}
+
+	async function deviceFailedCheck(state, providerKey, accountId) {
+		if(count === 0) {
+			hideSpinner();
+			unhide(deviceFail);
+		} else {
+			count = --count;
+			return checkDevice(state, providerKey, accountId);
+		}
 	}
 
 	//setup on load

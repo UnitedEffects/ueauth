@@ -866,10 +866,18 @@ const api = {
 			if(!req.query.lookup) throw Boom.badRequest('Username, email or phone is required');
 			const user = await acct.getAccountByEmailUsernameOrPhone(req.authGroup.id, req.query.lookup);
 			if(!user) throw Boom.notFound(req.query.lookup);
+			if(req.query.state) {
+				try {
+					await challenge.addAccountToState(req.authGroup.id, req.query.state, user.id);
+				} catch (e) {
+					// not throwing an error if this does not work
+				}
+			}
 			const options = {
+				query: req.query.lookup,
 				state: req.query.state,
-				magicLink: (req.globalSettings.notifications.enabled === true && req.authGroup.config.passwordLessSupport === true),
-				device: user.mfa?.enabled
+				magicLink: (req.globalSettings?.notifications?.enabled === true && req.authGroup.config?.passwordLessSupport === true),
+				device: (req.globalSettings?.mfaChallenge?.enabled === true && req.authGroup.config?.mfaChallenge?.enable === true &&  user.mfa?.enabled === true)
 			};
 			return res.respond(say.ok(options, RESOURCE));
 		} catch (error) {

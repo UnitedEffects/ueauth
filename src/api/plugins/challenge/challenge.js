@@ -51,6 +51,15 @@ async function interfaceSelector(ag, global) {
 }
 
 const chApi = {
+	async saveState(data) {
+		return dal.saveState(data);
+	},
+	async findState(authGroup, account, state) {
+		return dal.findState(authGroup, account, state);
+	},
+	async addAccountToState(authGroup, state, account) {
+		return 	dal.addAccountToState(authGroup, state, account);
+	},
 	async bindInstructions(ag, global, bindData) {
 		const { pInterface, provider } = await interfaceSelector(ag, global);
 		if(pInterface) return pInterface.bindInstructions(provider, bindData);
@@ -86,6 +95,9 @@ const chApi = {
 	},
 	async status(query) {
 		return dal.status(query);
+	},
+	async clearStatus(query) {
+		return dal.clearStatus(query);
 	},
 	async emailVerify(authGroup, global, account, state) {
 		const user = await acc.getAccount(authGroup.id, account);

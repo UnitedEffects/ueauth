@@ -5,7 +5,7 @@ export { default as Access } from './access';
 export { default as OIDC  } from './oidc';
 export { default as AccService } from './accService';
 export { default as Profiles } from './profiles';
-export { default as Challenge } from './mfa';
+export { default as Challenge } from './challenge';
 export { default as Stats } from './stats';
 export { default as Plugins } from './plugins';
 export { default as Notifications } from './notifications';
