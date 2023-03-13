@@ -18,7 +18,7 @@ function switchInterface(provider) {
 	case 'privakey':
 		return { pInterface: privakey, provider: provider };
 	default:
-		throw Boom.failedDependency('MFA configuration is currently unhandled - contact the Platform Admin');
+		throw Boom.failedDependency('Device Challenge configuration is currently unhandled - contact the Platform Admin');
 	}
 }
 
@@ -30,7 +30,7 @@ async function initInterface(global, type) {
 	const provider = settings.mfaChallenge.providers.filter((p) => {
 		return (p.type === type);
 	});
-	if(!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
+	if(!provider.length) throw Boom.failedDependency('An AG device challenge provider is specified that is not supported');
 	return switchInterface(provider[0]);
 }
 
@@ -44,7 +44,7 @@ async function interfaceSelector(ag, global) {
 		const provider = settings.mfaChallenge.providers.filter((p) => {
 			return (p.type === ag.config.mfaChallenge.type);
 		});
-		if(!provider.length) throw Boom.failedDependency('An AG mfa provider is specified that is not supported');
+		if(!provider.length) throw Boom.failedDependency('An AG device challenge provider is specified that is not supported');
 		return switchInterface(provider[0]);
 	}
 	return undefined;
@@ -82,7 +82,7 @@ const chApi = {
 	async callback(ag, global, data) {
 		const { pInterface, provider } = await interfaceSelector(ag, global);
 		if(pInterface) return pInterface.findChallengeAndUpdate(provider, ag, data);
-		throw Boom.badRequest('MFA is not enabled for this Auth Group');
+		throw Boom.badRequest('Device Challenges are not enabled for this Auth Group');
 	},
 	async status(query) {
 		return dal.status(query);
@@ -90,7 +90,7 @@ const chApi = {
 	async clearStatus(query) {
 		return dal.clearStatus(query);
 	},
-	async emailVerify(authGroup, global, account, state) {
+	async emailVerify(authGroup, global, account, state, customDomain) {
 		const user = await acc.getAccount(authGroup.id, account);
 		const meta = {
 			sub: user.id,
@@ -100,15 +100,15 @@ const chApi = {
 		const code = await iat.generateIAT(360, ['auth_group'], authGroup, meta);
 		const notifyOptions = {
 			iss: `${config.PROTOCOL}://${
-				authGroup.aliasDnsOIDC ? authGroup.aliasDnsOIDC : config.SWAGGER
+				customDomain ? customDomain : config.SWAGGER
 			}/${authGroup.id}`,
 			createdBy: account,
 			type: 'general',
 			formats: ['email'],
 			recipientUserId: account,
 			recipientEmail: user.email,
-			subject: `${authGroup.name} Platform - MFA Identity Verification`,
-			message: `This code will be valid for 5 minutes. Please copy and paste it into the MFA Recover Window input field to proceed with your MFA recovery.\n\n\n${code.jti}`
+			subject: `${authGroup.name} Platform - Device Identity Verification`,
+			message: `This code will be valid for 5 minutes. Please copy and paste it into the Device Recover Window input field to proceed with your Device recovery.\n\n\n${code.jti}`
 		};
 
 		return notify.notify(global, notifyOptions, authGroup);
@@ -176,7 +176,7 @@ const chApi = {
 		}
 		// otherwise create it...
 		if(pInterface) return pInterface.initGroup(ag, type, provider);
-		throw Boom.badRequest('MFA is not enabled for this Auth Group');
+		throw Boom.badRequest('Device Challenges are not enabled for this Auth Group');
 	}
 };
 

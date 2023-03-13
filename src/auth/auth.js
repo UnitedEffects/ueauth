@@ -336,6 +336,9 @@ export default {
 	isAuthenticatedOrIATState: passport.authenticate(['iat-user-state', 'oidc'], {
 		session: false
 	}),
+	isBasicOrIATStateOrOIDC: passport.authenticate(['basic', 'iat-user-state', 'oidc'], {
+		session: false
+	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
 	isBasicOrBearer: passport.authenticate(['basic', 'oidc'], { session: false }),
 	isOIDCValid: passport.authenticate('oidc-token-validation', { session: false }),

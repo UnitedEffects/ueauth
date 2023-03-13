@@ -56,6 +56,13 @@ router.get('/:group/recover-mfa', [
 	m.getGlobalPluginSettings
 ], chApi.recover);
 
+router.get('/:group/recover-mfa/email-verify', [
+	jsonParser,
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.getGlobalPluginSettings
+], chApi.verifyIdentByEmail);
+
 router.get('/:group/set-passkey', [
 	jsonParser,
 	m.setNoCache,

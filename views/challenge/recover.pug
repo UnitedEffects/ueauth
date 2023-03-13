@@ -3,8 +3,12 @@ extends ../uelayout
 block content
     script(nonce=nonce, type="text/javascript").
         let state = '#{state}';
-        const authGroup = '#{authGroup}';
+        const authGroupId = '#{authGroup.id}';
         const url = '#{request}';
+        const domain = '#{domain}';
+        const iat = '#{token}';
+        const accountId = '#{accountId}';
+        const email = '#{email}';
     script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
     script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
     script
@@ -23,16 +27,32 @@ block content
                 p.org-name=authGroup.name
             p#title.header=title
             p#instruct.description=message
-            div#getInfo
+            #verifiedIdentity.hidden
                 .credentials
-                    p To get started, please type in your email/username and password:
+                    div Your identity is confirmed, #{email || accountId}
+                        if(email && accountId)
+                            div
+                                small.smaller.grey=accountId
+                    h5 Click continue to create setup this device
+                    button#verified.btn.btn-outline-dark.btn-custom.m-t-20 Continue
+            #getInfo
+                .credentials
+                    p To get started, please type in your email address:
                     div
                         input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
                         label(for='email') Email
+                    button#recover-button.btn.btn-outline-dark.btn-custom.m-t-20 Continue
+            #auth.hidden
+                .credentials
+                    div#passwordless.hidden
+                        p Looks like there are a couple ways you can verify your identity. Choose one to continue.
+                        button#passkey.hidden.btn.btn-outline-dark.btn-custom.m-t-10 Use Passkey
+                        button#magic.hidden.btn.btn-outline-dark.btn-custom.m-t-10 Send magic link email
+                        span.orsi or sign in using
                     div
                         input#password(type='password' name='password' placeholder='Password' required='' autofocus='autofocus'  autocomplete='current-password')
                         label(for='password') Password
-                    button#recover-button.btn.btn-outline-dark.btn-custom.m-t-20 Continue
+                    button#login.btn.btn-outline-dark.btn-custom.m-t-20 Sign in
             div#notify
                 div#notify-ready
             div#resetting
