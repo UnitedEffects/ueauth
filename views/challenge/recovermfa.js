@@ -24,11 +24,14 @@ window.addEventListener( 'load', async function () {
 	const notifyDevice = $('#notify-device');
 	const notifyButtons = $('#notify-buttons');
 	const notifyMessage = $('#notify-message');
+	const notifyReadyMessage = $('#notify-read-message')
 	const notifyDone = $('#notify-done');
 	const jNotify = $('#notify');
 	const jResetting = $('#resetting');
 	const verified = $('#verified');
 	const verifiedIdentity = $('#verifiedIdentity');
+	const codeInput = $('#code');
+	const codeLabel = $('#code-label');
 
 	if(iat) {
 		unhide(verifiedIdentity)
@@ -36,11 +39,22 @@ window.addEventListener( 'load', async function () {
 	}
 
 	function hide(element) {
-		element.addClass('hidden');
+		try {
+			console.info('hiding', element);
+			element.addClass('hidden');
+		} catch(e) {
+			console.error(e, 'moving on');
+		}
+
 	}
 
 	function unhide(element) {
-		element.removeClass('hidden');
+		try {
+			console.info('showing', element);
+			element.removeClass('hidden');
+		} catch(e) {
+			console.error(e, 'moving on');
+		}
 	}
 
 	function onError(error) {
@@ -105,6 +119,23 @@ window.addEventListener( 'load', async function () {
 		}
 	});
 
+	notifyEmail.on('click', async (event) => {
+		return requestNotify('email', event);
+	});
+
+	notifyDevice.on('click', async (event) => {
+		return requestNotify('device', event);
+	});
+
+	notifyDone.on('click', async (event) => {
+		if(providerKey) {
+			return requestDone(event, providerKey, undefined);
+		} else {
+			const code = $('#code').val();
+			return requestDone(event, undefined, code);
+		}
+	});
+
 	async function findUser(state, event) {
 		hide(flashContainer);
 		event.preventDefault();
@@ -126,7 +157,7 @@ window.addEventListener( 'load', async function () {
 		if(result?.data?.data?.passkey) unhide(passkey);
 	}
 
-	async function basicRequest(data, event, auth = {}) {
+	async function basicRequest(data, event, authData = {}) {
 		try {
 			if(!data.providerKey && !data.code) {
 				if(!auth.token) unhide(getInfo);
@@ -137,18 +168,15 @@ window.addEventListener( 'load', async function () {
 			hide(jResetting);
 			hide(jNotify);
 			hide(notifyReady);
-			//jResetting.css({ display: 'none' });
-			//jNotify.css({ display: 'none' });
-			//notifyReady.css({display: 'none'});
 			event.preventDefault();
 			if(!username) username = emailInput.val();
 			if(!password) password = passwordInput.val();
 			this.disabled=true;
-			const options = (auth.token) ? {
+			const options = (authData.token) ? {
 				method: 'post',
 				url: url,
 				headers: {
-					Authorization: `bearer ${auth.token}`
+					Authorization: `bearer ${authData.token}`
 				},
 				data
 			} : {
@@ -168,6 +196,7 @@ window.addEventListener( 'load', async function () {
 				//instructions
 				hide(verifiedIdentity);
 				hide(getInfo);
+				hide(auth);
 				//getInfo.css({ display: 'none' });
 				unhide(jResetting);
 				//jResetting.css({ display: 'inherit' });
@@ -197,19 +226,10 @@ window.addEventListener( 'load', async function () {
 				token = result?.data?.data?.token;
 				notifyUrl = result?.data?.data?.uri;
 				hide(getInfo);
+				hide(auth);
 				hide(verifiedIdentity);
-				//getInfo.css({ display: 'none' });
-				unhide(jNotify);
-				//jNotify.css({ display: 'inherit'});
-				const notify = '<p id="notify-message"> It looks like you already have MFA enabled. This action would override your current settings so we need to make sure its you. You can verify your identity using your existing device or email. Please click the corresponding button.</p><div id="notify-buttons"><button class="btn btn-outline-dark btn-custom" id="notify-email">By Email...</button><button class="btn btn-outline-dark btn-custom m-t-20" id="notify-device">By Device...</button></div>';
-				jNotify.append(notify);
-				notifyEmail.on('click', async (event) => {
-					return requestNotify('email', event);
-				});
-				notifyDevice.on('click', async (event) => {
-					return requestNotify('device', event);
-				});
-
+				unhide(jNotify)
+				notifyMessage.append('<span id="existing-message">It looks like you already have device enabled. This action would override your current settings so we need to make sure its you. Click one of the methods to double check.</span>')
 			} else throw result;
 		} catch (error) {
 			console.error('ERROR CAUGHT', error);
@@ -272,27 +292,17 @@ window.addEventListener( 'load', async function () {
 			if(result.status === 200) {
 				hide(notifyButtons);
 				hide(notifyMessage);
-				//notifyButtons.css({ display: 'none' });
-				//notifyMessage.css({ display: 'none' });
 				switch(type) {
 				case 'device':
 					providerKey = result?.data?.data?.id;
 					unhide(notifyReady);
-					//notifyReady.css({ display: 'inherit' });
-					notifyReady.append('<div class="credentials"><p id="notify-ready-message">We have sent you a request on your device. After you approve, click the button below. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><button id="notify-done" class="btn btn-outline-dark btn-custom m-t-20">Ready to Proceed</button></div>');
-
-					notifyDone.on('click', async (event) => {
-						return requestDone(event, providerKey, undefined);
-					});
+					notifyReadyMessage.append('<span id="notify-message-device">We have sent you a request on your device. After you approve, click the button below. PLEASE BE AWARE: THIS WILL REVOKE ALL DEVICE KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</span>')
 					break;
 				case 'email':
 					unhide(notifyReady);
-					//notifyReady.css({ display: 'inherit' });
-					notifyReady.append('<div class="credentials"><p id="notify-ready-message">We have sent you a code via email. Please check your inbox, copy/paste the code in the field below, and click the button below when ready. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</p><input id="code" name="code" type="text" aria-describedby="code" placeholder="code..."><label for="code">Code</label></input><button id="notify-done" class="btn btn-outline-dark btn-custom m-t-20">Ready to Proceed</button></div>');
-					notifyDone.on('click', async (event) => {
-						const code = $('#code').val();
-						return requestDone(event, undefined, code);
-					});
+					unhide(codeInput);
+					unhide(codeLabel);
+					notifyReadyMessage.append('<span id="notify-message-device">We have sent you a code via email. Please check your inbox, copy/paste the code in the field below, and click the button below when ready. PLEASE BE AWARE: THIS WILL REVOKE ALL MFA KEYS ON ALL DEVICES BEFORE ALLOWING YOU TO CONFIGURE YOUR CURRENT DEVICE.</span>')
 					break;
 				default:
 					throw new Error('unknown state');
@@ -303,7 +313,7 @@ window.addEventListener( 'load', async function () {
 			console.error(error);
 			notifyDevice.prop('disabled', false);
 			notifyEmail.prop('disabled', false);
-			eFlash.append('<p>There was an error. Please try again later.</p>');
+			onError('There was an error. Please try again later');
 			reset();
 		}
 	}
@@ -313,10 +323,6 @@ window.addEventListener( 'load', async function () {
 		hide(jResetting);
 		hide(jNotify);
 		hide(notifyReady);
-		//getInfo.css({ display: 'inherit' });
-		//jResetting.css({ display: 'none' });
-		//jNotify.css({ display: 'none' });
-		//notifyReady.css({display: 'none'});
 	}
 
 	async function createQR (qrCode) {

@@ -7,7 +7,7 @@ import {say} from '../../../say';
 import iat from '../../oidc/initialAccess/iat';
 import crypto from 'crypto';
 import acct from '../../accounts/account';
-import n from "../notifications/notifications";
+import n from '../notifications/notifications';
 
 const config = require('../../../config');
 
@@ -183,7 +183,6 @@ export default {
 	},
 	async getMFAInstruction(req, res, next) {
 		try {
-			console.info('here');
 			const { authGroup } = await group.safeAuthGroup(req.authGroup);
 			//basic auth...
 			if(authGroup?.config?.mfaChallenge?.enable === true &&
@@ -243,6 +242,7 @@ export default {
 
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
+
 				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
