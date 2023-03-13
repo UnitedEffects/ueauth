@@ -68,7 +68,11 @@ export default {
 				credential: req.body.credential
 			};
 			const result = await web.finishWebAuthN(authGroup, req.globalSettings, data);
-			if(result) return res.respond(say.ok(result, RESOURCE));
+			if(result) {
+				const out = JSON.parse(JSON.stringify(result));
+				out.success = true;
+				return res.respond(say.ok(out, RESOURCE));
+			}
 			throw Boom.badRequest('no response');
 		} catch (error) {
 			if (error.isAxiosError) {

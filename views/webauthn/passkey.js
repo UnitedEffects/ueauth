@@ -98,12 +98,11 @@ window.addEventListener( 'load', async function () {
 			const credentials = await create(options);
 			// finish bind
 			const done = await finishWebAuthN(state, event, credentials);
-			if(done?.message === 'Registration successful!'){
+			if(done?.success === true){
 				hide(instructions);
 				hide(confirm);
 				unhide(success);
 				localStorage.setItem(`${window.location.host}:${authGroupId}:${user}`, JSON.stringify({ webauthn: true, accountId: user, authGroup: authGroupId, host: window.location.host, created: Date.now() }));
-				console.info('localstorage', localStorage);
 			}
 		} catch (error) {
 			onError(error);
@@ -204,7 +203,8 @@ window.addEventListener( 'load', async function () {
 		showSpinner();
 		const result = await axios(options);
 		hideSpinner();
-		if(result?.data?.data?.message !== 'Registration successful!') throw new Error('unsuccessful binding');
+		if(result?.data?.data?.success !== true) throw new Error('unsuccessful binding');
+		//if(result?.data?.data?.message !== 'Registration successful!') throw new Error('unsuccessful binding');
 		return result.data.data;
 	}
 

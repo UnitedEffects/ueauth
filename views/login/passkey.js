@@ -128,7 +128,6 @@ window.addEventListener( 'load', async function () {
 		showSpinner();
 		const result = await axios(options);
 		hideSpinner();
-		//todo generalize response expectations on binding as well
 		if(result?.data?.data?.success !== true) throw new Error('unsuccessful auth request');
 		return result.data.data;
 	}

@@ -32,7 +32,6 @@ router.post('/:group/mfa/instructions', [
 ], challengeApi.getMFAInstruction);
 
 // Initiate a challenge
-// todo swagger
 router.post('/:group/device/challenge', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings,

@@ -18,7 +18,6 @@ router.post('/:group/token/initial-access', [
 	m.permissions
 ], api.getInitialAccessToken);
 
-// not on the production api doc
 router.post('/:group/token/simple-iat', [
 	jsonParser,
 	m.validateAuthGroup,

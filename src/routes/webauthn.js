@@ -5,7 +5,7 @@ import api from '../api/plugins/webauthn/api';
 
 const router = express.Router();
 
-// bind user todo swagger
+// bind user
 router.post('/:group/webauthn/bind', [
 	//schema
 	m.validateAuthGroup,
@@ -13,7 +13,7 @@ router.post('/:group/webauthn/bind', [
 	m.isAuthenticatedOrIATState
 ], api.bindWebAuthN);
 
-// finish user bind todo swagger
+// finish user bind
 router.post('/:group/webauthn/finish', [
 	//schema
 	m.validateAuthGroup,
@@ -21,7 +21,7 @@ router.post('/:group/webauthn/finish', [
 	m.isAuthenticatedOrIATState
 ], api.finishWebAuthN);
 
-// prepare webAuthN auth req todo swagger
+// prepare webAuthN auth req
 router.post('/:group/webauthn/authenticate', [
 	//schema
 	m.validateAuthGroup,
