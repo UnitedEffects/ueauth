@@ -11,6 +11,7 @@ import iat from '../oidc/initialAccess/iat';
 import n from '../plugins/notifications/notifications';
 import eStreams from '../plugins/eventStream/eventStream';
 import challenge from '../plugins/challenge/challenge';
+import passkey from '../plugins/webauthn/webauthn';
 import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import cryptoRandomString from 'crypto-random-string';
@@ -121,7 +122,7 @@ const agp = {
 		return dal.getOneByEither(q, onlyIncludeActive);
 	},
 
-	async patch(group, update, user, global) {
+	async patch(group, update, user, global, domain) {
 		let globalSettings;
 		if(!global) {
 			globalSettings = await plugins.getLatestPluginOptions(true);
@@ -150,6 +151,31 @@ const agp = {
 				patched.config.mfaChallenge = {
 					enable: false,
 					required: false
+				}
+			}
+		}
+
+		// validation for webAuthN being enabled
+		if(patched.pluginOptions?.webAuthN?.enable !== group.pluginOptions?.webAuthN?.enable) {
+			if(patched.pluginOptions?.webAuthN?.enable === true) {
+				if(!patched.pluginOptions?.webAuthN?.type) {
+					throw Boom.badRequest('WebAuthN provider type is required');
+				}
+				if(globalSettings?.webAuthN?.enabled !== true ||
+					!globalSettings?.webAuthN?.providers) {
+					throw Boom.badRequest('Unable to enable WebAuthN until the Admin provides this feature');
+				}
+				const check = globalSettings.webAuthN.providers.filter((p) => {
+					return (p.type === patched.pluginOptions.webAuthN.type);
+				});
+				if(check.length === 0) {
+					throw Boom.badRequest(`Unsupported WebAuthN provider type requested ${patched.pluginOptions.webAuthN.type}`);
+				}
+				const meta = await passkey.initGroup(group, globalSettings, patched.pluginOptions.webAuthN.type, domain);
+				patched.pluginOptions.webAuthN.meta = meta;
+			} else {
+				patched.pluginOptions.webAuthN = {
+					enable: false
 				}
 			}
 		}

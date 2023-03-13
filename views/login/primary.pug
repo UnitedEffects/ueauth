@@ -25,4 +25,5 @@ block primary
             a(href=(client.tosUri || tosUri)) Terms of Service
         if (client.policyUri || policyUri)
             a(href=(client.policyUri || policyUri)) Privacy Policy
-        a(href='/' + authGroup + '/recover-mfa' target='_blank') Restore MFA
+        a#passkeyLink.hidden(href='/' + authGroup + '/set-passkey' target='_blank') Set Passkey
+        a(href='/' + authGroup + '/recover-mfa' target='_blank') Set Device

@@ -1,4 +1,4 @@
-import Challenge from './model';
+import Challenge from './models/status';
 
 export default {
 	async saveChallenge(data) {
@@ -13,5 +13,8 @@ export default {
 	},
 	async status(query) {
 		return Challenge.findOne(query);
+	},
+	async clearStatus(query) {
+		return Challenge.findOneAndRemove(query);
 	}
 };

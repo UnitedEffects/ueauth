@@ -1,0 +1,57 @@
+extends ../uelayout
+
+block content
+    script(nonce=nonce, type="text/javascript").
+        let state = '#{state}';
+        const authGroupId = '#{authGroup.id}';
+        const domain = '#{domain}';
+        const token = `#{token}`;
+        const user = `#{user}`;
+    script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
+    script(nonce=nonce, type='module')
+        include passkey.js
+    body.bg.flex
+        .panel.middle-panel
+            if (flash)
+                #flash-container.flash-container.mfa-flash
+                    p#flash=flash
+            else
+                #flash-container.hidden.flash-container.mfa-flash
+                    p#flash=flash
+            if (authGroupLogo)
+                img.logo(src=authGroupLogo alt='Platform Logo')
+            if (authGroup && authGroup.name)
+                p.org-name=authGroup.name
+            p#title.header=title
+            h5#instruct.center=message
+                p.description.center Setup will overwrite existing passkeys on #{authGroup.name}.
+            div#confirm
+                .credentials
+                    div Your identity is confirmed, #{email}
+                        div
+                            small.smaller.grey=user
+                    h5 Click continue to create a passkey for this device.
+                        if (expiresDate)
+                            div
+                                small.smaller This session expires on #{expiresDate}
+                                if (expiresTime)
+                                    div
+                                        small.smaller at #{expiresTime}
+                    button#bind.btn.btn-outline-dark.btn-custom.m-t-20 Create Passkey
+            div#deviceIssue.hidden
+                .credentials
+                    p We're sorry, but this device does not support passkey. You may close this window
+            div#success.hidden
+                .credentials
+                    h5 You're all set! You may close this window.
+                    p Next time you log into a #{authGroup.name} product with this device, you'll be able to use your passkey. Please note that if you clear your browser history, you may need to do this setup again.
+            .center.m-t-5
+                div#loading.m-t-20.hidden
+            .tandc.p-b-20.center.width-auto
+                if (authGroup && authGroup.primaryTOS)
+                    a(href=(authGroup.primaryTOS)) Terms of Service
+                if (authGroup && authGroup.primaryPrivacyPolicy)
+                    a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
+                if (authGroup && authGroup.primaryEmail)
+                    a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}
+                a(href='/' + authGroup + '/recover-mfa' target='_blank') Set Device

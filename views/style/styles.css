@@ -54,6 +54,11 @@ button .federated {
 	border: none;
 }
 
+.btn-auto {
+	margin: auto !important;
+	margin-bottom: 5px !important;
+}
+
 button:hover {
 	cursor: pointer;
 	background-color: #00386d;
@@ -181,6 +186,18 @@ input:focus + label, input:not(:placeholder-shown) + label {
 	font-size: 32px;
 	font-weight: 300;
 	margin: 0 0 24px 0;
+}
+
+.center {
+	text-align: center;
+}
+
+.smaller {
+	font-size: .7em;
+}
+
+.grey {
+	color: #999;
 }
 
 .fpsw {

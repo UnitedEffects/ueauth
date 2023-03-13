@@ -16,6 +16,7 @@ export default {
 		})));
 		return dal.insertMany(setOfIATs);
 	},
+
 	async generateIAT(expiresIn, policies, authGroup, meta = {}) {
 		if(!authGroup) throw new Error('authGroup not defined');
 		return new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies }).save().then(async (x) => {
@@ -24,6 +25,23 @@ export default {
 				sub: meta.sub,
 				email: meta.email,
 				uid: meta.uid
+			};
+			const iat = await dal.updateAuthGroup(x, metaData);
+			const response = JSON.parse(JSON.stringify(iat.payload));
+			delete response.auth_group;
+			delete response.policies;
+			return response;
+		});
+	},
+
+	async generateSimpleIAT(expiresIn, policies, authGroup, user, state) {
+		if(!authGroup) throw new Error('authGroup not defined');
+		return new (oidc(authGroup).InitialAccessToken)({ expiresIn, policies }).save().then(async (x) => {
+			const metaData = {
+				auth_group: authGroup.id,
+				sub: user.id || user.sub,
+				email: user.email,
+				state
 			};
 			const iat = await dal.updateAuthGroup(x, metaData);
 			const response = JSON.parse(JSON.stringify(iat.payload));

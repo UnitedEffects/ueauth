@@ -30,3 +30,7 @@ block content
                     a(href='mailto:'+authGroup.primaryEmail) Contact #{authGroup.name}
                 if (authGroup)
                     a(href='/' + authGroup.id + '/forgotpassword') Reset Password
+                if (passkey === true)
+                    a(href='/' + authGroup.id + '/set-passkey') Set Passkey
+                if (device === true)
+                    a(href='/' + authGroup.id + '/recover-mfa') Set Device

@@ -3,7 +3,20 @@ import path from 'path';
 import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
-import { Root, Identity, Access, OIDC, Profiles, Challenge, Stats } from './routes';
+import {
+	Root,
+	Group,
+	Account,
+	Access,
+	OIDC,
+	Profiles,
+	Challenge,
+	Stats,
+	AccService,
+	Plugins,
+	Notifications,
+	WebAuthN
+} from './routes';
 import middle from './middleware';
 
 const config = require('./config');
@@ -28,9 +41,14 @@ app.use(middle.cores);
 //content and APIs
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/', Root);
+app.use('/', AccService);
 app.use('/', OIDC);
 app.use('/api', Challenge);
-app.use('/api', Identity);
+app.use('/api', Group);
+app.use('/api', Account);
+app.use('/api', Plugins);
+app.use('/api', Notifications);
+app.use('/api', WebAuthN);
 app.use('/api', Access);
 app.use('/api', Profiles);
 app.use('/api', Stats);

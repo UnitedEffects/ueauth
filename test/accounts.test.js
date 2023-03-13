@@ -91,7 +91,7 @@ describe('Accounts', () => {
 			delete expected.__v;
 			mockingoose(Model).toReturn(AccountMocks.account, 'findOne');
 			const result = await account.getAccount(AccountMocks.account.authGroup, AccountMocks.account._id);
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ '_id': AccountMocks.account._id, 'authGroup': AccountMocks.account.authGroup }, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ '_id': AccountMocks.account._id, 'authGroup': AccountMocks.account.authGroup });
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -139,7 +139,7 @@ describe('Accounts', () => {
 			const spy = jest.spyOn(helper, 'parseOdataQuery');
 			const result = await account.getAccounts(AccountMocks.account.authGroup, {});
 			expect(spy).toHaveBeenCalledWith({});
-			expect(Model.Query.prototype.find).toHaveBeenCalledWith({ authGroup: AccountMocks.account.authGroup }, undefined);
+			expect(Model.Query.prototype.find).toHaveBeenCalledWith({ authGroup: AccountMocks.account.authGroup });
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -178,8 +178,8 @@ describe('Accounts', () => {
 				}
 			];
 			const result = await account.patchAccount(oneGroup, oneAccount._id, update, oneAccount._id, false);
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id }, undefined);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id }, expect.objectContaining(patched), { 'new': true, 'overwrite': true}, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id });
+			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id }, expect.objectContaining(patched), { 'new': true, 'overwrite': true});
 			const res = JSON.parse(JSON.stringify(result));
 
 			// ignoring these since they are dynamic - we do this by just setting to the actual result so check passes
@@ -217,7 +217,7 @@ describe('Accounts', () => {
 					{ username: AccountMocks.account.username }
 				]
 			};
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -249,7 +249,7 @@ describe('Accounts', () => {
 					{ username: AccountMocks.account.email }
 				]
 			};
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -281,8 +281,7 @@ describe('Accounts', () => {
 			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith(
 				{ '_id': AccountMocks.account._id, 'authGroup': AccountMocks.account.authGroup },
 				expect.objectContaining({ modifiedBy: 'TEST' }),
-				{ 'new': true },
-				undefined);
+				{ 'new': true });
 
 			// ensure we are hashing the password correctly since its handled in function and not mongoose middleware
 			const argument = Model.Query.prototype.findOneAndUpdate.mock.calls[0][1];

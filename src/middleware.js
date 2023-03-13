@@ -14,6 +14,7 @@ import access from './permissions';
 import mongoose from 'mongoose';
 import spec from './swagger';
 import plugins from './api/plugins/plugins';
+import challenges from './api/plugins/challenge/challenge';
 
 const { doc: swag } = spec;
 const config = require('./config');
@@ -395,12 +396,55 @@ const mid = {
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
 	iatQueryCodeAuth: authorizer.iatQueryCodeAuth,
 	isAuthenticated: authorizer.isAuthenticated,
+	isAuthenticatedOrIATState: authorizer.isAuthenticatedOrIATState,
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,
+	isBasicOrBearer: authorizer.isBasicOrBearer,
+	async isBasicBearerOrDevice (req, res, next) {
+		if(req.body?.providerKey && req.body?.accountId && req.body?.state && req.authGroup) {
+			//this is a confirmation of mfa
+			const status = await challenges.status({
+				accountId: req.body.accountId,
+				uid: req.body.state,
+				authGroup: req.authGroup.id,
+				providerKey: req.body.providerKey
+			});
+			if(status?.state === 'approved') {
+				const acc = await account.getAccount(req.authGroup.id, status.accountId);
+				if(acc) {
+					await challenges.clearStatus({
+						accountId: req.body.accountId,
+						uid: req.body.state,
+						authGroup: req.authGroup.id,
+						providerKey: req.body.providerKey
+					});
+					req.user = acc;
+					return next();
+				}
+			}
+		}
+		return authorizer.isBasicOrBearer(req, res, next);
+	},
 	isSimpleIAT: authorizer.isSimpleIAT,
 	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
 	isWhitelisted: authorizer.isWhitelisted,
-	isPublicOrAuth: authorizer.publicOrAuth
+	isPublicOrAuth: authorizer.publicOrAuth,
+	async isQueryStateAndIAT (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			if(!req.query.token) throw Boom.forbidden();
+			if(!req.query.state) throw Boom.forbidden();
+			const { user, token } = await authorizer.isQueryStateAndIAT(req.query.token, req.authGroup.id, req.query.state);
+			if(!user?.id) throw Boom.forbidden();
+			if(!token?.jti) throw Boom.forbidden();
+			if(token?.state !== req.query.state) throw Boom.forbidden();
+			req.user = user;
+			req.authInfo = token;
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	}
 };
 
 export default mid;

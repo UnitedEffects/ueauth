@@ -13,7 +13,11 @@ const API = {
 	validate: '/api/request/getRequest',
 	bind: '/api/account/bind',
 	devices: '/api/device/getAll',
-	revoke: '/api/device/revoke'
+	revoke: '/api/device/revoke',
+	bindWebAuthN: '/api/account/webauthn/bind',
+	finishWebAuthN: '/api/account/webauthn/register',
+	authWebAuthN: '/api/request/webauthn/authenticate',
+	authWebAuthNFinish: '/api/request/webauthn/finishAuthentication'
 };
 
 const APP_LINKS = {
@@ -102,9 +106,127 @@ const pkApi = {
 		}
 		return pkey.data;
 	},
+	async reqWebAuthN(provider, authGroup, data) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.authWebAuthN}`,
+			method: 'post',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.pluginOptions.webAuthN.meta.privakeyClient,
+				password: authGroup.pluginOptions.webAuthN.meta.privakeySecret
+			},
+			data: {
+				accountId: data.accountId,
+				domain: data.domain
+			}
+		};
+		const pkey = await axios(options);
+		if(!pkey?.data?.requestGuid) {
+			throw Boom.failedDependency('auth request unsuccessful');
+		}
+		const output = JSON.parse(JSON.stringify(pkey.data));
+		output.success = true;
+		output.accountId = data.accountId;
+		return output;
+	},
+	async finishWebAuthNReq(event, accountId, credential) {
+		hide(flashContainer);
+		event.preventDefault();
+		const options = {
+			method: 'post',
+			url: `${domain}/api/${authGroupId}/webauthn/finish`,
+			headers: {
+				Authorization: `bearer ${token}`
+			},
+			data: {
+				accountId,
+				credential
+			}
+		};
+		showSpinner();
+		const result = await axios(options);
+		hideSpinner();
+		if(result?.data?.data?.success !== true) throw new Error('not logged in');
+		return result.data.data;
+	},
+	async finishAuth(provider, authGroup, data) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.authWebAuthNFinish}`,
+			method: 'post',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.pluginOptions.webAuthN.meta.privakeyClient,
+				password: authGroup.pluginOptions.webAuthN.meta.privakeySecret
+			},
+			data: {
+				accountId: data.accountId,
+				credential: data.credential
+			}
+		};
+		const pkey = await axios(options);
+		if(!pkey?.data?.requestGuid) {
+			throw Boom.failedDependency('auth request unsuccessful');
+		}
+		const output = JSON.parse(JSON.stringify(pkey.data));
+		output.success = true;
+		return output;
+	},
+	async bindWebAuthN(provider, authGroup, data) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.bindWebAuthN}`,
+			method: 'put',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.pluginOptions.webAuthN.meta.privakeyClient,
+				password: authGroup.pluginOptions.webAuthN.meta.privakeySecret
+			},
+			data: {
+				accountId: data.accountId,
+				userInfo: JSON.stringify({ name: data.email, displayName: data.email }),
+				domain: data.domain
+			}
+		};
+		const pkey = await axios(options);
+		if(!pkey?.data?.privakeyId) {
+			throw Boom.failedDependency('Bind request unsuccessful');
+		}
+		const output = JSON.parse(JSON.stringify(pkey.data));
+		output.success = true;
+		return output;
+	},
+	async finishWebAuthN(provider, authGroup, data) {
+		//ignoring provider parameter for this implementation
+		const options = {
+			url: `${API.domain}${API.finishWebAuthN}`,
+			method: 'post',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			auth: {
+				username: authGroup.pluginOptions.webAuthN.meta.privakeyClient,
+				password: authGroup.pluginOptions.webAuthN.meta.privakeySecret
+			},
+			data
+		};
+		const pkey = await axios(options);
+		if(!pkey?.data?.privakeyId) {
+			throw Boom.failedDependency('Bind request unsuccessful');
+		}
+		const output = JSON.parse(JSON.stringify(pkey.data));
+		output.success = true;
+		return output;
+	},
 	async sendChallenge(provider, authGroup, account, uid, meta) {
 		//ignoring provider parameter for this implementation
-
 		const content = (meta?.content) ? {
 			title: meta.content.title,
 			keys: [{
@@ -253,6 +375,11 @@ const pkApi = {
 			}
 		};
 		return axios(options);
+	},
+	async challengeCallback(provider, authGroupId, companyId, appSpaceId, reqOriginId) {
+		const clientID = provider.privakeySuper.id;
+		const clientSecret = provider.privakeySuper.key;
+		return pInit.addCallback(clientID, clientSecret, authGroupId, companyId, appSpaceId, reqOriginId);
 	},
 	async initGroup(authGroup, type, provider) {
 		if(type.toLowerCase() === 'privakeysuper') {

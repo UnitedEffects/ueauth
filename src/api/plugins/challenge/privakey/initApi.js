@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { nanoid } from 'nanoid';
 import crypto from 'crypto-js';
 import Boom from '@hapi/boom';
 
@@ -175,5 +174,30 @@ export default {
 		if(!result?.headers?.location) throw Boom.failedDependency('Could not create a callback');
 		const location = result.headers.location.split('/');
 		return { status: result.status, id: location[location.length-1] };
-	}
+	},
+	async addWebAuthNCallback(id, key, groupId, cId, aId, oId, domain) {
+		const url = `${API.domain}${API.addCallback}`
+			.replace('{{companyGuid}}', cId)
+			.replace('{{appSpaceGuid}}', aId)
+			.replace('{{requestOriginGuid}}', oId);
+		const method = 'POST';
+		const data = {
+			callbackUrl: domain,
+			callbackType: 2
+		};
+		const hmac = generateHmac(id, key, method, url, JSON.stringify(data));
+		const options = {
+			url,
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				authorization: hmac
+			},
+			data
+		};
+		const result = await axios(options);
+		if(!result?.headers?.location) throw Boom.failedDependency('Could not create a callback');
+		const location = result.headers.location.split('/');
+		return { status: result.status, id: location[location.length-1] };
+	},
 };

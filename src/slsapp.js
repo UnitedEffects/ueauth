@@ -11,7 +11,7 @@ if (!mongoConnect) {
 }
 
 if(process.env.NODE_ENV === 'dev') console.info(`Connection string: ${mongoConnect}`);
-connection.create(mongoConnect, config.REPLICA);
+connection.create(mongoConnect);
 
 function normalizePort(val) {
 	const port = parseInt(val, 10);

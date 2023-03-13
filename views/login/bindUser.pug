@@ -8,7 +8,7 @@ block bindUser
     script(nonce=nonce)
         include qrcode.js
     .credential-container
-        p.sign-in The Platform is now requiring MFA. Please follow the instructions below.
+        p.sign-in The Platform is now requiring device based MFA. Please follow the instructions below.
         .credentials
             ol.instructions.m-t-20.list-group.list-group-flush.list-group-numbered
                 each i in mfa.instructions.instructions
@@ -24,6 +24,6 @@ block bindUser
                     a.btn.btn-outline-dark.federated.m-t-20(href=mfa.setupScreen)
                         i.far.fa-list-alt
                         span.p-l-10 Go To Setup
-            a.btn.btn-outline-dark.federated.m-t-20(href='/' + authGroup + '/interaction/' + uid + '?flash=Please enter your username and password again now that you have activated MFA')
+            a.btn.btn-outline-dark.federated.m-t-20(href='/' + authGroup + '/interaction/' + uid + '?flash=Please enter your username and password again now that you have activated your device for MFA')
                 i.fas.fa-check-circle
                 span.p-l-10 Ready To Login

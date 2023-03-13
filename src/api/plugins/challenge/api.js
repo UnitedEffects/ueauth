@@ -1,4 +1,5 @@
 import challenge from './challenge';
+import states from '../state/state';
 import Boom from '@hapi/boom';
 import acc from '../../accounts/account';
 import group from '../../authGroup/group';
@@ -10,6 +11,35 @@ import acct from '../../accounts/account';
 const config = require('../../../config');
 
 export default {
+	async sendChallenge(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.body.lookup) throw Boom.badRequest();
+			if(!req.body.state) throw Boom.forbidden();
+			const account = await acct.getAccountByEmailUsernameOrPhone(authGroup.id, req.body.lookup);
+			if(!account) throw Boom.badRequest();
+			const validate = await states.findState(authGroup.id, account.id, req.body.state);
+			if(!validate) throw Boom.forbidden();
+			const meta = {
+				content: {
+					title: 'Authorization Request',
+					header: `${authGroup.name} Platform`,
+					body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
+				}
+			};
+			const mfaResult = await challenge.sendChallenge(authGroup, req.globalSettings, {
+				accountId: account.id,
+				mfaEnabled: true
+			}, req.body.state, meta);
+			if(!mfaResult) throw Boom.failedDependency('unknown challenge error');
+			const out = JSON.parse(JSON.stringify(mfaResult));
+			out.accountId = account.id;
+			return res.respond(say.ok(out, 'CHALLENGE'));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async status (req, res, next) {
 		try {
 			const accountId = req.params.account;
@@ -49,12 +79,12 @@ export default {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
 					state,
-					title: 'MFA Recovery Wizard',
-					message: 'You can use this wizard to connect or reconnect your account to your device so you can log in with multi-factor authentication. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.',
+					title: 'Device Setup Wizard',
+					message: 'You can use this wizard to connect or reconnect your account to your device so you can use MFA or login with your device. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.',
 					request: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/instructions`
 				});
 			}
-			throw Boom.forbidden(`MFA recovery is not available on the ${authGroup.name} Platform`);
+			throw Boom.forbidden(`Device recovery is not available on the ${authGroup.name} Platform`);
 		} catch (error) {
 			next(error);
 		}

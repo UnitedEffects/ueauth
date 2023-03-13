@@ -11,6 +11,34 @@ export default {
 	async initPlugins() {
 		return dal.initPlugins();
 	},
+	async toggleGlobalWebAuthN(data, userId, root) {
+		if(root.prettyName !== 'root') throw Boom.unauthorized();
+		const record = await this.getLatestPluginOptions(true);
+		if(!record) throw Boom.internal('System may not have been initialized yet');
+		if(data?.currentVersion !== record?.version) {
+			throw Boom.badRequest('Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
+		}
+		let lastSaved = JSON.parse(JSON.stringify(record));
+		if(data.enabled === false) {
+			lastSaved.webAuthN = {
+				enabled: false,
+				providers: []
+			};
+		} else {
+			switch(data.type.toLowerCase()) {
+			case 'privakey':
+				lastSaved = setupWebAuthN(lastSaved, data.type.toLowerCase());
+				lastSaved.webAuthN.providers.push({
+					type: data.type.toLowerCase(),
+					setup: data.setup || {}
+				});
+				break;
+			default:
+				throw Boom.badRequest('Unsupported mfa type requested');
+			}
+		}
+		return dal.updatePlugins(lastSaved.version+1, lastSaved, userId);
+	},
 	async toggleGlobalMFASettings(data, userId, root) {
 		if(root.prettyName !== 'root') throw Boom.unauthorized();
 		let client;
@@ -188,7 +216,6 @@ export default {
 			const latest = await this.getLatestPluginOptions(true);
 			if(latest?.eventStream?.enabled === true) {
 				const describe = await eStream.describe(latest);
-				console.info(describe);
 				if(describe.startup === true) {
 					return eStream.startup(latest);
 				}
@@ -198,6 +225,21 @@ export default {
 	}
 };
 
+function setupWebAuthN(lastSaved, type) {
+	if(!lastSaved.webAuthN) {
+		lastSaved.webAuthN = {
+			enabled: true,
+			providers: []
+		};
+	}
+	lastSaved.webAuthN.enabled = true;
+	// blow away previous configurations of same type
+	lastSaved.webAuthN.providers = lastSaved.webAuthN.providers.filter((p) => {
+		return (p.type !== type);
+	});
+	return lastSaved;
+}
+
 function setupMFA(lastSaved, type) {
 	if(!lastSaved.mfaChallenge) {
 		lastSaved.mfaChallenge = {
@@ -206,7 +248,7 @@ function setupMFA(lastSaved, type) {
 		};
 	}
 	lastSaved.mfaChallenge.enabled = true;
-	// blow away previous privakey configuration
+	// blow away previous configurations of same type
 	lastSaved.mfaChallenge.providers = lastSaved.mfaChallenge.providers.filter((p) => {
 		return (p.type !== type);
 	});

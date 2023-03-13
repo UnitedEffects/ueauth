@@ -48,9 +48,11 @@ tags:
   - name: Permissions
     description: Manage Permissinos for one Product at a time.
   - name: Notification
-    description: Manage notifications sent to the http notification plugin. Requires the plugin to be enabled.
-  - name: MFA Challenge
-    description: Manage MFA interactions when the plugin is enabled
+    description: Manage notifications sent to the http notification plugin. Requires the Notifications plugin to be enabled.
+  - name: Device Challenge
+    description: Manage device MFA/Challenge/Sign-on interactions. Requires the MFA Challenge plugin to be enabled.
+  - name: WebAuthN
+    description: Manage WebAuthN (passkey) interactions. Requires the WebAuthN plugin to be enabled.
   - name: Operations
     description: Commands for Artifact or Security Updates
   - name: Plugins
@@ -641,6 +643,38 @@ paths:
         description: Setting for mfa challenge desired
         required: true
 
+  /api/plugins/global/webauthn:
+    post:
+      tags:
+        - Plugins
+      summary: Configure Global webAuthN Plugin as Service Owner
+      description: Configure Global webAuthN Plugin as Service Owner
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/globalPlugins'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeWebAuthN'
+        description: Setting for mfa challenge desired
+        required: true
+
   /api/plugins/global/mfa-challenge:
     post:
       tags:
@@ -676,7 +710,7 @@ paths:
   /api/{group}/mfa/callback:
     post:
       tags:
-        - MFA Challenge
+        - Device Challenge
       summary: Callback used by provider to communicate user approval or denial of challenge
       description: When configuring an MFA provider, you will likely need to provide a callback uri.
       operationId: mfaCallback
@@ -702,7 +736,7 @@ paths:
   /api/{group}/mfa/{key}/account/{account}/interaction/{uid}/status:
     get:
       tags:
-        - MFA Challenge
+        - Device Challenge
       summary: Poll UE Auth for a response to a challenge.
       description: You can poll UE Auth for the response to a challenge sent to a user.
       operationId: mfaStatus
@@ -742,7 +776,7 @@ paths:
   /api/{group}/mfa/instructions:
     post:
       tags:
-        - MFA Challenge
+        - Device Challenge
       summary: Request an account be bound and instructions for device setup be provided
       description: This API is multi-purpose, responding to a request based on which properties have been provided. See request object for details.
       operationId: mfaInstructions
@@ -779,7 +813,7 @@ paths:
   /api/{group}/mfa/safe-recovery:
     post:
       tags:
-        - MFA Challenge
+        - Device Challenge
       summary: Request to verify your identity via email or an existing MFA device
       description: This API allows a user to validate who they are through email or a challenge. This is used as part of MFA recovery when the user wants to bind to a new device. Security on this is an initial access token as provided by the instructions endpoint.
       operationId: mfaSafeRecovery
@@ -810,6 +844,188 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/sendMfaSafeRecovery'
+        required: true
+
+  /api/{group}/device/challenge:
+    post:
+      tags:
+        - Device Challenge
+      summary: For an account with a saved state session, initiate a device based challenge.
+      description: For an account with a saved state session, initiate a device based challenge.
+      operationId: deviceSendChallenge
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId:
+                    type: string
+                    format: uuid
+                  response:
+                    type: object
+                    description: response from provider
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lookup:
+                  type: string
+                  description: an email, username, or phone number
+                state:
+                  type: string
+                  description: a previously saved state session to ensure this endpoint is not abused
+        required: true
+
+  # WebAuthN
+  /api/{group}/webauthn/bind:
+    post:
+      tags:
+        - WebAuthN
+      summary: Initiate binding a user local device webAuthN using a state value and token
+      description: Initiate binding a user local device webAuthN using a state value and token
+      operationId: webAuthNBind
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registrationOptions:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+        required: true
+
+  /api/{group}/webauthn/finish:
+    post:
+      tags:
+        - WebAuthN
+      summary: Complete webAuthN user to local device binding
+      description: Complete webAuthN user to local device binding
+      operationId: webAuthNFinish
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    default: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+                credential:
+                  type: object
+        required: true
+
+  /api/{group}/webauthn/authenticate:
+    post:
+      tags:
+        - WebAuthN
+      summary: Initiate a webAuthN (passkey) authentication
+      description: Initiate a webAuthN (passkey) authentication
+      operationId: webAuthNAuth
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    default: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
         required: true
 
   # Account APIs
@@ -4778,6 +4994,48 @@ paths:
                 style: form
         required: true
 
+  /{group}/token/simple-iat:
+    post:
+      tags:
+        - OIDC
+      summary: Request an initial access token (IAT) tied to your account and a state using basic auth or bearer token
+      description: Request an initial access token (IAT) tied to your account and a state using basic auth or bearer token. This is primarily used for out of band authorizations for account settings.
+      operationId: getSimpleIAT
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/initialAccessToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+        - basic: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/simpleIAT'
+        required: false
+
   /{group}/token/initial-access:
     post:
       tags:
@@ -7942,6 +8200,7 @@ components:
             - generate_password
 
     initialAccessTokenRequest:
+      type: object
       properties:
         email:
           type: string
@@ -7952,6 +8211,13 @@ components:
         expires:
           type: number
           description: Number of seconds after which this token expires. Default is 604800 (7 days).
+
+    simpleIAT:
+      type: object
+      properties:
+        state:
+          type: string
+          description: a value to tie the token to an external state
 
     initialAccessToken:
       properties:
@@ -8552,6 +8818,15 @@ components:
       description: these are plugin configurations
       additionalProperties: false
       properties:
+        webAuthN:
+          type: object
+          properties:
+            enable:
+              type: boolean
+            type:
+              type: string
+            meta:
+              type: object
         externalStreaming:
           type: object
           properties:
@@ -8929,7 +9204,22 @@ components:
                     tlsTrustCertsFilePath: /my/path
                     tlsValidateHostname: false
                     tlsAllowInsecureConnection: false
-
+        webAuthN:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            providers:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    enum:
+                      - privakey
+                  setup:
+                    type: object
         mfaChallenge:
           type: object
           properties:
@@ -8945,6 +9235,7 @@ components:
                     enum:
                       - http-proxy
                       - privakey
+                      - privakeySuper
                   api:
                     type: object
                     description: endpoints for the interface functions
@@ -10197,6 +10488,22 @@ components:
               #  tlsTrustCertsFilePath: /my/path
               #  tlsValidateHostname: false
               #  tlsAllowInsecureConnection: false
+
+# WEBAUTHN
+    writeWebAuthN:
+      type: object
+      required:
+        - enabled
+        - currentVersion
+      properties:
+        enabled:
+          type: boolean
+        currentVersion:
+          type: number
+        type:
+          type: string
+        setup:
+          type: object
 
 # MFA CHALLENGE
     writeMfaChallenge:

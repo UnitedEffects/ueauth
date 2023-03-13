@@ -13,8 +13,6 @@ const config = {
 	PROTOCOL: process.env.PROTOCOL || envVars.PROTOCOL || 'http',
 	// Mongo connection string. Highly recommend this be encrypted as a secret in any deployment
 	MONGO: process.env.MONGO || envVars.MONGO || 'mongodb://localhost:27017/your-db',
-	// Mongo Replica Set value (if applicable)
-	REPLICA: process.env.REPLICA || envVars.REPLICA || 'rs0',
 	// Self reference so that Swagger UI knows where to make requests. Used elsewhere as a convenient reference to service host domain
 	SWAGGER: process.env.SWAGGER || envVars.SWAGGER || 'localhost:3000',
 	// Reference to where the UI is hosted. This repo is just the backend witch central OIDC UI screen.

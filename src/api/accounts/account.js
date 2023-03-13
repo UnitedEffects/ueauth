@@ -364,6 +364,9 @@ export default {
 	},
 	async getActiveB2BCount(authGroup) {
 		return dal.getActiveB2BCount(authGroup);
+	},
+	async getAccountByEmailUsernameOrPhone(authGroup, data) {
+		return dal.getAccountByEmailUsernameOrPhone(authGroup, data);
 	}
 };
 

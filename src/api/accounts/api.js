@@ -6,6 +6,7 @@ import group from '../authGroup/group';
 import orgProfile from '../profiles/profiles/org';
 import orgs from '../orgs/orgs';
 import challenge from '../plugins/challenge/challenge';
+import states from '../plugins/state/state';
 import iat from '../oidc/initialAccess/iat';
 import cl from '../oidc/client/clients';
 import permissions from '../../permissions';
@@ -267,12 +268,9 @@ const api = {
 				access
 			};
 			try {
-				//console.info(req.authInfo);
-				const result = await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
-				//console.info(result);
+				await iat.deleteOne(req.authInfo.token._id, req.authGroup._id);
 			} catch (error) {
-				console.error(error);
-				console.error('could not clean token');
+				console.error(error, 'could not clean token');
 			}
 			return res.respond(say.created(out, RESOURCE));
 		} catch (error) {
@@ -281,8 +279,7 @@ const api = {
 					const aDone = await acct.deleteAccount(req.authGroup, account._id);
 					if(!aDone) throw new Error('Account delete not complete');
 				} catch (error) {
-					console.error(error);
-					console.info('Account Rollback: There was a problem and you may need the admin to finish setup');
+					console.error(error,'Account Rollback: There was a problem and you may need the admin to finish setup' );
 				}
 			}
 			if (client) {
@@ -290,8 +287,7 @@ const api = {
 					const cDone = await client.deleteOne(req.authGroup, client.client_id);
 					if(!cDone) throw new Error('Client delete not complete');
 				} catch (error) {
-					console.error(error);
-					console.info('Client Rollback: There was a problem and you may need the admin to finish setup');
+					console.error(error, 'Client Rollback: There was a problem and you may need the admin to finish setup');
 				}
 			}
 			ueEvents.emit(req.authGroup.id, 'ue.account.error', error);
@@ -708,8 +704,7 @@ const api = {
 			try {
 				await iat.deleteOne(req.user?.jti, authGroup.id);
 			} catch(e) {
-				console.info('Issue with token cleanup');
-				console.error(e);
+				console.error(e, 'Issue with token cleanup');
 			}
 			return res.respond(say.ok({ codes: rC.codes, password, ...JSON.parse(JSON.stringify(account)) }, RESOURCE));
 		} catch (error) {
@@ -860,6 +855,31 @@ const api = {
 			next (error);
 		}
 	},
+	async getAccountLogins(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			if(!req.query.lookup) throw Boom.badRequest('Username, email or phone is required');
+			const user = await acct.getAccountByEmailUsernameOrPhone(req.authGroup.id, req.query.lookup);
+			if(!user) throw Boom.notFound(req.query.lookup);
+			if(req.query.state) {
+				try {
+					await states.addAccountToState(req.authGroup.id, req.query.state, user.id);
+				} catch (e) {
+					// not throwing an error if this does not work
+				}
+			}
+			const options = {
+				query: req.query.lookup,
+				state: req.query.state,
+				magicLink: (req.globalSettings?.notifications?.enabled === true && req.authGroup.config?.passwordLessSupport === true),
+				device: (req.globalSettings?.mfaChallenge?.enabled === true && req.authGroup.config?.mfaChallenge?.enable === true &&  user.mfa?.enabled === true),
+				passkey: (req.globalSettings?.webAuthN?.enabled === true && req.authGroup.pluginOptions?.webAuthN?.enable === true)
+			};
+			return res.respond(say.ok(options, RESOURCE));
+		} catch (error) {
+			next (error);
+		}
+	}
 };
 
 async function userOperation(req, user, password) {

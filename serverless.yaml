@@ -27,7 +27,6 @@ provider:
     UI_REFRESH_REDIRECT_PATH: ${env:UI_REFRESH_REDIRECT_PATH, file(./.env/env.${self:custom.local_env}.json):UI_REFRESH_REDIRECT_PATH}
     PROTOCOL: ${env:PROTOCOL, file(./.env/env.${self:custom.local_env}.json):PROTOCOL}
     MONGO: ${env:MONGO, file(./.env/env.${self:custom.local_env}.json):MONGO}
-    REPLICA: ${env:REPLICA, file(./.env/env.${self:custom.local_env}.json):REPLICA}
     PERSIST_HTTP_ERRORS: ${env:PERSIST_HTTP_ERRORS, file(./.env/env.${self:custom.local_env}.json):PERSIST_HTTP_ERRORS}
     WRITE_LOGS_TO_DB: ${env:WRITE_LOGS_TO_DB, file(./.env/env.${self:custom.local_env}.json):WRITE_LOGS_TO_DB}
     SINGLE_USE_IAT: ${env:SINGLE_USE_IAT, file(./.env/env.${self:custom.local_env}.json):SINGLE_USE_IAT}

@@ -124,7 +124,7 @@ describe('OIDC Pre/Post Middleware', () => {
 				]
 			};
 			await middle.validateAuthGroup(ctx);
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			expect(ctx.authGroup.id).toBe(authGroup.id);
 			expect(ctx.authGroup.name).toBe(authGroup.name);
 			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
@@ -158,7 +158,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			};
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.validateAuthGroup(ctx);
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			expect(spy).toHaveBeenCalled();
 			const args = spy.mock.calls[0];
 			expect(args[0].status).toBe(404);
@@ -224,7 +224,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			};
 			await middle.validateAuthGroup(ctx);
 			expect(NodeCache.prototype.get).not.toHaveBeenCalled();
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query, undefined);
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			expect(ctx.authGroup.id).toBe(authGroup.id);
 			expect(ctx.authGroup.name).toBe(authGroup.name);
 			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);

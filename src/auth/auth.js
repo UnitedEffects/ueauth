@@ -61,6 +61,28 @@ async (req, token, next) => {
 	}
 }));
 
+passport.use('iat-user-state', new BearerStrategy({
+	passReqToCallback: true
+},
+async (req, token, next) => {
+	try {
+		if (!req.authGroup) throw Boom.preconditionFailed('Auth Group not recognized');
+		if (req.authGroup.active !== true) return next(null, false);
+		if (!req.body.state) return next(null, false);
+		const authGroupId = req.authGroup._id;
+		const state = req.body.state;
+		const access = await iat.getOne(token, authGroupId);
+		if(!access) return next(null, false);
+		if(access?.payload?.state !== state) return next(null, false);
+		if(!access?.payload?.sub) return next(null, false);
+		const user = await account.getAccount(authGroupId, access.payload.sub);
+		if(!user) return next(null, false);
+		return next(null, user, access.payload);
+	} catch (error) {
+		return next(error);
+	}
+}));
+
 passport.use('iat-group-create', new BearerStrategy({
 	passReqToCallback: true
 },
@@ -311,7 +333,11 @@ export default {
 	isAccessOrSimpleIAT: passport.authenticate(['oidc', 'simple-iat'], {
 		session: false
 	}),
+	isAuthenticatedOrIATState: passport.authenticate(['iat-user-state', 'oidc'], {
+		session: false
+	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
+	isBasicOrBearer: passport.authenticate(['basic', 'oidc'], { session: false }),
 	isOIDCValid: passport.authenticate('oidc-token-validation', { session: false }),
 	isBasic: passport.authenticate('basic', { session: false }),
 	isSimpleIAT: passport.authenticate('simple-iat', { session: false }),
@@ -327,4 +353,13 @@ export default {
 			return core.whitelist(req, res, next);
 		}
 	},
+	async isQueryStateAndIAT(token, authGroupId, state) {
+		const iToken = await iat.getOne(token, authGroupId);
+		if(!iToken) throw Boom.unauthorized('This session may have expired');
+		if(iToken?.payload?.state !== state) throw Boom.forbidden('State does not match');
+		if(!iToken?.payload?.sub) throw Boom.forbidden('No user associated');
+		const user = await account.getAccount(authGroupId, iToken.payload.sub);
+		if(!user) throw Boom.forbidden('Unknown user');
+		return { user, token: iToken.payload };
+	}
 };

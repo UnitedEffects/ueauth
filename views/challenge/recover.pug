@@ -6,11 +6,11 @@ block content
         const authGroup = '#{authGroup}';
         const url = '#{request}';
     script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
-    script(nonce=nonce, src="https://unpkg.com/axios/dist/axios.min.js")
+    script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
     script
         include recovermfa.js
     body.bg.flex
-        .utility-panel
+        .panel.middle-panel
             if (flash)
                 #flash-container.flash-container.mfa-flash
                     p#flash=flash
@@ -32,11 +32,11 @@ block content
                     div
                         input#password(type='password' name='password' placeholder='Password' required='' autofocus='autofocus'  autocomplete='current-password')
                         label(for='password') Password
-                    button#recover-button.btn.btn-outline-dark.btn-custom.m-t-20 Recover
+                    button#recover-button.btn.btn-outline-dark.btn-custom.m-t-20 Continue
             div#notify
                 div#notify-ready
             div#resetting
-            center.m-t-5
+            .center.m-t-5
                 div#loading.m-t-20.hidden
             .tandc.p-b-20.center.width-auto
                 if (authGroup && authGroup.primaryTOS)

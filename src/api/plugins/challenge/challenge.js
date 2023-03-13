@@ -87,6 +87,9 @@ const chApi = {
 	async status(query) {
 		return dal.status(query);
 	},
+	async clearStatus(query) {
+		return dal.clearStatus(query);
+	},
 	async emailVerify(authGroup, global, account, state) {
 		const user = await acc.getAccount(authGroup.id, account);
 		const meta = {
@@ -145,7 +148,33 @@ const chApi = {
 		return warnings;
 	},
 	async initGroup(ag, global, type) {
+		let settings;
+		if(!global) {
+			settings = await plugins.getLatestPluginOptions();
+		} else settings = JSON.parse(JSON.stringify(global));
 		const { pInterface, provider } = await initInterface(global, type);
+		const privaCheck = settings.mfaChallenge.providers.filter((p) => {
+			return (p?.type?.toLowerCase() === 'privakey');
+		});
+		// because there is also a privakey webAuthN plugin, we want to use those value if it exists for the AG
+		if( ag.pluginOptions.webAuthN.enable === true && settings.webAuthN.enabled === true) {
+			if( ag.pluginOptions.webAuthN?.type?.toLowerCase() === 'privakey') {
+				if( privaCheck.length &&
+					ag.pluginOptions.webAuthN?.meta?.privakeyClient &&
+					ag.pluginOptions.webAuthN?.meta?.privakeySecret) {
+					return ag.pluginOptions.webAuthN.meta;
+				}
+				if(  privaCheck.length &&
+					ag.pluginOptions.webAuthN?.meta?.privakeyClient &&
+					ag.pluginOptions.webAuthN?.meta?.privakeySecret) {
+					const meta = JSON.parse(JSON.stringify(ag.pluginOptions.webAuthN.meta));
+					const CB = await pInterface.challengeCallback(provider, ag.id, meta.privakey.companyId, meta.privakey.appSpaceId, ag.pluginOptions.webAuthN?.meta?.privakeyClient);
+					meta.privakey.callbackId = CB.id;
+					return meta;
+				}
+			}
+		}
+		// otherwise create it...
 		if(pInterface) return pInterface.initGroup(ag, type, provider);
 		throw Boom.badRequest('MFA is not enabled for this Auth Group');
 	}

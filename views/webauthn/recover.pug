@@ -1,0 +1,61 @@
+extends ../uelayout
+
+block content
+    script(nonce=nonce, type="text/javascript").
+        let state = '#{state}';
+        const authGroupId = '#{authGroup.id}';
+        const domain = '#{domain}';
+        const user = `#{user}`;
+    script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
+    script(nonce=nonce, type='module')
+        include passkey.js
+    body.bg.flex
+        .panel.middle-panel
+            if (flash)
+                #flash-container.flash-container.mfa-flash
+                    p#flash=flash
+            else
+                #flash-container.hidden.flash-container.mfa-flash
+                    p#flash=flash
+            if (authGroupLogo)
+                img.logo(src=authGroupLogo alt='Platform Logo')
+            if (authGroup && authGroup.name)
+                p.org-name=authGroup.name
+            p#title.header=title
+            h5#instruct.center=message
+                p.description.center Setup will overwrite existing passkeys on #{authGroup.name}.
+            h3#altInstructions.hidden
+            #getInfo
+                .credentials
+                    p To get started, please type in your email address:
+                    div
+                        input#email(type='email' name='email' placeholder='Email' required='' autofocus='autofocus' onfocus='this.select()' autocomplete='username')
+                        label(for='email') Email
+                    button#continue.btn.btn-outline-dark.btn-custom.m-t-20 Continue
+            #auth.hidden
+                .credentials
+                    div#passwordless.hidden
+                        p Looks like there are a couple ways you can verify your identity. Choose one to continue.
+                        button#device.hidden.btn.btn-outline-dark.btn-custom.m-t-20 Use my mobile device
+                        button#magic.hidden.btn.btn-outline-dark.btn-custom.m-t-20 Send magic link email
+                        span.orsi or sign in using
+                    div
+                        input#password(type='password' name='password' placeholder='Password' required='' autofocus='autofocus'  autocomplete='current-password')
+                        label(for='password') Password
+                    button#login.btn.btn-outline-dark.btn-custom.m-t-20 Sign in
+            #deviceAuth.hidden
+                .credentials
+                    p Check your device to continue
+                    #device-try-again.hidden
+                        h4 Device identity verification failed
+                        p If you need to reconnect your device to your account, use the 'Set Device' link below. Refresh this page to try again.
+            .center.m-t-5
+                div#loading.m-t-20.hidden
+            .tandc.p-b-20.center.width-auto
+                if (authGroup && authGroup.primaryTOS)
+                    a(href=(authGroup.primaryTOS)) Terms of Service
+                if (authGroup && authGroup.primaryPrivacyPolicy)
+                    a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
+                if (authGroup && authGroup.primaryEmail)
+                    a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}
+                a(href='/' + authGroup + '/recover-mfa' target='_blank') Set Device

@@ -26,6 +26,20 @@ const api = {
 			next(error);
 		}
 	},
+	async toggleGlobalWebAuthN (req, res, next) {
+		try {
+			if (!req.body) return next(Boom.preconditionRequired('configuration body is required'));
+			if (req.body.enabled === true && !req.body.type) {
+				return next(Boom.preconditionRequired('Type is required'));
+			}
+			await permissions.enforceRoot(req.permissions);
+			const user = req.user.sub;
+			const result = await pins.toggleGlobalWebAuthN(req.body, user, req.authGroup);
+			return res.respond(say.created(result, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async toggleGlobalMFASettings(req, res, next) {
 		try {
 			if (!req.body) return next(Boom.preconditionRequired('configuration body is required'));
