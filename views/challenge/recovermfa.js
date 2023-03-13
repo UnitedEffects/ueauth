@@ -255,7 +255,9 @@ window.addEventListener( 'load', async function () {
 			};
 			if(code) data.code = code;
 			if(pk) data.providerKey = pk;
-			return basicRequest(data, event);
+			const authData = {}
+			if(iat) authData.token = iat;
+			return basicRequest(data, event, authData);
 		} catch(error) {
 			hideSpinner();
 			console.error(error);
