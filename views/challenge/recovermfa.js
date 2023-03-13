@@ -1,3 +1,9 @@
+import {
+	supported,
+	parseRequestOptionsFromJSON,
+	get
+} from 'https://cdn.jsdelivr.net/npm/@github/webauthn-json@2.1.1/dist/esm/webauthn-json.browser-ponyfill.js';
+
 window.addEventListener( 'load', async function () {
 	let count = 15;
 	let token;
@@ -6,6 +12,8 @@ window.addEventListener( 'load', async function () {
 	let password;
 	let method;
 	let providerKey;
+	let credentials;
+	let local;
 	const continueButton = $('#recover-button');
 	const eFlash = $('#flash');
 	const flashContainer = $('#flash-container');
@@ -14,7 +22,6 @@ window.addEventListener( 'load', async function () {
 	const emailInput = $('#email');
 	const passwordInput = $('#password');
 	const magic = $('#magic');
-	const device = $('#device');
 	const passkey = $('#passkey');
 	const passwordless = $('#passwordless');
 	const loginBasic = $('#login');
@@ -32,6 +39,8 @@ window.addEventListener( 'load', async function () {
 	const verifiedIdentity = $('#verifiedIdentity');
 	const codeInput = $('#code');
 	const codeLabel = $('#code-label');
+	const passKeySupport = supported();
+	const passKeyLink = $('#passkeyLink');
 
 	if(iat) {
 		unhide(verifiedIdentity)
@@ -103,8 +112,18 @@ window.addEventListener( 'load', async function () {
 
 	passkey.on('click', async (event) => {
 		try {
-			console.info('clicked passkey');
-			//todo
+			credentials = await webAuthNAuthenticate(event, username);
+			const local = localStorage.getItem(`${window.location.host}:${authGroupId}:${credentials.accountId}`);
+			if(!local) {
+				unhide(flashContainer);
+				eFlash.append('<span id="passkey-message">You may need to set up passkey to use this feature. Click Set Passkey and try again if this does not work.</span>')
+			}
+			if(credentials) {
+				const result = await parseRequestOptionsFromJSON({ publicKey: credentials.assertionOptions });
+				const data = await get(result);
+				if(data) return basicRequest({ state, passkey: { accountId: credentials.accountId, credential: data } }, event);
+			}
+			throw 'Passkey was not supported. You need to click "Set Passkey" to set that up. Try a different verification method.';
 		} catch (error) {
 			onError(error);
 		}
@@ -151,10 +170,9 @@ window.addEventListener( 'load', async function () {
 		if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
 		hide(getInfo);
 		unhide(auth);
-		if(result?.data?.data?.device || result?.data?.data?.magicLink || result?.data?.data?.passkey) unhide(passwordless);
-		if(result?.data?.data?.device) unhide(device);
+		if(result?.data?.data?.magicLink || (result?.data?.data?.passkey && passKeySupport === true)) unhide(passwordless);
 		if(result?.data?.data?.magicLink) unhide(magic);
-		if(result?.data?.data?.passkey) unhide(passkey);
+		if(result?.data?.data?.passkey && passKeySupport === true) unhide(passkey);
 	}
 
 	async function basicRequest(data, event, authData = {}) {
@@ -162,7 +180,6 @@ window.addEventListener( 'load', async function () {
 			if(!data.providerKey && !data.code) {
 				if(!auth.token) unhide(getInfo);
 				else unhide(verifiedIdentity);
-				//getInfo.css({ display: 'inherit' });
 			}
 			eFlash.append('');
 			hide(jResetting);
@@ -171,8 +188,11 @@ window.addEventListener( 'load', async function () {
 			event.preventDefault();
 			if(!username) username = emailInput.val();
 			if(!password) password = passwordInput.val();
-			this.disabled=true;
-			const options = (authData.token) ? {
+			const options = (data.passkey?.data) ? {
+				method: 'post',
+				url: url,
+				data
+			} : (authData.token) ? {
 				method: 'post',
 				url: url,
 				headers: {
@@ -188,18 +208,14 @@ window.addEventListener( 'load', async function () {
 				},
 				data
 			};
-			console.info(options);
 			showSpinner()
 			const result = await axios(options);
 			hideSpinner()
 			if(result?.status === 200) {
-				//instructions
 				hide(verifiedIdentity);
 				hide(getInfo);
 				hide(auth);
-				//getInfo.css({ display: 'none' });
 				unhide(jResetting);
-				//jResetting.css({ display: 'inherit' });
 				let instruct = '<p id="reset-instructions">You are ready to roll. Follow the instructions below. When you finish, click the button to close this window and go back to your login screen.</p><ol class="m-t-20 list-group list-group-flush list-group-numbered">';
 				result.data?.data?.instructions.map((i) => {
 					instruct = `${instruct}<li class="list-group-item">${i}</li>`;
@@ -234,7 +250,6 @@ window.addEventListener( 'load', async function () {
 		} catch (error) {
 			console.error('ERROR CAUGHT', error);
 			hideSpinner();
-			this.disabled=false;
 			reset();
 			unhide(flashContainer);
 			flashContainer.css({ visibility: 'inherit', position: 'inherit' });
@@ -341,5 +356,27 @@ window.addEventListener( 'load', async function () {
 		event.preventDefault();
 		if(!username) username = emailInput.val();
 		return window.location.replace(`${domain}/${authGroupId}/recover-mfa/email-verify?state=${state}&lookup=${username}`);
+	}
+
+	async function webAuthNAuthenticate(event, email) {
+		event.preventDefault()
+		hide(flashContainer);
+		const options = {
+			method: 'post',
+			url: `${domain}/api/${authGroupId}/webauthn/authenticate`,
+			data: {
+				email
+			}
+		};
+
+		showSpinner();
+		const result = await axios(options);
+		hideSpinner();
+		if(result?.data?.data?.success !== true) throw new Error('unsuccessful auth request');
+		return result.data.data;
+	}
+
+	if(passKeySupport === true) {
+		unhide(passKeyLink);
 	}
 });

@@ -1,7 +1,7 @@
 {
   "name": "ue-auth",
   "altName": "UE-Auth",
-  "version": "1.29.3-wip",
+  "version": "1.29.4-wip",
   "description": "UE Auth is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions",
   "private": false,
   "license": "SEE LICENSE IN ./LICENSE.md",

@@ -11,7 +11,7 @@ block content
         const email = '#{email}';
     script(nonce=nonce, src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js")
     script(nonce=nonce, src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
-    script
+    script(nonce=nonce, type='module')
         include recovermfa.js
     body.bg.flex
         .panel.middle-panel
@@ -72,5 +72,6 @@ block content
                     a(href=(authGroup.primaryTOS)) Terms of Service
                 if (authGroup && authGroup.primaryPrivacyPolicy)
                     a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
+                a#passkeyLink.hidden(href='/' + authGroup.id + '/set-passkey' target='_blank') Set Passkey
                 if (authGroup && authGroup.primaryEmail)
                     a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}

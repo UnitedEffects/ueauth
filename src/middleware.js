@@ -15,6 +15,7 @@ import mongoose from 'mongoose';
 import spec from './swagger';
 import plugins from './api/plugins/plugins';
 import challenges from './api/plugins/challenge/challenge';
+import webauthn from './api/plugins/webauthn/webauthn';
 
 const { doc: swag } = spec;
 const config = require('./config');
@@ -405,6 +406,26 @@ const mid = {
 	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
 	isWhitelisted: authorizer.isWhitelisted,
 	isPublicOrAuth: authorizer.publicOrAuth,
+	async isPasskeyBodyOrBasicOrIATStateOrOIDC (req, res, next) {
+		try {
+			if(req.body.passkey) {
+				if(!req.authGroup) throw Boom.forbidden();
+				if(req.globalSettings.webAuthN.enabled !== true) throw Boom.unauthorized();
+				if(req.authGroup.pluginOptions.webAuthN.enable !== true) throw Boom.unauthorized();
+				if(!req.body?.passkey?.credential) throw Boom.unauthorized();
+				if(!req.body?.passkey?.accountId) throw Boom.unauthorized();
+				const validate = await webauthn.finishAuth(req.authGroup, req.globalSettings, {accountId: req.body.passkey.accountId, credential: req.body.passkey.credential});
+				if(validate.success !== true) throw Boom.unauthorized();
+				const user = await account.getAccount(req.authGroup.id, req.body.passkey.accountId);
+				if(!user) throw Boom.unauthorized();
+				req.user = user;
+				return next();
+			}
+			return authorizer.isBasicOrIATStateOrOIDC(req, res, next);
+		} catch(error) {
+			return authorizer.isBasicOrIATStateOrOIDC(req, res, next);
+		}
+	},
 	async isQueryStateAndIAT (req, res, next) {
 		try {
 			if(!req.authGroup) throw Boom.forbidden();
