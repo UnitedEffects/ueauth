@@ -192,7 +192,7 @@ export default {
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
 				if(!account.mfa?.enabled) {
 					// if account is not mfaEnabled, enable and send instructions
-					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+					//todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
 					return res.respond(say.ok(result, 'MFA RECOVERY'));
 				}
@@ -243,7 +243,7 @@ export default {
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
 
-				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+				//todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,
@@ -256,6 +256,12 @@ export default {
 					uri,
 					requestInstructions: 'Send header authorization: bearer token along with body json including state and selection = "email" or "device" to the uri'
 				};
+				console.info('over here...', req.body);
+				if(req.body.passkey?.credential) {
+					const newToken = await iat.generateSimpleIAT(900, ['auth_group'], authGroup, account, state);
+					output.passkeyToken = newToken.jti;
+				}
+				console.info(output);
 				return res.respond(say.accepted(output, 'DEVICE RECOVERY'));
 			}
 			throw Boom.forbidden(`Device recovery is not available on the ${authGroup.name} Platform`);

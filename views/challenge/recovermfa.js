@@ -13,6 +13,7 @@ window.addEventListener( 'load', async function () {
 	let method;
 	let providerKey;
 	let credentials;
+	let passkeyToken;
 	let local;
 	const continueButton = $('#recover-button');
 	const eFlash = $('#flash');
@@ -49,7 +50,6 @@ window.addEventListener( 'load', async function () {
 
 	function hide(element) {
 		try {
-			console.info('hiding', element);
 			element.addClass('hidden');
 		} catch(e) {
 			console.error(e, 'moving on');
@@ -59,18 +59,18 @@ window.addEventListener( 'load', async function () {
 
 	function unhide(element) {
 		try {
-			console.info('showing', element);
 			element.removeClass('hidden');
 		} catch(e) {
 			console.error(e, 'moving on');
 		}
 	}
 
-	function onError(error) {
+	function onError(error, msg) {
 		hideSpinner();
 		console.error(error);
 		unhide(flashContainer);
-		eFlash.append('<p>There was an error. Please try again later.</p>');
+		if(msg) eFlash.append(`<p>${msg}</p>`);
+		else eFlash.append('<p>There was an error. Please try again later.</p>');
 	}
 
 	const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -123,7 +123,7 @@ window.addEventListener( 'load', async function () {
 				const data = await get(result);
 				if(data) return basicRequest({ state, passkey: { accountId: credentials.accountId, credential: data } }, event);
 			}
-			throw 'Passkey was not supported. You need to click "Set Passkey" to set that up. Try a different verification method.';
+			throw 'Passkey was not supported. You need to click "Set Passkey" to set that up or try a different verification method.';
 		} catch (error) {
 			onError(error);
 		}
@@ -156,23 +156,28 @@ window.addEventListener( 'load', async function () {
 	});
 
 	async function findUser(state, event) {
-		hide(flashContainer);
-		event.preventDefault();
-		count = 15;
-		if(!username) username = emailInput.val();
-		const options = {
-			method: 'get',
-			url: `${domain}/api/${authGroupId}/account/login/options?lookup=${username}&state=${state}`
-		};
-		showSpinner();
-		const result = await axios(options);
-		hideSpinner();
-		if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
-		hide(getInfo);
-		unhide(auth);
-		if(result?.data?.data?.magicLink || (result?.data?.data?.passkey && passKeySupport === true)) unhide(passwordless);
-		if(result?.data?.data?.magicLink) unhide(magic);
-		if(result?.data?.data?.passkey && passKeySupport === true) unhide(passkey);
+		try {
+			hide(flashContainer);
+			event.preventDefault();
+			count = 15;
+			if(!username) username = emailInput.val();
+			if(!username) throw 'Email required';
+			const options = {
+				method: 'get',
+				url: `${domain}/api/${authGroupId}/account/login/options?lookup=${username}&state=${state}`
+			};
+			showSpinner();
+			const result = await axios(options);
+			hideSpinner();
+			if(result?.data?.data?.state !== state) throw new Error(`unknown state: ${state}`);
+			hide(getInfo);
+			unhide(auth);
+			if(result?.data?.data?.magicLink || (result?.data?.data?.passkey && passKeySupport === true)) unhide(passwordless);
+			if(result?.data?.data?.magicLink) unhide(magic);
+			if(result?.data?.data?.passkey && passKeySupport === true) unhide(passkey);
+		} catch (e) {
+			onError(true, e);
+		}
 	}
 
 	async function basicRequest(data, event, authData = {}) {
@@ -216,6 +221,7 @@ window.addEventListener( 'load', async function () {
 				hide(getInfo);
 				hide(auth);
 				unhide(jResetting);
+				if(result.data?.data?.passkeyToken) passkeyToken = result.data.data.passkeyToken;
 				let instruct = '<p id="reset-instructions">You are ready to roll. Follow the instructions below. When you finish, click the button to close this window and go back to your login screen.</p><ol class="m-t-20 list-group list-group-flush list-group-numbered">';
 				result.data?.data?.instructions.map((i) => {
 					instruct = `${instruct}<li class="list-group-item">${i}</li>`;
@@ -241,6 +247,7 @@ window.addEventListener( 'load', async function () {
 				//selection
 				token = result?.data?.data?.token;
 				notifyUrl = result?.data?.data?.uri;
+				if(result.data?.data?.passkeyToken) passkeyToken = result.data.data.passkeyToken;
 				hide(getInfo);
 				hide(auth);
 				hide(verifiedIdentity);
@@ -271,7 +278,8 @@ window.addEventListener( 'load', async function () {
 			if(code) data.code = code;
 			if(pk) data.providerKey = pk;
 			const authData = {}
-			if(iat) authData.token = iat;
+			if(passkeyToken) authData.token = passkeyToken;
+			else if(iat) authData.token = iat;
 			return basicRequest(data, event, authData);
 		} catch(error) {
 			hideSpinner();
@@ -302,7 +310,6 @@ window.addEventListener( 'load', async function () {
 					selection: type
 				}
 			};
-
 			showSpinner()
 			const result = await axios(options);
 			hideSpinner()
