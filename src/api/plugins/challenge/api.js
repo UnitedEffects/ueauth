@@ -184,7 +184,7 @@ export default {
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
 				if(!account.mfa?.enabled) {
 					// if account is not mfaEnabled, enable and send instructions
-					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+					// todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
 					return res.respond(say.ok(result, 'MFA RECOVERY'));
 				}
@@ -235,7 +235,7 @@ export default {
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
 
-				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+				// todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,

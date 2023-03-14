@@ -71,6 +71,11 @@ window.addEventListener( 'load', async function () {
 		unhide(flashContainer);
 		if(msg) eFlash.append(`<p>${msg}</p>`);
 		else eFlash.append('<p>There was an error. Please try again later.</p>');
+		unhide(getInfo);
+		hide(auth);
+		hide(verifiedIdentity);
+		hide(jNotify);
+		hide(notifyReady);
 	}
 
 	const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -112,6 +117,7 @@ window.addEventListener( 'load', async function () {
 
 	passkey.on('click', async (event) => {
 		try {
+			hide(auth);
 			credentials = await webAuthNAuthenticate(event, username);
 			const local = localStorage.getItem(`${window.location.host}:${authGroupId}:${credentials.accountId}`);
 			if(!local) {
@@ -181,14 +187,13 @@ window.addEventListener( 'load', async function () {
 
 	async function basicRequest(data, event, authData = {}) {
 		try {
-			if(!data.providerKey && !data.code) {
-				if(!auth.token) unhide(getInfo);
-				else unhide(verifiedIdentity);
-			}
-			eFlash.append('');
+			showSpinner()
+			hide(flashContainer);
+			hide(auth);
 			hide(jResetting);
 			hide(jNotify);
 			hide(notifyReady);
+			hide(verifiedIdentity);
 			event.preventDefault();
 			if(!username) username = emailInput.val();
 			if(!password) password = passwordInput.val();
@@ -200,7 +205,7 @@ window.addEventListener( 'load', async function () {
 				method: 'post',
 				url: url,
 				headers: {
-					Authorization: `bearer ${authData.token}`
+					Authorization: `bearer ${authData.token}`,
 				},
 				data
 			} : {
@@ -212,7 +217,7 @@ window.addEventListener( 'load', async function () {
 				},
 				data
 			};
-			showSpinner()
+			console.info(options);
 			const result = await axios(options);
 			hideSpinner()
 			if(result?.status === 200) {
@@ -254,15 +259,14 @@ window.addEventListener( 'load', async function () {
 				notifyMessage.append('<span id="existing-message">It looks like you already have device enabled. This action would override your current settings so we need to make sure its you. Click one of the methods to double check.</span>')
 			} else throw result;
 		} catch (error) {
-			console.error('ERROR CAUGHT', error);
+			console.error('ERROR CAUGHT', error.response);
 			hideSpinner();
 			reset();
 			unhide(flashContainer);
-			flashContainer.css({ visibility: 'inherit', position: 'inherit' });
-			if(error.status === 401) {
-				eFlash.append('<p>Your username and password were not valid...</p>');
+			if(error.response?.status === 401) {
+				onError(true, 'Unable to complete the operation. Your identity confirmation may have expired or your username/password was incorrect.')
 			} else {
-				eFlash.append('<p>There was an error. Please try again later. If the problem continues, contact admin using the link below.</p>');
+				onError(true, 'There was an error. Please try again later. If the problem continues, contact admin using the link below.')
 			}
 		}
 	}
@@ -286,7 +290,7 @@ window.addEventListener( 'load', async function () {
 			notifyDevice.prop('disabled', false);
 			notifyEmail.prop('disabled', false);
 			// start over...
-			eFlash.append('<p>There was an error. Please try again later.</p>');
+			onError(true,'There was an error. Please try again later.');
 			reset();
 		}
 	}

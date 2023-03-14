@@ -36,7 +36,7 @@ passport.use('basic', new BasicStrategy({
 		if(await user.verifyPassword(password)) {
 			return done(null, user);
 		}
-		
+
 		done(null, false);
 	} catch (error) {
 		done(null, false);
@@ -221,10 +221,8 @@ async (req, token, next) => {
 				return next(null, false);
 			}
 		}
-		console.error('Token expired');
 		return next(null, false);
 	} catch (error) {
-		console.error(error);
 		return next(null, false);
 	}
 }
@@ -336,7 +334,7 @@ export default {
 	isAuthenticatedOrIATState: passport.authenticate(['iat-user-state', 'oidc'], {
 		session: false
 	}),
-	isBasicOrIATStateOrOIDC: passport.authenticate(['basic', 'iat-user-state', 'oidc'], {
+	isBasicOrIATStateOrOIDC: passport.authenticate(['iat-user-state', 'basic', 'oidc'], {
 		session: false
 	}),
 	isAuthenticated: passport.authenticate('oidc', { session: false }),
