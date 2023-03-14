@@ -15,6 +15,7 @@ import mongoose from 'mongoose';
 import spec from './swagger';
 import plugins from './api/plugins/plugins';
 import challenges from './api/plugins/challenge/challenge';
+import webauthn from './api/plugins/webauthn/webauthn';
 
 const { doc: swag } = spec;
 const config = require('./config');
@@ -392,7 +393,7 @@ const mid = {
 	access: access.enforce,
 	setRoleTarget: access.setRoleTarget,
 	enforceRole: access.enforceRole,
-	// authorization
+	// authorizations
 	isAuthenticatedOrIAT: authorizer.isAuthenticatedOrIATUserUpdates,
 	iatQueryCodeAuth: authorizer.iatQueryCodeAuth,
 	isAuthenticated: authorizer.isAuthenticated,
@@ -400,6 +401,47 @@ const mid = {
 	isOIDCValid: authorizer.isOIDCValid,
 	isBasic: authorizer.isBasic,
 	isBasicOrBearer: authorizer.isBasicOrBearer,
+	isBasicOrIATStateOrOIDC: authorizer.isBasicOrIATStateOrOIDC,
+	isSimpleIAT: authorizer.isSimpleIAT,
+	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
+	isWhitelisted: authorizer.isWhitelisted,
+	isPublicOrAuth: authorizer.publicOrAuth,
+	async isPasskeyBodyOrBasicOrIATStateOrOIDC (req, res, next) {
+		try {
+			if(req.body.passkey) {
+				if(!req.authGroup) throw Boom.forbidden();
+				if(req.globalSettings.webAuthN.enabled !== true) throw Boom.unauthorized();
+				if(req.authGroup.pluginOptions.webAuthN.enable !== true) throw Boom.unauthorized();
+				if(!req.body?.passkey?.credential) throw Boom.unauthorized();
+				if(!req.body?.passkey?.accountId) throw Boom.unauthorized();
+				const validate = await webauthn.finishAuth(req.authGroup, req.globalSettings, {accountId: req.body.passkey.accountId, credential: req.body.passkey.credential});
+				if(validate.success !== true) throw Boom.unauthorized();
+				const user = await account.getAccount(req.authGroup.id, req.body.passkey.accountId);
+				if(!user) throw Boom.unauthorized();
+				req.user = user;
+				return next();
+			}
+			return authorizer.isBasicOrIATStateOrOIDC(req, res, next);
+		} catch(error) {
+			return authorizer.isBasicOrIATStateOrOIDC(req, res, next);
+		}
+	},
+	async isQueryStateAndIAT (req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			if(!req.query.token) throw Boom.forbidden();
+			if(!req.query.state) throw Boom.forbidden();
+			const { user, token } = await authorizer.isQueryStateAndIAT(req.query.token, req.authGroup.id, req.query.state);
+			if(!user?.id) throw Boom.forbidden();
+			if(!token?.jti) throw Boom.forbidden();
+			if(token?.state !== req.query.state) throw Boom.forbidden();
+			req.user = user;
+			req.authInfo = token;
+			return next();
+		} catch (error) {
+			next(error);
+		}
+	},
 	async isBasicBearerOrDevice (req, res, next) {
 		if(req.body?.providerKey && req.body?.accountId && req.body?.state && req.authGroup) {
 			//this is a confirmation of mfa
@@ -424,26 +466,6 @@ const mid = {
 			}
 		}
 		return authorizer.isBasicOrBearer(req, res, next);
-	},
-	isSimpleIAT: authorizer.isSimpleIAT,
-	isAccessOrSimpleIAT: authorizer.isAccessOrSimpleIAT,
-	isWhitelisted: authorizer.isWhitelisted,
-	isPublicOrAuth: authorizer.publicOrAuth,
-	async isQueryStateAndIAT (req, res, next) {
-		try {
-			if(!req.authGroup) throw Boom.forbidden();
-			if(!req.query.token) throw Boom.forbidden();
-			if(!req.query.state) throw Boom.forbidden();
-			const { user, token } = await authorizer.isQueryStateAndIAT(req.query.token, req.authGroup.id, req.query.state);
-			if(!user?.id) throw Boom.forbidden();
-			if(!token?.jti) throw Boom.forbidden();
-			if(token?.state !== req.query.state) throw Boom.forbidden();
-			req.user = user;
-			req.authInfo = token;
-			return next();
-		} catch (error) {
-			next(error);
-		}
 	}
 };
 

@@ -252,6 +252,12 @@ input:focus + label, input:not(:placeholder-shown) + label {
 	padding: 40px 60px 60px 60px;
 }
 
+@media only screen and (max-width: 768px) {
+	[class*="utility-panel"] {
+		width: 100%;
+	}
+}
+
 .header {
 	font-size: 32px;
 	font-weight: 300;

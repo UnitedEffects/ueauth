@@ -28,7 +28,7 @@ router.post('/:group/mfa/safe-recovery', [
 router.post('/:group/mfa/instructions', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings,
-	m.isBasic
+	m.isPasskeyBodyOrBasicOrIATStateOrOIDC
 ], challengeApi.getMFAInstruction);
 
 // Initiate a challenge

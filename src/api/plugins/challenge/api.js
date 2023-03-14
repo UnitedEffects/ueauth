@@ -7,6 +7,7 @@ import {say} from '../../../say';
 import iat from '../../oidc/initialAccess/iat';
 import crypto from 'crypto';
 import acct from '../../accounts/account';
+import n from '../notifications/notifications';
 
 const config = require('../../../config');
 
@@ -68,23 +69,71 @@ export default {
 			const { safeAG, authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(authGroup?.config?.mfaChallenge?.enable === true &&
 				req.globalSettings?.mfaChallenge?.enabled === true) {
-				let state;
-				if(!req.query.state) {
-					state = crypto.randomBytes(32).toString('hex');
-					const path = req.path;
-					return res.redirect(`${path}?state=${state}`);
+				let state = (req.query.state) ? req.query.state : crypto.randomBytes(32).toString('hex');
+				if(!req.query.token) {
+					const stateData = {
+						authGroup: req.authGroup.id,
+						stateValue: state
+					};
+					await states.saveState(stateData);
 				}
-				state = req.query.state;
+
 				return res.render('challenge/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
 					state,
+					token: req.query.token,
+					accountId: req.query.accountId,
+					email: req.query.email,
 					title: 'Device Setup Wizard',
 					message: 'You can use this wizard to connect or reconnect your account to your device so you can use MFA or login with your device. You might need to do this if you lost your device, deleted the device app, or revoked your service on the app. This process will revoke all existing keys on any devices you currently have.',
-					request: `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/instructions`
+					request: `${config.PROTOCOL}://${(req.customDomain) ? req.customDomain : config.SWAGGER}/api/${authGroup.id}/mfa/instructions`,
+					domain: `${config.PROTOCOL}://${(req.customDomain) ? req.customDomain : config.SWAGGER}`,
 				});
 			}
 			throw Boom.forbidden(`Device recovery is not available on the ${authGroup.name} Platform`);
+		} catch (error) {
+			next(error);
+		}
+	},
+	async verifyIdentByEmail(req, res, next) {
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+			let iAccessToken;
+			try {
+				if(!req.query.state) throw Boom.badRequest('State required');
+				if(!req.query.lookup) throw Boom.badRequest('Email required');
+				const lookup = req.query.lookup;
+				const state = req.query.state;
+				const validate = await states.findStateNoAcc(authGroup.id, state);
+				if(!validate) throw Boom.forbidden();
+				const account = await acc.getAccountByEmailUsernameOrPhone(authGroup.id, lookup);
+				if(!account) throw Boom.forbidden();
+				iAccessToken = await iat.generateSimpleIAT(900, ['auth_group'], authGroup, account, state);
+				const notificationData = emailVerifyNotification(authGroup, account, iAccessToken, state, req.customDomain);
+				await n.notify(req.globalSettings, notificationData, req.authGroup);
+				return res.render('response/response', {
+					title: 'SUCCESS!',
+					message: 'Check your email to continue.',
+					authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
+					splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+					authGroup: safeAG
+				});
+			} catch (e) {
+				console.error(e);
+				if(iAccessToken) {
+					await iat.deleteOne(iAccessToken.jti, authGroup.id);
+				}
+				return res.render('response/response', {
+					title: 'Unable to verify you',
+					message: 'Something went wrong. Wait a bit and then try again.',
+					authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
+					splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+					authGroup: safeAG,
+					passkey: true
+				});
+			}
 		} catch (error) {
 			next(error);
 		}
@@ -101,7 +150,7 @@ export default {
 			let result;
 			switch (selection.toLowerCase()) {
 			case 'email':
-				result = await challenge.emailVerify(authGroup, req.globalSettings, user, state);
+				result = await challenge.emailVerify(authGroup, req.globalSettings, user, state, req.customDomain);
 				if(!result) throw Boom.badRequest(`The ${authGroup.name} platform ran into an issue accessing the notification service. Please try again later and if the issue continues, contact the administrator.`);
 				return res.respond(say.ok({ selection: 'email', sent: true }));
 			case 'device':
@@ -135,7 +184,7 @@ export default {
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
 				if(!account.mfa?.enabled) {
 					// if account is not mfaEnabled, enable and send instructions
-					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+					// todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
 					return res.respond(say.ok(result, 'MFA RECOVERY'));
 				}
@@ -185,27 +234,47 @@ export default {
 
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
-				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+
+				// todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,
 					uid: state
 				};
 				const token = await iat.generateIAT(360, ['auth_group'], authGroup, meta);
-				const uri = `${config.PROTOCOL}://${(authGroup.aliasDnsOIDC) ? authGroup.aliasDnsOIDC : config.SWAGGER}/api/${authGroup.id}/mfa/safe-recovery`;
+				const uri = `${config.PROTOCOL}://${(req.customDomain) ? req.customDomain : config.SWAGGER}/api/${authGroup.id}/mfa/safe-recovery`;
 				const output = {
 					token: token.jti,
 					uri,
 					requestInstructions: 'Send header authorization: bearer token along with body json including state and selection = "email" or "device" to the uri'
 				};
-				return res.respond(say.accepted(output, 'MFA RECOVERY'));
+				if(req.body.passkey?.credential) {
+					const newToken = await iat.generateSimpleIAT(900, ['auth_group'], authGroup, account, state);
+					output.passkeyToken = newToken.jti;
+				}
+				return res.respond(say.accepted(output, 'DEVICE RECOVERY'));
 			}
-			throw Boom.forbidden(`MFA recovery is not available on the ${authGroup.name} Platform`);
+			throw Boom.forbidden(`Device recovery is not available on the ${authGroup.name} Platform`);
 		} catch (error) {
 			next(error);
 		}
 	}
 };
+
+function emailVerifyNotification(authGroup, user, iAccessToken, state, customDomain) {
+	return {
+		iss: `${config.PROTOCOL}://${(customDomain) ? customDomain : config.SWAGGER}/${authGroup.id}`,
+		createdBy: `proxy-${user.id}`,
+		type: 'passwordless',
+		formats: ['email'],
+		recipientUserId: user.id,
+		recipientEmail: user.email,
+		recipientSms: user.txt,
+		screenUrl: `${config.PROTOCOL}://${(customDomain) ? customDomain : config.SWAGGER}/${authGroup.id}/recover-mfa?token=${iAccessToken.jti}&state=${state}&accountId=${user.id}&email=${user.email}`,
+		subject: `${authGroup.prettyName} - Device Setup Verify Identity`,
+		message: 'You have requested an email identity verification. Click the link to continue. This link will expire in 15 minutes.',
+	};
+}
 
 async function bindAndSendInstructions(req, mfaAcc, account) {
 	const { authGroup } = await group.safeAuthGroup(req.authGroup);
