@@ -70,22 +70,14 @@ export default {
 			if(authGroup?.config?.mfaChallenge?.enable === true &&
 				req.globalSettings?.mfaChallenge?.enabled === true) {
 				let state = (req.query.state) ? req.query.state : crypto.randomBytes(32).toString('hex');
-				/*
-				if(!req.query.state) {
-					state = crypto.randomBytes(32).toString('hex');
-					const path = req.path;
-					return res.redirect(`${path}?state=${state}`);
-				}
-				 */
 				if(!req.query.token) {
-					console.info('saving...');
 					const stateData = {
 						authGroup: req.authGroup.id,
 						stateValue: state
 					};
 					await states.saveState(stateData);
 				}
-				console.info('state', state);
+
 				return res.render('challenge/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
@@ -192,7 +184,7 @@ export default {
 				const mfaAcc = { mfaEnabled: account.mfa.enabled, accountId: account.id };
 				if(!account.mfa?.enabled) {
 					// if account is not mfaEnabled, enable and send instructions
-					//todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 					const result = await bindAndSendInstructions(req, mfaAcc, account);
 					return res.respond(say.ok(result, 'MFA RECOVERY'));
 				}
@@ -243,7 +235,7 @@ export default {
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
 
-				//todo await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,
@@ -256,12 +248,10 @@ export default {
 					uri,
 					requestInstructions: 'Send header authorization: bearer token along with body json including state and selection = "email" or "device" to the uri'
 				};
-				console.info('over here...', req.body);
 				if(req.body.passkey?.credential) {
 					const newToken = await iat.generateSimpleIAT(900, ['auth_group'], authGroup, account, state);
 					output.passkeyToken = newToken.jti;
 				}
-				console.info(output);
 				return res.respond(say.accepted(output, 'DEVICE RECOVERY'));
 			}
 			throw Boom.forbidden(`Device recovery is not available on the ${authGroup.name} Platform`);

@@ -131,7 +131,6 @@ window.addEventListener( 'load', async function () {
 
 	magic.on('click', async (event) => {
 		try {
-			console.info('clicked magic');
 			return sendEmail(state, event);
 		} catch (error) {
 			onError(error);
