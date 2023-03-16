@@ -243,7 +243,7 @@ const authGroup = new mongoose.Schema({
 				loginOrientation: {
 					type: String,
 					enum: ['left', 'middle', 'right'],
-					default: 'right'
+					default: 'middle'
 				},
 				bgGradientLow: {
 					type: String,
