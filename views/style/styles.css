@@ -14,8 +14,9 @@ body, html {
 }
 
 .bg {
-	background: url("https://assets.uecore.io/ueauth/20220221.1/background.jpg") no-repeat center center fixed;
+	/*background: url("/background.jpg") no-repeat center center fixed;*/
   	height: 100%;
+	background: #fffdfa;
 	background-size: cover;
 }
 
@@ -48,7 +49,7 @@ button .federated {
 	font-size: 16px;
 	font-weight: 400;
 	line-height: 44px;
-	background-color: #004A8F;
+	background-color: #0026AD;
 	border-radius: 4px;
 	color: #fff;
 	border: none;
@@ -61,7 +62,7 @@ button .federated {
 
 button:hover {
 	cursor: pointer;
-	background-color: #00386d;
+	background-color: #012296;
 	box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 }
 
@@ -137,12 +138,12 @@ input:focus + label, input:not(:placeholder-shown) + label {
 }
 
 .middle-panel {
-	margin: 120px auto;
+	margin: 100px auto;
 	width: 480px;
 	border-radius: 8px;
 	box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
 	box-sizing: border-box;
-	padding: 40px 60px 60px 60px;
+	padding: 40px 60px 20px 60px;
 }
 
 .login-canvas-view {
@@ -165,7 +166,7 @@ input:focus + label, input:not(:placeholder-shown) + label {
 	margin: 24px auto 0 auto;
 	border: 1px solid #B8BFBD;
 	border-radius: 8px;
-	padding: 32px 40px 80px 40px;
+	padding: 32px 40px 40px 40px;
 	box-sizing: border-box;
 }
 
@@ -179,7 +180,7 @@ input:focus + label, input:not(:placeholder-shown) + label {
 }
 
 .credentials div:first-of-type {
-	margin-bottom: 20px;
+	margin-bottom: 10px;
 }
 
 .sign-in {
@@ -203,9 +204,18 @@ input:focus + label, input:not(:placeholder-shown) + label {
 .fpsw {
 	display: block;
 	text-align: left;
-	margin: 8px auto 40px auto;
+	margin: 0 auto 10px auto;
 	font-size: 12px;
 	font-weight: 700;
+}
+
+.signup {
+	margin-top: 32px;
+	font-weight: 700;
+}
+
+.signup a {
+	color: #353434;
 }
 
 .fpsw a {
