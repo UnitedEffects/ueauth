@@ -7,7 +7,11 @@ const { prod, doc: swagger } = spec;
 export default {
 	async serveSwaggerUI(req, res, next) {
 		try {
-			return res.render('swagger', { title: pJson.name, group: req.params.group || undefined });
+			return res.render('swagger', {
+				title: pJson.name,
+				group: req.params.group || undefined,
+				favicon: (req.authGroup) ? req.authGroup?.config?.ui?.skin?.favicon : undefined
+			});
 		} catch (e) {
 			next(e);
 		}
@@ -34,7 +38,11 @@ export default {
 	},
 	async reDocApi(req, res, next) {
 		try {
-			return res.render('api', { title: pJson.name, group: req.params.group || undefined });
+			return res.render('api', {
+				title: pJson.name,
+				group: req.params.group || undefined,
+				favicon: (req.authGroup) ? req.authGroup?.config?.ui?.skin?.favicon : undefined
+			});
 		} catch (e) {
 			next(e);
 		}

@@ -3,8 +3,11 @@ doctype html
 head
     meta(charset='UTF-8')
     title=title
-    link(rel='stylesheet' type='text/css' href='https://unpkg.com/swagger-ui-dist@3/swagger-ui.css')
-    link(rel='icon' type='image/png' href=assets + "favicon.png" sizes="100x100")
+    link(rel='stylesheet' type='text/css' href='https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css')
+    if favicon
+        link(rel="icon" type="image/png" href=favicon sizes="100x100")
+    else
+        link(rel="icon" type="image/png" href="/favicon.png" sizes="100x100")
     style.
         html
         {
@@ -24,8 +27,8 @@ head
             background: #fafafa;
         }
 #swagger-ui
-script(src='https://unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js')
-script(src='https://unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js')
+script(src='https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js')
+script(src='https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-standalone-preset.js')
 script.
     window.onload = function() {
         const group = '#{group}';

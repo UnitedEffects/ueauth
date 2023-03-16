@@ -3,8 +3,9 @@ const config = require('../../config');
 const screens = {
 	baseSettings(authGroup) {
 		return {
-			authGroupLogo: authGroup.config.ui.skin.logo || undefined,
-			splashImage: authGroup.config.ui.skin.splashImage || undefined,
+			authGroupLogo: authGroup.config.ui?.skin?.logo || undefined,
+			splashImage: authGroup.config.ui?.skin?.splashImage || undefined,
+			favicon: authGroup.config.ui?.skin?.favicon,
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
 			bgGradientHigh: authGroup.config.ui.skin.bgGradientHigh || config.DEFAULT_UI_SKIN_GRADIENT_HIGH
 		};
