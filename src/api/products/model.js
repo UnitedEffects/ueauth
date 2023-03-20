@@ -60,7 +60,8 @@ const productSchema = new mongoose.Schema({
 			type: String,
 			validate: {
 				validator: function (v) {
-					const ag = this.authGroup;
+					const doc = (this.authGroup) ? this : this._update.$set;
+					const ag = doc.authGroup;
 					return h.validateClientReference(mongoose.model('client'), v, ag);
 				},
 				message: 'Client does not exist in this authGroup'

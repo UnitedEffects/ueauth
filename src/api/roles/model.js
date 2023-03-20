@@ -44,7 +44,8 @@ const roleSchema = new mongoose.Schema({
 			type: String,
 			validate: {
 				validator: function (v) {
-					return h.validatePermissionReference(mongoose.model('permissions'), v, this.authGroup, this.product);
+					const doc = (this.authGroup) ? this : this._update.$set;
+					return h.validatePermissionReference(mongoose.model('permissions'), v, doc.authGroup, doc.product);
 				},
 				message: prop => `Permission does not exist or is not part of this product. Also make sure you provide value as a concat of "permission.id permission.coded" where there is a space between the values: ${prop.value}`
 			}
