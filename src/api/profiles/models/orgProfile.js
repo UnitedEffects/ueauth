@@ -27,8 +27,9 @@ const orgProfileSchema = new mongoose.Schema({
 		type: String,
 		validate: {
 			validator: function (v) {
-				const ag = this.authGroup;
-				const org = this.organization;
+				const doc = (this.authGroup) ? this : this._update.$set;
+				const ag = doc.authGroup;
+				const org = doc.organization;
 				return h.validateAccountReference(mongoose.model('accounts'), v, ag, org);
 			},
 			message: 'Account does not exist in this AuthGroup and/or Organization'

@@ -169,8 +169,9 @@ const orgSchema = new mongoose.Schema({
 			type: String,
 			validate: {
 				validator: function (v) {
-					const ag = this.authGroup;
-					const core = this.core;
+					const doc = (this.authGroup) ? this : this._update.$set;
+					const ag = doc.authGroup;
+					const core = doc.core;
 					return h.validateProductReference(mongoose.model('products'), v, ag, core);
 				},
 				message: 'Product does not exist or is not allowed'

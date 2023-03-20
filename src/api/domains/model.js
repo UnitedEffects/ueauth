@@ -47,7 +47,8 @@ const domainSchema = new mongoose.Schema({
 			type: String,
 			validate: {
 				validator: function (v) {
-					return h.validateOrgProductReference(mongoose.model('organizations'), this.organization, this.authGroup, v);
+					const doc = (this.authGroup) ? this : this._update.$set;
+					return h.validateOrgProductReference(mongoose.model('organizations'), doc.organization, doc.authGroup, v);
 				},
 				message: 'Product does not exist as part of the organization'
 			}
