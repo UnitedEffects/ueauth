@@ -550,8 +550,9 @@ const api = {
 			return res.render('response/response', {
 				title: 'SUCCESS!',
 				message,
-				authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
-				splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+				authGroupLogo: authGroup.config?.ui?.skin?.logo,
+				splashImage: authGroup.config?.ui?.skin?.splashImage,
+				favicon: authGroup.config?.ui?.skin?.favicon,
 				authGroup: safeAG
 			});
 		} catch (err) {
@@ -791,7 +792,11 @@ const api = {
 		if(config.CUSTOM_FONTS_URL) {
 			options.customFonts = config.CUSTOM_FONTS_URL;
 		}
-		ctx.body = await pug.render('response/response', { ...options, nonce: ctx.res.locals.cspNonce });
+		ctx.body = await pug.render('response/response', {
+			...options,
+			nonce: ctx.res.locals.cspNonce,
+			favicon: authGroup.config?.ui?.skin?.favicon,
+		});
 	}
 };
 
