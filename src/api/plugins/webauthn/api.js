@@ -94,6 +94,7 @@ export default {
 				return res.render('webauthn/secureSet', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
+					favicon: authGroup.config.ui?.skin?.favicon,
 					domain: `${config.PROTOCOL}://${config.SWAGGER}`,
 					state,
 					token: req.authInfo.jti,
@@ -133,6 +134,7 @@ export default {
 					message: 'Check your email to continue.',
 					authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 					splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+					favicon: authGroup.config.ui?.skin?.favicon,
 					authGroup: safeAG
 				});
 			} catch (e) {
@@ -145,6 +147,7 @@ export default {
 					message: 'Something went wrong. Wait a bit and then try again.',
 					authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 					splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
+					favicon: authGroup.config.ui?.skin?.favicon,
 					authGroup: safeAG,
 					passkey: true
 				});
@@ -167,6 +170,7 @@ export default {
 				return res.render('webauthn/recover', {
 					authGroup: safeAG,
 					authGroupLogo: authGroup.config.ui.skin.logo,
+					favicon: authGroup.config.ui?.skin?.favicon,
 					domain: `${config.PROTOCOL}://${config.SWAGGER}`,
 					state,
 					title: 'Passkey Login Setup Wizard',
