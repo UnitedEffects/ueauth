@@ -84,7 +84,7 @@ const api = {
 			}
 		}
 		// otherwise create it...
-		if(alt) return alt.initGroupPasskey(ag, type, provider);
+		if(alt) return alt.initGroupPasskey(ag, type, provider, domain);
 		if(pInterface) return pInterface.initGroup(ag, type, provider);
 		throw Boom.badRequest('WebAuthN is not enabled for this Auth Group');
 	}
