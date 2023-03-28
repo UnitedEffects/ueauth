@@ -25,7 +25,6 @@ const pkApi = {
 		const keys = await pInit.createAccessKey(clientID, clientSecret, authGroup.id, company.id, appSpace.id, reqOrigin.id);
 		// call addCallBack
 		const cb = await this.createCallback(authGroup.id, provider, company.id, appSpace.id, reqOrigin.id, domain);
-		//const cb = await pInit.addCallback(clientID, clientSecret, authGroup.id, company.id, appSpace.id, reqOrigin.id);
 		privakey.callbackId = cb.id;
 		// return metadata to update AG
 		return {
