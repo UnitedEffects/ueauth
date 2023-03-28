@@ -162,11 +162,6 @@ const chApi = {
 				if( privaCheck.length &&
 					ag.pluginOptions.webAuthN?.meta?.privakeyClient &&
 					ag.pluginOptions.webAuthN?.meta?.privakeySecret) {
-					return ag.pluginOptions.webAuthN.meta;
-				}
-				if(  privaCheck.length &&
-					ag.pluginOptions.webAuthN?.meta?.privakeyClient &&
-					ag.pluginOptions.webAuthN?.meta?.privakeySecret) {
 					const meta = JSON.parse(JSON.stringify(ag.pluginOptions.webAuthN.meta));
 					const CB = await pInterface.challengeCallback(provider, ag.id, meta.privakey.companyId, meta.privakey.appSpaceId, ag.pluginOptions.webAuthN?.meta?.privakeyClient);
 					meta.privakey.callbackId = CB.id;

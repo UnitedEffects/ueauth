@@ -7,7 +7,7 @@ const pkApi = {
 		const clientSecret = provider.setup.key;
 		return pInit.addWebAuthNCallback(clientID, clientSecret, authGroup, company, appSpace, reqOrigin, domain);
 	},
-	async initGroupPasskey(authGroup, type, provider) {
+	async initGroupPasskey(authGroup, type, provider, domain) {
 		if(!provider.setup.key) throw Boom.failedDependency('This MFA provider is not set up');
 		const clientID = provider.setup.id;
 		const clientSecret = provider.setup.key;
@@ -24,7 +24,7 @@ const pkApi = {
 		// call createAccessKey
 		const keys = await pInit.createAccessKey(clientID, clientSecret, authGroup.id, company.id, appSpace.id, reqOrigin.id);
 		// call addCallBack
-		const cb = await pInit.addCallback(clientID, clientSecret, authGroup.id, company.id, appSpace.id, reqOrigin.id);
+		const cb = await this.createCallback(authGroup.id, provider, company.id, appSpace.id, reqOrigin.id, domain);
 		privakey.callbackId = cb.id;
 		// return metadata to update AG
 		return {
