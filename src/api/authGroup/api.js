@@ -126,6 +126,18 @@ const api = {
 			if (config.OPEN_GROUP_REG === false) {
 				await permissions.enforceRoot(req.permissions);
 			}
+
+			// if notifications are on, default to passwordless and notifications for AG
+			if (req.globalSettings.notifications.enabled === true && config.ROOT_GROUP_REGISTRATION_UI_URL !== undefined){
+				if (!req.body.config) req.body.config = {};
+				if (!req.body.pluginOptions) req.body.pluginOptions = {};
+				if (!req.body.pluginOptions.notification) {
+					req.body.pluginOptions.notification = {};
+				}
+				req.body.config.passwordLessSupport = true;
+				req.body.pluginOptions.notification.enabled = true;
+			}
+
 			result = await group.write(req.body);
 			let output = await group.completeGroupSignup(result, req.globalSettings, req.body.owner);
 			output = includeSSORedirectUris(output);
