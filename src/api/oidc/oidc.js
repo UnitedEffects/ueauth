@@ -177,7 +177,8 @@ function oidcConfig(g, aliasDns = undefined) {
 											key !== 'clientSkipConsent' &&
 											key !== 'clientAllowOrgSelfIdentify' &&
 											key !== 'clientSkipToFederated' &&
-											key !== 'clientOptionalSkipLogoutPrompt'
+											key !== 'clientOptionalSkipLogoutPrompt' &&
+											key !== 'clientOnlyPasswordless'
 										) {
 											error = true;
 										}
@@ -299,6 +300,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				'register_url',
 				'associated_product',
 				'client_skip_consent',
+				'client_only_passwordless',
 				'client_optional_skip_logout_prompt',
 				'client_federation_options',
 				'client_allow_org_federation',
@@ -445,6 +447,16 @@ function oidcConfig(g, aliasDns = undefined) {
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						error.message = `${error.message} - Client Federation Options`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'client_only_passwordless') {
+					try {
+						if (value === undefined || value === null) value = false;
+						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Passwordless Only`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}

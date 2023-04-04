@@ -56,6 +56,7 @@ const agp = {
 				}
 			}
 		}
+
 		// ensure that external streaming can only be patched after creation
 		if (data?.pluginOptions?.externalStreaming?.enabled === true) {
 			data.pluginOptions.externalStreaming.enabled = false;

@@ -41,6 +41,7 @@ export default {
 			'client_id': uuid(),
 			'client_name': config.PLATFORM_NAME,
 			'client_skip_consent': true,
+			'client_only_passwordless': true,
 			'client_allow_org_federation': true,
 			'grant_types': ['client_credentials', 'authorization_code', 'refresh_token'],
 			'response_types': ['code'],

@@ -37,16 +37,15 @@ const api = {
 	},
 	async writeAccount(req, res, next) {
 		try {
+			if (req.body.generatePassword === true) {
+				req.body.password = cryptoRandomString({length: 16, type: 'url-safe'});
+				delete req.body.generatePassword;
+			}
 			if (req.groupActivationEvent === true) return api.activateGroupWithAccount(req, res, next);
 			if (req.authGroup.active === false) throw Boom.forbidden('You can not add members to an inactive group');
 			if (!req.body.email) throw Boom.preconditionRequired('username is required');
-			if (req.body.generatePassword === true) {
-				req.body.password = cryptoRandomString({length: 16, type: 'url-safe'});
-			}
 			if (!req.body.password) throw Boom.preconditionRequired('password is required');
 			const password = req.body.password;
-			//clean up
-			delete req.body.generatePassword;
 			let user;
 			if (req.user && req.user.sub) {
 				req.body.modifiedBy = req.user.sub;
