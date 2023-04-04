@@ -367,8 +367,8 @@ const agp = {
 			formats: ['email'],
 			recipientEmail: owner,
 			screenUrl: `https://${config.UI_URL}/${authGroup.prettyName}?code=${authGroup.initialAccessToken}`,
-			subject: `Your Have Registered a new Platform: ${authGroup.name}`,
-			message: `You created a new auth group called '${authGroup.name}'. The button below will take you to your sign-on. If you want to store the URL for later, use: https://${config.UI_URL}/${authGroup.prettyName}`,
+			subject: `Your Have Registered a new Company: ${authGroup.name}`,
+			message: `Welcome! You registered a new company called '${authGroup.name}'. The button below will take you to your company portal sign-on. Your company ID is "${authGroup.id}" and your company URL alias is "${authGroup.prettyName}". Either can be used to access your company portal at ${config.UI_URL}; however, you can get there directly by bookmarking and using this URL: https://${config.UI_URL}/${authGroup.prettyName}. As you configure your settings, you may want to also define a custom domain for ${authGroup.name}, which will be interchangeable with this URL, or change your company alias to something easier for you to remember.`,
 			meta: {
 				description: 'Direct API Post Call',
 				token: authGroup.initialAccessToken,
