@@ -698,26 +698,26 @@ const api = {
 	async logoutSource(ctx, form) {
 		try {
 			const action = ctx.oidc.urlFor('end_session_confirm');
-			let skipPrompt = false;
-			if (ctx?.req?.query?.skipPrompt === 'true') {
-				// this must be set at the client level and only works if there is a redirectUrl present
-				if (ctx?.oidc?.client?.client_optional_skip_logout_prompt === true) {
-					// post_logout_redirect_uri further requires an id_token_hint or client_id
-					if(ctx?.req?.query?.post_logout_redirect_uri) {
-						skipPrompt = true;
-					}
-				}
-			}
-			const name = (ctx?.oidc?.client?.clientName) ? ctx.oidc.client.clientName : ctx.authGroup.name;
 			let client;
 			if(ctx?.oidc?.client) {
 				client = JSON.parse(JSON.stringify(ctx.oidc.client));
 			}
+			const name = (client?.clientName) ? client.clientName : ctx.authGroup.name;
+			const sid = ctx.oidc?.entities?.Session?.jti;
+			if ((client?.client_optional_skip_logout_prompt === true || ctx.req.query.skipPrompt === 'true') && sid) {
+				await ctx.oidc.entities.Session.destroy(sid);
+				if(ctx.oidc.entities.Session.destroyed === true) {
+					//reload...
+					const end = ctx.oidc.urlFor('end_session');
+					return ctx.redirect(end);
+				}
+			}
+			//}
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../../views'),
 				basedir: 'path/for/pug/extends',
 			});
-			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, client, skipPrompt);
+			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, client);
 			if (ctx?.req?.query?.onCancel) {
 				options.onCancel = ctx.req.query.onCancel;
 			}

@@ -51,7 +51,7 @@ class MongoAdapter {
 	}
 
 	async destroy(_id) {
-		await this.coll().deleteOne({ _id });
+		return this.coll().deleteOne({ _id });
 	}
 
 	async revokeByGrantId(grantId) {
