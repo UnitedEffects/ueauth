@@ -2,6 +2,7 @@ import Account from './model';
 import bcrypt from 'bcryptjs';
 import Organization from '../orgs/model';
 import Domain from '../domains/model';
+import Group from '../authGroup/model';
 
 export default {
 	async getActiveAccountCount(authGroup) {
@@ -359,5 +360,35 @@ export default {
 			return code;
 		}));
 		return Account.findOneAndUpdate({ _id, authGroup, userLocked: false }, { recoverCodes }, { new: true });
+	},
+	async getOwnerGroups(lookup) {
+		return Account.aggregate([
+			{
+				$match: { $or: [{ email: lookup }, { 'phone.txt': lookup }]}
+			},
+			{
+				$project: { authGroup: 1, _id: 1, email: 1 }
+			},
+			{
+				$lookup: {
+					from: Group.collection.name,
+					let: { id: '$authGroup' },
+					pipeline: [
+						{ $match: { $expr: { $eq: ['$_id', '$$id'] }}},
+						{ $project: { name: 1, prettyName: 1, owner: 1, aliasDnsUi: 1 }}
+					],
+					as: 'group'
+				}
+			},
+			{
+				$unwind: {
+					path: '$group',
+					preserveNullAndEmptyArrays: false
+				}
+			},
+			{
+				$project: { _id: 1, email: 1, group: 1 }
+			},
+		]);
 	}
 };

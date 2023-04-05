@@ -367,6 +367,33 @@ export default {
 	},
 	async getAccountByEmailUsernameOrPhone(authGroup, data) {
 		return dal.getAccountByEmailUsernameOrPhone(authGroup, data);
+	},
+	async getOwnerGroups(lookup) {
+		const result = await dal.getOwnerGroups(lookup);
+		const output = result.filter((ag) => {
+			return (ag._id === ag.group?.owner);
+		});
+		return output;
+	},
+	async notifyOwnerGroups(globalSettings, lookup, authGroup) {
+		const uid = crypto.randomBytes(10).toString('hex');
+		const meta = {
+			email: lookup,
+			auth_group: authGroup.id,
+			uid
+		};
+		const token = await iat.generateIAT(7200, ['auth_group'], authGroup, meta);
+		const data = {
+			iss: `${config.PROTOCOL}://${config.SWAGGER}`,
+			createdBy: 'SYSTEM',
+			type: 'general',
+			recipientEmail: lookup,
+			formats: ['email'],
+			screenUrl: `${config.PROTOCOL}://${config.SWAGGER}/account/groups/recovery?code=${token.jti}&email=${lookup}&uid=${uid}`,
+			subject: 'Company Portal Recovery',
+			message: 'Someone has requested a list of Company portals to which you are the owner. If you did not make this request, you may ignore the message. Click the button below to see a list of all Company logins you own. The button will be active for 2 hours.'
+		};
+		return n.notify(globalSettings, data, authGroup);
 	}
 };
 

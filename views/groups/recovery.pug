@@ -1,0 +1,37 @@
+extends ../uelayout
+
+block content
+    body.bg.flex
+        .panel.middle-panel
+            if (flash)
+                #flash-container.flash-container.mfa-flash
+                    p#flash=flash
+            else
+                #flash-container.hidden.flash-container.mfa-flash
+                    p#flash=flash
+            if (authGroupLogo)
+                img.logo(src=authGroupLogo alt='Platform Logo')
+            if (name)
+                p.org-name=name
+            p#title.header=title
+            .credentials
+                div Here are #{count} platform instances created by #{lookup}
+                div Please note that this will not recover a specific login for you. Click into a platform and on that sign-in screen you will see options to recovery credentials.
+                if logins.length !== 0
+                    .list-group.m-t-20
+                        each val in logins
+                            .list-group-item.list-group-item-action.flex-column.align-items-start
+                                .d-flex.w-100.justify-content-between.m-b-0(style="margin: 0 !important")
+                                    .h5=val.companyName
+                                    small.text-muted ID: #{val.id}
+                                p.mb-1.d-flex Sign in here:&nbsp;&nbsp;
+                                    a(href=val.login target='_blank')
+                                        span=val.login
+
+            .tandc.p-b-20.center.width-auto
+                if (authGroup && authGroup.primaryTOS)
+                    a(href=(authGroup.primaryTOS)) Terms of Service
+                if (authGroup && authGroup.primaryPrivacyPolicy)
+                    a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
+                if (authGroup && authGroup.primaryEmail)
+                    a(href='mailto:' + authGroup.primaryEmail) Contact the Admin

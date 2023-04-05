@@ -396,6 +396,60 @@ paths:
         required: true
 
   # Account APIs
+  /api/account/groups:
+    get:
+      tags:
+        - Users
+      summary: Lookup any AuthGroups a user owns
+      description: Lookup any AuthGroups a user owns. Must be a root user or Notifications must be on so an email can be sent to the user.
+      operationId: findAccountGroups
+      parameters:
+        - name: lookup
+          in: query
+          description: the email address of a person
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Account
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        count:
+                          type: number
+                        groups:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                            email:
+                              type: string
+                            group:
+                              type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
   /api/{group}/account:
     post:
       tags:

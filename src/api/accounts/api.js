@@ -878,6 +878,86 @@ const api = {
 		} catch (error) {
 			next (error);
 		}
+	},
+	async getOwnerGroups(req, res, next) {
+		try {
+			if(!req.query.lookup) throw Boom.badRequest('Must specify an email or phone number via "lookup" query');
+			let output;
+			if(!req.user) {
+				//todo create notification + page to view
+				try {
+					await acct.notifyOwnerGroups(req.globalSettings, req.query.lookup, req.authGroup);
+					output = {
+						message: 'An email has been sent'
+					};
+				} catch (error) {
+					console.error(error);
+					throw Boom.failedDependency('Unable to satisfy the request at this time. Contact your administrator');
+				}
+			} else {
+				const result = await acct.getOwnerGroups(req.query.lookup);
+				const logins = [];
+				result.map((g) => {
+					logins.push({
+						id: g.group._id,
+						companyName: g.group.name,
+						companyAlias: g.group.prettyName,
+						login: `https://${(g.group.aliasDnsUi) ? g.group.aliasDnsUi : config.UI_URL}/${g.group.prettyName || g.group._id}`
+					});
+				});
+				output = {
+					lookup: req.query.lookup,
+					count: result.length,
+					logins
+				};
+			}
+			return res.respond(say.ok(output, RESOURCE));
+		} catch (error) {
+			next(error);
+		}
+	},
+	async recoveryGroups (req, res) {
+		const { authGroup, safeAG } = await group.safeAuthGroup(req.authGroup);
+		try {
+			if(!req.query.email ||
+				!req.query.code ||
+				!req.query.uid) throw Boom.unauthorized();
+			const token = await iat.getOne(req.query.code, req.authGroup.id);
+			console.info(token);
+			if(token?.payload?.email !== req.query.email ||
+				token?.payload?.auth_group !== req.authGroup.id ||
+				token?.payload?.uid !== req.query.uid) throw Boom.unauthorized();
+			const result = await acct.getOwnerGroups(req.query.email);
+			const logins = [];
+			result.map((g) => {
+				logins.push({
+					id: g.group._id,
+					companyName: g.group.name,
+					companyAlias: g.group.prettyName,
+					login: `https://${(g.group.aliasDnsUi) ? g.group.aliasDnsUi : config.UI_URL}/${g.group.prettyName || g.group._id}`
+				});
+			});
+			const output = {
+				lookup: req.query.email,
+				count: result.length,
+				logins
+			};
+			return res.render('groups/recovery', {
+				...screens.baseSettings(req.authGroup),
+				...output,
+				authGroup: safeAG,
+				name: config.ROOT_COMPANY_NAME,
+				title: 'Company Platform Recovery'
+			});
+		} catch (error) {
+			console.error(error);
+			return res.render('response/response', {
+				title: 'Uh oh...',
+				message: 'We had a problem recovering your logins. Please try again later.',
+				details: error,
+				...screens.baseSettings(authGroup)
+			});
+		}
 	}
 };
 
