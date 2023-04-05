@@ -72,6 +72,6 @@ block content
                     a(href=(authGroup.primaryTOS)) Terms of Service
                 if (authGroup && authGroup.primaryPrivacyPolicy)
                     a(href=(authGroup.primaryPrivacyPolicy)) Privacy Policy
-                a#passkeyLink.hidden(href='/' + authGroup.id + '/set-passkey' target='_blank') Set Passkey
+                a#passkeyLink.hidden(href='/' + authGroup.id + '/set-passkey' target='_blank') Setup Passkey
                 if (authGroup && authGroup.primaryEmail)
                     a(href='mailto:' + authGroup.primaryEmail) Contact #{authGroup.name}

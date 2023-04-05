@@ -5,6 +5,13 @@ import m from '../middleware';
 const router = express.Router();
 
 // Accounts
+
+router.get('/account/groups', [
+	m.getGlobalPluginSettings,
+	m.rootAG,
+	m.isPublicOrAuth
+], account.getOwnerGroups);
+
 router.post('/:group/account', [
 	m.validateAuthGroupAllowInactive,
 	m.schemaCheck,

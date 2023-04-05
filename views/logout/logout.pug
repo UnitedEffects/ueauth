@@ -1,15 +1,6 @@
 extends ../uelayout
 
 block content
-    script(nonce=nonce).
-        const A0 = ('#{bdf635x}' === '\x74\x72\x75\x65');if (A0 === true) {
-            window["\x6F\x6E\x6C\x6F\x61\x64"] = function () {
-                const _0x659dx1 = document["\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64"]('\x73\x6B\x69\x70');
-                _0x659dx1["\x6E\x61\x6D\x65"] = '\x6C\x6F\x67\x6F\x75\x74';
-                _0x659dx1["\x76\x61\x6C\x75\x65"] = '\x79\x65\x73';
-                document["\x66\x6F\x72\x6D\x73"]['#{a42ce03}']["\x73\x75\x62\x6D\x69\x74"]()
-            }
-        }
     body.bg.flex
         .utility-panel
             if (flash)
@@ -24,24 +15,17 @@ block content
             if (clientName)
                 p.product-name=clientName
             p#title.header=title
-            if skipPrompt === true
-                p#instruct.description.center Logging out, one second...
-            else
-                p#instruct.description.center=message
+            p#instruct.description.center=message
             form.m-t-10.form-fields(id=formId, autocomplete='off', action=actionUrl, method='post')
                 input(type="hidden" name=inName value=secret)
                 input(type="hidden" id='skip')
-                if skipPrompt === true
-                    button.btn.btn-outline-dark.btn-custom.invisible(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
-                    button.btn.btn-outline-dark.btn-custom.invisible.m-t-20(type="submit" form=formId) Cancel
+                button.btn.btn-outline-dark.btn-custom(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
+                if onCancel
+                    a.btn.btn-outline-dark.btn-custom.m-t-20(href=onCancel id='onCancel') Cancel
+                else if clientUri
+                    a.btn.btn-outline-dark.btn-custom.m-t-20(href=clientUri id='clientUri') Cancel
                 else
-                    button.btn.btn-outline-dark.btn-custom(type="submit" autofocus form=formId value="yes" name="logout") Sign Out
-                    if onCancel
-                        a.btn.btn-outline-dark.btn-custom.m-t-20(href=onCancel id='onCancel') Cancel
-                    else if clientUri
-                        a.btn.btn-outline-dark.btn-custom.m-t-20(href=clientUri id='clientUri') Cancel
-                    else
-                        button.btn.btn-outline-dark.btn-custom.m-t-20(type="submit" form=formId id='cancel' value="no") Cancel
+                    button.btn.btn-outline-dark.btn-custom.m-t-20(type="submit" form=formId id='cancel' value="no") Cancel
             .tandc.p-b-20.width-auto.center
                 if (tosUri || (authGroup && authGroup.primaryTOS))
                     a(href=(tosUri || authGroup.primaryTOS)) Terms of Service

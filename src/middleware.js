@@ -182,10 +182,19 @@ const mid = {
 			next(error);
 		}
 	},
+	async rootAG(req, res, next) {
+		if(!req.params.group) {
+			req.params.group = 'root';
+		}
+		return mid.validateAuthGroup(req, res, next);
+	},
 	async conditionalAGValidate(req, res, next) {
 		const grabToken = req.headers?.authorization?.split(' ');
 		if(grabToken?.length && grabToken[0].toLowerCase() === 'bearer') {
 			// this is a token, we should validate AG
+			if(!req.params.group) {
+				req.params.group = 'root';
+			}
 			return mid.validateAuthGroup(req, res, next);
 		}
 		return next();

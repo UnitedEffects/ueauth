@@ -12,6 +12,13 @@ const router = express.Router();
 /**
  * Account Service Endpoints
  */
+// Recover AuthGroups Account Owns
+router.get('/account/groups/recovery', [
+	//m.getGlobalPluginSettings,
+	m.rootAG,
+	//m.isPublicOrAuth
+], account.recoveryGroups);
+
 // Form POST for setting new password
 router.post('/:group/setpass', [
 	jsonParser,
