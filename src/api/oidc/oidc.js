@@ -460,6 +460,16 @@ function oidcConfig(g, aliasDns = undefined) {
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
+				if (key === 'client_skip_to_federated') {
+					try {
+						if (value === undefined || value === null) value = false;
+						if (typeof value !== 'boolean') throw new InvalidClientMetadata(`${key} must be a boolean value`);
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Client Skip To Federated`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
 			}
 		},
 		formats: {
