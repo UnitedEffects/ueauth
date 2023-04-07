@@ -19,6 +19,7 @@ describe('Auth Groups', () => {
 		Model.Query.prototype.save.mockClear();
 		Model.Query.prototype.findOne.mockClear();
 		Model.Query.prototype.findOneAndUpdate.mockClear();
+		Model.Query.prototype.findOneAndReplace.mockClear();
 		ModelIAT.Query.prototype.save.mockClear();
 		ModelIAT.Query.prototype.findOne.mockClear();
 	});
@@ -275,7 +276,7 @@ describe('Auth Groups', () => {
 			updated.active = true;
 			updated.associatedClient = clientId;
 			const expected = JSON.parse(JSON.stringify(updated));
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 			expected.id = expected._id;
 			delete expected._id;
 			delete expected.active;
@@ -287,7 +288,7 @@ describe('Auth Groups', () => {
 			expect(args[0]).toBe(grp.id || grp._id);
 			delete updated.modifiedAt; //not important for this
 			expect(args[1]).toMatchObject(expect.objectContaining(updated));
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalled();
+			expect(Model.Query.prototype.findOneAndReplace).toHaveBeenCalled();
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
 		} catch (error) {
@@ -333,7 +334,7 @@ describe('Auth Groups', () => {
 			grp.toObject = jest.fn(()=>{
 				return grp;
 			});
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 
 			// ignoring these since they are dynamic
 			delete updated.createdAt;
@@ -348,7 +349,7 @@ describe('Auth Groups', () => {
 			];
 			const result = await group.patch(grp, data, user);
 			//const result = await account.patchAccount(oneGroup, oneAccount._id, update, oneAccount._id, false);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true});
+			expect(Model.Query.prototype.findOneAndReplace).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true});
 			const res = JSON.parse(JSON.stringify(result));
 
 			// ignoring these since they are dynamic - we do this by just setting to the actual result so check passes
@@ -382,7 +383,7 @@ describe('Auth Groups', () => {
 				return grp;
 			});
 			mockingoose(Plugins).toReturn(global, 'findOne');
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 
 			// ignoring these since they are dynamic
 			delete updated.createdAt;
@@ -397,7 +398,7 @@ describe('Auth Groups', () => {
 			];
 			const result = await group.patch(grp, data, user);
 			//const result = await account.patchAccount(oneGroup, oneAccount._id, update, oneAccount._id, false);
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true});
+			expect(Model.Query.prototype.findOneAndReplace).toHaveBeenCalledWith({ _id: grp._id, active: true }, expect.objectContaining(updated), { 'new': true, 'overwrite': true});
 			const res = JSON.parse(JSON.stringify(result));
 
 			// ignoring these since they are dynamic - we do this by just setting to the actual result so check passes
@@ -431,7 +432,7 @@ describe('Auth Groups', () => {
 				return grp;
 			});
 			mockingoose(Plugins).toReturn(global, 'findOne');
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 
 			// ignoring these since they are dynamic
 			delete updated.createdAt;
@@ -475,7 +476,7 @@ describe('Auth Groups', () => {
 				return grp;
 			});
 			mockingoose(Plugins).toReturn(global, 'findOne');
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 
 			// ignoring these since they are dynamic
 			delete updated.createdAt;
@@ -518,7 +519,7 @@ describe('Auth Groups', () => {
 				return grp;
 			});
 			mockingoose(Plugins).toReturn(global, 'findOne');
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 
 			// ignoring these since they are dynamic
 			delete updated.createdAt;
@@ -561,7 +562,7 @@ describe('Auth Groups', () => {
 				return grp;
 			});
 			mockingoose(Plugins).toReturn(global, 'findOne');
-			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(updated, 'findOneAndReplace');
 
 			// ignoring these since they are dynamic
 			delete updated.createdAt;
