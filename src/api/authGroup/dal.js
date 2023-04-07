@@ -47,7 +47,7 @@ export default {
 	},
 	async patch(id, data) {
 		data.modifiedAt = Date.now();
-		return Group.findOneAndUpdate({ _id: id, active: true }, data, { new: true, overwrite: true });
+		return Group.findOneAndReplace({ _id: id, active: true }, data, { new: true, overwrite: true });
 	},
 	async patchNoOverwrite(id, data, q = undefined) {
 		const filter = (q) ? { _id: id, active: true, ...q } : { _id: id, active: true };
@@ -56,7 +56,7 @@ export default {
 	},
 	async activatePatch(id, data) {
 		data.modifiedAt = Date.now();
-		return Group.findOneAndUpdate({ _id: id, active: false }, data, { new: true, overwrite: true });
+		return Group.findOneAndReplace({ _id: id, active: false }, data, { new: true, overwrite: true });
 	},
 	async checkPrettyName(prettyName) {
 		return Group.find({ prettyName }).countDocuments();

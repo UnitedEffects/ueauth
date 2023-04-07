@@ -20,6 +20,7 @@ describe('Accounts', () => {
 		Model.Query.prototype.findOne.mockClear();
 		Group.Query.prototype.findOne.mockClear();
 		Model.Query.prototype.findOneAndUpdate.mockClear();
+		Model.Query.prototype.findOneAndReplace.mockClear();
 		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
 	});
 
@@ -157,7 +158,7 @@ describe('Accounts', () => {
 			expected.email = 'updated@unitedeffects.com';
 			const patched = JSON.parse(JSON.stringify(expected));
 
-			mockingoose(Model).toReturn(patched, 'findOneAndUpdate');
+			mockingoose(Model).toReturn(patched, 'findOneAndReplace');
 			mockingoose(Model).toReturn(oneAccount, 'findOne');
 
 			// ignoring these since they are dynamic
@@ -179,7 +180,7 @@ describe('Accounts', () => {
 			];
 			const result = await account.patchAccount(oneGroup, oneAccount._id, update, oneAccount._id, false);
 			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id });
-			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id }, expect.objectContaining(patched), { 'new': true, 'overwrite': true});
+			expect(Model.Query.prototype.findOneAndReplace).toHaveBeenCalledWith({ '_id': oneAccount._id, 'authGroup': oneGroup._id }, expect.objectContaining(patched), { 'new': true, 'overwrite': true});
 			const res = JSON.parse(JSON.stringify(result));
 
 			// ignoring these since they are dynamic - we do this by just setting to the actual result so check passes

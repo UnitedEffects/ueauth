@@ -22,6 +22,7 @@ describe('Auth Functions', () => {
 		Model.Query.prototype.save.mockClear();
 		Model.Query.prototype.findOne.mockClear();
 		Model.Query.prototype.findOneAndUpdate.mockClear();
+		Model.Query.prototype.findOneAndReplace.mockClear();
 		ModelC.Query.prototype.findOne.mockClear();
 	});
 

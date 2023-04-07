@@ -105,12 +105,12 @@ export default {
 	async patchRole(authGroup, id, product, data, runValidators = true) {
 		data.modifiedAt = Date.now();
 		const options = { new: true, overwrite: true, runValidators };
-		return Role.findOneAndUpdate({ _id: id, authGroup, product }, data, options);
+		return Role.findOneAndReplace({ _id: id, authGroup, product }, data, options);
 	},
 	async patchOrganizationRole(authGroup, id, organization, product, data) {
 		data.modifiedAt = Date.now();
 		const options = { new: true, overwrite: true, runValidators: true };
-		return Role.findOneAndUpdate({ _id: id, authGroup, organization, product, custom: true }, data, options);
+		return Role.findOneAndReplace({ _id: id, authGroup, organization, product, custom: true }, data, options);
 	},
 	async checkProduct(authGroup, productId) {
 		return Role.find( { authGroup, product: productId }).select( { _id: 1, name: 1, description: 1, productCodedId: 1});

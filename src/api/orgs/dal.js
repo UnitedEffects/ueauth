@@ -30,7 +30,7 @@ export default {
 		if(data.associatedProducts.length > 0) {
 			options.runValidators = true;
 		}
-		return Organization.findOneAndUpdate({ _id: id, authGroup }, data, options);
+		return Organization.findOneAndReplace({ _id: id, authGroup }, data, options);
 	},
 	async checkProduct(authGroup, productId) {
 		return Organization.find( { authGroup, associatedProducts: productId }).select( { name: 1, _id: 1, description: 1, active: 1});

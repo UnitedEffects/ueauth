@@ -67,7 +67,7 @@ export default {
 			data.password = await bcrypt.hash(data.password, salt);
 		}
 		const options = { new: true, overwrite: true };
-		return Account.findOneAndUpdate({ _id: id, authGroup }, data, options);
+		return Account.findOneAndReplace({ _id: id, authGroup }, data, options);
 	},
 	async enableMFA(authGroup, id) {
 		const update = {
