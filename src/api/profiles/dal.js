@@ -101,7 +101,7 @@ export default {
 	},
 	async patchProfile(authGroup, id, data) {
 		data.modifiedAt = Date.now();
-		return Profile.findOneAndUpdate({
+		return Profile.findOneAndReplace({
 			authGroup, $or: [{ _id: id }, { accountId: id }] }, data, { new: true, overwrite: true });
 	},
 	/* ORG PROFILES */
@@ -125,7 +125,7 @@ export default {
 	},
 	async patchOrgProfile(authGroup, organization, id, data) {
 		data.modifiedAt = Date.now();
-		return OrgProfile.findOneAndUpdate({ authGroup, organization, $or: [{ _id: id }, { accountId: id }] }, data, { new: true, overwrite: true });
+		return OrgProfile.findOneAndReplace({ authGroup, organization, $or: [{ _id: id }, { accountId: id }] }, data, { new: true, overwrite: true });
 	},
 	async partialPatchOrgProfile(authGroup, organization, accountId, data) {
 		data.modifiedAt = Date.now();

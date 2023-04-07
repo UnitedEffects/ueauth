@@ -1,5 +1,4 @@
 import Client from '../models/client';
-import Account from "../../accounts/model";
 
 export default {
 	async get(authGroup, query, search = undefined) {
@@ -76,7 +75,7 @@ export default {
 		});
 	},
 	async patchOne(authGroup, id, data) {
-		return Client.findOneAndUpdate({
+		return Client.findOneAndReplace({
 			_id: id,
 			$or: [{'payload.auth_group': authGroup._id}, {'payload.auth_group': authGroup.prettyName}]
 		}, data, {new: true, overwrite: true}).select({payload: 1});
