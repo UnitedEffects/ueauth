@@ -77,14 +77,14 @@ const mid = {
 	},
 	catch404 (req, res, next) {
 		try {
-			next(handleErrors.catch404());
+			next(handleErrors.catch404(req.path));
 		} catch (error) {
 			next(error);
 		}
 	},
 	async catchErrors (err, req, res, next) {
 		try {
-			if(config.ENV !== 'production') console.info(err);
+			if(config.ENV !== 'production') console.info('DEBUG', err);
 			const error = await handleErrors.parse(err, req.requestId);
 			if(!req.path.includes('/api')) {
 				if(req.headers && req.headers.accept && !req.headers.accept.split(',').includes('application/json')) {
@@ -172,7 +172,10 @@ const mid = {
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
 			const AG = await group.findByAliasDNS(req.cdHostname);
-			if(!AG) throw Boom.notFound(`DNS not recognized - ${req.cdHostname}`);
+			if(!AG) {
+				console.info('SUSPICIOUS REQUEST HEADERS', req.headers);
+				throw Boom.notFound(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
+			}
 			req.customDomain = req.cdHostname;
 			req.customDomainUI = AG.aliasDnsUi;
 			req.authGroup = AG;
@@ -214,7 +217,7 @@ const mid = {
 			}
 
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
-			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
+			if (helper.protectedNames(req.params.group)) throw Boom.notFound(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
 			const result = await helper.cacheAG(req.query.resetCache, 'AG', req.params.group);
 			req.authGroup = result;
 			req.ogPathGroup = req.params.group;
@@ -222,15 +225,17 @@ const mid = {
 			req.customDomain = undefined;
 			req.customDomainUI = undefined;
 			if(req.cdHostname !== config.SWAGGER.split(':')[0]) {
-				if(req.authGroup.aliasDnsOIDC !== req.cdHostname) throw Boom.notFound(`DNS not recognized - ${req.cdHostname}`);
+				if(req.authGroup.aliasDnsOIDC !== req.cdHostname) {
+					throw Boom.notFound(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
+				}
 				req.customDomain = req.cdHostname;
 				req.customDomainUI = req.authGroup.aliasDnsUi;
 			}
 			// adding organization context for secure API calls into this... may find a better home later
 			return mid.organizationContext(req, res, next);
 		} catch (error) {
-			console.error(error);
-			next(Boom.notFound(error.message || 'Auth Group'));
+			console.error('AG Validation Error', error);
+			next(Boom.notFound(error.message || `Group id/alias attempted was '${req.params.group}' with path: ${req.path}`));
 		}
 	},
 	async organizationContext(req, res, next) {
@@ -330,7 +335,7 @@ const mid = {
 	async validateAuthGroupAllowInactive (req, res, next) {
 		try {
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
-			if (helper.protectedNames(req.params.group)) throw Boom.notFound('auth group not found');
+			if (helper.protectedNames(req.params.group)) throw Boom.notFound(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
 			const result = await helper.cacheAG(req.query.resetCache, 'AG.ALT', req.params.group, false);
 			req.authGroup = result;
 			req.ogPathGroup = req.params.group;
