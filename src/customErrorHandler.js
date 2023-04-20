@@ -3,8 +3,9 @@ import log from './api/logging/logs';
 const config = require('./config');
 
 export default {
-	catch404() {
-		return Boom.notFound('Resource not found');
+	catch404(path = undefined) {
+		const msg = (path) ? `Path not found - ${path}` : 'Path not found';
+		return Boom.notFound(msg);
 	},
 	async parse(error, id=undefined) {
 		try {

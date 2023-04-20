@@ -176,7 +176,7 @@ async (req, token, next) => {
 
 			return jwt.verify(token, myPubKey, async (err, decoded) => {
 				if(err) {
-					console.error(err);
+					//console.error(err);
 					return next(null, false);
 				}
 				if(decoded) {
@@ -184,7 +184,7 @@ async (req, token, next) => {
 						const result = await core.runDecodedChecks(token, issuer, decoded, subAG, req.customDomain);
 						return next(null, result, { token });
 					} catch (error) {
-						console.error(error);
+						console.error('Problem Decoding Token', error);
 						return next(null, false);
 					}
 				}
@@ -217,7 +217,7 @@ async (req, token, next) => {
 				if(!req.authGroup) req.authGroup = subAG;
 				return next(null, result, { token });
 			} catch (error) {
-				console.error(error);
+				//console.error(error);
 				return next(null, false);
 			}
 		}
@@ -267,7 +267,7 @@ async (req, token, next) => {
 
 			return jwt.verify(token, myPubKey, async (err, decoded) => {
 				if(err) {
-					console.error(err);
+					//console.error(err);
 					return next(null, false);
 				}
 				if(decoded) {
@@ -275,7 +275,7 @@ async (req, token, next) => {
 						const result = await core.runDecodedChecks(token, issuer, decoded, subAG, true, req.customDomain);
 						return next(null, result, { token });
 					} catch (error) {
-						console.error(error);
+						console.error('Problem Decoding Token', error);
 						return next(null, false);
 					}
 				}
@@ -308,14 +308,14 @@ async (req, token, next) => {
 				if(!req.authGroup) req.authGroup = subAG;
 				return next(null, result, { token });
 			} catch (error) {
-				console.error(error);
+				//console.error(error);
 				return next(null, false);
 			}
 		}
-		console.error('Token expired');
+		//console.error('Token expired');
 		return next(null, false);
 	} catch (error) {
-		console.error(error);
+		console.error('Unexpected OIDC Validation Error', error);
 		return next(null, false);
 	}
 }
