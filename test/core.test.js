@@ -68,7 +68,7 @@ describe('Middleware tests', () => {
 		try {
 			const req = {}, res = { sendStatus: jest.fn(), header: jest.fn() }, next = jest.fn();
 			await m.catch404(req, res, next);
-			expect(next).toHaveBeenCalledWith(Boom.notFound('Resource not found'));
+			expect(next).toHaveBeenCalledWith(Boom.notFound('Path not found'));
 		} catch (error) {
 			t.fail(error);
 		}
