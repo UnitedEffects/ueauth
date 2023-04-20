@@ -226,6 +226,7 @@ const mid = {
 			req.customDomainUI = undefined;
 			if(req.cdHostname !== config.SWAGGER.split(':')[0]) {
 				if(req.authGroup.aliasDnsOIDC !== req.cdHostname) {
+					console.info('SUSPICIOUS REQUEST HEADERS', req.headers);
 					throw Boom.notFound(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
 				}
 				req.customDomain = req.cdHostname;
