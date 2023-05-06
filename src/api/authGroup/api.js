@@ -119,9 +119,14 @@ const api = {
 	async write(req, res, next) {
 		let result;
 		try {
-			if (!req.body.name) return next(Boom.preconditionRequired('name is required'));
+			if (!req.body.name) throw Boom.preconditionRequired('name is required');
+			req.body.name = req.body.name.trim();
+			if (req.body.name === config.PLATFORM_NAME || req.body.name === config.ROOT_COMPANY_NAME) {
+				throw Boom.forbidden('Protected Namespace');
+			}
 			if (req.body.prettyName) {
-				if(helper.protectedNames(req.body.prettyName)) return  next(Boom.forbidden('Protected Namespace'));
+				req.body.prettyName = req.body.prettyName.trim();
+				if(helper.protectedNames(req.body.prettyName)) throw Boom.forbidden('Protected Namespace');
 			}
 			if (config.OPEN_GROUP_REG === false) {
 				await permissions.enforceRoot(req.permissions);
