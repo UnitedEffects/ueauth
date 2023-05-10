@@ -36,11 +36,12 @@ If you're looking for help with a commercial solution, you may contact us at [he
 ## Quick Start
 
 Our help docs have a lot of information to get you started with the technology on our hosted solution. That covers 95% of what's possible with this open source version. You can follow the [Quick Start in our docs](https://docs.unitedeffects.com/reference/getting-started-with-your-api) and try the API immediately.
-If you want to try it locally, you can follow these instructions. Feel free to [reach out for help](mailto:help@unitedeffects.com): [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
+If you want to try it locally, you can follow these instructions. Feel free to [reach out for help](mailto:help@unitedeffects.com):
+* [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
 
 ## WIKI Guides
 
-We are in the process of migrating and updating our documentation. We recommend you check out our official documentation to start at https://docs.unitedeffects.com
+We are in the process of migrating and updating our documentation. We recommend you check out our official documentation to start at https://docs.unitedeffects.com.
 The below WIKI may be a little out of date in some places. We will resolve that or migrate the pages soon.
 If you can't find something you need, reach out: [United Effects Team](mailto:help@unitedeffects.com)
 
