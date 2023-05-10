@@ -8,7 +8,7 @@ The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER
 
 ## Note to Followers
 
-Thank you for your support of UE Auth! We have been adding A LOT of functionality, but we have not updated this documentation just yet. Please be patient as this is all happening with the launch of our commercial SaaS solution which you can access at [unitedeffects.com](https://unitedeffects.com). We will update these documents very soon. In the meantime, you can access our up-to-date API documentation in our demo environment here: [DEMO API DOCS](https://qa.ueauth.io/api)
+Thank you for your support of UE Auth! We have been adding A LOT of functionality, but we have not updated this documentation just yet. Please be patient as this is all happening with the launch of our commercial SaaS solution which you can access at [unitedeffects.com](https://unitedeffects.com). We will update these documents very soon. In the meantime, you can try UE Auth absolutely free on our [commercial offering](https://core.unitedeffects.com), and you can see the full API documented in our [docs](https://docs.unitedeffects.com).
 
 ## LICENSE
 
@@ -18,7 +18,8 @@ This project is available under a modified Apache 2.0 license which states that 
 
 #### Solutions
 
-If you'd like to access the features of UE Auth and much more without having to DIY the solution, please visit our commercial offerings at [United Effects](https://unitedeffects.com) where our Beta is free to use, and there will always be a free tier. Alternatively, you may contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com).
+If you'd like to access the features of UE Auth and much more without having to DIY the solution, please visit our commercial offerings at [United Effects](https://unitedeffects.com) where you can sign up completely free without a credit card. Also, note that the commercial version of UE Auth is 100% free to use for startups with less than $1M in funding, $500K in revenue, and 10K monthly active users.
+Alternatively, you may contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com).
 
 #### Support
 
@@ -31,46 +32,22 @@ If you're looking for help with a commercial solution, you may contact us at [he
 
 ## API Documentation and Demo
 
-* [Demo Service](https://qa.ueauth.io)
-* The UE Auth API is well documented and available here: https://qa.ueauth.io/api
-* You can create an AuthGroup and experiment with the API in the demo account using swagger: https://qa.ueauth.io/swagger
-    * See Getting Started below for details
-* Once you have an AuthGroup, you can actually utilize the AuthGroup to login directly from swagger by inserting the group into the swagger URL as follows: https://qa.ueauth.io/{yourgroup id or prettyName}/swagger
+* The UE Auth API is well documented and available at https://docs.unitedeffects.com/reference
+* You can signup for an account with UE Auth for free to experiment at https://core.unitedeffects.com
+* Once you have an AuthGroup, you can actually utilize the AuthGroup to login directly from swagger by inserting the group into the swagger URL as follows: https://auth.unitedeffects.com/{yourgroup id or prettyName}/swagger
     * Click Authorize and scroll down to the Code Authorization flow. You'll need your AuthGroup associated client_id and client_secret, which would have been provided when you signed up
     * Please note, you will still need to enter a value into the required group fields throughout the API to make openapi requests; however, for your convenience, the ID of the authgroup you've selected is displayed and used rather than whatever you may enter in the field.
 
-## Manual Quick Start with the Demo
+## Quick Start
 
-1. Navigate to https://qa.ueauth.io/swagger
-2. Access the [Group creation API - POST /api/group](https://qa.ueauth.io/swagger#/Auth%20Groups/post_api_group)
-3. Click "Try it out" and define the POST request object ensuring the required fields are defined:
-```json
-{
-  "name": "Your Group Name",
-  "prettyName": "your_url_friendly_name",
-  "owner": "you@example.com",
-  "locked": false,
-  "primaryDomain": "https://example.com",
-  "primaryEmail": "info@example.com"
-}
-```
-4. Make the request and take note of the response properties. One of them will be an initialAccessToken. Another property will be the securityExpiration, which is how long you have to create your account and activate the AuthGroup before it auto deletes.
-5. Access the [Account creation API - POST /api/your_url_friendly_name/account](https://qa.ueauth.io/swagger#/Users/writeAccount)
-6. Click the Authorization button and paste the initialAccessToken from step 4 into the bearer field
-7. Click "Try it out" and define the POST request object for the account. Make sure you use the same email address you used to define the Owner when you created your AuthGroup - your@example.com
-```json
-{
-  "username": "you@example.com",
-  "email": "you@example.com",
-  "password": "yourpassword"
-}
-```
-8. Make the request. This will create your account, activate your AuthGroup, provide a oAuth Client with client_id and client_secret, initialize the primary products, organizations and domains and finally associate you to those products so you have full Admin privileges.
-9. Access your well-known URL here: https://qa.ueauth.io/your_url_friendly_name/.well-known/openid-configuration
+Our help docs have a lot of information to get you started with the technology on our hosted solution. That covers 95% of what's possible with this open source version. You can follow the [Quick Start in our docs](https://docs.unitedeffects.com/reference/getting-started-with-your-api) and try the API immediately.
+If you want to try it locally, you can follow these instructions. Feel free to [reach out for help](mailto:help@unitedeffects.com): [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
 
-## Guides
+## WIKI Guides
 
-Please note, documentation is still a work in progress. If you can't find something you need, reach out: [United Effects Team](mailto:help@unitedeffects.com)
+We are in the process of migrating and updating our documentation. We recommend you check out our official documentation to start at https://docs.unitedeffects.com
+The below WIKI may be a little out of date in some places. We will resolve that or migrate the pages soon.
+If you can't find something you need, reach out: [United Effects Team](mailto:help@unitedeffects.com)
 
 * [UE Auth](https://github.com/UnitedEffects/ueauth/wiki)
 * [Overview](https://github.com/UnitedEffects/ueauth/wiki/Overview)
