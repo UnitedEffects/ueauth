@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml/badge.svg)](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml)
 
-[UEAuth](https://ueauth.io) is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management and provides the missing pieces enterprises typically have to develop on their own in a single package.
+[UEAuth](https://ueauth.com) is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management and provides the missing pieces enterprises typically have to develop on their own in a single package.
 
 The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider), which is the only [openid.net](https://openid.net/developers/certified/) certified javascript library currently listed. Multi-tenancy in this context means each tenant is an "AuthGroup" and all artifacts such as accounts (users) and clients are unique and locked to the AuthGroup.
 
@@ -92,4 +92,4 @@ UE Auth is a Patent Pending Technology. Please read the License before use.
 
 If you are interested in learning about investment opportunities with United Effects, contact [invest@unitedeffects.com](mailto:invest@unitedeffects.com)
 
-Copyright (c) 2022 [United Effects LLC](https://unitedeffects.com), all rights reserved.
+Copyright (c) 2023 [United Effects LLC](https://unitedeffects.com), all rights reserved.
