@@ -25,11 +25,6 @@ Alternatively, you may contact us at [solution@unitedeffects.com](mailto:solutio
 
 If you're looking for help with a commercial solution, you may contact us at [help@unitedeffects.com](mailto:help@unitedeffects.com).
 
-
-## Object Relationship Model
-
-![Object Relationships Diagram](https://unitedeffects.com/docs/object-relationships.jpeg)
-
 ## API Documentation and Demo
 
 * The UE Auth API is well documented and available at https://docs.unitedeffects.com/reference
