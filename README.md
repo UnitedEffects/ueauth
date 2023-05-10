@@ -67,10 +67,6 @@ If you're looking for help with a commercial solution, you may contact us at [he
 ```
 8. Make the request. This will create your account, activate your AuthGroup, provide a oAuth Client with client_id and client_secret, initialize the primary products, organizations and domains and finally associate you to those products so you have full Admin privileges.
 9. Access your well-known URL here: https://qa.ueauth.io/your_url_friendly_name/.well-known/openid-configuration
-    
-## Optional Dependency
-
-* TODO pulsar-client optional dependency overview and limitations here
 
 ## Guides
 
