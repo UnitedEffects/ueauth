@@ -40,19 +40,24 @@ export default {
 };
 
 async function callback(interaction, response) {
-	const data = JSON.parse(JSON.stringify(interaction));
-	data.state = data.uid;
-	delete data.uid;
-	const options = {
-		url: interaction.cb,
-		method: 'post',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		data: {
-			challenge: data,
-			response
-		}
-	};
-	return axios(options);
+	try {
+		const data = JSON.parse(JSON.stringify(interaction));
+		data.state = data.uid;
+		data.key = response.providerKey;
+		data.authGroup = response.authGroup;
+		data.response = response.state;
+		data.createdAt = response.createdAt;
+		delete data.uid;
+		const options = {
+			url: interaction.cb,
+			method: 'post',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			data
+		};
+		return axios(options);
+	} catch (error) {
+		console.error('Attempted the callback with error', error);
+	}
 }

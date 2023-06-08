@@ -21,13 +21,12 @@ export default {
 			const account = await acct.getAccountByEmailOrId(authGroup.id, req.body.lookup);
 			if(!account) throw Boom.badRequest(`Could not identify account ${req.body.lookup}`);
 			if (account.mfa?.enabled !== true) throw Boom.badRequest(`Account ${req.body.lookup} does not have an auth device enabled.`);
-			const stateValue = req.body.state || uuid();
+			const stateValue = req.body.state || crypto.randomBytes(64).toString('hex');
 			await states.saveState({
 				stateValue,
 				authGroup: authGroup.id,
 				account: account.id
 			});
-			//todo make sure callback is a url and exists
 			const meta = {
 				event: 'ue.challenge.callback',
 				callback: req.body.callback,

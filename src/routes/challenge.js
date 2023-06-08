@@ -41,6 +41,8 @@ router.put('/:group/device/challenge', [
 	m.schemaCheck,
 	m.validateAuthGroup,
 	m.isAuthenticated,
+	m.permissions,
+	m.access('notification'),
 	m.getGlobalPluginSettings,
 ], challengeApi.customChallenge);
 

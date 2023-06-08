@@ -850,8 +850,8 @@ paths:
     put:
       tags:
         - Device Challenge
-      summary: Send custom transaction challenges to a registered device within your AuthGroup.
-      description: Send custom transaction challenges to a registered device within your AuthGroup. This API allows you to define and send a transaction challenge with a callback that is called when the user responds.
+      summary: BETA - Send custom transaction challenges to a registered device within your AuthGroup.
+      description: BETA - Send custom transaction challenges to a registered device within your AuthGroup. This API allows you to define and send a transaction challenge with a callback that is called when the user responds.
       operationId: customChallenge
       parameters:
         - name: group
@@ -876,7 +876,7 @@ paths:
                     format: uuid
                   state:
                     type: string
-                    format: uuid
+                    description: cryptographically secure 64 character value
                   callback:
                     type: string
                     format: uri
@@ -916,7 +916,7 @@ paths:
                   description: The email address or account ID of the user
                 state:
                   type: string
-                  description: A unique ID to mark this transaction. If not provided, one will be generated.
+                  description: A unique cryptographically secure value to mark this transaction. If not provided, one will be generated. If unsure, we recommend letting UE Auth generate it.
                 duration:
                   type: string
                   description: How long should the system wait before the request expires? 5m (five minutes), 10m (ten minutes), etc.
