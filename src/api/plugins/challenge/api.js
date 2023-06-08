@@ -90,7 +90,6 @@ export default {
 			const authGroup = req.authGroup.id;
 			const providerKey = req.params.key;
 			const result = await challenge.status({ accountId, uid, authGroup, providerKey });
-			console.info(result);
 			if(result?.state === 'approved') return res.respond(say.noContent());
 			return res.respond(say.partial());
 		} catch (error) {
