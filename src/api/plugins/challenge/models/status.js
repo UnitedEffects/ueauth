@@ -27,6 +27,7 @@ const transactionChallengeSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	transactionData: Object,
 	state: {
 		type: String,
 		enum: ['pending', 'approved', 'denied']

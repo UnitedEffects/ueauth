@@ -847,11 +847,79 @@ paths:
         required: true
 
   /api/{group}/device/challenge:
+    put:
+      tags:
+        - Device Challenge
+      summary: Send custom transaction challenges to a registered device within your AuthGroup.
+      description: Send custom transaction challenges to a registered device within your AuthGroup. This API allows you to define and send a transaction challenge with a callback that is called when the user responds.
+      operationId: customChallenge
+      parameters:
+        - name: group
+          in: path
+          description: the auth group ID associated to your business account
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId:
+                    type: string
+                    format: uuid
+                  response:
+                    type: object
+                    description: response from provider
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '427':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - header
+                - message
+                - lookup
+              properties:
+                title:
+                  type: string
+                  description: The title of your transaction challenge
+                header:
+                  type: string
+                  description: The header that is displayed to the user on the auth app
+                message:
+                  type: string
+                  description: The message the user will see in the auth app
+                lookup:
+                  type: string
+                  description: The email address or account ID of the user
+                state:
+                  type: string
+                  description: A unique ID to mark this transaction. If not provided, one will be generated.
+                duration:
+                  type: string
+                  description: How long should the system wait before the request expires? 5m (five minutes), 10m (ten minutes), etc.
+                callback:
+                  type: string
+                  description: What url should UE Auth send a POST request to notify of a response?
     post:
       tags:
         - Device Challenge
-      summary: For an account with a saved state session, initiate a device based challenge.
-      description: For an account with a saved state session, initiate a device based challenge.
+      summary: Exclusively for use with a login flow for an account with a saved state session, initiate a device based challenge.
+      description: Exclusively for use with a login flow for an account with a saved state session, initiate a device based challenge.
       operationId: deviceSendChallenge
       parameters:
         - name: group

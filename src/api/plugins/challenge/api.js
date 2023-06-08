@@ -1,6 +1,7 @@
+import Boom from '@hapi/boom';
+import { v4 as uuid } from 'uuid';
 import challenge from './challenge';
 import states from '../state/state';
-import Boom from '@hapi/boom';
 import acc from '../../accounts/account';
 import group from '../../authGroup/group';
 import {say} from '../../../say';
@@ -12,6 +13,56 @@ import n from '../notifications/notifications';
 const config = require('../../../config');
 
 export default {
+	async customChallenge(req, res, next) {
+		/*
+		const tempBody = {
+			title: 'required',
+			header: 'required',
+			message: 'required',
+			lookup: 'required',
+			state: 'optional',
+			callback: 'required'
+			duration: 'optional'
+		};
+
+		 */
+		try {
+			if(!req.authGroup) throw Boom.forbidden();
+			const { authGroup } = await group.safeAuthGroup(req.authGroup);
+			if(!req.body.lookup) throw Boom.badRequest();
+			const account = await acct.getAccountByEmailOrId(authGroup.id, req.body.lookup);
+			if(!account) throw Boom.badRequest(`Could not identify account ${req.body.lookup}`);
+			console.info(account);
+			if (account.mfa?.enabled !== true) throw Boom.badRequest(`Account ${req.body.lookup} does not have an auth device enabled.`);
+			const stateValue = req.body.state || uuid();
+			await states.saveState({
+				stateValue,
+				authGroup: authGroup.id,
+				account: account.id
+			});
+			//todo make sure callback is a url and exists
+			const meta = {
+				event: 'ue.challenge.callback',
+				callback: req.body.callback,
+				duration: req.body.duration,
+				content: {
+					title: req.body.title,
+					header: req.body.header,
+					body: req.body.message
+				}
+			};
+			const deviceResult = await challenge.sendChallenge(authGroup, req.globalSettings, {
+				accountId: account.id,
+				mfaEnabled: true
+			}, stateValue, meta);
+			if(!deviceResult) throw Boom.failedDependency('unknown challenge error');
+			const out = JSON.parse(JSON.stringify(deviceResult));
+			out.accountId = account.id;
+			return res.respond(say.ok(out, 'CHALLENGE'));
+		} catch (error) {
+			next(error);
+		}
+	},
 	async sendChallenge(req, res, next) {
 		try {
 			if(!req.authGroup) throw Boom.forbidden();
@@ -29,12 +80,12 @@ export default {
 					body: 'If you initiated this login, Approve below. Otherwise click Decline and change your password.'
 				}
 			};
-			const mfaResult = await challenge.sendChallenge(authGroup, req.globalSettings, {
+			const deviceResult = await challenge.sendChallenge(authGroup, req.globalSettings, {
 				accountId: account.id,
 				mfaEnabled: true
 			}, req.body.state, meta);
-			if(!mfaResult) throw Boom.failedDependency('unknown challenge error');
-			const out = JSON.parse(JSON.stringify(mfaResult));
+			if(!deviceResult) throw Boom.failedDependency('unknown challenge error');
+			const out = JSON.parse(JSON.stringify(deviceResult));
 			out.accountId = account.id;
 			return res.respond(say.ok(out, 'CHALLENGE'));
 		} catch (error) {

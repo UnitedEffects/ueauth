@@ -51,7 +51,7 @@ const httpProxyApi = {
 		};
 		const result = await dal.findChallengeAndUpdate(update);
 		// if there is an event in the message, we process
-		await events.processEvent(data?.interactionDetails?.event, ag, accountId, uid, result);
+		await events.processEvent(data?.interactionDetails, ag, accountId, uid, result);
 		return result;
 	},
 	async bindUser(provider, authGroup, account) {

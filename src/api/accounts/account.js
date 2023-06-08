@@ -368,6 +368,9 @@ export default {
 	async getAccountByEmailUsernameOrPhone(authGroup, data) {
 		return dal.getAccountByEmailUsernameOrPhone(authGroup, data);
 	},
+	async getAccountByEmailOrId(authGroup, data) {
+		return dal.getAccountByEmailOrId(authGroup, data);
+	},
 	async getOwnerGroups(lookup) {
 		const result = await dal.getOwnerGroups(lookup);
 		const output = result.filter((ag) => {

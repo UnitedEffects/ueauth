@@ -80,7 +80,7 @@ const pkApi = {
 		};
 		const result = await dal.findChallengeAndUpdate(update);
 		// if there is an event in the message, we process
-		await events.processEvent(interaction?.event, ag, accountId, uid, result);
+		await events.processEvent(interaction, ag, accountId, uid, result);
 		return result;
 	},
 	async bindUser(provider, authGroup, account) {
@@ -132,6 +132,7 @@ const pkApi = {
 		output.accountId = data.accountId;
 		return output;
 	},
+	/*
 	async finishWebAuthNReq(event, accountId, credential) {
 		hide(flashContainer);
 		event.preventDefault();
@@ -152,6 +153,8 @@ const pkApi = {
 		if(result?.data?.data?.success !== true) throw new Error('not logged in');
 		return result.data.data;
 	},
+
+	 */
 	async finishAuth(provider, authGroup, data) {
 		//ignoring provider parameter for this implementation
 		const options = {
@@ -266,9 +269,10 @@ const pkApi = {
 		const callback = `${config.PROTOCOL}://${config.SWAGGER}/api/${authGroup.id}/mfa/callback`;
 		const transactionId = { uid, accountId: account.accountId };
 		if(meta?.event) transactionId.event = meta.event;
+		if(meta?.callback) transactionId.cb = meta.callback;
 		const data = {
 			accountId: account.accountId,
-			duration: '5m',
+			duration: (meta.duration) ? meta.duration : '5m',
 			additionalInfo: {'template':'true'},
 			transactionId: JSON.stringify(transactionId),
 			notificationTitle: meta?.notification?.title || content.title,
@@ -306,6 +310,7 @@ const pkApi = {
 				providerKey: pkey.data.guid,
 				uid,
 				accountId: account.accountId,
+				transactionData: transactionId,
 				state: 'pending'
 			});
 		} catch (error) {
