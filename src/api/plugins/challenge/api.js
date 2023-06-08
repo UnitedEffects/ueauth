@@ -14,25 +14,12 @@ const config = require('../../../config');
 
 export default {
 	async customChallenge(req, res, next) {
-		/*
-		const tempBody = {
-			title: 'required',
-			header: 'required',
-			message: 'required',
-			lookup: 'required',
-			state: 'optional',
-			callback: 'required'
-			duration: 'optional'
-		};
-
-		 */
 		try {
 			if(!req.authGroup) throw Boom.forbidden();
 			const { authGroup } = await group.safeAuthGroup(req.authGroup);
 			if(!req.body.lookup) throw Boom.badRequest();
 			const account = await acct.getAccountByEmailOrId(authGroup.id, req.body.lookup);
 			if(!account) throw Boom.badRequest(`Could not identify account ${req.body.lookup}`);
-			console.info(account);
 			if (account.mfa?.enabled !== true) throw Boom.badRequest(`Account ${req.body.lookup} does not have an auth device enabled.`);
 			const stateValue = req.body.state || uuid();
 			await states.saveState({
@@ -55,9 +42,14 @@ export default {
 				accountId: account.id,
 				mfaEnabled: true
 			}, stateValue, meta);
-			if(!deviceResult) throw Boom.failedDependency('unknown challenge error');
-			const out = JSON.parse(JSON.stringify(deviceResult));
-			out.accountId = account.id;
+			if(!deviceResult?.id) throw Boom.failedDependency('unknown challenge error');
+			const out = {
+				key: deviceResult.id,
+				accountId: account.id,
+				state: stateValue,
+				callback: req.body.callback,
+				duration: req.body.duration
+			};
 			return res.respond(say.ok(out, 'CHALLENGE'));
 		} catch (error) {
 			next(error);
@@ -99,6 +91,7 @@ export default {
 			const authGroup = req.authGroup.id;
 			const providerKey = req.params.key;
 			const result = await challenge.status({ accountId, uid, authGroup, providerKey });
+			console.info(result);
 			if(result?.state === 'approved') return res.respond(say.noContent());
 			return res.respond(say.partial());
 		} catch (error) {

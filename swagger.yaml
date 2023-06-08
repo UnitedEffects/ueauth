@@ -868,12 +868,20 @@ paths:
               schema:
                 type: object
                 properties:
+                  key:
+                    type: string
+                    format: uuid
                   accountId:
                     type: string
                     format: uuid
-                  response:
-                    type: object
-                    description: response from provider
+                  state:
+                    type: string
+                    format: uuid
+                  callback:
+                    type: string
+                    format: uri
+                  duration:
+                    type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -914,6 +922,7 @@ paths:
                   description: How long should the system wait before the request expires? 5m (five minutes), 10m (ten minutes), etc.
                 callback:
                   type: string
+                  format: uri
                   description: What url should UE Auth send a POST request to notify of a response?
     post:
       tags:
