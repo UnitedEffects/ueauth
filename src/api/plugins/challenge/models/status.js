@@ -5,7 +5,7 @@ const transactionChallengeSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
 		default: Date.now,
-		expires: 600
+		expires: 1200
 	},
 	_id: {
 		type: String,
@@ -27,6 +27,7 @@ const transactionChallengeSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	transactionData: Object,
 	state: {
 		type: String,
 		enum: ['pending', 'approved', 'denied']

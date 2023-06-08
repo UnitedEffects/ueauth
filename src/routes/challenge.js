@@ -37,6 +37,15 @@ router.post('/:group/device/challenge', [
 	m.getGlobalPluginSettings,
 ], challengeApi.sendChallenge);
 
+router.put('/:group/device/challenge', [
+	m.schemaCheck,
+	m.validateAuthGroup,
+	m.isAuthenticated,
+	m.permissions,
+	m.access('notification'),
+	m.getGlobalPluginSettings,
+], challengeApi.customChallenge);
+
 // In case we design something else for the callback system later
 async function callback(req, res, next) {
 	const func = req.params.function;
