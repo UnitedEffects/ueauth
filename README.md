@@ -2,60 +2,56 @@
 
 [![Build](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml/badge.svg)](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml)
 
-[UEAuth](https://ueauth.com) is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions. The feature set combines similar functionality you find in Commercial SaaS providers for Identity Management and provides the missing pieces enterprises typically have to develop on their own in a single package.
+[UE Auth](https://ueauth.com) is a multi-tenant OIDC / OAuth 2.0 provider and identity management platform that features (non-exhaustive):
 
-The Multi-tenant OIDC component of UEAuth is built on top of [NODE OIDC PROVIDER](https://github.com/panva/node-oidc-provider), which is the only [openid.net](https://openid.net/developers/certified/) certified javascript library currently listed. Multi-tenancy in this context means each tenant is an "AuthGroup" and all artifacts such as accounts (users) and clients are unique and locked to the AuthGroup.
+- User management
+- Organization management (e.g., customers, departments, groups, etc.)
+- Product management
+- Role & Fine-grained permissions by product (actions that can be taken agains highly specific elements of a product)
+- B2B product access managed and mapped between customers, users, and products
+- An interface to retrieve all access for a user through the OIDC token
+- Plugin support for notifications, event streaming, transaction challenges (MFA, Device Login, etc.), and WebAuthN
+- Magic link, social, and passwordless logins
+- Federated SSO globally or by product supporting OIDC, OAuth, and SAML protocols
 
-## Note to Followers
+The project is intended to create a single hybrid solution to serve as identity and access for both self-registered B2C apps and enterprise B2B solutions. The feature set combines the functionality you find in traditional commercial auth providers for identity management from the last decade, but provides the missing pieces development organizations typically have to build on their own, all as one package that can be run as a container.
 
-Thank you for your support of UE Auth! We have been adding A LOT of functionality, but we have not updated this documentation just yet. Please be patient as this is all happening with the launch of our commercial SaaS solution which you can access at [unitedeffects.com](https://unitedeffects.com). We will update these documents very soon. In the meantime, you can try UE Auth absolutely free on our [commercial offering](https://core.unitedeffects.com), and you can see the full API documented in our [docs](https://docs.unitedeffects.com).
+## References
 
-## LICENSE
+UE Auth incorporate many amazing technologies. [See credits and references for details](https://docs.unitedeffects.com/docs/references).
 
-This project is available under a modified Apache 2.0 license which states that while you may make use of this product in a number of ways, you may not sell the product as an offering unto itself. UE Auth is a Patent Pending technology, please review the [license](LICENSE.md). Please feel free to [contact us at United Effects](mailto:solution@unitedeffects.com) to discuss alternative licensing options.
+## Documentation & Getting Started
 
-### SaaS Offerings
+This project is documented on the [United Effects developer portal](https://docs.unitedeffects.com/docs/open-source). If you are a developer, we recommend you start there.
 
-#### Solutions
+## API Reference
 
-If you'd like to access the features of UE Auth and much more without having to DIY the solution, please visit our commercial offerings at [United Effects](https://unitedeffects.com) where you can sign up completely free without a credit card. Also, note that the commercial version of UE Auth is 100% free to use for startups with less than $1M in funding, $500K in revenue, and 10K monthly active users.
-Alternatively, you may contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com).
+The UE Auth API (along with others provided by United Effects) can be viewed in our [document portal](https://docs.unitedeffects.com/reference/getting-started-with-your-api). All documented APIs are exactly the same when served locally; however, some APIs are visible in the local Swagger that are not in the public reference.
 
-#### Support
+## Open Source LICENSE
 
-If you're looking for help with a commercial solution, you may contact us at [help@unitedeffects.com](mailto:help@unitedeffects.com).
+UE Auth is a Patent Pending technology, please review the [license](LICENSE.md). This project is available under a modified Apache 2.0 license which states that while you may make use of this product in a number of ways, you may not sell the product as an offering unto itself. Please feel free to [contact us at United Effects](mailto:solution@unitedeffects.com) to discuss alternative licensing options.
 
-## API Documentation and Demo
+## SaaS Commercial Offering
 
-* The UE Auth API is well documented and available at https://docs.unitedeffects.com/reference
-* You can signup for an account with UE Auth for free to experiment at https://core.unitedeffects.com
-* Once you have an AuthGroup, you can actually utilize the AuthGroup to login directly from swagger by inserting the group into the swagger URL as follows: https://auth.unitedeffects.com/{yourgroup id or prettyName}/swagger
-    * Click Authorize and scroll down to the Code Authorization flow. You'll need your AuthGroup associated client_id and client_secret, which would have been provided when you signed up
-    * Please note, you will still need to enter a value into the required group fields throughout the API to make openapi requests; however, for your convenience, the ID of the authgroup you've selected is displayed and used rather than whatever you may enter in the field.
+If you'd like to access the features of UE Auth and much more without having to DIY the solution, please visit our commercial offerings at [United Effects](https://ueauth.com) where you can sign up completely free without a credit card.
 
-## Quick Start
+### FREE FOR STARTUPS
 
-Our help docs have a lot of information to get you started with the technology on our hosted solution. That covers 95% of what's possible with this open source version. You can follow the [Quick Start in our docs](https://docs.unitedeffects.com/reference/getting-started-with-your-api) and try the API immediately.
-If you want to try it locally, you can follow these instructions. Feel free to [reach out for help](mailto:help@unitedeffects.com):
-* [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
+The commercial version of UE Auth is 100% free to use for startups with less than $1M in funding, $500K in revenue, and 10K monthly active users.
+Contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com) to discuss.
 
-## WIKI Guides
+## Support
 
-We are in the process of migrating and updating our documentation. We recommend you check out our official documentation to start at https://docs.unitedeffects.com.
-The below WIKI may be a little out of date in some places. We will resolve that or migrate the pages soon.
-If you can't find something you need, reach out: [United Effects Team](mailto:help@unitedeffects.com)
+* If you're looking for help with a commercial solution, you may contact us at [help@unitedeffects.com](mailto:help@unitedeffects.com) or visit our document portal: [docs.unitedeffects.com](https://docs.unitedeffects.com)
+* If you need help with the open source solution, please create an appropriate Issue.
 
-* [UE Auth](https://github.com/UnitedEffects/ueauth/wiki)
-* [Overview](https://github.com/UnitedEffects/ueauth/wiki/Overview)
-* [Getting Started](https://github.com/UnitedEffects/ueauth/wiki/Getting-Started)
-* [Local Setup](https://github.com/UnitedEffects/ueauth/wiki/Local-Setup)
-* [Specifications](https://github.com/UnitedEffects/ueauth/wiki/Specifications)
-* [System Configuration](https://github.com/UnitedEffects/ueauth/wiki/System-Configuration)
-* [AuthGroup Configuration](https://github.com/UnitedEffects/ueauth/wiki/AuthGroup-Configuration)
-* [Notification Plugin](https://github.com/UnitedEffects/ueauth/wiki/Notification-Plugin)
-* [FAQ & Tips](https://github.com/UnitedEffects/ueauth/wiki/FAQ-and-Tips)
+### Community
 
-UE Auth is a Patent Pending Technology. Please read the License before use.
+* [Join our slack community!](https://docs.unitedeffects.com/docs/community-and-support)
+* [LinkedIn](https://www.linkedin.com/company/unitedeffects)
+* [Twitter](https://twitter.com/ueffectsLLC)
+* [Medium Blog](https://blog.unitedeffects.com)
 
 ## Investment Opportunities
 
