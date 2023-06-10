@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml/badge.svg)](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml)
 
-[UE Auth](https://ueauth.com) is a multi-tenant OIDC / OAuth 2.0 provider and identity management platform that features (non-exhaustive):
+[UE Auth](https://ueauth.com) is a **Patent Pending** multi-tenant OIDC / OAuth 2.0 provider and identity management platform that features (non-exhaustive):
 
 - User management
 - Organization management (e.g., customers, departments, groups, etc.)
