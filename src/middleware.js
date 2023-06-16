@@ -37,6 +37,9 @@ const mid = {
 			next(error);
 		}
 	},
+	nofavicon (req, res) {
+		return res.status(204).send();
+	},
 	domainProxySettings(req, res, next) {
 		try {
 			req.cdHostname = req.hostname;
@@ -174,7 +177,7 @@ const mid = {
 			const AG = await group.findByAliasDNS(req.cdHostname);
 			if(!AG) {
 				console.info('SUSPICIOUS REQUEST HEADERS', req.headers);
-				throw Boom.notFound(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
+				throw Boom.notImplemented(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
 			}
 			req.customDomain = req.cdHostname;
 			req.customDomainUI = AG.aliasDnsUi;
@@ -217,7 +220,7 @@ const mid = {
 			}
 
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
-			if (helper.protectedNames(req.params.group)) throw Boom.notFound(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
+			if (helper.protectedNames(req.params.group)) throw Boom.notImplemented(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
 			const result = await helper.cacheAG(req.query.resetCache, 'AG', req.params.group);
 			req.authGroup = result;
 			req.ogPathGroup = req.params.group;
@@ -227,7 +230,7 @@ const mid = {
 			if(req.cdHostname !== config.SWAGGER.split(':')[0]) {
 				if(req.authGroup.aliasDnsOIDC !== req.cdHostname) {
 					console.info('SUSPICIOUS REQUEST HEADERS', req.headers);
-					throw Boom.notFound(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
+					throw Boom.notImplemented(`Request from unrecognized DNS: ${req.cdHostname} (header value - ${req.headers.host}) - group: ${req.params.group} - ${req.method} - ${req.path}`);
 				}
 				req.customDomain = req.cdHostname;
 				req.customDomainUI = req.authGroup.aliasDnsUi;
@@ -235,8 +238,8 @@ const mid = {
 			// adding organization context for secure API calls into this... may find a better home later
 			return mid.organizationContext(req, res, next);
 		} catch (error) {
-			console.error('AG Validation Error', error);
-			next(Boom.notFound(error.message || `Group id/alias attempted was '${req.params.group}' with path: ${req.path}`));
+			//console.error('AG Validation Error', error);
+			next(Boom.notImplemented(error.message || `Group id/alias attempted was '${req.params.group}' with path: ${req.path}`));
 		}
 	},
 	async organizationContext(req, res, next) {
@@ -252,7 +255,7 @@ const mid = {
 			// skip this if its just a swagger request
 			if(req.path.includes('swagger')) return next();
 			const primaryOrg = await helper.cachePrimaryOrg(req.query.resetCache, req.authGroup);
-			if(!primaryOrg) throw Boom.notFound('AuthGroup missing primary organization');
+			if(!primaryOrg) throw Boom.failedDependency('AuthGroup missing primary organization');
 			req.primaryOrg = primaryOrg;
 			if(ogPath && req.params && req.params.id && req.path === `/${ogPath}/organizations/${req.params.id}`){
 				const orgCon = await orgs.getOrg(req.params.group, req.params.id);
@@ -271,7 +274,7 @@ const mid = {
 			return next();
 		} catch (error) {
 			console.error(error);
-			next(Boom.notFound(error.message || 'Organization Context'));
+			next(Boom.failedDependency(error.message || 'Organization Context'));
 		}
 	},
 	async validateOrganization (req, res, next) {
@@ -336,7 +339,7 @@ const mid = {
 	async validateAuthGroupAllowInactive (req, res, next) {
 		try {
 			if (!req.params.group) throw Boom.preconditionRequired('authGroup is required');
-			if (helper.protectedNames(req.params.group)) throw Boom.notFound(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
+			if (helper.protectedNames(req.params.group)) throw Boom.notImplemented(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
 			const result = await helper.cacheAG(req.query.resetCache, 'AG.ALT', req.params.group, false);
 			req.authGroup = result;
 			req.ogPathGroup = req.params.group;

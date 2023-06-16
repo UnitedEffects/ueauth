@@ -186,7 +186,7 @@ export default {
 			result = JSON.parse(cache);
 		}
 		if (!result) {
-			throw Boom.notFound('auth group not found');
+			throw Boom.notImplemented('auth group not found');
 		}
 		if (!cache) {
 			const holdThis = JSON.parse(JSON.stringify(result));

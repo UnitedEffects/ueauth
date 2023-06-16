@@ -40,6 +40,7 @@ app.use(middle.cores);
 
 //content and APIs
 app.use(express.static(path.join(__dirname, '../public')));
+
 app.use('/', Root);
 app.use('/', AccService);
 app.use('/', OIDC);
