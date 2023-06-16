@@ -12,7 +12,7 @@ const api = {
 			let tenant;
 			if(!req.authGroup) {
 				tenant = await group.getOneByEither(req.params.group, false);
-				if(!tenant) throw Boom.notFound(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
+				if(!tenant) throw Boom.notImplemented(`Group id/alias attempted was '${req.params.group}' with path: ${req.path}`);
 			} else tenant = req.authGroup;
 			const provider = oidc(tenant, req.customDomain);
 			return provider.callback()(req, res, next);

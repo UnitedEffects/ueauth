@@ -15,7 +15,8 @@ export default {
 			out = JSON.parse(JSON.stringify(await dal.writeLogObject(log)));
 			out.persisted = true;
 		} else out = JSON.parse(JSON.stringify(log));
-		console.log(out);
+		// limit outputs...
+		if(out?.details?.statusCode !== 404) console.info(out);
 		return out;
 	},
 

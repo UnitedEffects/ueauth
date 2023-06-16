@@ -32,6 +32,7 @@ router.get('/', m.validateHostDomain, (req, res) => {
 		production: (config.ENV === 'production')
 	});
 });
+router.get('/favicon.ico', m.nofavicon);
 router.get('/ready-check', m.health);
 router.get('/:group/api', m.validateAuthGroup, openapi.reDocApi);
 router.get('/:group/swagger', m.validateAuthGroup, openapi.serveSwaggerUI);
