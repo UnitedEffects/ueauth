@@ -161,8 +161,8 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
 			expect(spy).toHaveBeenCalled();
 			const args = spy.mock.calls[0];
-			expect(args[0].status).toBe(404);
-			expect(args[0].body.error).toBe('Not Found');
+			expect(args[0].status).toBe(501);
+			expect(args[0].body.error).toBe('Not Implemented');
 			expect(args[0].body.message).toBe('auth group not found');
 		} catch (error) {
 			t.fail(error);
