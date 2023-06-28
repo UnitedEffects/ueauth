@@ -106,7 +106,7 @@ export default {
 	async getClientAccess(authGroup, id) {
 		return Client.findOne({
 			_id: id,
-			'payload.auth_group': authGroup
+			'payload.auth_group': authGroup.id
 		}).select({ _id: 1, access: 1, 'payload.auth_group': 1 });
 	},
 	async applyClientAccess(authGroup, id, access) {

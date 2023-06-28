@@ -25,7 +25,7 @@ export default {
 	},
 	async getClientAccess(authGroup, id) {
 		let result = await dal.getClientAccess(authGroup, id);
-        result = cleanupAccessResponse(result);
+		result = cleanupAccessResponse(result);
 		return result;
 	},
 	async getFormattedClientAccess(authGroup, id) {
@@ -70,7 +70,7 @@ export default {
 		await Promise.all(task);
 		if(errors.length !== 0) throw Boom.preconditionRequired('One or more of the roles specified do not exist', errors);
 		let result = await dal.applyClientAccess(authGroup, id, access);
-        result = cleanupAccessResponse(result);
+		result = cleanupAccessResponse(result);
 		ueEvents.emit(authGroup, 'ue.client.access.defined', result);
 		return result;
 	},
