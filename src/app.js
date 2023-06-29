@@ -15,7 +15,8 @@ import {
 	AccService,
 	Plugins,
 	Notifications,
-	WebAuthN
+	WebAuthN,
+	ProductKeys
 } from './routes';
 import middle from './middleware';
 
@@ -50,6 +51,7 @@ app.use('/api', Plugins);
 app.use('/api', Notifications);
 app.use('/api', WebAuthN);
 app.use('/api', Access);
+app.use('/api', ProductKeys);
 app.use('/api', Profiles);
 app.use('/api', Stats);
 

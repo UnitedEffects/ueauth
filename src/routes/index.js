@@ -10,3 +10,4 @@ export { default as Stats } from './stats';
 export { default as Plugins } from './plugins';
 export { default as Notifications } from './notifications';
 export { default as WebAuthN } from './webauthn';
+export { default as ProductKeys } from './productKeys';

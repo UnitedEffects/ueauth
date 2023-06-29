@@ -56,6 +56,34 @@
     "description": "UE Core permission"
   },
   {
+    "target": "clientAccess",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
     "target": "notification",
     "action": "create",
     "core": true,

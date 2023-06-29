@@ -12,6 +12,7 @@ import RefreshToken from './refreshToken';
 import RegistrationAccessToken from './registrationAccessToken';
 import ReplayDetection from './replayDetection';
 import Grant from './grant';
+import ProductKey from './productKey';
 
 function getModel (name) {
 	switch (name) {
@@ -41,6 +42,8 @@ function getModel (name) {
 		return ReplayDetection;
 	case Grant.modelName:
 		return Grant;
+	case ProductKey.modelName:
+		return ProductKey;	
 	default:
 		return Default(name);
 	}

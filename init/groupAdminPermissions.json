@@ -107,6 +107,12 @@
   },
   {
     "target": "clientAccess",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
     "action": "update",
     "core": true,
     "description": "UE Core permission"
@@ -120,6 +126,34 @@
   {
     "target": "clientAccess",
     "action": "delete",
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission"
+  },
+  {
+    "target": "clientAccess",
+    "action": "delete",
+    "ownershipRequired": true,
     "core": true,
     "description": "UE Core permission"
   },

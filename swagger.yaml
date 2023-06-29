@@ -8556,6 +8556,7 @@ components:
             - api
             - app
             - custom
+            - product-key
         redirect_uris:
           type: array
           default: []

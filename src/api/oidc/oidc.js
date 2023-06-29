@@ -307,6 +307,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				'client_allow_org_federation',
 				'client_allow_org_self_identify',
 				'client_skip_to_federated',
+				'initialized_org_context',
 				'dynamic_scope'
 			],
 			validator(ctx, key, value, metadata) {
@@ -332,6 +333,17 @@ function oidcConfig(g, aliasDns = undefined) {
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						error.message = `${error.message} - Associated Product`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'initialized_org_context') {
+					try {
+						if(value) {
+							if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string uuid representing an organization`);
+						}
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Initialized Org Context`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -393,7 +405,7 @@ function oidcConfig(g, aliasDns = undefined) {
 					try {
 						if(!value) value = 'login';
 						if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string value`);
-						const validLabels = ['login', 'api', 'app', 'custom'];
+						const validLabels = ['login', 'api', 'app', 'custom', 'product-key'];
 						if(!validLabels.includes(value)) throw new InvalidClientMetadata(`${key} be one of: ${validLabels.join(' ')}`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;

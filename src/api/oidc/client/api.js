@@ -80,6 +80,7 @@ const api = {
 	},
 	async applyClientAccess(req, res, next) {
 		try {
+			//todo enforce not "own"
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.notFound('Product specified does not exist');
 			if(!req.params.id) throw Boom.preconditionRequired('Id required');
@@ -104,6 +105,7 @@ const api = {
 	},
 	async getClientAccess(req, res, next) {
 		try {
+			//todo enforce not "own"
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.params.id) throw Boom.preconditionRequired('Id required');
 			const result = await access.getClientAccess(req.authGroup, req.params.id);
@@ -115,6 +117,7 @@ const api = {
 	},
 	async removeClientAccess(req, res, next) {
 		try {
+			//todo enforce not "own"
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.notFound('Product specified does not exist');
 			if(!req.params.id) throw Boom.preconditionRequired('Id required');
