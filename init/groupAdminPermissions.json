@@ -107,12 +107,6 @@
   },
   {
     "target": "clientAccess",
-    "action": "create",
-    "core": true,
-    "description": "UE Core permission"
-  },
-  {
-    "target": "clientAccess",
     "action": "update",
     "core": true,
     "description": "UE Core permission"
@@ -130,32 +124,56 @@
     "description": "UE Core permission"
   },
   {
-    "target": "clientAccess",
+    "target": "productKey",
+    "action": "create",
+    "core": true,
+    "description": "UE Core permission - create long-lived product keys"
+  },
+  {
+    "target": "productKey",
+    "action": "update",
+    "core": true,
+    "description": "UE Core permission - update long-lived product keys"
+  },
+  {
+    "target": "productKey",
+    "action": "read",
+    "core": true,
+    "description": "UE Core permission - read long-lived product keys"
+  },
+  {
+    "target": "productKey",
+    "action": "delete",
+    "core": true,
+    "description": "UE Core permission - remove long-lived product keys"
+  },
+  {
+    "target": "productKey",
     "action": "create",
     "ownershipRequired": true,
     "core": true,
-    "description": "UE Core permission"
+    "description": "UE Core permission - create long-lived product keys specific to your organization"
   },
   {
-    "target": "clientAccess",
+    "target": "productKey",
     "action": "update",
     "ownershipRequired": true,
     "core": true,
-    "description": "UE Core permission"
+    "description": "UE Core permission - update long-lived product keys specific to your organization"
   },
   {
-    "target": "clientAccess",
+    "target": "productKey",
     "action": "read",
     "ownershipRequired": true,
     "core": true,
-    "description": "UE Core permission"
+    "description": "UE Core permission - read long-lived product keys specific to your organization"
   },
   {
-    "target": "clientAccess",
+    "target": "productKey",
     "action": "delete",
     "ownershipRequired": true,
     "core": true,
-    "description": "UE Core permission"
+    "description": "UE Core permission - remove long-lived product keys specific to your organization"
   },
   {
     "target": "userAccess",

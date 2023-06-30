@@ -12,7 +12,7 @@ export default {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.notFound('Product specified does not exist');
-			//todo enforce own...
+			//todo enforce own... also core=true?
 			const result = await key.initializeProductKeyClient(req.authGroup, req.product, req.body);
 			return res.respond(say.created(result, RESOURCE));
 		} catch (error) {

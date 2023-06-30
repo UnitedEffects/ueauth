@@ -39,6 +39,8 @@ tags:
     description: Manage personal account notifications, organizations, products, and more
   - name: Client Access
     description: Clients can be supplied with a single product reference and multiple roles to empower them with permissions
+  - name: Product Keys
+    description: Create and manage groupings of long-lived and hidden client-credential tokens that can be used to create marketplace style integrations
   - name: Validate Access
     description: Use this endpoint to return the access associated to an accessToken or clientCredential
   - name: Products
@@ -3928,6 +3930,236 @@ paths:
                     example: Notification
                   data:
                     $ref: '#/components/schemas/notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  # Product Keys
+  /api/{group}/access/product/{product}/key/service:
+    post:
+      tags:
+        - Product Keys
+      summary: Define a Service (oAuth Client) that can be used to generate and group product keys.
+      description: Define a Service (oAuth Client) that can be used to generate and group long-lived client-credential tokens for various integration and marketplace applications.
+      operationId: createKeyService
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    # todo move this to object
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      clientId:
+                        type: string
+                        format: uuid
+                      organizationId:
+                        type: string
+                        format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              # todo move to objects
+              type: object
+              additionalProperties: false
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Grouping identifier
+                organization:
+                  type: string
+                  format: uuid
+                  description: orgId if applicable
+        required: true
+    get:
+      tags:
+        - Product Keys
+      summary: View all Services (oAuth Clients) that are used to group product keys for a specific product.
+      description: View all Services (oAuth Clients) that are used to group product keys for a specific product.
+      operationId: viewKeyServices
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    # todo move this to object
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        clientId:
+                          type: string
+                          format: uuid
+                        organizationId:
+                          type: string
+                          format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/access/product/{product}/key/service/{clientId}:
+    delete:
+      tags:
+        - Product Keys
+      summary: Delete a Services (oAuth Clients) that is used to group product keys for a specific product.
+      description: Delete a Services (oAuth Clients) that is used to group product keys for a specific product. This will disable all tokens associated to the service.
+      operationId: deleteKeyService
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: clientId
+          in: path
+          description: Each service has a clientId, this is that value
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    # todo move this to object
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      clientId:
+                        type: string
+                        format: uuid
+                      organizationId:
+                        type: string
+                        format: uuid
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -9807,7 +10039,6 @@ components:
           items:
             type: string
             format: uuid
-
 
     clientAccess:
       properties:
