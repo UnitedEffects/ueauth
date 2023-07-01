@@ -37,7 +37,13 @@ export default {
 		if (query.limit) pipeline.push({ $limit: query.limit });
 		pipeline.push({ $replaceRoot: { newRoot: '$payload' } });
 		pipeline.push({ $project: { 'client_secret': 0 } });
+		console.info(JSON.stringify(pipeline, null, 2));
 		return Client.aggregate(pipeline);
+	},
+	async getProductKeys(authGroup, product, query) {
+		query.query.associated_product = product;
+		query.query.client_label = 'product-key';
+		return this.get(authGroup, query);
 	},
 	async getCount(authGroup, id, clientName) {
 		const query = { query: { 'payload.client_name': clientName } };
@@ -63,9 +69,10 @@ export default {
 		return result;
 	},
 	async getOneByName(authGroup, name) {
+		const agId = authGroup._id || authGroup.id;
 		return Client.findOne({
 			'payload.client_name': name,
-			$or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
+			$or: [{ 'payload.auth_group': agId }, { 'payload.auth_group': authGroup.prettyName }]
 		}).select({ 'payload.client_secret': 0 });
 	},
 	async getOneFull(authGroup, id) {
@@ -88,6 +95,9 @@ export default {
 	},
 	async deleteOne(authGroup, id) {
 		return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.id }, { 'payload.auth_group': authGroup.prettyName }] });
+	},
+	async deleteProductKeyService(authGroup, product, id) {
+		return Client.findOneAndRemove({ _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup });
 	},
 	async rotateSecret(id, authGroup, client_secret) {
 		return Client.findOneAndUpdate({

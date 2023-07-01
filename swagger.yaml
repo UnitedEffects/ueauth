@@ -3978,17 +3978,7 @@ paths:
                     type: string
                     example: Product Key
                   data:
-                    # todo move this to object
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      clientId:
-                        type: string
-                        format: uuid
-                      organizationId:
-                        type: string
-                        format: uuid
+                    $ref: '#/components/schemas/productKeyService'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4008,19 +3998,7 @@ paths:
         content:
           application/json:
             schema:
-              # todo move to objects
-              type: object
-              additionalProperties: false
-              required:
-                - name
-              properties:
-                name:
-                  type: string
-                  description: Grouping identifier
-                organization:
-                  type: string
-                  format: uuid
-                  description: orgId if applicable
+              $ref: '#/components/schemas/writeProductKeyService'
         required: true
     get:
       tags:
@@ -4082,19 +4060,9 @@ paths:
                     type: string
                     example: Product Key
                   data:
-                    # todo move this to object
                     type: array
                     items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                        clientId:
-                          type: string
-                          format: uuid
-                        organizationId:
-                          type: string
-                          format: uuid
+                      $ref: '#/components/schemas/productKeyService'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4149,17 +4117,359 @@ paths:
                     type: string
                     example: Product Key
                   data:
-                    # todo move this to object
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      clientId:
-                        type: string
-                        format: uuid
-                      organizationId:
-                        type: string
-                        format: uuid
+                    $ref: '#/components/schemas/productKeyService'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: [] 
+    put:
+      tags:
+        - Product Keys
+      summary: Update the roles and permissions associated with a key grouping.
+      description: This will update the roles associated to the key grouping (client access). It will overwrite existing roles.
+      operationId: updateKeyServiceRoles
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: clientId
+          in: path
+          description: Each service has a clientId, this is that value
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    $ref: '#/components/schemas/productKeyService'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []          
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateProductKeyServiceRoles'
+        required: true
+
+  /api/{group}/access/product/{product}/key:
+    post:
+      tags:
+        - Product Keys
+      summary: Create a product key.
+      description: Product keys are long-lived client-credential tokens that can be created and managed. They can be used to create secure integrations between distinct systems when a more robust solution like OAuth token flows are not possible. They are a good option to secure webhooks, create marketplace style token management, or other external system integrations. If the grouping service is associated to an organization, so too will this key be assocaited to the same organization.
+      operationId: createProductKey
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    $ref: '#/components/schemas/productKeyCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeProductKey'
+        required: true
+    get:
+      tags:
+        - Product Keys
+      summary: Retrieve all product keys associated to a product.
+      description: This API will include security features to ensure there is no cross-organization data leakage. Typically, it will be easier to query using the filters to specify a service (client) grouping of tokens.
+      operationId: getProductKeys
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/productKey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: []
+        - openId: []
+
+  /api/{group}/access/product/{product}/key/{id}:
+    get:
+      tags:
+        - Product Keys
+      summary: Retrieve a single product key.
+      description: This will retrieve a single product key to view.
+      operationId: getKey
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: product key ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    $ref: '#/components/schemas/productKey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+    put:
+      tags:
+        - Product Keys
+      summary: Rotate product key.
+      description: Product key records are themselves generally immutable; however, you can use this api to rotate a product key if you believe the key itself has been compromised or if it has expired.
+      operationId: rotateKey
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: product key ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    $ref: '#/components/schemas/productKeyCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/InvalidInput'
+        '417':
+          $ref: '#/components/responses/ExpectationFailed'
+      security:
+        - bearer: [ ]
+        - openId: [ ]
+    delete:
+      tags:
+        - Product Keys
+      summary: Delete a product key.
+      description: This will remove a product key. Warning, all integrations depending on this key will be disabled from a UE Auth security perspective (i.e., unauthorized).
+      operationId: removeKey
+      parameters:
+        - name: group
+          in: path
+          description: Auth Group Id or name
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: product key ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  type:
+                    type: string
+                    example: Product Key
+                  data:
+                    $ref: '#/components/schemas/productKey'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -11202,3 +11512,107 @@ components:
           type: string
           format: uuid
           description: the account Id of the secured profile being shared
+
+    updateProductKeyServiceRoles:
+      type: object
+      additionalProperties: false
+      properties:
+        roles:
+          type: array
+          description: the IDs of the roles (and associated permissions) for this product that you wish to associate to this key. This will overwrite existing roles.
+          items:
+            type: string
+            format: uuid
+
+    writeProductKeyService:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Grouping identifier
+        organizationId:
+          type: string
+          format: uuid
+          description: orgId if applicable
+        roles:
+          type: array
+          description: the IDs of the roles (and associated permissions) for this product that you wish to associate to this key
+          items:
+            type: string
+            format: uuid
+
+    productKeyService:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/writeProductKeyService'
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+
+    writeProductKey:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - clientId
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        clientId:
+          type: string
+          format: uuid
+        expires:
+          type: number
+          example: 2592000
+          description: how long in seconds should the key remain active? Default is 2592000 (30 days).
+
+    productKey:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/writeProductKey'
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        expiresOn:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
+        modifiedAt:
+          type: string
+          format: date-time
+        modifiedBy:
+          type: string
+          format: uuid
+        authGroup:
+          type: string
+        productId:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+          description: only appeares if the associated service (client) has an organization context
+
+    productKeyCreated:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/productKey'
+      properties:
+        key:
+          type: string
+          description: This is the access token to use. It will never show again.

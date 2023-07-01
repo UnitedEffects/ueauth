@@ -6,6 +6,10 @@ const productKey = new mongoose.Schema({
 		type: Date,
 		default: Date.now
 	},
+	expires: {
+		type: Number,
+		default: 2592000
+	},
 	createdBy: String,
 	modifiedAt: {
 		type: Date,
@@ -30,7 +34,7 @@ const productKey = new mongoose.Schema({
 		required: true
 	},
 	description: String,
-	token: {
+	key: {
 		type: String,
 		required: true
 	},
@@ -40,8 +44,8 @@ const productKey = new mongoose.Schema({
 	},
 },{ _id: false });
 
-productKey.index({ 'authGroup': 1, 'product': 1, 'name': 1}, { unique: true });
-productKey.index({ 'authGroup': 1, 'product': 1, 'token': 1}, { unique: true });
+productKey.index({ 'authGroup': 1, 'productId': 1, 'name': 1, 'clientId': 1}, { unique: true });
+productKey.index({ 'authGroup': 1, 'productId': 1, 'clientId': 1, 'key': 1}, { unique: true });
 productKey.pre('save', callback => callback());
 
 productKey.virtual('id').get(function(){
@@ -55,7 +59,8 @@ productKey.set('toJSON', {
 productKey.options.toJSON.transform = function (doc, ret, options) {
 	ret.id = ret._id;
 	delete ret._id;
-	delete ret.token;
+	delete ret.__v;
+	delete ret.key;
 };
 
 
