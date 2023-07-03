@@ -131,7 +131,7 @@ const api = {
 			if(!req.user) throw Boom.badRequest('Requesting party not a client or user');
 			if(!req.user.client_credential) return accountApi.getUserAccess(req, res, next);
 			if(!req.user.client_id) throw Boom.badRequest('Client Credential token identified but no clientId specified');
-			const result = await access.getFormattedClientAccess(req.authGroup, req.user.client_id);
+			const result = await access.getFormattedClientAccess(req.authGroup, req.user.client_id, req.user.decoded);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			ueEvents.emit(req.authGroup.id, 'ue.client.access.error', error);

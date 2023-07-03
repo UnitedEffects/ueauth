@@ -28,8 +28,9 @@ export default {
 		result = cleanupAccessResponse(result);
 		return result;
 	},
-	async getFormattedClientAccess(authGroup, id) {
+	async getFormattedClientAccess(authGroup, id, token) {
 		let result = await dal.getClientAccess(authGroup, id);
+		if(!result) throw Boom.unauthorized();
 		result = cleanupAccessResponse(result);
 		const response = {
 			sub: id,
@@ -37,7 +38,7 @@ export default {
 			authGroup: result.authGroup,
 			member: (result.authGroup === authGroup.id),
 		};
-		if(result.access.roles && result.access.product) {
+		if(token.scope.includes('access') && result.access.roles && result.access.product) {
 			response.products = result.access.product;
 			const roles = [];
 			const permissions = [];
@@ -55,6 +56,9 @@ export default {
 			await Promise.all(roleTask);
 			response.productRoles = roles.join(' ');
 			response.permissions = permissions.join(' ');
+		}
+		if(token?.['x-organization-context']) {
+			response.orgContext = token['x-organization-context'];
 		}
 		return response;
 	},

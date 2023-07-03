@@ -38,7 +38,7 @@ tags:
   - name: Client Access
     description: Clients can be supplied with a single product reference and multiple roles to empower them with permissions
   - name: Product Keys
-    description: Create and manage groupings of long-lived and hidden client-credential tokens that can be used to create marketplace style integrations
+    description: (WARNING - BETA) Create and manage groupings of long-lived and hidden client-credential tokens that can be used to create marketplace style integrations
   - name: Validate Access
     description: Use this endpoint to return the access associated to an accessToken or clientCredential
   - name: Products
@@ -10874,6 +10874,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/writeProductKeyService'
       properties:
+        authGroup:
+          type: string
         clientId:
           type: string
           format: uuid

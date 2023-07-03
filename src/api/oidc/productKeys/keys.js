@@ -37,6 +37,9 @@ export default {
 		ueEvents.emit(authGroupId, 'ue.key.access.destroy', { clientId });
 		return result;
 	},
+	async getProductKeyClient(authGroupId, productId, clientId) {
+		return client.getProductKeyService(authGroupId, productId, clientId);
+	},
 	async createKey(authGroup, product, data) {
 		let value;
 		try {

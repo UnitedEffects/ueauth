@@ -1,49 +1,87 @@
 import Client from '../models/client';
 
-export default {
-	async get(authGroup, query, search = undefined) {
-		if(query.query) {
-			Object.keys(query.query).forEach((key) => {
-				query.query[`payload.${key}`] = query.query[key];
-				delete query.query[key];
+
+function definePipeline(authGroup, query, search = undefined) {
+	if(query.query) {
+		Object.keys(query.query).forEach((key) => {
+			query.query[`payload.${key}`] = query.query[key];
+			delete query.query[key];
+		});
+	}
+	query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
+	if(search) {
+		query.query['$text'] = { $search : search };
+	}
+	if(query.projection) {
+		if(Object.keys(query.projection).length !== 0) {
+			Object.keys(query.projection).forEach((key) => {
+				query.projection[`payload.${key}`] = query.projection[key];
+				delete query.projection[key];
 			});
 		}
-		query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
-		if(search) {
-			query.query['$text'] = { $search : search };
+		/*
+		if(Object.keys(query.projection).length === 0) {
+			query.projection['payload'] = 1;
+		} else {
+			Object.keys(query.projection).forEach((key) => {
+				query.projection[`payload.${key}`] = query.projection[key];
+				delete query.projection[key];
+			});
 		}
-		if(query.projection) {
-			if(Object.keys(query.projection).length === 0) {
-				query.projection['payload'] = 1;
-			} else {
-				Object.keys(query.projection).forEach((key) => {
-					query.projection[`payload.${key}`] = query.projection[key];
-					delete query.projection[key];
-				});
+		 */
+	}
+	if(query.sort) {
+		Object.keys(query.sort).forEach((key) => {
+			query.sort[`payload.${key}`] = query.sort[key];
+			delete query.sort[key];
+		});
+	}
+	const pipeline = [
+		{ $match: query.query }
+	];
+	if (query.projection && Object.keys(query.projection).length !== 0) pipeline.push({ $project: query.projection});
+	if (query.sort && Object.keys(query.sort).length !== 0) pipeline.push({ $sort: query.sort });
+	if (query.skip) pipeline.push({ $skip: query.skip });
+	if (query.limit) pipeline.push({ $limit: query.limit });
+	pipeline.push({
+		$replaceRoot: {
+			newRoot: {
+				$mergeObjects: [
+					'$$ROOT', '$payload'
+				]
 			}
 		}
-		if(query.sort) {
-			Object.keys(query.sort).forEach((key) => {
-				query.sort[`payload.${key}`] = query.sort[key];
-				delete query.sort[key];
-			});
-		}
-		const pipeline = [
-			{ $match: query.query },
-			{ $project: query.projection}
-		];
-		if (query.sort && Object.keys(query.sort).length !== 0) pipeline.push({ $sort: query.sort });
-		if (query.skip) pipeline.push({ $skip: query.skip });
-		if (query.limit) pipeline.push({ $limit: query.limit });
-		pipeline.push({ $replaceRoot: { newRoot: '$payload' } });
-		pipeline.push({ $project: { 'client_secret': 0 } });
-		console.info(JSON.stringify(pipeline, null, 2));
+	});
+	pipeline.push({
+		$unset: ['payload', '_id', '__v']
+	});
+	pipeline.push({ $project: { 'client_secret': 0 } });
+	return pipeline;
+}
+
+export default {
+	async get(authGroup, query, search = undefined, agg = undefined) {
+		const pipeline = agg || definePipeline(authGroup, query, search);
 		return Client.aggregate(pipeline);
 	},
 	async getProductKeys(authGroup, product, query) {
 		query.query.associated_product = product;
 		query.query.client_label = 'product-key';
-		return this.get(authGroup, query);
+		const result = await this.get(authGroup, query);
+		const output = [];
+		if(result?.length) {
+			result.map((c) => {
+				output.push({
+					authGroup: c.auth_group,
+					clientId: c.client_id,
+					productId: product,
+					name: c.client_name,
+					organizationId: c.initialized_org_context,
+					roles: c.access?.roles
+				});
+			});
+		}
+		return output;
 	},
 	async getCount(authGroup, id, clientName) {
 		const query = { query: { 'payload.client_name': clientName } };
@@ -98,6 +136,9 @@ export default {
 	},
 	async deleteProductKeyService(authGroup, product, id) {
 		return Client.findOneAndRemove({ _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup });
+	},
+	async getProductKeyService(authGroup, product, id) {
+		return Client.findOne({ _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup });
 	},
 	async rotateSecret(id, authGroup, client_secret) {
 		return Client.findOneAndUpdate({
