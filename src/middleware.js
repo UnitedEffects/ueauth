@@ -262,8 +262,8 @@ const mid = {
 				if(orgCon) req.orgContext = orgCon;
 				return next();
 			}
-			if(req.params.group && req.params && req.params.org) {
-				const orgCon = await orgs.getOrg(req.params.group, req.params.org);
+			if(req.params?.group && (req.params?.org || req.headers?.['x-org-context'])) {
+				const orgCon = await orgs.getOrg(req.params.group, req.params.org || req.headers['x-org-context']);
 				if(orgCon) req.orgContext = orgCon;
 				return next();
 			}

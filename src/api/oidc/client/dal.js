@@ -134,8 +134,13 @@ export default {
 	async deleteOne(authGroup, id) {
 		return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.id }, { 'payload.auth_group': authGroup.prettyName }] });
 	},
-	async deleteProductKeyService(authGroup, product, id) {
-		return Client.findOneAndRemove({ _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup });
+	async deleteProductKeyService(authGroup, product, id, orgContext) {
+		const filter = { _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup };
+		if(orgContext) {
+			filter['payload.initialized_org_context'] = orgContext;
+		}
+		const result = await Client.findOneAndRemove(filter);
+		return result;
 	},
 	async getProductKeyService(authGroup, product, id) {
 		return Client.findOne({ _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup });
@@ -160,11 +165,13 @@ export default {
 			'payload.auth_group': authGroup.id
 		}).select({ _id: 1, access: 1, 'payload.auth_group': 1 });
 	},
-	async applyClientAccess(authGroup, id, access) {
-		return Client.findOneAndUpdate({
+	async applyClientAccess(authGroup, id, access, args = {}) {
+		const filter = {
 			_id: id,
-			'payload.auth_group': authGroup
-		}, { access }, { new: true })
+			'payload.auth_group': authGroup,
+			...args
+		};
+		return Client.findOneAndUpdate(filter, { access }, { new: true })
 			.select({ _id: 1, access: 1, 'payload.auth_group': 1 });
 	},
 	async checkRoles(authGroup, id) {

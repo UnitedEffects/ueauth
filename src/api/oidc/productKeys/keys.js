@@ -5,6 +5,35 @@ import ueEvents from '../../../events/ueEvents';
 import helper from '../../../helper';
 import dal from './dal';
 
+function translateToKeyService(q) {
+	Object.keys(q).map((k) => {
+		switch(k) {
+		case 'organizationId':
+			q.initialized_org_context = q.organizationId
+			delete q.organizationId;
+			break;
+		case 'authGroup':
+			q.auth_group = q.authGroup;
+			delete q.authGroup;
+			break;
+		case 'clientId':
+			q.client_id = q.clientId;
+			delete q.clientId;
+			break;
+		case 'productId':
+			q.associated_product = q.productId;
+			delete q.productId;
+			break;
+		case 'name':
+			q.client_name = q.name;
+			delete q.name;
+			break;
+		default:
+			break;
+		}
+	});
+	return q;
+}
 
 export default {
 	async initializeProductKeyClient(authGroup, productName, data) {
@@ -17,7 +46,7 @@ export default {
 			revocationEndpointAuthMethod: 'none',
 			tokenEndpointAuthMethod: 'none'
 		};
-		const result = await client.createClientCredentialService(authGroup, options);
+		const result = await client.createProductKeyService(authGroup, options);
 		const output = {
 			clientId: result.client_id,
 			name: result.client_name,
@@ -28,13 +57,13 @@ export default {
 		ueEvents.emit(authGroup.id, 'ue.key.access.defined', { type: 'Product Key Service', ...output});
 		return output;
 	},
-	async showProductKeyClients(authGroup, product, q) {
-		const query = await helper.parseOdataQuery(q);
+	async showProductKeyClients(authGroup, product, query) {
+		query.query = translateToKeyService(query.query);
 		return client.getProductKeys(authGroup, product, query);
 	},
-	async removeProductKeyClient(authGroupId, productId, clientId) {
-		const result = await client.deleteProductKeyService(authGroupId, productId, clientId);
-		ueEvents.emit(authGroupId, 'ue.key.access.destroy', { clientId });
+	async removeProductKeyClient(authGroupId, productId, clientId, orgContext) {
+		const result = await client.deleteProductKeyService(authGroupId, productId, clientId, orgContext);
+		//if(result) ueEvents.emit(authGroupId, 'ue.key.access.destroy', { clientId });
 		return result;
 	},
 	async getProductKeyClient(authGroupId, productId, clientId) {

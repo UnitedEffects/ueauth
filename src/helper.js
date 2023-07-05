@@ -212,8 +212,11 @@ export default {
 		return !!result;
 	},
 	async validateClientReference (model, id, authGroup) {
-		const result = await model.findOne({ _id: id, 'payload.auth_group': authGroup });
-		return !!result;
+		if(id) {
+			const result = await model.findOne({ _id: id, 'payload.auth_group': authGroup });
+			return !!result;
+		}
+		return true;
 	},
 	async validateAccountReference(model, id, authGroup, org) {
 		const result = await model.findOne({ _id: id, authGroup, access: { $elemMatch: { 'organization.id': org }}});

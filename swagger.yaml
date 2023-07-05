@@ -3967,6 +3967,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '201':
           description: successful operation
@@ -4049,6 +4050,7 @@ paths:
           required: false
           schema:
             type: string
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -4106,6 +4108,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -4159,6 +4162,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -4213,6 +4217,7 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '201':
           description: successful operation
@@ -4295,6 +4300,7 @@ paths:
           required: false
           schema:
             type: string
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -4352,6 +4358,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -4405,6 +4412,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -4458,6 +4466,7 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: '#/components/parameters/OrgContext'
       responses:
         '200':
           description: successful operation
@@ -8770,7 +8779,15 @@ paths:
 servers:
   - url: http://localhost:3000
 components:
-
+  parameters:
+    OrgContext:
+      in: header
+      name: x-org-context
+      description: NOTE, HEADER PARAMETER - provides context to validate permissions. if left blank, the service will attempt to query the primary org of the user's AG and use that as the context. If an org context cannot be resolved, the request will be denied with a 403 forbidden
+      schema:
+        type: string
+        format: uuid
+      required: false
   responses:
     Forbidden:
       description: Request is forbidden

@@ -34,10 +34,14 @@ export default {
 	},
 
 	// @notTested
-	async createClientCredentialService(authGroup, data) {
+	async createClientCredentialService(authGroup, data, verify = true) {
 		const provider = await oidc(authGroup);
-		const check = await dal.getOneByName(authGroup, data.name);
-		if(check?._id) return check;
+		if(verify === true) {
+			const check = await dal.getOneByName(authGroup, data.name);
+			if(check?._id) {
+				return check.payload;
+			}
+		}
 		const options = {
 			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),
 			'client_secret_expires_at': 0,
@@ -294,8 +298,12 @@ export default {
 		return dal.getProductKeys(authGroup, product, query);
 	},
 
-	async deleteProductKeyService(authGroup, product, clientId) {
-		return dal.deleteProductKeyService(authGroup, product, clientId);
+	async createProductKeyService(authGroup, data) {
+		return this.createClientCredentialService(authGroup, data, false);
+	},
+
+	async deleteProductKeyService(authGroup, product, clientId, orgContext) {
+		return dal.deleteProductKeyService(authGroup, product, clientId, orgContext);
 	}
 };
 

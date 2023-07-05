@@ -4,6 +4,7 @@ import Boom from '@hapi/boom';
 import key from './keys';
 import {say} from '../../../say';
 import ueEvents from '../../../events/ueEvents';
+import helper from '../../../helper';
 
 const RESOURCE = 'Product Keys';
 
@@ -12,7 +13,11 @@ export default {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
-			//todo enforce own... also core=true?
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				req.body.organizationId = req.permissions.orgContext;
+				if(!req.permissions.products.includes(req.product.id)) throw Boom.forbidden(`Product ${req.product.id}`);
+			}
 			let roles;
 			if(req.body.roles && Array.isArray(req.body.roles)) {
 				roles = req.body.roles;
@@ -23,12 +28,13 @@ export default {
 				...req.body
 			};
 			const result = await key.initializeProductKeyClient(req.authGroup, req.product.name, data);
-			if(result?.clientId) {
-				await product.addAssociatedClient(req.authGroup.id, req.product.id, result.clientId);
-				if(roles) {
-					await clientAccess.applyClientAccess(req.authGroup.id, result.clientId, { roles, product: req.product.id });
-					result.roles = roles;
-				}
+			if(!result?.clientId) {
+				throw Boom.expectationFailed('There was an unexpected error, please try again later or contact the admin');
+			}
+			await product.addAssociatedClient(req.authGroup.id, req.product.id, result.clientId);
+			if(roles) {
+				await clientAccess.applyClientAccess(req.authGroup.id, result.clientId, { roles, product: req.product.id });
+				result.roles = roles;
 			}
 			return res.respond(say.created(result, RESOURCE));
 		} catch (error) {
@@ -41,8 +47,12 @@ export default {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
 			if(!req.params.clientId) throw Boom.badRequest('Must specify the ID of the client');
-			//todo enforce own... have to query it first...
-			const result = await key.removeProductKeyClient(req.authGroup.id, req.product.id, req.params.clientId);
+			let orgContext;
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				orgContext = req.permissions.orgContext;
+			}
+			const result = await key.removeProductKeyClient(req.authGroup.id, req.product.id, req.params.clientId, orgContext);
 			if(!result) throw Boom.notFound(req.params.clientId);
 			await product.removeAssociatedClient(req.authGroup.id, req.product.id, req.params.clientId);
 			return res.respond(say.ok({
@@ -59,8 +69,14 @@ export default {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
-			//todo enforce own...
-			const result = await key.showProductKeyClients(req.authGroup, req.product.id, req.query);
+			const query = await helper.parseOdataQuery(req.query);
+			if(req.permissions.enforceOwn) {
+				if(!query.query.organizationId) throw Boom.forbidden('You must specify exactly one organization');
+				if(!req.permissions.organizations.includes(query.query.organizationId)) {
+					throw Boom.forbidden(`Org ${query.query.organizationId}`);
+				}
+			}
+			const result = await key.showProductKeyClients(req.authGroup, req.product.id, query);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -72,8 +88,14 @@ export default {
 			if(!req.product) throw Boom.preconditionRequired('Product required');
 			if(!req.params.clientId) throw Boom.badRequest('Must specify the ID of the client');
 			if(!req.body.roles || !Array.isArray(req.body.roles)) throw Boom.badRequest('Must specify new roles as an array');
-			//todo enforce own... will have to look this up in keys first...
-			const result = await clientAccess.applyClientAccess(req.authGroup.id, req.params.clientId, { roles: req.body.roles, product: req.product.id });
+			let accessArgs = {
+				'payload.associated_product': req.product.id
+			};
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				accessArgs['payload.initialized_org_context'] = req.permissions.orgContext;
+			}
+			const result = await clientAccess.applyClientAccess(req.authGroup.id, req.params.clientId, { roles: req.body.roles, product: req.product.id }, accessArgs);
 			if(!result) throw Boom.notFound(req.params.clientId);
 			const output = {
 				authGroup: result.authGroup,

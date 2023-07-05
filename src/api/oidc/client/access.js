@@ -62,7 +62,7 @@ export default {
 		}
 		return response;
 	},
-	async applyClientAccess(authGroup, id, access) {
+	async applyClientAccess(authGroup, id, access, args = {}) {
 		if(!access || !access.roles || !Array.isArray(access.roles)) throw new Error('incorrect input. access.roles should be an array');
 		if(!access || !access.product) throw new Error('incorrect input. access.product should exist');
 		const errors = [];
@@ -73,7 +73,7 @@ export default {
 		});
 		await Promise.all(task);
 		if(errors.length !== 0) throw Boom.preconditionRequired('One or more of the roles specified do not exist', errors);
-		let result = await dal.applyClientAccess(authGroup, id, access);
+		let result = await dal.applyClientAccess(authGroup, id, access, args);
 		result = cleanupAccessResponse(result);
 		ueEvents.emit(authGroup, 'ue.client.access.defined', result);
 		return result;
