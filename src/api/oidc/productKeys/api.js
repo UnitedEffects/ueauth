@@ -112,7 +112,6 @@ export default {
 	},
 	async createKey(req, res, next) {
 		try {
-			//todo enforce own...
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
 			if(!req.body.clientId) throw Boom.badRequest('Client Id required');
@@ -122,7 +121,12 @@ export default {
 				modifiedBy: req.user.sub || req.user.id
 			};
 			if(!data.expires) data.expires = 2592000;
-			const result = await key.createKey(req.authGroup, req.product.id, data);
+			let orgContext;
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				orgContext = req.permissions.orgContext;
+			}
+			const result = await key.createKey(req.authGroup, req.product.id, data, orgContext);
 			const token = result.key;
 			const exp = new Date(result.createdAt);
 			exp.setSeconds(exp.getSeconds() + result.expires);
@@ -142,8 +146,12 @@ export default {
 		try {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
-			//todo enforce own...
-			const result = await key.getKeys(req.authGroup.id, req.product.id, req.query);
+			let orgContext;
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				orgContext = req.permissions.orgContext;
+			}
+			const result = await key.getKeys(req.authGroup.id, req.product.id, req.query, orgContext);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
 			next(error);
@@ -154,8 +162,12 @@ export default {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
 			if(!req.params.id) throw Boom.badRequest('ID required');
-			//todo enforce own...
-			const result = await key.getKey(req.authGroup.id, req.product.id, req.params.id);
+			let orgContext;
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				orgContext = req.permissions.orgContext;
+			}
+			const result = await key.getKey(req.authGroup.id, req.product.id, req.params.id, orgContext);
 			if(!result) throw Boom.notFound(req.params.id);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -167,8 +179,12 @@ export default {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
 			if(!req.params.id) throw Boom.badRequest('ID required');
-			//todo enforce own...
-			const result = await key.removeKey(req.authGroup.id, req.product.id, req.params.id);
+			let orgContext;
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				orgContext = req.permissions.orgContext;
+			}
+			const result = await key.removeKey(req.authGroup.id, req.product.id, req.params.id, orgContext);
 			if(!result) throw Boom.notFound(req.params.id);
 			return res.respond(say.ok(result, RESOURCE));
 		} catch (error) {
@@ -181,8 +197,12 @@ export default {
 			if(!req.authGroup) throw Boom.preconditionRequired('AuthGroup required');
 			if(!req.product) throw Boom.preconditionRequired('Product required');
 			if(!req.params.id) throw Boom.badRequest('ID required');
-			//todo enforce own...
-			const result = await key.refreshKey(req.authGroup, req.product.id, req.params.id);
+			let orgContext;
+			if(req.permissions.enforceOwn) {
+				if(!req.permissions?.orgContext) throw Boom.forbidden('Org Context required with your permission');
+				orgContext = req.permissions.orgContext;
+			}
+			const result = await key.refreshKey(req.authGroup, req.product.id, req.params.id, orgContext);
 			if(!result) throw Boom.notFound(req.params.id);
 			const token = result.key;
 			const exp = new Date(result.createdAt);

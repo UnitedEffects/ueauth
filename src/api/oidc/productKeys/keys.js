@@ -69,14 +69,17 @@ export default {
 	async getProductKeyClient(authGroupId, productId, clientId) {
 		return client.getProductKeyService(authGroupId, productId, clientId);
 	},
-	async createKey(authGroup, product, data) {
+	async createKey(authGroup, product, data, orgContext = undefined) {
 		let value;
 		try {
 			const provider = await oidc(authGroup);
 			const cl = await provider.Client.find(data.clientId);
-			if(cl.associated_product !== product) throw Boom.notFound('Service is not associated to the product specified');
+			if(cl?.associated_product !== product) throw Boom.notFound('Service is not associated to the product specified');
 			let scope = `access group:${authGroup.id}`;
-			if(cl.initialized_org_context) scope = `${scope} org:${cl.initialized_org_context}`;
+			if(orgContext && orgContext !== cl?.initialized_org_context) {
+				throw Boom.forbidden('Your permissions are not for this organization');
+			}
+			if(cl?.initialized_org_context) scope = `${scope} org:${cl.initialized_org_context}`;
 			const token = new provider.ClientCredentials({
 				client: cl,
 				expiresIn: data.expires,
@@ -101,23 +104,24 @@ export default {
 			throw error;
 		}
 	},
-	async getKeys(authGroup, product, q) {
+	async getKeys(authGroup, product, q, orgContext = undefined) {
 		const query = await helper.parseOdataQuery(q);
 		query.query.authGroup = authGroup;
 		query.query.product = product;
+		if(orgContext) query.query.organizationId = orgContext;
 		return dal.getKeys(query);
 	},
-	async getKey(authGroup, product, id) {
-		return dal.getKey(authGroup, product, id);
+	async getKey(authGroup, product, id, orgContext = undefined) {
+		return dal.getKey(authGroup, product, id, orgContext);
 	},
-	async removeKey(authGroup, product, id) {
-		const result = await dal.removeKey(authGroup, product, id);
+	async removeKey(authGroup, product, id, orgContext = undefined) {
+		const result = await dal.removeKey(authGroup, product, id, orgContext);
 		if(result?.id) ueEvents.emit(authGroup, 'ue.key.access.destroy', { name: result.name, id: result._id});
 		return result;
 	},
-	async refreshKey(authGroup, product, id) {
+	async refreshKey(authGroup, product, id, orgContext = undefined) {
 		const provider = await oidc(authGroup);
-		const record = await dal.getKey(authGroup.id, product, id);
+		const record = await dal.getKey(authGroup.id, product, id, orgContext);
 		if(!record) throw Boom.notFound(id);
 		if(record?.key) {
 			try {

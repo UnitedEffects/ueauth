@@ -12,10 +12,14 @@ export default {
 	async getKeys(query) {
 		return Keys.find(query.query).select(query.projection).sort(query.sort).skip(query.skip).limit(query.limit);
 	},
-	async getKey(authGroup, productId, _id) {
-		return Keys.findOne({ _id, productId, authGroup });
+	async getKey(authGroup, productId, _id, organizationId = undefined) {
+		const filter = { _id, productId, authGroup };
+		if(organizationId) filter.organizationId = organizationId;
+		return Keys.findOne(filter);
 	},
-	async removeKey(authGroup, productId, _id) {
-		return Keys.findOneAndRemove({ _id, productId, authGroup });
+	async removeKey(authGroup, productId, _id, organizationId = undefined) {
+		const filter = { _id, productId, authGroup };
+		if(organizationId) filter.organizationId = organizationId;
+		return Keys.findOneAndRemove(filter);
 	},
 };
