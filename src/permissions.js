@@ -286,7 +286,34 @@ export default {
 			// we look up the core product and ensure all the permissions match the id associated.
 			const coreProducts = await helper.cacheCoreProduct(req.query.resetCache, req.authGroup);
 			const coreOrg = await helper.cachePrimaryOrg(req.query.resetCache, req.authGroup);
+
 			if(!coreProducts.length) throw new Error('Could not identify core products for this authgroup');
+
+			// create a non-contextual product list from the token to see if they have admin access to UE Auth through any org
+			if(req.user.decoded?.['x-access-products']) {
+				const nonContextCoreProducts = [];
+				const nonContextCoreProductCodes = [];
+				Object.keys(req.user.decoded['x-access-products']).map((key) => {
+					const products = req.user.decoded['x-access-products'][key].split(' ');
+					products.map((p) => {
+						const val = p.split(',');
+						if (val.length) {
+							const found = coreProducts.filter((c) => {
+								return (val[0] === (c._id || c.id));
+							});
+							if (found.length) {
+								nonContextCoreProducts.push(val[0]);
+								if (val.length > 1) nonContextCoreProductCodes.push(val[1]);
+							}
+						}
+					})
+				})
+				if(nonContextCoreProducts.length) {
+					req.permissions.noContextCore = nonContextCoreProducts;
+					req.permissions.noContextCoreCodes = nonContextCoreProductCodes;
+				}
+			}
+
 			req.permissions.core = {
 				group: req.permissions.req_group,
 				products: [],
