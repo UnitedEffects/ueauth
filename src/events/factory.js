@@ -132,7 +132,12 @@ const OP_EVENTS = {
 	access: [
 		'ue.client.access.defined',
 		'ue.client.access.destroy',
+		'ue.client.access.update',
 		'ue.client.access.error',
+		'ue.key.access.defined',
+		'ue.key.access.refreshed',
+		'ue.key.access.destroy',
+		'ue.key.access.error',
 		'ue.access.defined',
 		'ue.access.destroy',
 		'ue.access.error'

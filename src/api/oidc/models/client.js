@@ -10,7 +10,18 @@ const payloadSchema = new mongoose.Schema({
 	client_name: {
 		type: String,
 		required: true
-	}
+	},
+	associated_product: String,
+	initialized_org_context: String,
+	client_label: String,
+	register_url: String,
+	client_skip_consent: Boolean,
+	client_only_passwordless: Boolean,
+	client_optional_skip_logout_prompt: Boolean,
+	client_federation_options: Boolean,
+	client_allow_org_self_identify: Boolean,
+	client_skip_to_federated: Boolean,
+	dynamic_scope: String
 }, { _id: false, strict: false });
 
 const accessSchema = new mongoose.Schema({

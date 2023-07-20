@@ -3,6 +3,7 @@ import { camelCase } from 'lodash';
 import sizeof from 'object-sizeof';
 import Account from '../accounts/accountOidcInterface';
 import userAccess from '../accounts/access';
+import aGroup from '../authGroup/group';
 import orgs from '../orgs/orgs';
 import clientAccess from '../oidc/client/access';
 import intApi from './interactions/api';
@@ -306,6 +307,7 @@ function oidcConfig(g, aliasDns = undefined) {
 				'client_allow_org_federation',
 				'client_allow_org_self_identify',
 				'client_skip_to_federated',
+				'initialized_org_context',
 				'dynamic_scope'
 			],
 			validator(ctx, key, value, metadata) {
@@ -331,6 +333,17 @@ function oidcConfig(g, aliasDns = undefined) {
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
 						error.message = `${error.message} - Associated Product`;
+						throw new InvalidClientMetadata(error.message);
+					}
+				}
+				if (key === 'initialized_org_context') {
+					try {
+						if(value) {
+							if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string uuid representing an organization`);
+						}
+					} catch (error) {
+						if (error.name === 'InvalidClientMetadata') throw error;
+						error.message = `${error.message} - Initialized Org Context`;
 						throw new InvalidClientMetadata(error.message);
 					}
 				}
@@ -392,7 +405,7 @@ function oidcConfig(g, aliasDns = undefined) {
 					try {
 						if(!value) value = 'login';
 						if(typeof value !== 'string') throw new InvalidClientMetadata(`${key} must be a string value`);
-						const validLabels = ['login', 'api', 'app', 'custom'];
+						const validLabels = ['login', 'api', 'app', 'custom', 'product-key'];
 						if(!validLabels.includes(value)) throw new InvalidClientMetadata(`${key} be one of: ${validLabels.join(' ')}`);
 					} catch (error) {
 						if (error.name === 'InvalidClientMetadata') throw error;
@@ -515,6 +528,7 @@ function oidcConfig(g, aliasDns = undefined) {
 			} else {
 				let scope;
 				let group;
+				let xOrg;
 				if (!Array.isArray(token.scope)) {
 					try {
 						scope = (token.scope) ? token.scope.split(' ') : [];
@@ -525,11 +539,15 @@ function oidcConfig(g, aliasDns = undefined) {
 				} else scope = token.scope;
 
 				for(let i=0; i<scope.length; i++) {
-					if(scope[i].includes('group')){
+					if(scope[i].includes('group:')){
 						group = scope[i].split(':');
-						claims = {
-							group: group[group.length-1]
-						};
+						if(!claims) claims = {};
+						claims.group = group[group.length-1];
+					}
+					if(scope[i].includes('org:')){
+						xOrg = scope[i].split(':');
+						if(!claims) claims = {};
+						claims['x-organization-context'] = xOrg[xOrg.length-1];
 					}
 				}
 			}
@@ -564,27 +582,33 @@ function oidcConfig(g, aliasDns = undefined) {
 					const query = {
 						minimized: true
 					};
-					if(ctx.oidc.body.x_access_filter_organization){
+
+					if(ctx?.oidc?.body?.x_access_filter_organization){
 						const organization = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_access_filter_organization);
 						if(organization) query.org = organization.id;
 					}
-					if(ctx.oidc.body.x_access_filter_domain){
+					if(ctx?.oidc?.body?.x_access_filter_domain){
 						query.domain = ctx.oidc.body.x_access_filter_domain;
 					}
-					if(ctx.oidc.body.x_access_filter_product){
+					if(ctx?.oidc?.body?.x_access_filter_product){
 						query.product = ctx.oidc.body.x_access_filter_product;
 					}
-					if(bAccess === true && ctx.authGroup) {
+
+					if(bAccess === true && (ctx?.authGroup || claims.group)) {
 						let access;
+						let ag;
+						if(!ctx?.authGroup && claims.group) {
+							ag = JSON.parse(JSON.stringify(await aGroup.getOne(claims.group)));
+						}
 						if(token.accountId) {
 							// user - accessToken
-							access = await userAccess.getUserAccess(ctx.authGroup, token.accountId, query);
+							access = await userAccess.getUserAccess(ctx?.authGroup || ag, token.accountId, query);
 						} else {
 							// client - clientCredential
-							access = await clientAccess.getFormattedClientAccess(ctx.authGroup, token.clientId);
+							access = await clientAccess.getFormattedClientAccess(ctx?.authGroup || ag, token.clientId);
 						}
 						if(token.format === 'jwt' && sizeof(access) > config.ACCESS_OBJECT_SIZE_LIMIT) {
-							const url = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${ctx.authGroup.id}/access/validate`;
+							const url = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${ctx?.authGroup.id || claims.group}/access/validate`;
 							let urlQuery = '?';
 							if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
 							if(query.domain) {
@@ -605,7 +629,7 @@ function oidcConfig(g, aliasDns = undefined) {
 									else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
 								}
 								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
-									if(ctx.oidc.body.x_organization_context) {
+									if(ctx?.oidc?.body?.x_organization_context) {
 										let orgContext;
 										if(ctx.oidc.body.x_organization_context === ctx.oidc.body.x_access_filter_organization ||
 											ctx.oidc.body.x_organization_context === query?.org) {

@@ -1,43 +1,87 @@
 import Client from '../models/client';
 
-export default {
-	async get(authGroup, query, search = undefined) {
-		if(query.query) {
-			Object.keys(query.query).forEach((key) => {
-				query.query[`payload.${key}`] = query.query[key];
-				delete query.query[key];
+
+function definePipeline(authGroup, query, search = undefined) {
+	if(query.query) {
+		Object.keys(query.query).forEach((key) => {
+			query.query[`payload.${key}`] = query.query[key];
+			delete query.query[key];
+		});
+	}
+	query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
+	if(search) {
+		query.query['$text'] = { $search : search };
+	}
+	if(query.projection) {
+		if(Object.keys(query.projection).length !== 0) {
+			Object.keys(query.projection).forEach((key) => {
+				query.projection[`payload.${key}`] = query.projection[key];
+				delete query.projection[key];
 			});
 		}
-		query.query.$or = [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }];
-		if(search) {
-			query.query['$text'] = { $search : search };
+		/*
+		if(Object.keys(query.projection).length === 0) {
+			query.projection['payload'] = 1;
+		} else {
+			Object.keys(query.projection).forEach((key) => {
+				query.projection[`payload.${key}`] = query.projection[key];
+				delete query.projection[key];
+			});
 		}
-		if(query.projection) {
-			if(Object.keys(query.projection).length === 0) {
-				query.projection['payload'] = 1;
-			} else {
-				Object.keys(query.projection).forEach((key) => {
-					query.projection[`payload.${key}`] = query.projection[key];
-					delete query.projection[key];
-				});
+		 */
+	}
+	if(query.sort) {
+		Object.keys(query.sort).forEach((key) => {
+			query.sort[`payload.${key}`] = query.sort[key];
+			delete query.sort[key];
+		});
+	}
+	const pipeline = [
+		{ $match: query.query }
+	];
+	if (query.projection && Object.keys(query.projection).length !== 0) pipeline.push({ $project: query.projection});
+	if (query.sort && Object.keys(query.sort).length !== 0) pipeline.push({ $sort: query.sort });
+	if (query.skip) pipeline.push({ $skip: query.skip });
+	if (query.limit) pipeline.push({ $limit: query.limit });
+	pipeline.push({
+		$replaceRoot: {
+			newRoot: {
+				$mergeObjects: [
+					'$$ROOT', '$payload'
+				]
 			}
 		}
-		if(query.sort) {
-			Object.keys(query.sort).forEach((key) => {
-				query.sort[`payload.${key}`] = query.sort[key];
-				delete query.sort[key];
+	});
+	pipeline.push({
+		$unset: ['payload', '_id', '__v']
+	});
+	pipeline.push({ $project: { 'client_secret': 0 } });
+	return pipeline;
+}
+
+export default {
+	async get(authGroup, query, search = undefined, agg = undefined) {
+		const pipeline = agg || definePipeline(authGroup, query, search);
+		return Client.aggregate(pipeline);
+	},
+	async getProductKeys(authGroup, product, query) {
+		query.query.associated_product = product;
+		query.query.client_label = 'product-key';
+		const result = await this.get(authGroup, query);
+		const output = [];
+		if(result?.length) {
+			result.map((c) => {
+				output.push({
+					authGroup: c.auth_group,
+					clientId: c.client_id,
+					productId: product,
+					name: c.client_name,
+					organizationId: c.initialized_org_context,
+					roles: c.access?.roles
+				});
 			});
 		}
-		const pipeline = [
-			{ $match: query.query },
-			{ $project: query.projection}
-		];
-		if (query.sort && Object.keys(query.sort).length !== 0) pipeline.push({ $sort: query.sort });
-		if (query.skip) pipeline.push({ $skip: query.skip });
-		if (query.limit) pipeline.push({ $limit: query.limit });
-		pipeline.push({ $replaceRoot: { newRoot: '$payload' } });
-		pipeline.push({ $project: { 'client_secret': 0 } });
-		return Client.aggregate(pipeline);
+		return output;
 	},
 	async getCount(authGroup, id, clientName) {
 		const query = { query: { 'payload.client_name': clientName } };
@@ -63,9 +107,10 @@ export default {
 		return result;
 	},
 	async getOneByName(authGroup, name) {
+		const agId = authGroup._id || authGroup.id;
 		return Client.findOne({
 			'payload.client_name': name,
-			$or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.prettyName }]
+			$or: [{ 'payload.auth_group': agId }, { 'payload.auth_group': authGroup.prettyName }]
 		}).select({ 'payload.client_secret': 0 });
 	},
 	async getOneFull(authGroup, id) {
@@ -89,6 +134,17 @@ export default {
 	async deleteOne(authGroup, id) {
 		return Client.findOneAndRemove({ _id: id, $or: [{ 'payload.auth_group': authGroup._id }, { 'payload.auth_group': authGroup.id }, { 'payload.auth_group': authGroup.prettyName }] });
 	},
+	async deleteProductKeyService(authGroup, product, id, orgContext) {
+		const filter = { _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup };
+		if(orgContext) {
+			filter['payload.initialized_org_context'] = orgContext;
+		}
+		const result = await Client.findOneAndRemove(filter);
+		return result;
+	},
+	async getProductKeyService(authGroup, product, id) {
+		return Client.findOne({ _id: id, 'payload.associated_product': product, 'payload.auth_group': authGroup });
+	},
 	async rotateSecret(id, authGroup, client_secret) {
 		return Client.findOneAndUpdate({
 			_id: id,
@@ -106,14 +162,16 @@ export default {
 	async getClientAccess(authGroup, id) {
 		return Client.findOne({
 			_id: id,
-			'payload.auth_group': authGroup
+			'payload.auth_group': authGroup.id
 		}).select({ _id: 1, access: 1, 'payload.auth_group': 1 });
 	},
-	async applyClientAccess(authGroup, id, access) {
-		return Client.findOneAndUpdate({
+	async applyClientAccess(authGroup, id, access, args = {}) {
+		const filter = {
 			_id: id,
-			'payload.auth_group': authGroup
-		}, { access }, { new: true })
+			'payload.auth_group': authGroup,
+			...args
+		};
+		return Client.findOneAndUpdate(filter, { access }, { new: true })
 			.select({ _id: 1, access: 1, 'payload.auth_group': 1 });
 	},
 	async checkRoles(authGroup, id) {

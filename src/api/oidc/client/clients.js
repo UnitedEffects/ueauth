@@ -33,6 +33,39 @@ export default {
 		return dal.getOneByNameAndAG(authGroup, name);
 	},
 
+	// @notTested
+	async createClientCredentialService(authGroup, data, verify = true) {
+		const provider = await oidc(authGroup);
+		if(verify === true) {
+			const check = await dal.getOneByName(authGroup, data.name);
+			if(check?._id) {
+				return check.payload;
+			}
+		}
+		const options = {
+			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),
+			'client_secret_expires_at': 0,
+			'client_id_issued_at': Date.now(),
+			'client_id': uuid(),
+			'client_name': data.name,
+			'client_label': data.label,
+			'grant_types': ['client_credentials'],
+			'response_types': [],
+			'redirect_uris': [],
+			'auth_group': authGroup.id
+		};
+		if(data.organizationId) options.initialized_org_context = data.organizationId;
+		if(data.productId) options.associated_product = data.productId;
+		if(data.tokenEndpointAuthMethod) options.token_endpoint_auth_method = data.tokenEndpointAuthMethod;
+		if(data.revocationEndpointAuthMethod) options.revocation_endpoint_auth_method = data.revocationEndpointAuthMethod;
+		if(data.introspectionEndpointAuthMethod) options.introspection_endpoint_auth_method = data.introspectionEndpointAuthMethod;
+		const client = new provider.Client(options);
+		const fixed = snakeKeys(JSON.parse(JSON.stringify(client)));
+		const add = new Adapter('client');
+		await add.upsert(client.clientId, fixed);
+		return fixed;
+	},
+
 	async generateClient(authGroup) {
 		const options = {
 			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),
@@ -82,16 +115,24 @@ export default {
 	async generateRootServiceClient(authGroup, name) {
 		const check = await dal.getOneByName(authGroup,
 			`${authGroup.id}_${name.toLowerCase().replace(/ /g, '_')}`);
-		if(check) await dal.deleteOne(authGroup, check._id);
+		if(check?._id) await dal.deleteOne(authGroup, check._id);
+		const data = {
+			name: `${authGroup.id}_${name.toLowerCase().replace(/ /g, '_')}`,
+			label: 'api'
+		};
+		return this.createClientCredentialService(authGroup, data);
+		/*
+		// keeping this for now in case the update is flawed. Will remove on next version update.
 		const client = new (oidc(authGroup).Client)({
 			'client_secret': cryptoRandomString({length: 86, type: 'url-safe'}),
 			'client_secret_expires_at': 0,
 			'client_id_issued_at': Date.now(),
 			'client_id': uuid(),
 			'client_name': `${authGroup.id}_${name.toLowerCase().replace(/ /g, '_')}`,
+			'client_label': 'api',
 			'grant_types': ['client_credentials'],
 			'response_types': [],
-			'redirect_uris': [`https://${config.UI_URL}`],
+			'redirect_uris': [],
 			'auth_group': authGroup.id,
 			'scope': 'api:read api:write'
 		});
@@ -99,6 +140,7 @@ export default {
 		const add = new Adapter('client');
 		await add.upsert(client.clientId, fixed);
 		return fixed;
+		 */
 	},
 
 	async generateNotificationServiceClient(authGroup) {
@@ -250,6 +292,18 @@ export default {
 			return result.payload;
 		}
 		return undefined;
+	},
+
+	async getProductKeys(authGroup, product, query) {
+		return dal.getProductKeys(authGroup, product, query);
+	},
+
+	async createProductKeyService(authGroup, data) {
+		return this.createClientCredentialService(authGroup, data, false);
+	},
+
+	async deleteProductKeyService(authGroup, product, clientId, orgContext) {
+		return dal.deleteProductKeyService(authGroup, product, clientId, orgContext);
 	}
 };
 

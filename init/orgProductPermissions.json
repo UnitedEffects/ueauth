@@ -56,6 +56,34 @@
     "description": "UE Core permission"
   },
   {
+    "target": "productKey",
+    "action": "create",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission - create long-lived product keys specific to your organization"
+  },
+  {
+    "target": "productKey",
+    "action": "update",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission - update long-lived product keys specific to your organization"
+  },
+  {
+    "target": "productKey",
+    "action": "read",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission - read long-lived product keys specific to your organization"
+  },
+  {
+    "target": "productKey",
+    "action": "delete",
+    "ownershipRequired": true,
+    "core": true,
+    "description": "UE Core permission - remove long-lived product keys specific to your organization"
+  },
+  {
     "target": "notification",
     "action": "create",
     "core": true,

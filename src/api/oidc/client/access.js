@@ -25,11 +25,12 @@ export default {
 	},
 	async getClientAccess(authGroup, id) {
 		let result = await dal.getClientAccess(authGroup, id);
-        result = cleanupAccessResponse(result);
+		result = cleanupAccessResponse(result);
 		return result;
 	},
-	async getFormattedClientAccess(authGroup, id) {
+	async getFormattedClientAccess(authGroup, id, token) {
 		let result = await dal.getClientAccess(authGroup, id);
+		if(!result) throw Boom.unauthorized();
 		result = cleanupAccessResponse(result);
 		const response = {
 			sub: id,
@@ -37,7 +38,7 @@ export default {
 			authGroup: result.authGroup,
 			member: (result.authGroup === authGroup.id),
 		};
-		if(result.access.roles && result.access.product) {
+		if(token.scope.includes('access') && result.access.roles && result.access.product) {
 			response.products = result.access.product;
 			const roles = [];
 			const permissions = [];
@@ -56,9 +57,12 @@ export default {
 			response.productRoles = roles.join(' ');
 			response.permissions = permissions.join(' ');
 		}
+		if(token?.['x-organization-context']) {
+			response.orgContext = token['x-organization-context'];
+		}
 		return response;
 	},
-	async applyClientAccess(authGroup, id, access) {
+	async applyClientAccess(authGroup, id, access, args = {}) {
 		if(!access || !access.roles || !Array.isArray(access.roles)) throw new Error('incorrect input. access.roles should be an array');
 		if(!access || !access.product) throw new Error('incorrect input. access.product should exist');
 		const errors = [];
@@ -69,8 +73,8 @@ export default {
 		});
 		await Promise.all(task);
 		if(errors.length !== 0) throw Boom.preconditionRequired('One or more of the roles specified do not exist', errors);
-		let result = await dal.applyClientAccess(authGroup, id, access);
-        result = cleanupAccessResponse(result);
+		let result = await dal.applyClientAccess(authGroup, id, access, args);
+		result = cleanupAccessResponse(result);
 		ueEvents.emit(authGroup, 'ue.client.access.defined', result);
 		return result;
 	},
