@@ -38,7 +38,7 @@ export default {
 			authGroup: result.authGroup,
 			member: (result.authGroup === authGroup.id),
 		};
-		if(token.scope.includes('access') && result.access.roles && result.access.product) {
+		if(token?.scope.includes('access') && result.access.roles && result.access.product) {
 			response.products = result.access.product;
 			const roles = [];
 			const permissions = [];

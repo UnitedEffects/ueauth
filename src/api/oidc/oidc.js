@@ -520,158 +520,163 @@ function oidcConfig(g, aliasDns = undefined) {
 			}
 		},
 		async extraTokenClaims(ctx, token) {
-			let claims = {};
-			if (ctx) {
-				claims = {
-					group: ctx.authGroup._id
-				};
-			} else {
-				let scope;
-				let group;
-				let xOrg;
-				if (!Array.isArray(token.scope)) {
-					try {
-						scope = (token.scope) ? token.scope.split(' ') : [];
-					} catch (e) {
-						console.error(e);
-						scope = [];
-					}
-				} else scope = token.scope;
-
-				for(let i=0; i<scope.length; i++) {
-					if(scope[i].includes('group:')){
-						group = scope[i].split(':');
-						if(!claims) claims = {};
-						claims.group = group[group.length-1];
-					}
-					if(scope[i].includes('org:')){
-						xOrg = scope[i].split(':');
-						if(!claims) claims = {};
-						claims['x-organization-context'] = xOrg[xOrg.length-1];
-					}
-				}
-			}
-			// backing up claim before attempting access inclusion
-			const backup = JSON.parse(JSON.stringify(claims));
-			if(token.scope) {
-				try {
-					const scopes = token.scope.split(' ');
-					// check for federated_token scope and pull in the OG token into a claim
-					if(scopes.includes('federated_token')) {
-						try {
-							const ft = await fedTok.findOne({
-								'payload.authGroup': ctx.authGroup.id,
-								'payload.accountId': ctx.oidc.grant.accountId,
-								'payload.clientId': ctx.oidc.grant.clientId,
-								'payload.sessionUid': ctx.oidc.entities.AuthorizationCode.sessionUid
-							});
-							if(ft?.payload?.federatedToken) {
-								claims['x-federated-token'] = ft.payload.federatedToken;
-							}
-						} catch (error) {
-							console.error('unable to pull federated token', error);
-						}
-					}
-					// checking for access
-					let bAccess = false;
-					scopes.map((s) => {
-						if(ACCESS_SCOPES.includes(s)) {
-							bAccess = true;
-						}
-					});
-					const query = {
-						minimized: true
+			try {
+				let claims = {};
+				if (ctx) {
+					claims = {
+						group: ctx.authGroup._id
 					};
+				} else {
+					let scope;
+					let group;
+					let xOrg;
+					if (!Array.isArray(token.scope)) {
+						try {
+							scope = (token.scope) ? token.scope.split(' ') : [];
+						} catch (e) {
+							console.error(e);
+							scope = [];
+						}
+					} else scope = token.scope;
 
-					if(ctx?.oidc?.body?.x_access_filter_organization){
-						const organization = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_access_filter_organization);
-						if(organization) query.org = organization.id;
-					}
-					if(ctx?.oidc?.body?.x_access_filter_domain){
-						query.domain = ctx.oidc.body.x_access_filter_domain;
-					}
-					if(ctx?.oidc?.body?.x_access_filter_product){
-						query.product = ctx.oidc.body.x_access_filter_product;
-					}
-
-					if(bAccess === true && (ctx?.authGroup || claims.group)) {
-						let access;
-						let ag;
-						if(!ctx?.authGroup && claims.group) {
-							ag = JSON.parse(JSON.stringify(await aGroup.getOne(claims.group)));
+					for(let i=0; i<scope.length; i++) {
+						if(scope[i].includes('group:')){
+							group = scope[i].split(':');
+							if(!claims) claims = {};
+							claims.group = group[group.length-1];
 						}
-						if(token.accountId) {
-							// user - accessToken
-							access = await userAccess.getUserAccess(ctx?.authGroup || ag, token.accountId, query);
-						} else {
-							// client - clientCredential
-							access = await clientAccess.getFormattedClientAccess(ctx?.authGroup || ag, token.clientId);
-						}
-						if(token.format === 'jwt' && sizeof(access) > config.ACCESS_OBJECT_SIZE_LIMIT) {
-							const url = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${ctx?.authGroup.id || claims.group}/access/validate`;
-							let urlQuery = '?';
-							if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
-							if(query.domain) {
-								urlQuery = (urlQuery === '?') ? `${urlQuery}domain=${query.domain}` : `&${urlQuery}domain=${query.domain}`;
-							}
-							if(query.product) {
-								urlQuery = (urlQuery === '?') ? `${urlQuery}product=${query.product}` : `&${urlQuery}product=${query.product}`;
-							}
-							claims['x-access-url'] = (urlQuery === '?') ? url : `${url}${urlQuery}`;
-							claims['x-access-method'] = 'GET';
-						} else {
-							if(access) {
-								if(access.owner === true && (scopes.includes('access') || scopes.includes('access:group'))) {
-									claims['x-access-group'] = 'owner';
-								}
-								if(access.member === true && (scopes.includes('access') || scopes.includes('access:group'))) {
-									if(!claims['x-access-group']) claims['x-access-group'] = 'member';
-									else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
-								}
-								if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
-									if(ctx?.oidc?.body?.x_organization_context) {
-										let orgContext;
-										if(ctx.oidc.body.x_organization_context === ctx.oidc.body.x_access_filter_organization ||
-											ctx.oidc.body.x_organization_context === query?.org) {
-											if(query?.org) orgContext = query.org;
-										} else {
-											const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
-											if (!org?.id) {
-												throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
-											}
-											orgContext = org.id;
-										}
-										if(orgContext) {
-											if(!access.orgs.split(' ').includes(orgContext)) {
-												throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${ctx.oidc.body.x_organization_context}`);
-											}
-											claims['x-organization-context'] = ctx.oidc.body.x_organization_context;
-										}
-									}
-									claims['x-access-organizations'] = access.orgs;
-								}
-								if(access.domains && (scopes.includes('access') || scopes.includes('access:domains'))) {
-									claims['x-access-domains'] = access.domains;
-								}
-								if(access.products && (scopes.includes('access') || scopes.includes('access:products'))) {
-									claims['x-access-products'] = access.products;
-								}
-								if(access.productRoles && (scopes.includes('access') || scopes.includes('access:roles'))) {
-									claims['x-access-roles'] = access.productRoles;
-								}
-								if(access.permissions && (scopes.includes('access') || scopes.includes('access:permissions'))) {
-									claims['x-access-permissions'] = access.permissions;
-								}
-							}
+						if(scope[i].includes('org:')){
+							xOrg = scope[i].split(':');
+							if(!claims) claims = {};
+							claims['x-organization-context'] = xOrg[xOrg.length-1];
 						}
 					}
-				} catch (e) {
-					//console.error(e);
-					claims = backup;
-					throw e;
 				}
+				// backing up claim before attempting access inclusion
+				const backup = JSON.parse(JSON.stringify(claims));
+				if(token.scope) {
+					try {
+						const scopes = token.scope.split(' ');
+						// check for federated_token scope and pull in the OG token into a claim
+						if(scopes.includes('federated_token')) {
+							try {
+								const ft = await fedTok.findOne({
+									'payload.authGroup': ctx.authGroup.id,
+									'payload.accountId': ctx.oidc.grant.accountId,
+									'payload.clientId': ctx.oidc.grant.clientId,
+									'payload.sessionUid': ctx.oidc.entities.AuthorizationCode.sessionUid
+								});
+								if(ft?.payload?.federatedToken) {
+									claims['x-federated-token'] = ft.payload.federatedToken;
+								}
+							} catch (error) {
+								console.error('unable to pull federated token', error);
+							}
+						}
+						// checking for access
+						let bAccess = false;
+						scopes.map((s) => {
+							if(ACCESS_SCOPES.includes(s)) {
+								bAccess = true;
+							}
+						});
+						const query = {
+							minimized: true
+						};
+
+						if(ctx?.oidc?.body?.x_access_filter_organization){
+							const organization = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_access_filter_organization);
+							if(organization) query.org = organization.id;
+						}
+						if(ctx?.oidc?.body?.x_access_filter_domain){
+							query.domain = ctx.oidc.body.x_access_filter_domain;
+						}
+						if(ctx?.oidc?.body?.x_access_filter_product){
+							query.product = ctx.oidc.body.x_access_filter_product;
+						}
+
+						if(bAccess === true && (ctx?.authGroup || claims.group)) {
+							let access;
+							let ag;
+							if(!ctx?.authGroup && claims.group) {
+								ag = JSON.parse(JSON.stringify(await aGroup.getOne(claims.group)));
+							}
+							if(token.accountId) {
+								// user - accessToken
+								access = await userAccess.getUserAccess(ctx?.authGroup || ag, token.accountId, query);
+							} else {
+								// client - clientCredential
+								access = await clientAccess.getFormattedClientAccess(ctx?.authGroup || ag, token.clientId);
+							}
+							if(token.format === 'jwt' && sizeof(access) > config.ACCESS_OBJECT_SIZE_LIMIT) {
+								const url = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${ctx?.authGroup.id || claims.group}/access/validate`;
+								let urlQuery = '?';
+								if(query.org) urlQuery = `${urlQuery}org=${query.org}`;
+								if(query.domain) {
+									urlQuery = (urlQuery === '?') ? `${urlQuery}domain=${query.domain}` : `&${urlQuery}domain=${query.domain}`;
+								}
+								if(query.product) {
+									urlQuery = (urlQuery === '?') ? `${urlQuery}product=${query.product}` : `&${urlQuery}product=${query.product}`;
+								}
+								claims['x-access-url'] = (urlQuery === '?') ? url : `${url}${urlQuery}`;
+								claims['x-access-method'] = 'GET';
+							} else {
+								if(access) {
+									if(access.owner === true && (scopes.includes('access') || scopes.includes('access:group'))) {
+										claims['x-access-group'] = 'owner';
+									}
+									if(access.member === true && (scopes.includes('access') || scopes.includes('access:group'))) {
+										if(!claims['x-access-group']) claims['x-access-group'] = 'member';
+										else claims['x-access-group'] = (`${claims['x-access-group']} member`).trim();
+									}
+									if(access.orgs && (scopes.includes('access') || scopes.includes('access:organizations'))) {
+										if(ctx?.oidc?.body?.x_organization_context) {
+											let orgContext;
+											if(ctx.oidc.body.x_organization_context === ctx.oidc.body.x_access_filter_organization ||
+												ctx.oidc.body.x_organization_context === query?.org) {
+												if(query?.org) orgContext = query.org;
+											} else {
+												const org = await orgs.getOrg(ctx.authGroup.id, ctx.oidc.body.x_organization_context);
+												if (!org?.id) {
+													throw new InvalidRequest(`Requested x_organization_context ${ctx.oidc.body.x_organization_context} does not exist`);
+												}
+												orgContext = org.id;
+											}
+											if(orgContext) {
+												if(!access.orgs.split(' ').includes(orgContext)) {
+													throw new InvalidRequest(`Requesting x_organization_context to which user does not have access: ${ctx.oidc.body.x_organization_context}`);
+												}
+												claims['x-organization-context'] = ctx.oidc.body.x_organization_context;
+											}
+										}
+										claims['x-access-organizations'] = access.orgs;
+									}
+									if(access.domains && (scopes.includes('access') || scopes.includes('access:domains'))) {
+										claims['x-access-domains'] = access.domains;
+									}
+									if(access.products && (scopes.includes('access') || scopes.includes('access:products'))) {
+										claims['x-access-products'] = access.products;
+									}
+									if(access.productRoles && (scopes.includes('access') || scopes.includes('access:roles'))) {
+										claims['x-access-roles'] = access.productRoles;
+									}
+									if(access.permissions && (scopes.includes('access') || scopes.includes('access:permissions'))) {
+										claims['x-access-permissions'] = access.permissions;
+									}
+								}
+							}
+						}
+					} catch (e) {
+						//console.error(e);
+						claims = backup;
+						throw e;
+					}
+				}
+				return claims;
+			} catch (error) {
+				console.error(error);
+				throw error;
 			}
-			return claims;
 		},
 		responseTypes: [
 			'code id_token token',

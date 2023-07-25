@@ -385,7 +385,11 @@ const agp = {
 	},
 	async returnCoreInfo(ogAg, permissions, ag, query) {
 		let core;
-		if(permissions?.groupAccess?.includes('super') || permissions?.groupAccess?.includes('client-super')) {
+		const productFound = (permissions?.products?.length) ? permissions?.products.some((p) => {
+			return permissions.core.products.includes(p);
+		}) : false;
+
+		if(productFound || permissions.noContextCore.length || permissions?.groupAccess?.includes('super') || permissions?.groupAccess?.includes('client-super')) {
 			if(ag === permissions?.core?.group) {
 				core = permissions.core;
 			} else {
@@ -395,30 +399,15 @@ const agp = {
 						group: ag,
 						products: [],
 						productCodedIds: []
-					}
+					};
 					coreProducts.map((p) => {
 						core.products.push(p.id || p._id);
 						core.productCodedIds.push(p.codedId);
 					});
 				}
 			}
-		} else if(permissions?.sub_group === ag && permissions?.core?.group === ag) {
-			let bFound = false;
-			permissions?.core?.productCodedIds?.map((id) => {
-				if(bFound === false) {
-					permissions?.permissions?.map((p) => {
-						if(bFound === false) {
-							if(p.includes(`${id}:::group::read:own`) || p.includes(`${id}:::group::read`)) {
-								bFound = true;
-							}
-						}
-					})
-				}
-			});
-			if(bFound) {
-				core = permissions.core;
-			}
 		}
+
 		if(core?.org?.id) {
 			try {
 				const d = await domain.getOrgAdminDomain(ag, core.org.id)

@@ -190,7 +190,7 @@ const factory = {
 				}
 				if(thisOrg.restrictEmailDomains === true) {
 					const userDomain = user.email.split('@')[1];
-					if(!thisOrg.emailDomains.includes(userDomain)) termsAllow = false;
+					if(thisOrg.emailDomains.length && !thisOrg.emailDomains.includes(userDomain)) termsAllow = false;
 				}
 			}
 			if (termsAllow === true) {
