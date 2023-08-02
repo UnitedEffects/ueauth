@@ -389,7 +389,7 @@ const agp = {
 			return permissions.core.products.includes(p);
 		}) : false;
 
-		if(productFound || permissions.noContextCore.length || permissions?.groupAccess?.includes('super') || permissions?.groupAccess?.includes('client-super')) {
+		if(productFound || permissions?.noContextCore?.length || permissions?.groupAccess?.includes('super') || permissions?.groupAccess?.includes('client-super')) {
 			if(ag === permissions?.core?.group) {
 				core = permissions.core;
 			} else {
