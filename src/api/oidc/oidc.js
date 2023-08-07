@@ -606,7 +606,7 @@ function oidcConfig(g, aliasDns = undefined) {
 								access = await userAccess.getUserAccess(ctx?.authGroup || ag, token.accountId, query);
 							} else {
 								// client - clientCredential
-								access = await clientAccess.getFormattedClientAccess(ctx?.authGroup || ag, token.clientId);
+								access = await clientAccess.getFormattedClientAccess(ctx?.authGroup || ag, token.clientId, token);
 							}
 							if(token.format === 'jwt' && sizeof(access) > config.ACCESS_OBJECT_SIZE_LIMIT) {
 								const url = `${config.PROTOCOL}://${(aliasDns) ? aliasDns : config.SWAGGER}/api/${ctx?.authGroup.id || claims.group}/access/validate`;
