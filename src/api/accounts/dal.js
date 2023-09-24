@@ -6,10 +6,13 @@ import Group from '../authGroup/model';
 
 export default {
 	async getActiveAccountCount(authGroup) {
-		return Account.find({ authGroup, active: true }).countDocuments();
+		return Account.find({ authGroup, active: true, blocked: { $ne: true } }).countDocuments();
 	},
 	async getActiveB2BCount(authGroup) {
-		const query = { authGroup, active: true, 'access.0': { $exists: true } };
+		const query = { authGroup, active: true, blocked: { $ne: true }, $or: [
+			{'access.0': { $exists: true } },
+			{ 'mfa.enabled': true }
+		] };
 		return Account.find(query).countDocuments();
 	},
 	async writeAccount(data) {
