@@ -16,7 +16,7 @@ const cryptoRandomString = require('crypto-random-string');
 const config = require('../../config');
 
 export default {
-	async importAccounts(authGroup, global, array, creator, customDomain) {
+	async importAccounts(authGroup, global, array, creator) {
 		let failed = [];
 		let success = [];
 		let ok = 0;
@@ -46,9 +46,53 @@ export default {
 		// todo - event based bulk notification system
 		return { warning: 'Auto verify does not work with bulk imports. You will need to send password reset notifications or direct your users to the self-service password reset page.', attempted, ok, failed, success };
 	},
-	async writeAccount(data, creator = undefined) {
+	async passwordPolicy(ag, policy, password) {
+		const p = policy;
+		// example of a custom regex if you want to test it out
+		// custom = '(?=.{10,})(?=.*?[^\\w\\s])(?=.*?[0-9])(?=.*?[A-Z]).*?[a-z].*'
+		if(p.enabled) {
+			let policy;
+			let custom = false;
+			const standard = (pP) => {
+				const pVal = `(?=.{${pP.characters},})${(pP.special) ? '(?=.*?[^\\w\\s])' : ''}${(pP.number ? '(?=.*?[0-9])' : '')}${(pP.caps ? '(?=.*?[A-Z])' : '' )}.*?[a-z].*`;
+				return new RegExp(pVal);
+			};
+
+			try {
+				if(p.pattern.custom) {
+					try {
+						policy = new RegExp(p.pattern.custom);
+						console.info('this worked');
+						custom = true;
+					} catch(e) {
+						const message = `Custom Password Policy did not compile - ${p.pattern.custom}. Defaulted to standard.`;
+						if(ag) ueEvents.emit(ag, 'ue.account.error', message);
+						else console.error();
+					}
+				}
+				if(!policy) {
+					policy = standard(p.pattern);
+				}
+			} catch (error) {
+				const message = `Unexpected error with password policy validation - ${error.message}`;
+				if(ag) ueEvents.emit(ag, 'ue.account.error', message);
+				else console.error(message);
+				throw Boom.expectationFailed('Password validation is enabled but there was an unexpected error. Contact the admin and try again later.');
+			}
+
+			if(!policy.test(password)) {
+				const message = (custom) ? 'Password must follow the policy. Contact your administrator' :
+					`Password must follow the policy: At least ${p.pattern.characters} characters${(p.pattern.caps) ? ', at least one capital' : ''}${(p.pattern.number) ? ', at least one number' : ''}${(p.pattern.special) ? ', at least one special character' : ''}.`;
+				throw Boom.badRequest(message);
+			}
+		}
+	},
+	async writeAccount(data, policyPattern, creator = undefined) {
 		data.email = data.email.toLowerCase();
 		if(!data.username) data.username = data.email;
+		if(data.password) {
+			await this.passwordPolicy(data.authGroup, policyPattern, data.password);
+		}
 		const output = await dal.writeAccount(data);
 		ueEvents.emit(data.authGroup, 'ue.account.create', output);
 		if(data.profile) {
@@ -119,6 +163,7 @@ export default {
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
 		if(patched.password !== account.password) {
 			password = true;
+			await this.passwordPolicy(authGroup.id, authGroup.config.passwordPolicy, patched.password);
 		}
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
@@ -134,13 +179,14 @@ export default {
 		return (account?.mfa?.enabled === true);
 	},
 
-	async updatePassword(authGroupId, id, password, modifiedBy) {
+	async updatePassword(authGroup, id, password, modifiedBy) {
 		const update = {
 			modifiedBy,
 			password
 		};
-		const output = await dal.updatePassword(authGroupId, id, update);
-		ueEvents.emit(authGroupId, 'ue.account.edit', output);
+		await this.passwordPolicy(authGroup.id, authGroup.config.passwordPolicy, password);
+		const output = await dal.updatePassword(authGroup.id, id, update);
+		ueEvents.emit(authGroup.id, 'ue.account.edit', output);
 		return output;
 	},
 
@@ -227,14 +273,14 @@ export default {
 				apiMethod: 'PATCH',
 				apiBody: [
 					{
-						"op": "replace",
-						"path": "/password",
-						"value": 'NEW-PASSWORD-HERE'
+						'op': 'replace',
+						'path': '/password',
+						'value': 'NEW-PASSWORD-HERE'
 					},
 					{
-						"op": "replace",
-						"path": "/verified",
-						"value": true
+						'op': 'replace',
+						'path': '/verified',
+						'value': true
 					}
 				]
 			}

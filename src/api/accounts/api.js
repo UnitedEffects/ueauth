@@ -37,8 +37,10 @@ const api = {
 	},
 	async writeAccount(req, res, next) {
 		try {
+			req.generatePassword = false;
 			if (req.body.generatePassword === true) {
 				req.body.password = cryptoRandomString({length: 16, type: 'url-safe'});
+				req.generatePassword = true;
 				delete req.body.generatePassword;
 			}
 			if (req.groupActivationEvent === true) return api.activateGroupWithAccount(req, res, next);
@@ -53,7 +55,7 @@ const api = {
 			}
 			// force recovery code creation as a second step
 			if (req.body.recoverCodes) delete req.body.recoverCodes;
-			const result = await acct.writeAccount(req.body, user);
+			const result = await acct.writeAccount(req.body, (req.generatePassword) ? {} : req.authGroup.config.passwordPolicy, user);
 			try {
 				if (req.globalSettings.notifications.enabled === true &&
                     req.authGroup.pluginOptions.notification.enabled === true &&
@@ -154,7 +156,7 @@ const api = {
 			const user = await acct.getAccountAccessByEmailOrUsername(req.authGroup.id, req.body.email);
 			let result;
 			let newUser;
-			let password = cryptoRandomString({length: 32, type: 'url-safe'});
+			const password = cryptoRandomString({length: 32, type: 'url-safe'});
 			if(user) {
 				const checkForOrg = user.access.filter((ac) => {
 					return (ac.organization.id === req.organization.id);
@@ -191,7 +193,7 @@ const api = {
 							picture: req.body.profile.picture
 						};
 					}
-					newUser = await acct.writeAccount(newData);
+					newUser = await acct.writeAccount(newData, {});
 					if(!newUser) throw new Error('Could not create user');
 					result = await access.defineAccess(req.authGroup, req.organization, newUser._id, {}, req.globalSettings, req.user.sub, 'created', true, req.customDomainUI, req.customDomain);
 					try {
@@ -245,7 +247,7 @@ const api = {
 		let client;
 		try {
 			req.body.verified = true;
-			account = await acct.writeAccount(req.body);
+			account = await acct.writeAccount(req.body, (req.generatePassword) ? {} : req.authGroup.config.passwordPolicy);
 			if(!account) throw Boom.expectationFailed('Account not created due to unknown error. Try again later');
 			try {
 				client = await cl.generateClient(req.authGroup);
@@ -993,7 +995,7 @@ async function userOperation(req, user, password) {
 			throw error;
 		}
 	case 'generate_password':
-		result = await acct.updatePassword(req.authGroup.id, req.params.id, password, (req.user) ? req.user.sub : undefined, req.customDomain);
+		result = await acct.updatePassword(req.authGroup, req.params.id, password, (req.user) ? req.user.sub : undefined, req.customDomain);
 		return say.ok(result, RESOURCE);
 	default:
 		throw Boom.badRequest('Unknown operation');

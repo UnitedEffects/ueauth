@@ -9063,6 +9063,27 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/federatedOAuth2'
+        passwordPolicy:
+          type: object
+          description: this will be enforced for all password creates and updates in your authgroup
+          properties:
+            enabled:
+              type: boolean
+            pattern:
+              type: object
+              properties:
+                characters:
+                  type: number
+                  example: 10
+                special:
+                  type: boolean
+                number:
+                  type: boolean
+                caps:
+                  type: boolean
+                custom:
+                  type: string
+                  description: a regular expression. make sure it will compile
         ui:
           type: object
           properties:
