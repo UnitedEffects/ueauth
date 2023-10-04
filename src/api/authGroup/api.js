@@ -30,15 +30,7 @@ const api = {
 			if(req.body.setupCode !== config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY) return next(Boom.unauthorized());
 			if(!config.ROOT_EMAIL) return next(Boom.badData('Root Email Not Configured'));
 			if(!req.body.password) return next(Boom.badData('Need to provide a password for initial account'));
-			const policy = {
-				enabled: config.PASSWORD_POLICY.enabled,
-				pattern: {
-					characters: config.PASSWORD_POLICY.characters,
-					special: config.PASSWORD_POLICY.special,
-					number: config.PASSWORD_POLICY.number,
-					caps: config.PASSWORD_POLICY.caps
-				}
-			};
+			const policy = config.PASSWORD_POLICY; //default policy
 			await acct.passwordPolicy(undefined, policy, req.body.password);
 			const check = await group.getOneByEither('root');
 			if(check) return next(Boom.forbidden('root is established, this action is forbidden'));

@@ -157,10 +157,12 @@ const config = {
 	},
 	PASSWORD_POLICY: {
 		enabled: true,
-		characters: 6,
-		special: true,
-		number: true,
-		caps: true
+		pattern: {
+			characters: 10,
+			special: true,
+			number: true,
+			caps: true
+		}
 	}
 };
 

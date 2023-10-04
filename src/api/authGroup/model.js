@@ -207,19 +207,19 @@ const authGroup = new mongoose.Schema({
 			pattern: {
 				characters: {
 					type: Number,
-					default: config.PASSWORD_POLICY.characters
+					default: config.PASSWORD_POLICY.pattern.characters
 				},
 				special: {
 					type: Boolean,
-					default: config.PASSWORD_POLICY.special
+					default: config.PASSWORD_POLICY.pattern.special
 				},
 				number: {
 					type: Boolean,
-					default: config.PASSWORD_POLICY.number
+					default: config.PASSWORD_POLICY.pattern.number
 				},
 				caps: {
 					type: Boolean,
-					default: config.PASSWORD_POLICY.caps
+					default: config.PASSWORD_POLICY.pattern.caps
 				},
 				custom: String
 			}

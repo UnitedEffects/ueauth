@@ -62,12 +62,11 @@ export default {
 				if(p.pattern.custom) {
 					try {
 						policy = new RegExp(p.pattern.custom);
-						console.info('this worked');
 						custom = true;
 					} catch(e) {
 						const message = `Custom Password Policy did not compile - ${p.pattern.custom}. Defaulted to standard.`;
 						if(ag) ueEvents.emit(ag, 'ue.account.error', message);
-						else console.error();
+						else console.error(message);
 					}
 				}
 				if(!policy) {
