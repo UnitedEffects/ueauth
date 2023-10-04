@@ -30,9 +30,6 @@ block content
             #verifiedIdentity.hidden
                 .credentials
                     div Your identity is confirmed, #{email || accountId}
-                        if(email && accountId)
-                            div
-                                small.smaller.grey=accountId
                     h5 Click continue to create setup this device
                     button#verified.btn.btn-outline-dark.btn-custom.m-t-20 Continue
             #getInfo
