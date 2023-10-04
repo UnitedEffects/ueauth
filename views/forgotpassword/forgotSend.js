@@ -13,6 +13,7 @@ window.addEventListener( 'load', function () {
 			if (event.target.status !== 204) {
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
+				console.info(event);
 				let innerHtml = 'Verification or reset was not successful. Your reset or verification window may have expired. Click below to resend the email';
 				if(event.target.status === 417) {
 					let responseMessage;
