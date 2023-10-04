@@ -158,10 +158,10 @@ const config = {
 	PASSWORD_POLICY: {
 		enabled: true,
 		pattern: {
-			characters: 10,
+			characters: 6,
 			special: true,
-			number: true,
-			caps: true
+			number: false,
+			caps: false
 		}
 	}
 };
