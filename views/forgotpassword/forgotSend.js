@@ -13,7 +13,18 @@ window.addEventListener( 'load', function () {
 			if (event.target.status !== 204) {
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
-				document.getElementById('message').innerHTML = 'Verification or reset was not successful. Your reset or verification window may have expired. Click below to resend the email';
+				let innerHtml = 'Verification or reset was not successful. Your reset or verification window may have expired. Click below to resend the email';
+				if(event.target.status === 417) {
+					let responseMessage;
+					try {
+						responseMessage = JSON.parse(event.target.response);
+						innerHtml = `Password reset was not successful. ${responseMessage?.message}`;
+					} catch(e) {
+						innerHtml = 'Password reset was not successful. You must adhere to the password policy. Contact your admin for details.';
+					}
+				}
+				console.info(event);
+				document.getElementById('message').innerHTML = innerHtml;
 				form.remove();
 				document.getElementById('tryAgain').classList.remove('invisible');
 			} else {
@@ -49,10 +60,19 @@ window.addEventListener( 'load', function () {
 		XHR.addEventListener( 'load', function(event) {
 			hideSpinner();
 			if (event.target.status !== 204) {
-				console.info('error');
+				let innerHtml = 'There may be a problem. Try again later or contact the admin.';
+				if(event.target.status === 417) {
+					let responseMessage;
+					try {
+						responseMessage = JSON.parse(event.target.response);
+						innerHtml = `Password reset was not successful. ${responseMessage?.message}`;
+					} catch(e) {
+						innerHtml = 'Password reset was not successful. You must adhere to the password policy. Contact your admin for details.';
+					}
+				}
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
-				document.getElementById('message').innerHTML = 'There may be a problem. Try again later or contact the admin.';
+				document.getElementById('message').innerHTML = innerHtml;
 			} else {
 				document.getElementById('title').innerHTML = 'Check Your Email or Mobile Device';
 				const m1 = document.getElementById('message');

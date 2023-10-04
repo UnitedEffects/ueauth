@@ -82,7 +82,7 @@ export default {
 			if(!policy.test(password)) {
 				const message = (custom) ? 'Password must follow the policy. Contact your administrator' :
 					`Password must follow the policy: At least ${p.pattern.characters} characters${(p.pattern.caps) ? ', at least one capital' : ''}${(p.pattern.number) ? ', at least one number' : ''}${(p.pattern.special) ? ', at least one special character' : ''}.`;
-				throw Boom.badRequest(message);
+				throw Boom.expectationFailed(message);
 			}
 		}
 	},
