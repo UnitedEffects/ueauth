@@ -108,16 +108,9 @@ describe('Accounts', () => {
 				}
 			};
 			const result = await account.writeAccount(data, policy);
-			t.fail('should not get here');
-			//expect(spy).toHaveBeenCalledWith({ ...data, username: AccountMocks.account.email });
-			//expect(Model.prototype.save).toHaveBeenCalled();
-			//expect(result.email).toBe(AccountMocks.account.email);
-			//expect(result.username).toBe(AccountMocks.account.username);
-			//expect(result.password).toBe(AccountMocks.account.password);
-			//const res = JSON.parse(JSON.stringify(result));
-			//expect(res).toMatchObject(expected);
+			t.fail('password was reset when it should not have been.');
 		} catch (error) {
-			expect(error.message).toBe('Password must follow the policy: At least 10 characters, at least one capital, at least one number, at least one special character.');
+			expect(error.message).toBe('Password must follow this policy: At least 10 characters, at least one capital, at least one number, at least one special character.');
 		}
 	});
 
