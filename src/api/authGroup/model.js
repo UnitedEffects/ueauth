@@ -199,6 +199,31 @@ const authGroup = new mongoose.Schema({
 	config: {
 		keys: Array,
 		cookieKeys: Array,
+		passwordPolicy: {
+			enabled: {
+				type: Boolean,
+				default: config.PASSWORD_POLICY.enabled
+			},
+			pattern: {
+				characters: {
+					type: Number,
+					default: config.PASSWORD_POLICY.pattern.characters
+				},
+				special: {
+					type: Boolean,
+					default: config.PASSWORD_POLICY.pattern.special
+				},
+				number: {
+					type: Boolean,
+					default: config.PASSWORD_POLICY.pattern.number
+				},
+				caps: {
+					type: Boolean,
+					default: config.PASSWORD_POLICY.pattern.caps
+				},
+				custom: String
+			}
+		},
 		requireVerified: {
 			type: Boolean,
 			default: false

@@ -154,6 +154,15 @@ const config = {
 			process.env.SECURITY_FRAME_ANCESTORS.split(',') :
 			// eslint-disable-next-line quotes
 			(envVars.SECURITY_FRAME_ANCESTORS) ? envVars.SECURITY_FRAME_ANCESTORS.split(',') : [`'self'`]
+	},
+	PASSWORD_POLICY: {
+		enabled: true,
+		pattern: {
+			characters: 6,
+			special: true,
+			number: false,
+			caps: false
+		}
 	}
 };
 

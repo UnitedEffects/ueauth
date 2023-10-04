@@ -30,6 +30,8 @@ const api = {
 			if(req.body.setupCode !== config.ONE_TIME_PERSONAL_ROOT_CREATION_KEY) return next(Boom.unauthorized());
 			if(!config.ROOT_EMAIL) return next(Boom.badData('Root Email Not Configured'));
 			if(!req.body.password) return next(Boom.badData('Need to provide a password for initial account'));
+			const policy = config.PASSWORD_POLICY; //default policy
+			await acct.passwordPolicy(undefined, policy, req.body.password);
 			const check = await group.getOneByEither('root');
 			if(check) return next(Boom.forbidden('root is established, this action is forbidden'));
 			// finished security and data checks, proceeding
@@ -50,7 +52,7 @@ const api = {
 			};
 			g = await group.write(gData);
 			aData.authGroup = g.id;
-			account = await acct.writeAccount(aData);
+			account = await acct.writeAccount(aData, {});
 			client = await cl.generateClient(g);
 			final = JSON.parse(JSON.stringify(await group.activateNewAuthGroup(g, account, client.client_id)));
 			if(final.config) {

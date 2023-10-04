@@ -462,6 +462,18 @@ async function standardPatchValidation(original, patched) {
 		throw Boom.badRequest('aliasDnsOIDC cannot be edited form this API');
 	}
 
+	if(patched.config?.passwordPolicy?.enabled) {
+		if(patched.config?.passwordPolicy?.pattern?.custom) {
+			if(original.config?.passwordPolicy?.pattern?.custom !== patched.config?.passwordPolicy?.pattern?.custom) {
+				try {
+					new RegExp(patched.config.passwordPolicy.pattern.custom);
+				} catch (error) {
+					throw Boom.badRequest('A custom regular expression password policy was added but did not compile');
+				}
+			}
+		}
+	}
+
 	const groupSchema = Joi.object().keys(definition);
 	const main = await groupSchema.validateAsync(patched, {
 		allowUnknown: true

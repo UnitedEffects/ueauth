@@ -20,12 +20,15 @@ router.get('/account/groups/recovery', [
 ], account.recoveryGroups);
 
 // Form POST for setting new password
+// todo - remove if not needed here, moving this to the API section...
+/*
 router.post('/:group/setpass', [
 	jsonParser,
 	m.setNoCache,
 	m.validateAuthGroup,
 	m.isAuthenticatedOrIAT
 ], account.forgot);
+ */
 
 router.get('/:group/forgotpassword', [
 	jsonParser,

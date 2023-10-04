@@ -40,7 +40,7 @@ describe('Accounts', () => {
 				authGroup: AccountMocks.account.authGroup
 			};
 			const spy = jest.spyOn(dal, 'writeAccount');
-			const result = await account.writeAccount(data);
+			const result = await account.writeAccount(data, {});
 			expect(spy).toHaveBeenCalledWith(data);
 			expect(Model.prototype.save).toHaveBeenCalled();
 			expect(result.email).toBe(AccountMocks.account.email);
@@ -69,7 +69,7 @@ describe('Accounts', () => {
 				authGroup: AccountMocks.account.authGroup
 			};
 			const spy = jest.spyOn(dal, 'writeAccount');
-			const result = await account.writeAccount(data);
+			const result = await account.writeAccount(data, {});
 			expect(spy).toHaveBeenCalledWith({ ...data, username: AccountMocks.account.email });
 			expect(Model.prototype.save).toHaveBeenCalled();
 			expect(result.email).toBe(AccountMocks.account.email);
@@ -77,6 +77,73 @@ describe('Accounts', () => {
 			expect(result.password).toBe(AccountMocks.account.password);
 			const res = JSON.parse(JSON.stringify(result));
 			expect(res).toMatchObject(expected);
+		} catch (error) {
+			t.fail(error);
+		}
+	});
+
+	it('Create an account that fails password policy', async () => {
+		try {
+			const expected = JSON.parse(JSON.stringify(AccountMocks.account));
+			expected.id = expected._id;
+			delete expected.blocked;
+			delete expected._id;
+			delete expected.password;
+			delete expected.__v;
+			mockingoose(Model).toReturn(AccountMocks.account, 'save');
+			mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
+			const data = {
+				email: AccountMocks.account.email.toUpperCase(), //making sure it comes back lowercase
+				password: 'testpass',
+				authGroup: AccountMocks.account.authGroup
+			};
+			const spy = jest.spyOn(dal, 'writeAccount');
+			const policy = {
+				enabled: true,
+				pattern: {
+					characters: 10,
+					special: true,
+					number: true,
+					caps: true
+				}
+			};
+			const result = await account.writeAccount(data, policy);
+			t.fail('password was reset when it should not have been.');
+		} catch (error) {
+			expect(error.message).toBe('Password must follow this policy: At least 10 characters, at least one capital, at least one number, at least one special character.');
+		}
+	});
+
+	it('Create an account that passes the password policy', async () => {
+		try {
+			const expected = JSON.parse(JSON.stringify(AccountMocks.account));
+			expected.id = expected._id;
+			delete expected.blocked;
+			delete expected._id;
+			delete expected.password;
+			delete expected.__v;
+			mockingoose(Model).toReturn(AccountMocks.account, 'save');
+			mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
+			const data = {
+				email: AccountMocks.account.email.toUpperCase(), //making sure it comes back lowercase
+				password: 'testpassA1!',
+				authGroup: AccountMocks.account.authGroup
+			};
+			const spy = jest.spyOn(dal, 'writeAccount');
+			const policy = {
+				enabled: true,
+				pattern: {
+					characters: 10,
+					special: true,
+					number: true,
+					caps: true
+				}
+			};
+			const result = await account.writeAccount(data, policy);
+			expect(spy).toHaveBeenCalledWith({ ...data, username: AccountMocks.account.email });
+			expect(Model.prototype.save).toHaveBeenCalled();
+			expect(result.email).toBe(AccountMocks.account.email);
+			expect(result.username).toBe(AccountMocks.account.username);
 		} catch (error) {
 			t.fail(error);
 		}
@@ -273,9 +340,14 @@ describe('Accounts', () => {
 			// random hash - value not important
 			updated.password = '$2a$10$BIFS5/ldwZjtXa3RrW9kK.rRKjeb/jf/7haIwlWXaRp5.J/xAOt7a';
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
-            mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
+			mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
+			const group = GroupMocks.group;
+			group.id = group._id;
+			group.config.passwordPolicy = {
+				enabled: false
+			};
 			const result = await account.updatePassword(
-				AccountMocks.account.authGroup,
+				group,
 				AccountMocks.account._id,
 				newPass,
 				'TEST');

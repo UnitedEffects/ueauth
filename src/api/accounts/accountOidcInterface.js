@@ -142,7 +142,7 @@ class Account {
 
 			}
 
-			account = await acct.writeAccount(accData);
+			account = await acct.writeAccount(accData, {});
 		} else {
 			let ident = [];
 			ident = account.identities.filter((identity) => {

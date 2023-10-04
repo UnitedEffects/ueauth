@@ -13,8 +13,19 @@ window.addEventListener( 'load', function () {
 			if (event.target.status !== 204) {
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
-				document.getElementById('message').innerHTML = 'Verification or reset was not successful. Your reset or verification window may have expired. Click below to resend the email';
+				let messageInnerHtml = 'Verification or reset was not successful. Your reset or verification window may have expired.';
+				if(event.target.status === 417) {
+					let responseMessage;
+					try {
+						responseMessage = JSON.parse(event.target.response);
+						messageInnerHtml = `Password reset was not successful. ${responseMessage?.message}`;
+					} catch(e) {
+						messageInnerHtml = 'Password reset was not successful. You must adhere to the password policy. Contact your admin for details.';
+					}
+				}
+				document.getElementById('message').innerHTML = messageInnerHtml;
 				form.remove();
+				document.getElementById('instruct').innerHTML = 'You can try again by entering your email below for a new link.';
 				document.getElementById('tryAgain').classList.remove('invisible');
 			} else {
 				document.getElementById('title').innerHTML = 'Reset Successful';
@@ -49,10 +60,10 @@ window.addEventListener( 'load', function () {
 		XHR.addEventListener( 'load', function(event) {
 			hideSpinner();
 			if (event.target.status !== 204) {
-				console.info('error');
+				let messageInnerHtml = 'There may be a problem. Try again later or contact the admin.';
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
-				document.getElementById('message').innerHTML = 'There may be a problem. Try again later or contact the admin.';
+				document.getElementById('message').innerHTML = messageInnerHtml;
 			} else {
 				document.getElementById('title').innerHTML = 'Check Your Email or Mobile Device';
 				const m1 = document.getElementById('message');
