@@ -171,5 +171,10 @@ router.get('/:group/account/login/options', [
 	m.validateAuthGroup,
 	m.getGlobalPluginSettings
 ], account.getAccountLogins);
+router.post('/:group/setpass', [
+	m.setNoCache,
+	m.validateAuthGroup,
+	m.isAuthenticatedOrIAT
+], account.forgot);
 
 export default router;
