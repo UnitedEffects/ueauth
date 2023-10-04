@@ -13,20 +13,19 @@ window.addEventListener( 'load', function () {
 			if (event.target.status !== 204) {
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
-				console.info(event);
-				let innerHtml = 'Verification or reset was not successful. Your reset or verification window may have expired. Click below to resend the email';
+				let messageInnerHtml = 'Verification or reset was not successful. Your reset or verification window may have expired.';
 				if(event.target.status === 417) {
 					let responseMessage;
 					try {
 						responseMessage = JSON.parse(event.target.response);
-						innerHtml = `Password reset was not successful. ${responseMessage?.message}`;
+						messageInnerHtml = `Password reset was not successful. ${responseMessage?.message}`;
 					} catch(e) {
-						innerHtml = 'Password reset was not successful. You must adhere to the password policy. Contact your admin for details.';
+						messageInnerHtml = 'Password reset was not successful. You must adhere to the password policy. Contact your admin for details.';
 					}
 				}
-				console.info(event);
-				document.getElementById('message').innerHTML = innerHtml;
+				document.getElementById('message').innerHTML = messageInnerHtml;
 				form.remove();
+				document.getElementById('instruct').innerHTML = 'You can try again by entering your email below for a new link.';
 				document.getElementById('tryAgain').classList.remove('invisible');
 			} else {
 				document.getElementById('title').innerHTML = 'Reset Successful';
@@ -61,19 +60,10 @@ window.addEventListener( 'load', function () {
 		XHR.addEventListener( 'load', function(event) {
 			hideSpinner();
 			if (event.target.status !== 204) {
-				let innerHtml = 'There may be a problem. Try again later or contact the admin.';
-				if(event.target.status === 417) {
-					let responseMessage;
-					try {
-						responseMessage = JSON.parse(event.target.response);
-						innerHtml = `Password reset was not successful. ${responseMessage?.message}`;
-					} catch(e) {
-						innerHtml = 'Password reset was not successful. You must adhere to the password policy. Contact your admin for details.';
-					}
-				}
+				let messageInnerHtml = 'There may be a problem. Try again later or contact the admin.';
 				document.getElementById('message').classList.add('error');
 				document.getElementById('title').innerHTML = 'Uh oh...';
-				document.getElementById('message').innerHTML = innerHtml;
+				document.getElementById('message').innerHTML = messageInnerHtml;
 			} else {
 				document.getElementById('title').innerHTML = 'Check Your Email or Mobile Device';
 				const m1 = document.getElementById('message');
