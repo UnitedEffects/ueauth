@@ -9048,7 +9048,7 @@ components:
               example: privakey
               enum:
                 - http-proxy
-                - privakey
+                - privakeysuper
             meta:
               type: object
               description: This is an area designated for metadata such as provider ids, secrets, etc. As an example, for the privakey integration, use meta to store 'privakeyLoginId', 'privakeyClient' and 'privakeySecret'.
