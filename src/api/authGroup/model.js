@@ -439,6 +439,10 @@ const authGroup = new mongoose.Schema({
 				type: Boolean,
 				default: false
 			},
+			noPassLogin: {
+				type: Boolean,
+				default: true
+			},
 			type: {
 				type: String,
 				enum: ['http-proxy', 'privakey', 'privakeySuper']

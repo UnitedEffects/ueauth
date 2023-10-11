@@ -9038,6 +9038,10 @@ components:
               type: boolean
               default: false
               description: If this is true, all logins must have MFA enabled and will be onboarded at the first opportunity
+            noPassLogin:
+              type: boolean
+              default: true
+              description: If this is true, the challenge app can be used to sign-in without a password. When false, it is only used for MFA.
             type:
               type: string
               description: This is an indication of the MFA provider and must be the same as what is availble from global plugins
