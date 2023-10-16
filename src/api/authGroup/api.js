@@ -181,6 +181,8 @@ const api = {
 					delete output.config.cookieKeys;
 				}
 			}
+			// meta data is for internal use
+			if(output.config?.mfaChallenge?.meta) delete output.config.mfaChallenge.meta;
 			output = includeSSORedirectUris(output);
 			return res.respond(say.ok(output, RESOURCE));
 		} catch (error) {

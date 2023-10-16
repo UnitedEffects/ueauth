@@ -57,6 +57,11 @@ const api = {
 			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
 			req.globalSettings?.mfaChallenge?.enabled === true);
 
+			//verify AG has set no-pass device login true
+			params.deviceLogin = (authGroup?.config?.mfaChallenge?.enable === true &&
+				authGroup?.config?.mfaChallenge?.noPassLogin === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
 			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
 			req.globalSettings?.webAuthN?.enabled === true);
 
@@ -277,6 +282,20 @@ const api = {
 				req.globalSettings.notifications.enabled === true) {
 				params.passwordless = (authGroup?.config?.passwordLessSupport === true);
 			}
+
+			//verify MFA
+			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
+			//verify AG has set no-pass device login true
+			params.deviceLogin = (authGroup?.config?.mfaChallenge?.enable === true &&
+				authGroup?.config?.mfaChallenge?.noPassLogin === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
+			//verify webAuthN
+			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
+				req.globalSettings?.webAuthN?.enabled === true);
+
 			if (req.body?.action === 'orgLookup') {
 				params.emailScreen = true;
 				const client = JSON.parse(JSON.stringify(await provider.Client.find(params.client_id)));
@@ -457,6 +476,11 @@ const api = {
 			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
 				req.globalSettings?.mfaChallenge?.enabled === true);
 
+			//verify AG has set no-pass device login true
+			params.deviceLogin = (authGroup?.config?.mfaChallenge?.enable === true &&
+				authGroup?.config?.mfaChallenge?.noPassLogin === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
 			//verify webauthn
 			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
 				req.globalSettings?.webAuthN?.enabled === true);
@@ -598,12 +622,17 @@ const api = {
 			params.globalMfa = (authGroup?.config?.mfaChallenge?.enable === true &&
 				req.globalSettings?.mfaChallenge?.enabled === true);
 
+			//verify AG has set no-pass device login true
+			params.deviceLogin = (authGroup?.config?.mfaChallenge?.enable === true &&
+				authGroup?.config?.mfaChallenge?.noPassLogin === true &&
+				req.globalSettings?.mfaChallenge?.enabled === true);
+
 			//verify webauthn
 			params.webAuthN = (authGroup?.pluginOptions?.webAuthN?.enable === true &&
 				req.globalSettings?.webAuthN?.enabled === true);
 
 			//if both are false, save some time and go back to login
-			if (params.passwordless !== true && params.globalMfa !== true && params.webAuthN !== true) {
+			if (params.passwordless !== true && params.deviceLogin !== true && params.webAuthN !== true) {
 				return backToLogin('Password-free login is not currently enabled for this platform. Contact your admin to request the change.', params)
 			}
 
@@ -623,25 +652,25 @@ const api = {
 			}
 
 			// Error - enable mfa msg
-			if (params.passwordless !== true && params.webAuthN !== true && params.globalMfa === true && account?.mfa?.enabled !== true) {
+			if (params.passwordless !== true && params.webAuthN !== true && params.deviceLogin === true && account?.mfa?.enabled !== true) {
 				return backToLogin('Password-free device login is available but you must first setup your device. Click Set Device below on the login screen to proceed.', params);
 			}
 
 			// device flow
-			if (params.passwordless !== true && params.webAuthN !== true && params.globalMfa === true && account?.mfa?.enabled === true) {
+			if (params.passwordless !== true && params.webAuthN !== true && params.deviceLogin === true && account?.mfa?.enabled === true) {
 				return api.deviceLogin(req, res, authGroup, client, debug, prompt, session, uid, params, account, backToLogin)
 			}
 
 			// WE NEVER GET WEBAUTHN ONLY FLOW HERE...
 
 			// magic link flow
-			if (params.passwordless === true && params.globalMfa !== true && params.webAuthN !== true) {
+			if (params.passwordless === true && params.deviceLogin !== true && params.webAuthN !== true) {
 				const message = 'You should have a password free login link in your email. You may close this window.';
 				return api.emailLogin(req, res, authGroup, safeAG, account, uid, params, message, backToLogin);
 			}
 
 			// magic link flow when device is available but not enabled
-			if (params.passwordless === true && params.globalMfa === true && account?.mfa?.enabled !== true && params.webAuthN !== true) {
+			if (params.passwordless === true && params.deviceLogin === true && account?.mfa?.enabled !== true && params.webAuthN !== true) {
 				const message = 'You should have a password free login link in your email. You also have the ability to setup password free login using your mobile device. Just enable MFA in your account dashboard once you are logged to activate. You may close this window.';
 				return api.emailLogin(req, res, authGroup, safeAG, account, uid, params, message, backToLogin);
 			}
@@ -660,7 +689,7 @@ const api = {
 				account: account.id,
 				accountEmail: account.email,
 				email: (params.passwordless === true),
-				device: (params.globalMfa === true && account?.mfa?.enabled === true),
+				device: (params.deviceLogin === true && account?.mfa?.enabled === true),
 				passkey: (params.webAuthN === true),
 				localFound: jLocal.webauthn
 			}

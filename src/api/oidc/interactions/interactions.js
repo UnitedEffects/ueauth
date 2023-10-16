@@ -38,7 +38,7 @@ const api = {
 		const loginButtons = loginOptions.filter((option) => {
 			return (client?.client_federation_options?.join(' | ').toLowerCase().includes(option.code));
 		});
-		const altLogin = (params.passwordless === true || loginButtons.length !== 0);
+		const altLogin = (params.passwordless === true || params.webAuthN === true || params.deviceLogin === true || loginButtons.length !== 0);
 		return {
 			client,
 			altLogin,
