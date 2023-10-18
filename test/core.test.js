@@ -245,7 +245,6 @@ describe('Test connectjs', () => {
 	test('ensure mongoose options are correct', async () => {
 		try {
 			const mongoOptions = {
-				keepAlive: true,
 				connectTimeoutMS: 10000,
 				useNewUrlParser: true,
 				useUnifiedTopology: true

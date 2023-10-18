@@ -2,7 +2,7 @@ import '@babel/register';
 import 'regenerator-runtime/runtime';
 import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
-import Model from '../src/api/accounts/model';
+import Model from '../src/api/accounts/models/accounts';
 import core from '../src/auth/core';
 
 import {AccountMocks, GroupMocks, PluginMocks, Tokens} from './models';

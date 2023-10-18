@@ -1,8 +1,11 @@
-import Account from './model';
+import Account from './models/accounts';
+import History from './models/pHistory';
 import bcrypt from 'bcryptjs';
 import Organization from '../orgs/model';
 import Domain from '../domains/model';
 import Group from '../authGroup/model';
+
+const config = require('../../config');
 
 export default {
 	async getActiveAccountCount(authGroup) {
@@ -21,6 +24,32 @@ export default {
 	},
 	async writeMany(accounts) {
 		return Account.insertMany(accounts, { ordered: false });
+	},
+	async savePasswordToHistory(authGroup, accountId, value) {
+		const count = await this.getPasswordHistoryCount(authGroup, accountId);
+		if(count >= config.MAX_PASSWORD_HISTORY_SAVED) {
+			await this.removeOldestHistoryPassword(authGroup, accountId);
+		}
+		const history = new History({ authGroup, accountId, value });
+		return history.save();
+	},
+	async isPreviousPassword(authGroup, accountId, password) {
+		const passwords = await this.getPasswordHistory(authGroup, accountId);
+		let found = false;
+		for(let i = 0; i<passwords.length; i++) {
+			if(!found) found = await passwords[i].verifyPassword(password);
+			else break;
+		}
+		return found;
+	},
+	async getPasswordHistory(authGroup, accountId) {
+		return History.find({ authGroup, accountId }).sort({ createdAt: -1 }).limit(config.MAX_PASSWORD_HISTORY_SAVED);
+	},
+	async getPasswordHistoryCount(authGroup, accountId) {
+		return History.find({ authGroup, accountId }).countDocuments();
+	},
+	async removeOldestHistoryPassword(authGroup, accountId) {
+		return History.findOneAndRemove({ authGroup, accountId }).sort({ createdAt: 1 });
 	},
 	async getAccounts(g, query) {
 		query.query.authGroup = g;

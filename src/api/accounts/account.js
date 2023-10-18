@@ -46,6 +46,13 @@ export default {
 		// todo - event based bulk notification system
 		return { warning: 'Auto verify does not work with bulk imports. You will need to send password reset notifications or direct your users to the self-service password reset page.', attempted, ok, failed, success };
 	},
+	async passwordRepeatCheck(authGroup, accountId, password) {
+		if(authGroup.config.restrictPasswordRepeats === true) {
+			if(await dal.isPreviousPassword(authGroup, accountId, password)) {
+				throw Boom.expectationFailed('You are attempting to save a password that you previously used within the last year. Please try a different one.');
+			}
+		}
+	},
 	async passwordPolicy(ag, policy, password) {
 		const p = policy;
 		// example of a custom regex if you want to test it out
@@ -158,17 +165,31 @@ export default {
 
 	async patchAccount(authGroup, id, update, modifiedBy, bpwd = false, limit = false) {
 		let password = bpwd;
+		let newPassword;
 		const account = await dal.getAccount(authGroup.id || authGroup._id, id);
+		if(!account) throw Boom.notFound(id);
 		const patched = jsonPatch.apply_patch(account.toObject(), update);
 		if(patched.password !== account.password) {
 			password = true;
 			await this.passwordPolicy(authGroup.id, authGroup.config.passwordPolicy, patched.password);
+			await this.passwordRepeatCheck(authGroup, id, patched.password);
+			newPassword = patched.password;
 		}
 		if(patched.active === false) {
 			if (authGroup.owner === id) throw Boom.badRequest('You can not deactivate the owner of the auth group');
 		}
 		await standardPatchValidation(account, patched, limit);
 		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, password);
+		if(password === true && newPassword && authGroup.config.restrictPasswordRepeats === true) {
+			// we don't want this to block
+			try {
+				await dal.savePasswordToHistory(authGroup, id, newPassword);
+			} catch (error) {
+				const msg = `Unable to save password history for ${id} - ${authGroup}. This did not block the update.`;
+				console.error(msg);
+				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
+			}
+		}
 		ueEvents.emit(authGroup.id || authGroup._id, 'ue.account.edit', result);
 		return result;
 	},
@@ -184,7 +205,18 @@ export default {
 			password
 		};
 		await this.passwordPolicy(authGroup.id, authGroup.config.passwordPolicy, password);
+		await this.passwordRepeatCheck(authGroup, id, password);
 		const output = await dal.updatePassword(authGroup.id, id, update);
+		if(output && authGroup.config.restrictPasswordRepeats === true) {
+			// we don't want this to block
+			try {
+				await dal.savePasswordToHistory(authGroup, id, password);
+			} catch (error) {
+				const msg = `Unable to save password history for ${id} - ${authGroup}. This did not block the update.`;
+				console.error(msg);
+				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
+			}
+		}
 		ueEvents.emit(authGroup.id, 'ue.account.edit', output);
 		return output;
 	},

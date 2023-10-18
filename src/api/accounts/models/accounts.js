@@ -141,12 +141,9 @@ accountSchema.methods.verifyPassword = async function(password) {
 };
 
 accountSchema.methods.verifyRecoverCode = async function(code) {
-	console.info(code);
 	let found = false;
 	await Promise.all(this.recoverCodes.map(async (c) => {
 		if(await bcrypt.compare(code, c)) {
-			console.info('found it here...');
-			console.info(c);
 			found = true;
 		}
 		return c;
