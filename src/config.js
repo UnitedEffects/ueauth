@@ -163,7 +163,8 @@ const config = {
 			number: false,
 			caps: false
 		}
-	}
+	},
+	MAX_PASSWORD_HISTORY_SAVED: 30
 };
 
 module.exports = config;

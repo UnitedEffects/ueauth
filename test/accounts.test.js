@@ -1,7 +1,7 @@
 import '@babel/register';
 import 'regenerator-runtime/runtime';
 import { v4 as uuid } from 'uuid';
-import Model from '../src/api/accounts/model';
+import Model from '../src/api/accounts/models/accounts';
 import Group from '../src/api/authGroup/model';
 import dal from '../src/api/accounts/dal';
 import helper from '../src/helper';

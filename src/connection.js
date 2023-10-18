@@ -4,7 +4,6 @@ let i = 0;
 const connect = {
 	connectOptions() {
 		return {
-			keepAlive: true,
 			connectTimeoutMS: 10000,
 			useNewUrlParser: true,
 			useUnifiedTopology: true
