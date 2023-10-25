@@ -203,6 +203,20 @@ const authGroup = new mongoose.Schema({
 			type: Boolean,
 			default: false
 		},
+		failedLoginThresholds: {
+			enabled: {
+				type: Boolean,
+				default: false
+			},
+			threshold: {
+				type: Number,
+				default: 5
+			},
+			duration: {
+				type: Number,
+				default: 2
+			}
+		},
 		passwordPolicy: {
 			enabled: {
 				type: Boolean,
