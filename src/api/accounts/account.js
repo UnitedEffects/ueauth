@@ -181,12 +181,21 @@ export default {
 		}
 		await standardPatchValidation(account, patched, limit);
 		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, password);
-		if(password === true && newPassword && authGroup.config.restrictPasswordRepeats === true) {
+		if(password === true && newPassword && authGroup.config?.restrictPasswordRepeats === true) {
 			// we don't want this to block
 			try {
 				await dal.savePasswordToHistory(authGroup, id, newPassword);
 			} catch (error) {
 				const msg = `Unable to save password history for ${id} - ${authGroup}. This did not block the update.`;
+				console.error(msg);
+				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
+			}
+		}
+		if(password === true && authGroup.config?.failedLoginThresholds?.enabled === true) {
+			try {
+				await this.cleanupTimeout(authGroup.id, id);
+			} catch (error) {
+				const msg = `Unable to clear password timeouts for ${id} - ${authGroup}. This did not block the update.`;
 				console.error(msg);
 				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
 			}
@@ -208,7 +217,7 @@ export default {
 		await this.passwordPolicy(authGroup.id, authGroup.config.passwordPolicy, password);
 		await this.passwordRepeatCheck(authGroup, id, password);
 		const output = await dal.updatePassword(authGroup.id, id, update);
-		if(output && authGroup.config.restrictPasswordRepeats === true) {
+		if(output && authGroup.config?.restrictPasswordRepeats === true) {
 			// we don't want this to block
 			try {
 				await dal.savePasswordToHistory(authGroup, id, password);
@@ -218,8 +227,10 @@ export default {
 				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
 			}
 		}
-		// if there were timeouts, clear them. If there are errors with this, it should get exposed to the user.
-		await this.cleanupTimout(authGroup.id, id);
+		if(output && authGroup.config?.failedLoginThresholds?.enabled === true) {
+			// If there were timeouts, clear them. Since this is an operation, if there are errors with this, it should get exposed to the user.
+			await this.cleanupTimeout(authGroup.id, id);
+		}
 		ueEvents.emit(authGroup.id, 'ue.account.edit', output);
 		return output;
 	},
@@ -494,7 +505,7 @@ export default {
 	async getAttempts(authGroupId, accountId) {
 		return dal.getAttempts(authGroupId, accountId);
 	},
-	async cleanupTimout(authGroupId, accountId) {
+	async cleanupTimeout(authGroupId, accountId) {
 		await dal.clearTimeout(authGroupId, accountId);
 		return dal.clearAttempts(authGroupId, accountId);
 	}
