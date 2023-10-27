@@ -11,6 +11,7 @@ import ueEvents from '../../events/ueEvents';
 import Joi from 'joi';
 import plugins from '../plugins/plugins';
 import crypto from 'crypto';
+
 const cryptoRandomString = require('crypto-random-string');
 
 const config = require('../../config');
@@ -180,12 +181,21 @@ export default {
 		}
 		await standardPatchValidation(account, patched, limit);
 		const result = await dal.patchAccount(authGroup.id || authGroup._id, id, patched, password);
-		if(password === true && newPassword && authGroup.config.restrictPasswordRepeats === true) {
+		if(password === true && newPassword && authGroup.config?.restrictPasswordRepeats === true) {
 			// we don't want this to block
 			try {
 				await dal.savePasswordToHistory(authGroup, id, newPassword);
 			} catch (error) {
 				const msg = `Unable to save password history for ${id} - ${authGroup}. This did not block the update.`;
+				console.error(msg);
+				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
+			}
+		}
+		if(password === true && authGroup.config?.failedLoginThresholds?.enabled === true) {
+			try {
+				await this.cleanupTimeout(authGroup.id, id);
+			} catch (error) {
+				const msg = `Unable to clear password timeouts for ${id} - ${authGroup}. This did not block the update.`;
 				console.error(msg);
 				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
 			}
@@ -207,7 +217,7 @@ export default {
 		await this.passwordPolicy(authGroup.id, authGroup.config.passwordPolicy, password);
 		await this.passwordRepeatCheck(authGroup, id, password);
 		const output = await dal.updatePassword(authGroup.id, id, update);
-		if(output && authGroup.config.restrictPasswordRepeats === true) {
+		if(output && authGroup.config?.restrictPasswordRepeats === true) {
 			// we don't want this to block
 			try {
 				await dal.savePasswordToHistory(authGroup, id, password);
@@ -216,6 +226,10 @@ export default {
 				console.error(msg);
 				ueEvents.emit(authGroup.id, 'ue.account.error', msg);
 			}
+		}
+		if(output && authGroup.config?.failedLoginThresholds?.enabled === true) {
+			// If there were timeouts, clear them. Since this is an operation, if there are errors with this, it should get exposed to the user.
+			await this.cleanupTimeout(authGroup.id, id);
 		}
 		ueEvents.emit(authGroup.id, 'ue.account.edit', output);
 		return output;
@@ -474,6 +488,26 @@ export default {
 			message: 'Someone has requested a list of Company portals to which you are the owner. If you did not make this request, you may ignore the message. Click the button below to see a list of all Company logins you own. The button will be active for 2 hours.'
 		};
 		return n.notify(globalSettings, data, authGroup);
+	},
+	async getTimeout(authGroupId, accountId) {
+		return dal.getTimeout(authGroupId, accountId);
+	},
+	async createTimeout(authGroup, accountId) {
+		const duration = authGroup.config?.failedLoginThresholds?.duration || 2; //backup duration of 2 hours
+		if(duration > 23) throw 'Expires duration must be less than 23';
+		const today = new Date();
+		today.setHours(today.getHours() + duration);
+		return dal.createTimeout(authGroup.id, accountId, today)
+	},
+	async recordAttempt(authGroupId, accountId) {
+		return dal.recordAttempt(authGroupId, accountId);
+	},
+	async getAttempts(authGroupId, accountId) {
+		return dal.getAttempts(authGroupId, accountId);
+	},
+	async cleanupTimeout(authGroupId, accountId) {
+		await dal.clearTimeout(authGroupId, accountId);
+		return dal.clearAttempts(authGroupId, accountId);
 	}
 };
 

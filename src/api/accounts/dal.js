@@ -1,5 +1,7 @@
 import Account from './models/accounts';
 import History from './models/pHistory';
+import Timeout from './models/loginTimeout';
+import Attempt from './models/loginAttempts';
 import bcrypt from 'bcryptjs';
 import Organization from '../orgs/model';
 import Domain from '../domains/model';
@@ -8,6 +10,33 @@ import Group from '../authGroup/model';
 const config = require('../../config');
 
 export default {
+	async recordAttempt(authGroup, accountId) {
+		const attempt = new Attempt({
+			authGroup,
+			accountId
+		})
+		return attempt.save();
+	},
+	async getAttempts(authGroup, accountId) {
+		return Attempt.find({ authGroup, accountId }).countDocuments();
+	},
+	async clearAttempts(authGroup, accountId) {
+		return Attempt.deleteMany({ authGroup, accountId });
+	},
+	async getTimeout(authGroup, accountId) {
+		return Timeout.findOne({ authGroup, accountId });
+	},
+	async createTimeout(authGroup, accountId, expiresAt) {
+		const timeout = new Timeout({
+			authGroup,
+			accountId,
+			expiresAt
+		});
+		return timeout.save();
+	},
+	async clearTimeout(authGroup, accountId) {
+		return Timeout.findOneAndRemove({ authGroup, accountId });
+	},
 	async getActiveAccountCount(authGroup) {
 		return Account.find({ authGroup, active: true, blocked: { $ne: true } }).countDocuments();
 	},

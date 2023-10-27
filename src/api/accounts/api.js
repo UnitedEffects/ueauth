@@ -997,6 +997,10 @@ async function userOperation(req, user, password) {
 	case 'generate_password':
 		result = await acct.updatePassword(req.authGroup, req.params.id, password, (req.user) ? req.user.sub : undefined, req.customDomain);
 		return say.ok(result, RESOURCE);
+	case 'clear_timeouts':
+		if(req.permissions.enforceOwn === true) throw Boom.forbidden();
+		await acct.cleanupTimout(req.authGroup.id, req.params.id);
+		return say.noContent(RESOURCE);
 	default:
 		throw Boom.badRequest('Unknown operation');
 	}

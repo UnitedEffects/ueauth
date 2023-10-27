@@ -1,7 +1,7 @@
 block primary
     if (flash)
         .flash-container.m-b-20
-            p#flash=flash
+            pre#flash=flash
     if (client && client.logoUri)
         img.logo(src=client.logoUri alt='Product Logo')
     else if (authGroupLogo)

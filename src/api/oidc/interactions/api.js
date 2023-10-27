@@ -399,7 +399,7 @@ const api = {
 						{
 							...params,
 							login_hint: req.body.email
-						}, 'Invalid email or password.'));
+						}, account?.error || 'Invalid email or password.'));
 			}
 
 			const result = {
