@@ -82,16 +82,6 @@ function oidcConfig(g, aliasDns = undefined) {
 		async findById(ctx, sub, token) {
 			return {
 				accountId: sub,
-				// @param use {string} - can either be "id_token" or "userinfo", depending on
-				//   where the specific claims are intended to be put in
-				// @param scope {string} - the intended scope, while oidc-provider will mask
-				//   claims depending on the scope automatically you might want to skip
-				//   loading some claims from external resources or through db projection etc. based on this
-				//   detail or not return them in ID Tokens but only UserInfo and so on
-				// @param claims {object} - the part of the claims authorization parameter for either
-				//   "id_token" or "userinfo" (depends on the "use" param)
-				// @param rejected {Array[String]} - claim names that were rejected by the end-user, you might
-				//   want to skip loading some claims from external resources or through db projection
 				async claims(use, scope) {
 					return {sub};
 				},
@@ -255,7 +245,6 @@ function oidcConfig(g, aliasDns = undefined) {
 						}
 						break;
 					}
-
 					const tests = [];
 					ds.map((s) => {
 						tests.push(s.replace('{d}', ''));
@@ -285,7 +274,6 @@ function oidcConfig(g, aliasDns = undefined) {
 
 						resource.scope = override.join(' ');
 					}
-
 					return (resource);
 				},
 				useGrantedResource: (ctx, model) => {
@@ -557,6 +545,12 @@ function oidcConfig(g, aliasDns = undefined) {
 				if(token.scope) {
 					try {
 						const scopes = token.scope.split(' ');
+						// if we've enabled email on access token with a scope, add it as a claim
+						if(scopes.includes('email')) {
+							const user = await Account.findAccount(ctx, token.accountId, token);
+							const userClaims = await user.claims();
+							claims.email = userClaims?.email;
+						}
 						// check for federated_token scope and pull in the OG token into a claim
 						if(scopes.includes('federated_token')) {
 							try {
