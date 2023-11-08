@@ -9630,6 +9630,18 @@ components:
             grant:
               type: number
               default: 864000
+        defaultLogoutRedirect:
+          type: string
+          description: when clients logout of any app, if a redirect for the logout is not defined, this is the default.
+        defaultLogoutName:
+          type: string
+          description: text to display with default logout redirect
+        globalSkipLogoutConfirm:
+          type: boolean
+          default: false
+        globalSkipAuthorize:
+          type: boolean
+          default: false
         requireVerified:
           type: boolean
           default: false

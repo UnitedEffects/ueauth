@@ -100,7 +100,8 @@ const api = {
 				return res.render('login/login', options);
 			}
 			case 'consent': {
-				if(client.client_skip_consent === true || params.federated_redirect === true) {
+
+				if(client.client_skip_consent === true || authGroup?.config?.globalSkipAuthorize === true || params.federated_redirect === true) {
 					const result = await interactions.confirmAuthorization(provider, intDetails, authGroup);
 					return provider.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
 				}
@@ -731,9 +732,10 @@ const api = {
 			if(ctx?.oidc?.client) {
 				client = JSON.parse(JSON.stringify(ctx.oidc.client));
 			}
-			const name = (client?.clientName) ? client.clientName : ctx.authGroup.name;
+			const name = (client?.clientName) ? client.clientName : (ctx.authGroup?.config?.defaultLogoutName || ctx.authGroup.name);
 			const sid = ctx.oidc?.entities?.Session?.jti;
-			if ((client?.client_optional_skip_logout_prompt === true || ctx.req.query.skipPrompt === 'true') && sid) {
+
+			if ((client?.client_optional_skip_logout_prompt === true || ctx.req.query.skipPrompt === 'true' || ctx.authGroup?.config?.globalSkipLogoutConfirm === true) && sid) {
 				await ctx.oidc.entities.Session.destroy(sid);
 				if(ctx.oidc.entities.Session.destroyed === true) {
 					//reload...
@@ -741,14 +743,14 @@ const api = {
 					return ctx.redirect(end);
 				}
 			}
-			//}
+
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../../views'),
 				basedir: 'path/for/pug/extends',
 			});
 			const options = await interactions.oidcLogoutSourceOptions(ctx.authGroup, name, action, ctx.oidc.session.state.secret, client);
 			if (ctx?.req?.query?.onCancel) {
-				options.onCancel = ctx.req.query.onCancel;
+				options.clientUri = ctx.req.query.onCancel
 			}
 			if (ctx?.req?.query?.json === 'true') {
 				// enable REST response
@@ -775,23 +777,28 @@ const api = {
 		try {
 			const { authGroup } = await safeAuthGroup(ctx.authGroup);
 
-			const clientName = (ctx.oidc.client) ? ctx.oidc.client.clientName : null;
 			const clientId = (ctx.oidc.client) ? ctx.oidc.client.clientId : null;
-			let clientUri = (ctx.oidc.client) ? ctx.oidc.client.clientUri : null;
 			const initiateLoginUri = (ctx.oidc.client) ? ctx.oidc.client.initiateLoginUri : null;
 			const logoUri = (ctx.oidc.client) ? ctx.oidc.client.logoUri : null;
 			const policyUri = (ctx.oidc.client) ? ctx.oidc.client.policyUri : null;
 			const tosUri = (ctx.oidc.client) ? ctx.oidc.client.tosUri : null;
+			const clientName = (ctx.oidc.client) ? ctx.oidc.client.clientName : (authGroup?.config?.defaultLogoutName || null);
+			let clientUri = (ctx.oidc.client) ? ctx.oidc.client.clientUri : ( authGroup?.config?.defaultLogoutRedirect || null);
 
-			if(authGroup.associatedClient === clientId) {
+			if(!clientUri && authGroup.associatedClient === clientId) {
 				clientUri = `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}`;
 			}
+
+			if (ctx.authGroup?.config?.globalSkipLogoutConfirm === true && clientUri) {
+				return ctx.redirect(clientUri);
+			}
+
 			const name = (clientName) ? clientName : ctx.authGroup.name;
 			const pug = new Pug({
 				viewPath: path.resolve(__dirname, '../../../../views'),
 				basedir: 'path/for/pug/extends',
 			});
-			const message = (clientName) ? `You are still logged into ${name}` : undefined;
+			const message = (ctx.oidc.client) ? `You are still logged into ${name}` : undefined;
 			const options = await interactions.oidcPostLogoutSourceOptions(authGroup, message, clientUri, initiateLoginUri, logoUri, policyUri, tosUri, clientName);
 			ctx.type = 'html';
 			ctx.set('json-data', JSON.stringify({
@@ -809,7 +816,7 @@ const api = {
 		}
 	},
 	async renderError(ctx, out, error) {
-		console.error(error);
+		console.error('OIDC UI ERROR CAUGHT', error);
 		const { authGroup, safeAG } = await safeAuthGroup(ctx.authGroup);
 		const pug = new Pug({
 			viewPath: path.resolve(__dirname, '../../../../views'),

@@ -203,6 +203,7 @@ const api = {
 		};
 	},
 	async oidcLogoutSourceOptions(authGroup, name, action, secret, client, skipPrompt = false) {
+		let clientUri = (client) ? client.clientUri : ( authGroup?.config?.defaultLogoutRedirect || null);
 		return {
 			title: 'Log Out',
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,
@@ -210,9 +211,9 @@ const api = {
 			favicon: authGroup.config?.ui?.skin?.favicon,
 			authGroupLogo: authGroup.config?.ui?.skin?.logo || undefined,
 			splashImage: authGroup.config?.ui?.skin?.splashImage || undefined,
-			clientName: (client?.clientId === authGroup.associatedClient) ? undefined : client?.clientName,
-			clientUri: (authGroup.associatedClient === client?.clientId) ?
-				`https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` : client?.clientUri,
+			clientName: (name !== authGroup.name) ? name : undefined,
+			clientUri: (!clientUri && authGroup.associatedClient === client?.clientId) ?
+				`https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}` : clientUri,
 			initiateLoginUri: client?.initiateLoginUri,
 			logoUri: client?.logoUri,
 			tosUri: client?.tosUri || authGroup.primaryTOS || undefined,
@@ -223,7 +224,7 @@ const api = {
 				primaryTOS: authGroup.primaryTOS,
 				primaryDomain: authGroup.primaryDomain
 			},
-			message: `Are you sure you want to sign-out from ${(client?.clientId === authGroup.associatedClient) ? authGroup.name : client?.clientName}?`,
+			message: `Are you sure you want to sign-out from ${name}?`,
 			formId: 'op.logoutForm',
 			actionUrl: action,
 			secret,

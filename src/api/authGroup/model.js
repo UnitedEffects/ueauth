@@ -199,6 +199,10 @@ const authGroup = new mongoose.Schema({
 	config: {
 		keys: Array,
 		cookieKeys: Array,
+		defaultLogoutRedirect: String,
+		defaultLogoutName: String,
+		globalSkipLogoutConfirm: Boolean,
+		globalSkipAuthorize: Boolean,
 		restrictPasswordRepeats: {
 			type: Boolean,
 			default: false
