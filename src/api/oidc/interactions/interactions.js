@@ -203,7 +203,7 @@ const api = {
 		};
 	},
 	async oidcLogoutSourceOptions(authGroup, name, action, secret, client, skipPrompt = false) {
-		let clientUri = (client) ? client.clientUri : ( authGroup?.config?.defaultLogoutRedirect || null);
+		let clientUri = (client?.clientUri) ? client.clientUri : ( authGroup?.config?.defaultLogoutRedirect || null);
 		return {
 			title: 'Log Out',
 			bgGradientLow: authGroup.config.ui.skin.bgGradientLow || config.DEFAULT_UI_SKIN_GRADIENT_LOW,

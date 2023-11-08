@@ -783,7 +783,7 @@ const api = {
 			const policyUri = (ctx.oidc.client) ? ctx.oidc.client.policyUri : null;
 			const tosUri = (ctx.oidc.client) ? ctx.oidc.client.tosUri : null;
 			const clientName = (ctx.oidc.client) ? ctx.oidc.client.clientName : (authGroup?.config?.defaultLogoutName || null);
-			let clientUri = (ctx.oidc.client) ? ctx.oidc.client.clientUri : ( authGroup?.config?.defaultLogoutRedirect || null);
+			let clientUri = (ctx.oidc.client?.clientUri) ? ctx.oidc.client.clientUri : ( authGroup?.config?.defaultLogoutRedirect || null);
 
 			if(!clientUri && authGroup.associatedClient === clientId) {
 				clientUri = `https://${(authGroup.aliasDnsUi) ? authGroup.aliasDnsUi : config.UI_URL}/${authGroup.prettyName}`;
