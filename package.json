@@ -53,7 +53,7 @@
   "logo": "https://ue-platform-content.s3.amazonaws.com/6e5eab3d-d4e6-4a18-87c5-18be5e46f507",
   "dependencies": {
     "@hapi/boom": "^9.1.0",
-    "axios": "^0.21.1",
+    "axios": "^1.6.0",
     "basic-auth": "^2.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.13.2",
