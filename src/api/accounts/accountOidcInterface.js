@@ -69,6 +69,7 @@ class Account {
 	// This can be anything you need to authenticate a user - in OP docs this is called findByLogin
 	static async authenticate(authGroup, email, password) {
 		try {
+			const thresholds = authGroup.config?.failedLoginThresholds?.enabled;
 			const account = await acct.getAccountByEmailOrUsername(authGroup.id, email);
 			if(account.active !== true || account.blocked === true || account.userLocked === true) throw undefined;
 			if(authGroup && authGroup.config && authGroup.config.requireVerified === true) {
@@ -76,14 +77,39 @@ class Account {
 					throw undefined;
 				}
 			}
-
+			if(thresholds === true) {
+				// Account has a timeout because they attempted to login too many times with the wrong password
+				const checkTimeout = await acct.getTimeout(authGroup.id, account.id);
+				if(checkTimeout) throw undefined;
+			}
 			if(await account.verifyPassword(password)) {
 				return { accountId: account.id, mfaEnabled: account.mfa.enabled };
+			} else {
+				if(thresholds === true) {
+					try {
+						await acct.recordAttempt(authGroup.id, account.id);
+					} catch (error) {
+						console.error('PROBLEM RECORDING LOGIN TIMEOUT', error);
+					}
+					const failedAttempts = await acct.getAttempts(authGroup.id, account.id);
+					if(failedAttempts >= authGroup.config?.failedLoginThresholds?.threshold) {
+						try {
+							await acct.createTimeout(authGroup, account.id);
+						} catch (error) {
+							console.error('PROBLEM CREATING A TIMEOUT', error);
+						}
+						const t = authGroup.config?.failedLoginThresholds?.threshold || 5;
+						const d = authGroup.config?.failedLoginThresholds?.duration || 2;
+						const e = authGroup.primaryEmail;
+						const message = `Your account is being temporarily locked because you entered the wrong password ${t} times within 1 hour. It will remain locked for ${d} hours.\nYou can reset your password to resolve this immediately by clicking through with your email and selecting 'Forgot your password'.\nIf you need help, contact your admin at ${e}.`
+						throw message;
+					}
+				}
 			}
 
 			throw undefined;
-		} catch (err) {
-			return undefined;
+		} catch (error) {
+			return (typeof error === 'string') ? { error } : undefined;
 		}
 	}
 

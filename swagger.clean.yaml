@@ -8254,6 +8254,7 @@ components:
             - verify_account
             - password_reset
             - generate_password
+            - clear_timeouts
 
     initialAccessTokenRequest:
       properties:
@@ -8994,6 +8995,18 @@ components:
             grant:
               type: number
               default: 864000
+        defaultLogoutRedirect:
+          type: string
+          description: when clients logout of any app, if a redirect for the logout is not defined, this is the default.
+        defaultLogoutName:
+          type: string
+          description: text to display with default logout redirect
+        globalSkipLogoutConfirm:
+          type: boolean
+          default: false
+        globalSkipAuthorize:
+          type: boolean
+          default: false
         requireVerified:
           type: boolean
           default: false
@@ -9067,6 +9080,22 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/federatedOAuth2'
+        restrictPasswordRepeats:
+          type: boolean
+          default: false
+        failedLoginThresholds:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              default: false
+            threshold:
+              type: number
+              default: 5
+            duration:
+              type: number
+              description: how many hours should the account be temporarily locked?
+              default: 2
         passwordPolicy:
           type: object
           description: this will be enforced for all password creates and updates in your authgroup
@@ -9078,13 +9107,16 @@ components:
               properties:
                 characters:
                   type: number
-                  example: 10
+                  example: 6
                 special:
                   type: boolean
+                  example: true
                 number:
                   type: boolean
+                  example: false
                 caps:
                   type: boolean
+                  example: false
                 custom:
                   type: string
                   description: a regular expression. make sure it will compile
