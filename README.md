@@ -1,4 +1,4 @@
-# UE Auth by United Effects LLC
+# UE Auth by United Effects, Inc.
 
 [![Build](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml/badge.svg)](https://github.com/UnitedEffects/ueauth/actions/workflows/build.yml)
 
@@ -38,7 +38,7 @@ If you'd like to access the features of UE Auth and much more without having to 
 
 ### FREE FOR STARTUPS
 
-The commercial version of UE Auth is 100% free to use for startups with less than $1M in funding, $500K in revenue, and 10K monthly active users.
+The commercial version of UE Auth is 100% free to use for startups with less than 50 B2B users for 12 months.
 Contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com) to discuss.
 
 ## Support
@@ -50,11 +50,11 @@ Contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com) to
 
 * [Join our slack community!](https://docs.unitedeffects.com/docs/community-and-support)
 * [LinkedIn](https://www.linkedin.com/company/unitedeffects)
-* [Twitter](https://twitter.com/ueffectsLLC)
+* [Twitter](https://twitter.com/ueffectsInc)
 * [Medium Blog](https://blog.unitedeffects.com)
 
 ## Investment Opportunities
 
 If you are interested in learning about investment opportunities with United Effects, contact [invest@unitedeffects.com](mailto:invest@unitedeffects.com)
 
-Copyright (c) 2023 [United Effects LLC](https://unitedeffects.com), all rights reserved.
+Copyright (c) 2024 [United Effects, Inc.](https://unitedeffects.com), all rights reserved.
