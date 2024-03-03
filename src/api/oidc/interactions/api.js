@@ -387,6 +387,8 @@ const api = {
 					try {
 						const user = await acc.getAccount(authGroup.id, status?.accountId);
 						account.email = user?.email
+						//todo
+						console.info('-----USER-----', user);
 					} catch (e) {
 						console.error('unable to look up the user for a display email');
 					}
@@ -450,7 +452,12 @@ const api = {
 				try {
 					await challenges.revokeAllDevices(authGroup, req.globalSettings, account);
 					bindData = await challenges.bindUser(authGroup, req.globalSettings, account);
+					//todo
+					console.info(JSON.stringify(bindData, null, 2), '--', JSON.stringify(account, null, 2))
+
 					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData, account?.email);
+					//todo
+					console.info('----INSTRUCTIONS----', JSON.stringify(instructions, null, 2));
 				} catch (error) {
 					console.error(error);
 				}

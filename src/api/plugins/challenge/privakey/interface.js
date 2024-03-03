@@ -104,7 +104,6 @@ const pkApi = {
 			}
 		};
 		const pkey = await axios(options);
-		console.info(pkey.data);
 		if(!pkey?.data?.sessionToken || !pkey?.data?.appSpaceGuid ||
 			!pkey?.data?.appSpaceName || !pkey?.data?.privakeyId) {
 			console.error(pkey);
