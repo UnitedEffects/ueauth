@@ -8,10 +8,11 @@ import events from '../eventProcessor';
 const config = require('../../../../config');
 
 const httpProxyApi = {
-	async bindInstructions(provider, bindData) {
+	async bindInstructions(provider, bindData, displayName) {
 		const instructions = provider?.proxyEnableInstructions.replace(/</g, '&lt;').replace(/>/g, '&gt;').split('--');
 		const out = {
 			instructions,
+			displayName,
 			setupScreen: `${provider.proxyEnableScreen}?`,
 			setupScreenButtonText: provider.proxyEnableScreenButtonText,
 			qrCode: bindData.qrCode || false

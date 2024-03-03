@@ -51,9 +51,9 @@ async function interfaceSelector(ag, global) {
 }
 
 const chApi = {
-	async bindInstructions(ag, global, bindData) {
+	async bindInstructions(ag, global, bindData, displayName) {
 		const { pInterface, provider } = await interfaceSelector(ag, global);
-		if(pInterface) return pInterface.bindInstructions(provider, bindData);
+		if(pInterface) return pInterface.bindInstructions(provider, bindData, displayName);
 		return undefined;
 	},
 	async devices(ag, global, account) {

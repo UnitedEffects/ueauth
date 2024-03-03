@@ -336,6 +336,6 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 	if(!update || !bindData) {
 		throw Boom.failedDependency('Unable to set MFA for this account. Please try again later.');
 	}
-	const instructions = await challenge.bindInstructions(authGroup, req.globalSettings, bindData);
+	const instructions = await challenge.bindInstructions(authGroup, req.globalSettings, bindData, account.email);
 	return { ...instructions, warnings };
 }

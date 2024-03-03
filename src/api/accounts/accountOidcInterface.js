@@ -83,7 +83,7 @@ class Account {
 				if(checkTimeout) throw undefined;
 			}
 			if(await account.verifyPassword(password)) {
-				return { accountId: account.id, mfaEnabled: account.mfa.enabled };
+				return { accountId: account.id, mfaEnabled: account.mfa.enabled, email: account.email };
 			} else {
 				if(thresholds === true) {
 					try {

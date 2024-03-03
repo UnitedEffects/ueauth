@@ -378,11 +378,18 @@ const api = {
 						authGroup: authGroup.id,
 						providerKey: req.body.providerKey
 					});
+					//need the email address for the display name
 					account = {
 						accountId: status.accountId,
 						mfaEnabled: true,
 						mfaProven: true
 					};
+					try {
+						const user = await acc.getAccount(authGroup.id, status?.accountId);
+						account.email = user?.email
+					} catch (e) {
+						console.error('unable to look up the user for a display email');
+					}
 				}
 			} else{
 				// in v7 this is referred to as findByLogin
@@ -443,7 +450,7 @@ const api = {
 				try {
 					await challenges.revokeAllDevices(authGroup, req.globalSettings, account);
 					bindData = await challenges.bindUser(authGroup, req.globalSettings, account);
-					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData);
+					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData, account?.email);
 				} catch (error) {
 					console.error(error);
 				}
