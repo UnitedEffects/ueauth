@@ -36,7 +36,7 @@ const pkApi = {
 		];
 		return {
 			instructions,
-			qrCode: `authwallet://st=${
+			qrCode: encodeURIComponent(`authwallet://st=${
 				bindData.sessionToken
 			}&appSpaceGuid=${
 				bindData.appSpaceGuid
@@ -46,7 +46,7 @@ const pkApi = {
 				bindData.privakeyId
 			}&displayName=${
 				displayName
-			}`
+			}`)
 		};
 	},
 	async findChallengeAndUpdate(provider, ag, data) {
