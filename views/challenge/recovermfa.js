@@ -169,7 +169,7 @@ window.addEventListener( 'load', async function () {
 			if(!username) throw 'Email required';
 			const options = {
 				method: 'get',
-				url: `${domain}/api/${authGroupId}/account/login/options?lookup=${username}&state=${state}`
+				url: `${domain}/api/${authGroupId}/account/login/options?lookup=${encodeURIComponent(username)}&state=${state}`
 			};
 			showSpinner();
 			const result = await axios(options);

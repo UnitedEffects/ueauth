@@ -860,7 +860,7 @@ const api = {
 		try {
 			if(!req.authGroup) throw Boom.forbidden();
 			if(!req.query.lookup) throw Boom.badRequest('Username, email or phone is required');
-			const user = await acct.getAccountByEmailUsernameOrPhone(req.authGroup.id, req.query.lookup);
+			const user = await acct.getAccountByEmailUsernameOrPhone(req.authGroup.id, decodeURIComponent(req.query.lookup));
 			if(!user) throw Boom.notFound(req.query.lookup);
 			if(req.query.state) {
 				try {
