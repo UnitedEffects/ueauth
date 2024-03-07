@@ -65,7 +65,7 @@
     "express-openapi-validate": "^0.6.1",
     "helmet": "^4.6.0",
     "joi": "^17.4.2",
-    "jose": "^3.20.4",
+    "jose": "^4.15.5",
     "jose-legacy": "yarn:jose@^2.0.5",
     "json-diff": "^0.5.4",
     "json-schema-ref-parser": "^7.1.2",
