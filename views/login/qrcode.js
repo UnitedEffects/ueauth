@@ -5,7 +5,7 @@ window.addEventListener( 'load', async function () {
             var qr = new QRious({
                 element: document.getElementById('qrcode'),
                 size: 500,
-                value: qrCode
+                value: qrCode.replace(/&amp;/g, '&')
             });
         }
     })();

@@ -27,7 +27,7 @@ const APP_LINKS = {
 
 const pkApi = {
 	returnAPI: API,
-	async bindInstructions(provider, bindData) {
+	async bindInstructions(provider, bindData, displayName) {
 		const instructions = [
 			`Download the AuthWallet app, available on <a target='_blank' href='${APP_LINKS.android}'>Google Play</a> and the <a target='_blank' href="${APP_LINKS.ios}">App Store.</a>`,
 			'Open the app on your device and select to Add Service.',
@@ -42,6 +42,10 @@ const pkApi = {
 				bindData.appSpaceGuid
 			}&appSpaceName=${
 				bindData.appSpaceName
+			}&privakeyId=${
+				bindData.privakeyId
+			}&displayName=${
+				displayName
 			}`
 		};
 	},
@@ -100,7 +104,8 @@ const pkApi = {
 			}
 		};
 		const pkey = await axios(options);
-		if(!pkey?.data?.sessionToken || !pkey?.data?.appSpaceGuid || !pkey?.data?.appSpaceName) {
+		if(!pkey?.data?.sessionToken || !pkey?.data?.appSpaceGuid ||
+			!pkey?.data?.appSpaceName || !pkey?.data?.privakeyId) {
 			console.error(pkey);
 			throw Boom.failedDependency('Bind request unsuccessful');
 		}
@@ -132,29 +137,7 @@ const pkApi = {
 		output.accountId = data.accountId;
 		return output;
 	},
-	/*
-	async finishWebAuthNReq(event, accountId, credential) {
-		hide(flashContainer);
-		event.preventDefault();
-		const options = {
-			method: 'post',
-			url: `${domain}/api/${authGroupId}/webauthn/finish`,
-			headers: {
-				Authorization: `bearer ${token}`
-			},
-			data: {
-				accountId,
-				credential
-			}
-		};
-		showSpinner();
-		const result = await axios(options);
-		hideSpinner();
-		if(result?.data?.data?.success !== true) throw new Error('not logged in');
-		return result.data.data;
-	},
 
-	 */
 	async finishAuth(provider, authGroup, data) {
 		//ignoring provider parameter for this implementation
 		const options = {

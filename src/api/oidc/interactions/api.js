@@ -378,11 +378,18 @@ const api = {
 						authGroup: authGroup.id,
 						providerKey: req.body.providerKey
 					});
+					//need the email address for the display name
 					account = {
 						accountId: status.accountId,
 						mfaEnabled: true,
 						mfaProven: true
 					};
+					try {
+						const user = await acc.getAccount(authGroup.id, status?.accountId);
+						account.email = user?.email
+					} catch (e) {
+						console.error('unable to look up the user for a display email');
+					}
 				}
 			} else{
 				// in v7 this is referred to as findByLogin
@@ -443,11 +450,12 @@ const api = {
 				try {
 					await challenges.revokeAllDevices(authGroup, req.globalSettings, account);
 					bindData = await challenges.bindUser(authGroup, req.globalSettings, account);
-					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData);
+					instructions = await challenges.bindInstructions(authGroup, req.globalSettings, bindData, account?.email);
 				} catch (error) {
 					console.error(error);
 				}
 				if(!bindData || !instructions) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
+				// todo - evaluate if this is the right place for the mfa update on the user record.
 				const enableMFA = await acc.enableMFA(authGroup.id, account.accountId);
 				if(enableMFA !== true) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
