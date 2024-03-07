@@ -217,7 +217,6 @@ window.addEventListener( 'load', async function () {
 				},
 				data
 			};
-			console.info(options);
 			const result = await axios(options);
 			hideSpinner()
 			if(result?.status === 200) {

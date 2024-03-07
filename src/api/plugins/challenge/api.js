@@ -279,8 +279,13 @@ export default {
 
 				// if not, create a onetime use access token and
 				// send with instructions to request email or device confirmation
+				try {
+					await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
+				} catch (e) {
+					console.error(e?.data || e?.message || e);
+					if(config.ENV === 'production') throw Boom.failedDependency('Unable to send lock notification - there may be a security issue.')
+				}
 
-				await acct.sendAccountLockNotification(authGroup, account, req.globalSettings);
 				const meta = {
 					sub: req.user.id || req.user.sub,
 					email: req.user.email,
@@ -332,6 +337,7 @@ async function bindAndSendInstructions(req, mfaAcc, account) {
 		console.error(e);
 		throw Boom.failedDependency('Unable to set MFA for this account. Please try again later.');
 	}
+	// todo - evaluate whether there is a better time to do this in the process.
 	const update = await acc.enableMFA(authGroup.id, account.id);
 	if(!update || !bindData) {
 		throw Boom.failedDependency('Unable to set MFA for this account. Please try again later.');

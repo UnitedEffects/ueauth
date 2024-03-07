@@ -462,6 +462,7 @@ const api = {
 					console.error(error);
 				}
 				if(!bindData || !instructions) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
+				// todo - evaluate if this is the right place for the mfa update on the user record.
 				const enableMFA = await acc.enableMFA(authGroup.id, account.accountId);
 				if(enableMFA !== true) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing your account. Please contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
