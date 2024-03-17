@@ -13,8 +13,11 @@ import ModelP from '../api/plugins/model';
 
 // Clients
 import ModelC from '../api/oidc/models/client';
+jest.mock('../api/oidc/client/clients', () => ({
+	generateClientCredentialToken: jest.fn()
+}));
 import cl from '../api/oidc/client/clients';
-jest.mock('../api/oidc/client/clients');
+
 
 // Axios
 import axios from 'axios';
@@ -111,7 +114,7 @@ describe('Plugins', () => {
 		}
 	});
 
-	/*
+
 	it('Send Notification without token or global', async () => {
 		try {
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, false);
@@ -128,10 +131,10 @@ describe('Plugins', () => {
 					access_token: tok._id
 				}
 			};
-			axios.mockResolvedValue({ data: not });
+			maxios.onAny().reply(200, { data: not });
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			mockingoose(ModelG).toReturn(grp, 'findOne');
-			mockingoose(ModelC).toReturn(client, 'findOne');
+			mockingoose(ModelC).toReturn({ payload: client }, 'findOne');
 			mockingoose(ModelP).toReturn(global, 'findOne');
 			cl.generateClientCredentialToken.mockResolvedValue(token);
 			const result = await notify.sendNotification(not, null, null);
@@ -143,23 +146,24 @@ describe('Plugins', () => {
 				data: payload,
 				url: not.destinationUri
 			};
+			//todo fix expects...
 			expect(ModelG.Query.prototype.findOne).toHaveBeenCalled();
 			expect(ModelC.Query.prototype.findOne).toHaveBeenCalled();
 			expect(ModelP.Query.prototype.findOne).toHaveBeenCalled();
 			expect(cl.generateClientCredentialToken).toHaveBeenCalled();
 			const clGenArgs = cl.generateClientCredentialToken.mock.calls[0];
 			expect(clGenArgs[2]).toBe(`api:write group:${grp._id}`);
-			expect(axios).toHaveBeenCalled();
-			const args = axios.mock.calls[0];
-			expect(args[0]).toMatchObject(expectedOptions);
+			expect(maxios.history.post.length).toBe(1);
+			expect(JSON.parse(maxios.history.post[0].data)._id).toBe(payload._id);
 			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 			const res = JSON.parse(JSON.stringify(result.data));
-			expect(res._id).toBe(updated._id);
+			expect(res.data._id).toBe(updated._id);
 		} catch (error) {
+			console.error(error);
 			t.fail(error);
 		}
 	});
-
+	/*
 	it('Send Notification without token', async () => {
 		try {
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, false);
