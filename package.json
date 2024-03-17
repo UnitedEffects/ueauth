@@ -6,15 +6,16 @@
   "private": false,
   "license": "SEE LICENSE IN ./LICENSE.md",
   "scripts": {
+    "test-notifications": "nodemon ./test/tools/testserver.js",
     "start": "node ./dist/start.js",
-    "dev": "NODE_ENV=dev nodemon ./src/debug/start.js",
-    "build": "babel src -d dist",
-    "package": "yarn test && yarn build && sls package",
-    "deploy": "yarn test && yarn build && sls deploy",
+    "dev": "NODE_ENV=dev nodemon ./src/start.ts",
+    "swag-type": "ts-node openApiTypeGenerator.ts",
+    "build": "yarn && tsc",
+    "package": "yarn test && sls package",
+    "deploy": "yarn test && sls deploy",
     "simple-deploy": "sls deploy",
-    "test": "yarn && jest",
-    "clean": "rm -rf ./node_modules",
-    "test-notifications": "nodemon ./test/tools/testserver.js"
+    "test": "yarn build && node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "clean": "rm -rf ./node_modules"
   },
   "keywords": [
     "docker",
@@ -117,6 +118,11 @@
     "serverless-apigw-binary": "^0.4.4",
     "serverless-domain-manager": "^5.1.5",
     "supertest": "^4.0.2",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.5.0",
+    "typescript-eslint": "^0.0.1-alpha.0",
+    "typescript": "^5.4.2",
     "unique-names-generator": "^4.6.0"
   },
   "resolutions": {
@@ -127,12 +133,6 @@
   "engines": {
     "yarn": ">= 1.0.0",
     "node": "^12.19.0 || ^14.15.0 || ^16.13.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^jose/(.*)$": "<rootDir>/node_modules/jose-legacy"
-    }
   },
   "optionalDependencies": {
     "pulsar-client": "^1.6.2"
