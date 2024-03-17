@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
-const config = require('../../src/config');
+const config = require('../../config');
 const cryptoRandomString = require('crypto-random-string');
 const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
 

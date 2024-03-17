@@ -1,12 +1,10 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import { v4 as uuid } from 'uuid';
-import Model from '../src/api/authGroup/model';
-import ModelIAT from '../src/api/oidc/models/initialAccessToken';
-import Plugins from '../src/api/plugins/model';
-import iat from '../src/api/oidc/initialAccess/iat';
-import dal from '../src/api/authGroup/dal';
-import group from '../src/api/authGroup/group';
+import Model from '../api/authGroup/model';
+import ModelIAT from '../api/oidc/models/initialAccessToken';
+import Plugins from '../api/plugins/model';
+import iat from '../api/oidc/initialAccess/iat';
+import dal from '../api/authGroup/dal';
+import group from '../api/authGroup/group';
 import { AccountMocks, GroupMocks, PluginMocks, Tokens } from './models';
 import t from './testhelper';
 

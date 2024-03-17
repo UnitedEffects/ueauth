@@ -1,5 +1,3 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import t from './testhelper';
 import { v4 as uuid } from 'uuid';
 import qs from 'qs';
@@ -12,20 +10,20 @@ jest.mock('axios');
 import {ClientMocks, GroupMocks, Tokens} from './models';
 
 //Models
-import ModelC from '../src/api/oidc/models/client';
-import ModelIAT from '../src/api/oidc/models/initialAccessToken';
-import ModelRat from '../src/api/oidc/models/registrationAccessToken';
-import ModelS from '../src/api/oidc/models/session';
-import Group from '../src/api/authGroup/model';
+import ModelC from '../api/oidc/models/client';
+import ModelIAT from '../api/oidc/models/initialAccessToken';
+import ModelRat from '../api/oidc/models/registrationAccessToken';
+import ModelS from '../api/oidc/models/session';
+import Group from '../api/authGroup/model';
 
 //Libs
-import iat from '../src/api/oidc/initialAccess/iat';
-import rat from '../src/api/oidc/regAccess/rat';
-import client from '../src/api/oidc/client/clients';
-import session from '../src/api/oidc/session/session';
+import iat from '../api/oidc/initialAccess/iat';
+import rat from '../api/oidc/regAccess/rat';
+import client from '../api/oidc/client/clients';
+import session from '../api/oidc/session/session';
 
 const mockingoose = require('mockingoose');
-const config = require('../src/config');
+const config = require('../config');
 const cryptoRandomString = require('crypto-random-string');
 
 describe('OIDC OP interface functions - CLIENTS', () => {

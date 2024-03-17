@@ -1,19 +1,17 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import { v4 as uuid } from 'uuid';
 import { nanoid } from 'nanoid';
-import Model from '../src/api/accounts/models/accounts';
-import core from '../src/auth/core';
+import Model from '../api/accounts/models/accounts';
+import core from '../auth/core';
 
 import {AccountMocks, GroupMocks, PluginMocks, Tokens} from './models';
 import t from './testhelper';
 
 
 // Clients
-import ModelC from '../src/api/oidc/models/client';
+import ModelC from '../api/oidc/models/client';
 
 const mockingoose = require('mockingoose');
-const config = require('../src/config');
+const config = require('../config');
 
 describe('Auth Functions', () => {
 	beforeEach(() => {

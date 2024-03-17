@@ -1,7 +1,7 @@
 {
   "name": "ue-auth",
   "altName": "UE-Auth",
-  "version": "1.42.6",
+  "version": "1.43.0",
   "description": "UE Auth is a multi-tenant OIDC Provider, User Management, B2B Product Access, and Roles/Permissions Management system intended to create a single hybrid solution to serve as Identity and Access for both self-registered B2C Apps and Enterprise B2B Solutions",
   "private": false,
   "license": "SEE LICENSE IN ./LICENSE.md",
@@ -102,12 +102,10 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/register": "^7.7.4",
-    "babel-eslint": "^10.0.3",
-    "babel-jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.28",
+    "axios-mock-adapter": "^1.22.0",
     "eslint": "^8.52.0",
     "eslint-plugin-jest": "^27.4.3",
     "jest": "^29.7.0",
@@ -121,8 +119,8 @@
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
-    "typescript-eslint": "^0.0.1-alpha.0",
     "typescript": "^5.4.2",
+    "typescript-eslint": "^0.0.1-alpha.0",
     "unique-names-generator": "^4.6.0"
   },
   "resolutions": {

@@ -1,17 +1,15 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import t from './testhelper';
-import middle from '../src/oidcMiddleware';
-import errHandler from '../src/customErrorHandler';
+import middle from '../oidcMiddleware';
+import errHandler from '../customErrorHandler';
 import Boom from '@hapi/boom';
 import {GroupMocks} from './models';
-import Model from '../src/api/authGroup/model';
-import cl from '../src/api/oidc/client/clients';
-jest.mock('../src/api/oidc/client/clients');
-import IAT from '../src/api/oidc/initialAccess/iat';
-jest.mock('../src/api/oidc/initialAccess/iat');
+import Model from '../api/authGroup/model';
+import cl from '../api/oidc/client/clients';
+jest.mock('../api/oidc/client/clients');
+import IAT from '../api/oidc/initialAccess/iat';
+jest.mock('../api/oidc/initialAccess/iat');
 const mockingoose = require('mockingoose');
-const config = require('../src/config');
+const config = require('../config');
 const cryptoRandomString = require('crypto-random-string');
 
 import NodeCache from 'node-cache';

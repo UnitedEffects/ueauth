@@ -1,6 +1,4 @@
-import '@babel/register';
-import "regenerator-runtime/runtime";
-import { say, sayMiddleware } from '../src/say';
+import { say, sayMiddleware } from '../say';
 import t from './testhelper';
 
 describe('Say library tests', () => {

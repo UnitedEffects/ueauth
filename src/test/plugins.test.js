@@ -1,21 +1,19 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
-import Model from '../src/api/plugins/model';
+import Model from '../api/plugins/model';
 import { v4 as uuid } from 'uuid';
-import dal from '../src/api/plugins/dal';
-import plugins from '../src/api/plugins/plugins';
+import dal from '../api/plugins/dal';
+import plugins from '../api/plugins/plugins';
 import { GroupMocks, PluginMocks } from './models';
 
 // mocks for Group
-import ModelG from '../src/api/authGroup/model';
+import ModelG from '../api/authGroup/model';
 import t from './testhelper';
 
 // Clients
-import cl from '../src/api/oidc/client/clients';
-jest.mock('../src/api/oidc/client/clients');
+import cl from '../api/oidc/client/clients';
+jest.mock('../api/oidc/client/clients');
 
 const mockingoose = require('mockingoose');
-const config = require('../src/config');
+const config = require('../config');
 
 describe('Plugins', () => {
 	beforeEach(() => {
