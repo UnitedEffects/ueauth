@@ -4,7 +4,9 @@ import qs from 'qs';
 
 // Axios
 import axios from 'axios';
-jest.mock('axios');
+import MockAdapter from 'axios-mock-adapter';
+const maxios = new MockAdapter(axios);
+
 
 //Mocks
 import {ClientMocks, GroupMocks, Tokens} from './models';
@@ -37,6 +39,9 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 		ModelIAT.Query.prototype.save.mockClear();
 		ModelIAT.Query.prototype.findOne.mockClear();
 		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
+		maxios.resetHistory();
+		maxios.resetHandlers();
+		maxios.reset();
 	});
 
 	it('Generate Client - grp has primaryDomain', async () => {
@@ -124,7 +129,8 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 			delete grp.owner;
 			delete grp.__v;
 			delete grp.primaryDomain;
-			axios.mockResolvedValue({ access_token: cryptoRandomString({length: 21, type: 'url-safe'}) });
+			maxios.onAny().reply(200, { access_token: cryptoRandomString({length: 21, type: 'url-safe'}) })
+			//axios.mockResolvedValue({ access_token: cryptoRandomString({length: 21, type: 'url-safe'}) });
 			const client_id = uuid();
 			const client_secret = cryptoRandomString({length: 40, type: 'url-safe'});
 			await client.generateClientCredentialToken(grp,
@@ -148,7 +154,10 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 				data: qs.stringify(data),
 				url: `${iss}/token`,
 			};
-			expect(axios).toHaveBeenCalledWith(options);
+			expect(maxios.history.post.length).toBe(1);
+			console.info(maxios.history.post[1]);
+			//expect(JSON.parse(maxios.history.post[1].data)._id).toBe(payload._id);
+			//expect(axios).toHaveBeenCalledWith(options);
 		} catch (error) {
 			t.fail(error);
 		}

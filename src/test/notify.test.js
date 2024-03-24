@@ -20,7 +20,6 @@ jest.spyOn(cl, 'generateClientCredentialToken');
 // Axios
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import config from "../config";
 const maxios = new MockAdapter(axios);
 
 const mockingoose = require('mockingoose');
