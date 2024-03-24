@@ -13,16 +13,15 @@ import ModelP from '../api/plugins/model';
 
 // Clients
 import ModelC from '../api/oidc/models/client';
-jest.mock('../api/oidc/client/clients', () => ({
-	generateClientCredentialToken: jest.fn()
-}));
 import cl from '../api/oidc/client/clients';
+jest.spyOn(cl, 'generateClientCredentialToken');
 
 
 // Axios
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-var maxios = new MockAdapter(axios);
+import config from "../config";
+const maxios = new MockAdapter(axios);
 
 const mockingoose = require('mockingoose');
 
@@ -37,6 +36,9 @@ describe('Plugins', () => {
 		ModelP.Query.prototype.findOne.mockClear();
 		ModelC.Query.prototype.findOne.mockClear();
 		mockingoose(Group).toReturn(GroupMocks.group, 'findOne');
+		maxios.resetHistory();
+		maxios.resetHandlers();
+		maxios.reset();
 	});
 
 	it('Create Notification', async () => {
@@ -96,14 +98,6 @@ describe('Plugins', () => {
 			maxios.onAny().reply(200, { data: not });
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			const result = await notify.sendNotification(not, global, token);
-			const expectedOptions = {
-				method: 'POST',
-				headers: {
-					'Authorization': `bearer ${token.data.access_token}`
-				},
-				data: payload,
-				url: not.destinationUri
-			};
 			expect(maxios.history.post.length).toBe(1);
 			expect(JSON.parse(maxios.history.post[0].data)._id).toBe(payload._id);
 			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
@@ -113,7 +107,6 @@ describe('Plugins', () => {
 			t.fail(error);
 		}
 	});
-
 
 	it('Send Notification without token or global', async () => {
 		try {
@@ -131,30 +124,23 @@ describe('Plugins', () => {
 					access_token: tok._id
 				}
 			};
-			maxios.onAny().reply(200, { data: not });
+			maxios.onAny().reply((config) => {
+				if(config.url === not.destinationUri) return [200, { data: payload }];
+				return [200, token];
+			})
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			mockingoose(ModelG).toReturn(grp, 'findOne');
 			mockingoose(ModelC).toReturn({ payload: client }, 'findOne');
 			mockingoose(ModelP).toReturn(global, 'findOne');
-			cl.generateClientCredentialToken.mockResolvedValue(token);
-			const result = await notify.sendNotification(not, null, null);
-			const expectedOptions = {
-				method: 'POST',
-				headers: {
-					'Authorization': `bearer ${token.data.access_token}`
-				},
-				data: payload,
-				url: not.destinationUri
-			};
-			//todo fix expects...
+			const result = await notify.sendNotification(payload, null, null);
 			expect(ModelG.Query.prototype.findOne).toHaveBeenCalled();
 			expect(ModelC.Query.prototype.findOne).toHaveBeenCalled();
 			expect(ModelP.Query.prototype.findOne).toHaveBeenCalled();
 			expect(cl.generateClientCredentialToken).toHaveBeenCalled();
 			const clGenArgs = cl.generateClientCredentialToken.mock.calls[0];
 			expect(clGenArgs[2]).toBe(`api:write group:${grp._id}`);
-			expect(maxios.history.post.length).toBe(1);
-			expect(JSON.parse(maxios.history.post[0].data)._id).toBe(payload._id);
+			expect(maxios.history.post.length).toBe(2);
+			expect(JSON.parse(maxios.history.post[1].data)._id).toBe(payload._id);
 			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 			const res = JSON.parse(JSON.stringify(result.data));
 			expect(res.data._id).toBe(updated._id);
@@ -163,7 +149,7 @@ describe('Plugins', () => {
 			t.fail(error);
 		}
 	});
-	/*
+
 	it('Send Notification without token', async () => {
 		try {
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, false);
@@ -180,31 +166,24 @@ describe('Plugins', () => {
 					access_token: tok._id
 				}
 			};
-			axios.mockResolvedValue({ data: not });
+			maxios.onAny().reply((config) => {
+				if(config.url === not.destinationUri) return [200, { data: not }];
+				return [200, token];
+			})
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			mockingoose(ModelG).toReturn(grp, 'findOne');
-			mockingoose(ModelC).toReturn(client, 'findOne');
-			cl.generateClientCredentialToken.mockResolvedValue(token);
+			mockingoose(ModelC).toReturn({ payload: client }, 'findOne');
 			const result = await notify.sendNotification(not, global, null);
-			const expectedOptions = {
-				method: 'POST',
-				headers: {
-					'Authorization': `bearer ${token.data.access_token}`
-				},
-				data: payload,
-				url: not.destinationUri
-			};
 			expect(ModelG.Query.prototype.findOne).toHaveBeenCalled();
 			expect(ModelC.Query.prototype.findOne).toHaveBeenCalled();
 			expect(cl.generateClientCredentialToken).toHaveBeenCalled();
 			const clGenArgs = cl.generateClientCredentialToken.mock.calls[0];
 			expect(clGenArgs[2]).toBe(`api:write group:${grp._id}`);
-			expect(axios).toHaveBeenCalled();
-			const args = axios.mock.calls[0];
-			expect(args[0]).toMatchObject(expectedOptions);
+			expect(maxios.history.post.length).toBe(2);
+			expect(JSON.parse(maxios.history.post[1].data)._id).toBe(payload._id);
 			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
 			const res = JSON.parse(JSON.stringify(result.data));
-			expect(res._id).toBe(updated._id);
+			expect(res.data._id).toBe(updated._id);
 		} catch (error) {
 			t.fail(error);
 		}
@@ -225,7 +204,10 @@ describe('Plugins', () => {
 					access_token: tok._id
 				}
 			};
-			axios.mockResolvedValue({ data: not });
+			maxios.onAny().reply((config) => {
+				if(config.url === not.destinationUri) return [200, { data: not }];
+				return [200, token];
+			})
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			await notify.sendNotification(not, global, token);
 			t.fail('SHOULD NOT BE HERE');
@@ -248,12 +230,15 @@ describe('Plugins', () => {
 					access_token: tok._id
 				}
 			};
-			axios.mockRejectedValue({ status: 400 });
+			maxios.onAny().reply((config) => {
+				if(config.url === not.destinationUri) return [400, {}];
+				return [200, token];
+			})
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			await notify.sendNotification(not, global, token);
 			t.fail('SHOULD NOT BE HERE');
 		} catch (error) {
-			expect(error.status).toBe(400);
+			expect(error.response.status).toBe(400);
 		}
 	});
 
@@ -280,29 +265,21 @@ describe('Plugins', () => {
 					access_token: tok._id
 				}
 			};
-			axios.mockResolvedValue({ data: not });
+			maxios.onAny().reply((config) => {
+				if(config.url === not.destinationUri) return [200, { data: not }];
+				return [200, token];
+			})
 			mockingoose(Model).toReturn(not, 'findOne');
 			mockingoose(Model).toReturn(updated, 'findOneAndUpdate');
 			mockingoose(ModelG).toReturn(grp, 'findOne');
-			mockingoose(ModelC).toReturn(client, 'findOne');
-			cl.generateClientCredentialToken.mockResolvedValue(token);
+			mockingoose(ModelC).toReturn({ payload: client }, 'findOne');
 			const result = await notify.processNotification(global, grp, not._id);
 			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith({ _id: not._id, authGroupId: grp._id });
-			const expectedOptions = {
-				method: 'POST',
-				headers: {
-					'Authorization': `bearer ${token.data.access_token}`
-				},
-				data: payload,
-				url: not.destinationUri
-			};
-			expect(axios).toHaveBeenCalled();
-			const args = axios.mock.calls[0];
-			console.info(args[0]);
-			expect(args[0]).toMatchObject(expectedOptions);
+			expect(maxios.history.post.length).toBe(2);
+			expect(JSON.parse(maxios.history.post[1].data)._id).toBe(payload._id);
 			expect(Model.Query.prototype.findOneAndUpdate).toHaveBeenCalledWith({ _id: not._id }, { processed: true }, { new: true});
-
 			const res = JSON.parse(JSON.stringify(result));
+			console.info(res, updated);
 			expect(res.id).toBe(updated._id);
 		} catch (error) {
 			t.fail(error);
@@ -342,7 +319,5 @@ describe('Plugins', () => {
 			t.fail(error);
 		}
 	});
-
-	 */
 
 });
