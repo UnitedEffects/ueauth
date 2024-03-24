@@ -155,9 +155,10 @@ describe('OIDC OP interface functions - CLIENTS', () => {
 				url: `${iss}/token`,
 			};
 			expect(maxios.history.post.length).toBe(1);
-			console.info(maxios.history.post[1]);
-			//expect(JSON.parse(maxios.history.post[1].data)._id).toBe(payload._id);
-			//expect(axios).toHaveBeenCalledWith(options);
+			expect(maxios.history.post[0].headers.authorization).toBe(options.headers.authorization);
+			expect(maxios.history.post[0].headers['Content-Type']).toBe(options.headers['content-type']);
+			expect(maxios.history.post[0].data).toBe(options.data);
+			expect(maxios.history.post[0].url).toBe(options.url);
 		} catch (error) {
 			t.fail(error);
 		}
