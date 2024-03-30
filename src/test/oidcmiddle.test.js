@@ -8,7 +8,6 @@ import cl from '../api/oidc/client/clients';
 jest.mock('../api/oidc/client/clients');
 import IAT from '../api/oidc/initialAccess/iat';
 import ModelC from "../api/oidc/models/client";
-import {mock} from "node:test";
 jest.mock('../api/oidc/initialAccess/iat');
 const mockingoose = require('mockingoose');
 const config = require('../config');
