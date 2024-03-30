@@ -128,10 +128,6 @@
     "set-value": "^4.0.1",
     "ansi-regex": "^5.0.1"
   },
-  "engines": {
-    "yarn": ">= 1.0.0",
-    "node": "^12.19.0 || ^14.15.0 || ^16.13.0"
-  },
   "optionalDependencies": {
     "pulsar-client": "^1.6.2"
   }
