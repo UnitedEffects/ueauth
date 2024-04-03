@@ -1,12 +1,10 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import request from 'supertest';
-import app from '../src/app';
-import spec from '../src/swagger';
+import app from '../app';
+import spec from '../swagger';
 import t from './testhelper';
-import Group from '../src/api/authGroup/model';
-const config = require('../src/config');
-const pJson = require('../package');
+import Group from '../api/authGroup/model';
+const config = require('../config');
+const pJson = require('../../package');
 const mockingoose = require('mockingoose');
 
 const { doc: swagger } = spec;

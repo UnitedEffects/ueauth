@@ -1,7 +1,6 @@
-const app = require('./app').default;
-
-const connection = require('./connection').default;
-const plugins = require('./api/plugins/plugins').default;
+import app from './app.js';
+import connection from './connection';
+import plugins from './api/plugins/plugins';
 
 const config = require('./config');
 

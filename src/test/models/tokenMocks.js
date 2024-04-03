@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 const cryptoRandomString = require('crypto-random-string');
 const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
 
-const config = require('../../src/config');
+const config = require('../../config');
 
 const toks = {
 	opaque_access_token: cryptoRandomString({length: 86, type: 'url-safe'}),

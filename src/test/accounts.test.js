@@ -1,12 +1,11 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
+import {jest} from '@jest/globals'
 import { v4 as uuid } from 'uuid';
-import Model from '../src/api/accounts/models/accounts';
-import Group from '../src/api/authGroup/model';
-import dal from '../src/api/accounts/dal';
-import helper from '../src/helper';
-import account from '../src/api/accounts/account';
-import oidcAcc from '../src/api/accounts/accountOidcInterface';
+import Model from '../api/accounts/models/accounts';
+import Group from '../api/authGroup/model';
+import dal from '../api/accounts/dal';
+import helper from '../helper';
+import account from '../api/accounts/account';
+import oidcAcc from '../api/accounts/accountOidcInterface';
 import { AccountMocks, GroupMocks } from './models';
 const mockingoose = require('mockingoose');
 import t from './testhelper';

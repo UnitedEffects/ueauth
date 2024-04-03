@@ -1,7 +1,5 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import { nanoid } from 'nanoid';
-const config = require('../../src/config');
+const config = require('../../config');
 const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
 
 const agMocks = {

@@ -1,21 +1,18 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
-import Model from '../src/api/plugins/model';
+import Model from '../api/plugins/model';
 import { v4 as uuid } from 'uuid';
-import dal from '../src/api/plugins/dal';
-import plugins from '../src/api/plugins/plugins';
+import dal from '../api/plugins/dal';
+import plugins from '../api/plugins/plugins';
 import { GroupMocks, PluginMocks } from './models';
 
 // mocks for Group
-import ModelG from '../src/api/authGroup/model';
+import ModelG from '../api/authGroup/model';
 import t from './testhelper';
 
 // Clients
-import cl from '../src/api/oidc/client/clients';
-jest.mock('../src/api/oidc/client/clients');
+import cl from '../api/oidc/client/clients';
 
 const mockingoose = require('mockingoose');
-const config = require('../src/config');
+const config = require('../config');
 
 describe('Plugins', () => {
 	beforeEach(() => {
@@ -66,15 +63,21 @@ describe('Plugins', () => {
 			};
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, true);
 			const data = { enabled: true, currentVersion: 1, notificationServiceUri: 'http://localhost:8080' };
-			cl.generateNotificationServiceClient.mockResolvedValue(client);
-			cl.deleteNotificationsServiceClient.mockResolvedValue(true);
+			const mClG = jest
+				.spyOn(cl, 'generateNotificationServiceClient')
+				.mockResolvedValue(client);
+			const mCLD = jest
+				.spyOn(cl, 'deleteNotificationsServiceClient')
+				.mockResolvedValue(true);
 			mockingoose(Model).toReturn(plg, 'findOne');
 			mockingoose(Model).toReturn(updated, 'save');
 			const result = await plugins.toggleGlobalNotifications(data, uuid(), grp);
-			expect(cl.generateNotificationServiceClient).toHaveBeenCalledWith(grp);
+			expect(mClG).toHaveBeenCalledWith(grp);
 			expect(Model.prototype.save).toHaveBeenCalled();
 			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
 			expect(result).toMatchObject(expected);
+			mClG.mockRestore();
+			mCLD.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -102,20 +105,26 @@ describe('Plugins', () => {
 			};
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, true);
 			const data = { enabled: false, currentVersion: 1,  };
-			cl.deleteNotificationsServiceClient.mockResolvedValue(true);
+			const mCLD = jest
+				.spyOn(cl, 'deleteNotificationsServiceClient')
+				.mockResolvedValue(true);
 			mockingoose(Model).toReturn(og, 'findOne');
 			mockingoose(Model).toReturn(plg, 'save');
 			const result = await plugins.toggleGlobalNotifications(data, uuid(), grp);
-			expect(cl.deleteNotificationsServiceClient).toHaveBeenCalled();
+			expect(mCLD).toHaveBeenCalled();
 			expect(Model.prototype.save).toHaveBeenCalled();
 			expect(Model.Query.prototype.findOne).toHaveBeenCalled();
 			expect(result).toMatchObject(expected);
+			mCLD.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
 	});
 
 	it('toggle global notifications plugin with wrong versions', async () => {
+		const mCLD = jest
+			.spyOn(cl, 'deleteNotificationsServiceClient')
+			.mockResolvedValue(true);
 		try {
 			const plg = PluginMocks.global;
 			const client = PluginMocks.notificationClient();
@@ -128,7 +137,7 @@ describe('Plugins', () => {
 			og.notifications.registeredClientId = client.client_id;
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, true);
 			const data = { enabled: false, currentVersion: 1,  };
-			cl.deleteNotificationsServiceClient.mockResolvedValue(true);
+
 			mockingoose(Model).toReturn(og, 'findOne');
 			mockingoose(Model).toReturn(plg, 'save');
 			await plugins.toggleGlobalNotifications(data, uuid(), grp);
@@ -136,10 +145,14 @@ describe('Plugins', () => {
 		} catch (error) {
 			expect(error.output.statusCode).toBe(400);
 			expect(error.output.payload.message).toBe( 'Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
+			mCLD.mockRestore();
 		}
 	});
 
 	it('toggle global notifications plugin with no version provided', async () => {
+		const mCLD = jest
+			.spyOn(cl, 'deleteNotificationsServiceClient')
+			.mockResolvedValue(true);
 		try {
 			const plg = PluginMocks.global;
 			const client = PluginMocks.notificationClient();
@@ -152,7 +165,6 @@ describe('Plugins', () => {
 			og.notifications.registeredClientId = client.client_id;
 			const grp = GroupMocks.newGroup('UE Core', 'root', true, true);
 			const data = { enabled: false };
-			cl.deleteNotificationsServiceClient.mockResolvedValue(true);
 			mockingoose(Model).toReturn(og, 'findOne');
 			mockingoose(Model).toReturn(plg, 'save');
 			await plugins.toggleGlobalNotifications(data, uuid(), grp);
@@ -160,6 +172,7 @@ describe('Plugins', () => {
 		} catch (error) {
 			expect(error.output.statusCode).toBe(400);
 			expect(error.output.payload.message).toBe( 'Must provide the current version to be incremented. If you thought you did, someone may have updated this before you.');
+			mCLD.mockRestore();
 		}
 	});
 

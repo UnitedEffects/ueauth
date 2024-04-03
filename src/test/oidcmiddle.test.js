@@ -1,30 +1,33 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import t from './testhelper';
-import middle from '../src/oidcMiddleware';
-import errHandler from '../src/customErrorHandler';
+import middle from '../oidcMiddleware';
+import errHandler from '../customErrorHandler';
 import Boom from '@hapi/boom';
 import {GroupMocks} from './models';
-import Model from '../src/api/authGroup/model';
-import cl from '../src/api/oidc/client/clients';
-jest.mock('../src/api/oidc/client/clients');
-import IAT from '../src/api/oidc/initialAccess/iat';
-jest.mock('../src/api/oidc/initialAccess/iat');
+import Model from '../api/authGroup/model';
+import cl from '../api/oidc/client/clients';
+jest.mock('../api/oidc/client/clients');
+import IAT from '../api/oidc/initialAccess/iat';
+import ModelC from "../api/oidc/models/client";
+jest.mock('../api/oidc/initialAccess/iat');
 const mockingoose = require('mockingoose');
-const config = require('../src/config');
+const config = require('../config');
 const cryptoRandomString = require('crypto-random-string');
 
-import NodeCache from 'node-cache';
-jest.mock('node-cache');
+import helper from '../helper';
+
 
 describe('OIDC Pre/Post Middleware', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+		jest.clearAllMocks();
         mockingoose.resetAll();
-        Model.Query.prototype.save.mockClear();
-        Model.Query.prototype.findOne.mockClear();
-        Model.Query.prototype.findOneAndUpdate.mockClear();
-        NodeCache.prototype.get.mockClear();
+		ModelC.Query.prototype.save.mockClear();
+		ModelC.Query.prototype.find.mockClear();
+		ModelC.Query.prototype.findOne.mockClear();
+		ModelC.Query.prototype.findOneAndUpdate.mockClear();
+		Model.Query.prototype.save.mockClear();
+		Model.Query.prototype.find.mockClear();
+		Model.Query.prototype.findOne.mockClear();
+		Model.Query.prototype.findOneAndUpdate.mockClear();
     });
 
 	test('validate authgroup for OP koa routes - authgroup defined in ctx', async () => {
@@ -44,7 +47,6 @@ describe('OIDC Pre/Post Middleware', () => {
 			await middle.validateAuthGroup(ctx, jest.fn());
 			expect(ctx.req.params.group).toBe(authGroup.id);
 		} catch (error) {
-			console.info(error);
 			t.fail();
 		}
 	});
@@ -69,6 +71,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].status).toBe(428);
 			expect(args[0].body.error).toBe('Precondition Required');
 			expect(args[0].body.message).toBe('authGroup is required');
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -91,20 +94,23 @@ describe('OIDC Pre/Post Middleware', () => {
 			await middle.validateAuthGroup(ctx);
 			expect(spy).toHaveBeenCalled();
 			const args = spy.mock.calls[0];
-			expect(args[0].status).toBe(428);
-			expect(args[0].body.error).toBe('Precondition Required');
-			expect(args[0].body.message).toBe('authGroup is required');
+			expect(args[1].output.statusCode).toBe(428);
+			expect(args[1].output.payload.error).toBe('Precondition Required');
+			expect(args[1].output.payload.message).toBe('authGroup is required');
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
 	});
 
+
 	test('validate authgroup for OP koa routes - authgroup not defined - group provided', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
 			authGroup.id = authGroup._id;
-			NodeCache.prototype.get.mockResolvedValue(undefined);
-			mockingoose(Model).toReturn(authGroup, 'findOne');
+			const mockGet = jest
+				.spyOn(helper, 'cacheAG')
+				.mockResolvedValue(authGroup);
 			const ctx = {
 				req: {
 					params: {
@@ -116,19 +122,13 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
-			const query = {
-				active: true,
-				$or: [
-					{ _id: ctx.req.params.group },
-					{ prettyName: ctx.req.params.group }
-				]
-			};
 			await middle.validateAuthGroup(ctx);
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
+			expect(mockGet).toHaveBeenCalled();
 			expect(ctx.authGroup.id).toBe(authGroup.id);
 			expect(ctx.authGroup.name).toBe(authGroup.name);
 			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
 			expect(ctx.req.params.group).toBe(authGroup.id);
+			mockGet.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -136,8 +136,11 @@ describe('OIDC Pre/Post Middleware', () => {
 
 	test('validate authgroup for OP koa routes - authgroup not defined - group provided - not found', async () => {
 		try {
-			mockingoose(Model).toReturn(undefined, 'findOne');
-			NodeCache.prototype.get.mockResolvedValue(undefined);
+			const mockGet = jest
+				.spyOn(helper, 'cacheAG')
+				.mockImplementation(() => {
+					throw Boom.notImplemented('auth group not found');
+				})
 			const ctx = {
 				req: {
 					params: {
@@ -149,6 +152,26 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
+			const spy = jest.spyOn(middle, 'koaErrorOut');
+			await middle.validateAuthGroup(ctx);
+			expect(mockGet).toHaveBeenCalled();
+			expect(spy).toHaveBeenCalled();
+			const args = spy.mock.calls[0];
+			//console.info('args', args[1]);
+			expect(args[1].output.statusCode).toBe(501);
+			expect(args[1].output.payload.error).toBe('Not Implemented');
+			expect(args[1].output.payload.message).toBe('auth group not found');
+			mockGet.mockRestore();
+			spy.mockRestore();
+		} catch (error) {
+			t.fail(error);
+		}
+	});
+
+	test('validate cache can return an authgroup when cache is empty (sequence of tests is important) and AG is found', async () => {
+		try {
+			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
+			mockingoose(Model).toReturn(authGroup, 'findOne');
 			const query = {
 				active: true,
 				$or: [
@@ -156,137 +179,97 @@ describe('OIDC Pre/Post Middleware', () => {
 					{ prettyName: 'root' }
 				]
 			};
-			const spy = jest.spyOn(middle, 'koaErrorOut');
-			await middle.validateAuthGroup(ctx);
+			const result = await helper.cacheAG(false, 'AG', 'root');
 			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
-			expect(spy).toHaveBeenCalled();
-			const args = spy.mock.calls[0];
-			expect(args[0].status).toBe(501);
-			expect(args[0].body.error).toBe('Not Implemented');
-			expect(args[0].body.message).toBe('auth group not found');
+			expect(result._id).toBe(authGroup._id);
 		} catch (error) {
 			t.fail(error);
 		}
-	});
+	})
 
-	test('validate authgroup for OP koa routes - authgroup not defined - group provided and cached', async () => {
+	test('validate cache can return an authgroup when cache is not empty (not mocked)', async () => {
 		try {
-			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
-			authGroup.id = authGroup._id;
-			NodeCache.prototype.get.mockResolvedValue(JSON.stringify(authGroup));
-			const ctx = {
-				req: {
-					params: {
-						group: 'root'
-					},
-					query: {}
-				},
-				app: {
-					emit: jest.fn()
-				}
-			};
-			await middle.validateAuthGroup(ctx);
-			expect(NodeCache.prototype.get).toHaveBeenCalled();
-			expect(ctx.authGroup.id).toBe(authGroup.id);
-			expect(ctx.authGroup.name).toBe(authGroup.name);
-			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
-			expect(ctx.req.params.group).toBe(authGroup.id);
+			const result = await helper.cacheAG(false, 'AG', 'root');
+			expect(Model.Query.prototype.findOne).not.toHaveBeenCalled();
+			expect(result.prettyName).toBe('root');
 		} catch (error) {
 			t.fail(error);
 		}
-	});
+	})
 
-	test('validate authgroup for OP koa routes - group provided and cached - cache refresh requested', async () => {
+	test('validate cache can return an authgroup when cache is reset and AG is found - should hit DB', async () => {
 		try {
-			const authGroup = GroupMocks.newGroup('UE Core', 'root', false, false);
-			authGroup.id = authGroup._id;
-			NodeCache.prototype.get.mockResolvedValue(authGroup);
+			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
 			mockingoose(Model).toReturn(authGroup, 'findOne');
+			const query = {
+				active: true,
+				$or: [
+					{ _id: 'root' },
+					{ prettyName: 'root' }
+				]
+			};
+			const result = await helper.cacheAG(true, 'AG', 'root');
+			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
+			expect(result._id).toBe(authGroup._id);
+		} catch (error) {
+			console.error(error);
+			t.fail(error);
+		}
+	})
+
+	test('No deleting authGroup associated client - DELETE method', async () => {
+		try {
+			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
+			authGroup.id = authGroup._id;
 			const ctx = {
+				authGroup,
+				method: 'DELETE',
+				path: `/${authGroup.id}/reg/${authGroup.associatedClient}`,
 				req: {
 					params: {
-						group: 'root'
-					},
-					query: {
-						resetCache: 'true'
+						group: authGroup.id
 					}
 				},
 				app: {
 					emit: jest.fn()
 				}
 			};
-			const query = {
-				active: true,
-				$or: [
-					{ _id: ctx.req.params.group },
-					{ prettyName: ctx.req.params.group }
-				]
-			};
-			await middle.validateAuthGroup(ctx);
-			expect(NodeCache.prototype.get).not.toHaveBeenCalled();
-			expect(Model.Query.prototype.findOne).toHaveBeenCalledWith(query);
-			expect(ctx.authGroup.id).toBe(authGroup.id);
-			expect(ctx.authGroup.name).toBe(authGroup.name);
-			expect(ctx.authGroup.prettyName).toBe(authGroup.prettyName);
-			expect(ctx.req.params.group).toBe(authGroup.id);
+			const spy = jest.spyOn(middle, 'koaErrorOut');
+			await middle.noDeleteOnPrimaryClient(ctx, jest.fn());
+			expect(spy).toHaveBeenCalled();
+			const args = spy.mock.calls[0];
+			expect(args[0].status).toBe(400);
+			expect(args[0].body.error).toBe('Bad Request');
+			expect(args[0].body.message).toBe('You can not delete the primary client of your auth group');
 		} catch (error) {
 			t.fail(error);
 		}
 	});
 
-    test('No deleting authGroup associated client - DELETE method', async () => {
-        try {
-            const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
-            authGroup.id = authGroup._id;
-            const ctx = {
-                authGroup,
-                method: 'DELETE',
-                path: `/${authGroup.id}/reg/${authGroup.associatedClient}`,
-                req: {
-                    params: {
-                        group: authGroup.id
-                    }
-                },
-                app: {
-                    emit: jest.fn()
-                }
-            };
-            const spy = jest.spyOn(middle, 'koaErrorOut');
-            await middle.noDeleteOnPrimaryClient(ctx, jest.fn());
-            expect(spy).toHaveBeenCalled();
-            const args = spy.mock.calls[0];
-            expect(args[0].status).toBe(400);
-            expect(args[0].body.error).toBe('Bad Request');
-            expect(args[0].body.message).toBe('You can not delete the primary client of your auth group');
-        } catch (error) {
+	test('No deleting authGroup associated client - not DELETE method (GET)', async () => {
+		try {
+			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
+			authGroup.id = authGroup._id;
+			const ctx = {
+				authGroup,
+				method: 'GET',
+				path: `/${authGroup.id}/reg/${authGroup.associatedClient}`,
+				req: {
+					params: {
+						group: authGroup.id
+					}
+				},
+				app: {
+					emit: jest.fn()
+				}
+			};
+			const spy = jest.spyOn(middle, 'koaErrorOut');
+			await middle.noDeleteOnPrimaryClient(ctx, jest.fn());
+			expect(spy).not.toHaveBeenCalled();
+		} catch (error) {
 			t.fail(error);
-        }
-    });
-
-    test('No deleting authGroup associated client - not DELETE method (GET)', async () => {
-        try {
-            const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
-            authGroup.id = authGroup._id;
-            const ctx = {
-                authGroup,
-                method: 'GET',
-                path: `/${authGroup.id}/reg/${authGroup.associatedClient}`,
-                req: {
-                    params: {
-                        group: authGroup.id
-                    }
-                },
-                app: {
-                    emit: jest.fn()
-                }
-            };
-            const spy = jest.spyOn(middle, 'koaErrorOut');
-            await middle.noDeleteOnPrimaryClient(ctx, jest.fn());
-            expect(spy).not.toHaveBeenCalled();
-        } catch (error) {
-			t.fail(error);
-        }
-    });
+		}
+	});
 
 	test('uniqueClientRegCheck - non update or write should not do anything', async () => {
 		try {
@@ -314,7 +297,8 @@ describe('OIDC Pre/Post Middleware', () => {
 		}
 	});
 
-	test('uniqueClientRegCheck - POST should add group to the body', async () => {
+
+	test('uniqueClientRegCheck - POST should continue without error', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
 			authGroup.id = authGroup._id;
@@ -334,17 +318,22 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
-			cl.validateUniqueNameGroup.mockResolvedValue(true);
+			const mCl = jest
+				.spyOn(cl, 'validateUniqueNameGroup')
+				.mockResolvedValue(true);
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.uniqueClientRegCheck(ctx, jest.fn());
-			//expect(ctx.request.body.auth_group).toBe(authGroup.id);
+			expect(mCl).toHaveBeenCalled();
+			console.info(ctx);
 			expect(spy).not.toHaveBeenCalled();
+			spy.mockRestore();
+			mCl.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
 	});
 
-	test('uniqueClientRegCheck - PUT should add group to the body but throw an error b/c client_id not defined', async () => {
+	test('uniqueClientRegCheck - PUT should throw an error b/c client_id not defined', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
 			authGroup.id = authGroup._id;
@@ -364,21 +353,24 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
-			cl.validateUniqueNameGroup.mockResolvedValue(true);
+			const mCl = jest
+				.spyOn(cl, 'validateUniqueNameGroup')
+				.mockResolvedValue(true);
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.uniqueClientRegCheck(ctx, jest.fn());
-			//expect(ctx.request.body.auth_group).toBe(authGroup.id);
 			expect(spy).toHaveBeenCalled();
 			const args = spy.mock.calls[0];
 			expect(args[0].status).toBe(400);
 			expect(args[0].body.error).toBe('Bad Request');
 			expect(args[0].body.message).toBe('client_id should be included in the request body');
+			spy.mockRestore();
+			mCl.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
 	});
 
-	test('uniqueClientRegCheck - PUT should add group to the body and work when client_id is there', async () => {
+	test('uniqueClientRegCheck - PUT should work when client_id is there', async () => {
 		try {
 			const authGroup = GroupMocks.newGroup('UE Core', 'root', true, false);
 			authGroup.id = authGroup._id;
@@ -400,11 +392,15 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
-			cl.validateUniqueNameGroup.mockResolvedValue(true);
+			const mCl = jest
+				.spyOn(cl, 'validateUniqueNameGroup')
+				.mockResolvedValue(true);
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.uniqueClientRegCheck(ctx, jest.fn());
-			//expect(ctx.request.body.auth_group).toBe(authGroup.id);
+			expect(mCl).toHaveBeenCalled();
 			expect(spy).not.toHaveBeenCalled();
+			spy.mockRestore();
+			mCl.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -432,15 +428,20 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
-			cl.validateUniqueNameGroup.mockResolvedValue(false);
+			const mCl = jest
+				.spyOn(cl, 'validateUniqueNameGroup')
+				.mockResolvedValue(false);
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.uniqueClientRegCheck(ctx, jest.fn());
 			//expect(ctx.request.body.auth_group).toBe(authGroup.id);
 			expect(spy).toHaveBeenCalled();
+			expect(mCl).toHaveBeenCalled();
 			const args = spy.mock.calls[0];
 			expect(args[0].status).toBe(409);
 			expect(args[0].body.error).toBe('Conflict');
 			expect(args[0].body.message).toBe('This client name already exists in your auth group');
+			spy.mockRestore();
+			mCl.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -546,6 +547,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].error).toBe('server_error');
 			expect(args[0].message).toBe( 'Unexpected OIDC error. testing internal server error. Work with admin to review Logs');
 			expect(args[0].id).toBeDefined();
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -581,6 +583,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].error).toBe('other_error');
 			expect(args[0].message).toBe('OIDC - details here');
 			expect(args[0].id).toBeDefined();
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -621,6 +624,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.parseKoaOIDC(ctx, jest.fn());
 			expect(spy).not.toHaveBeenCalled();
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -664,6 +668,7 @@ describe('OIDC Pre/Post Middleware', () => {
 			expect(args[0].status).toBe(404);
 			expect(args[0].body.error).toBe('Not Found');
 			expect(args[0].body.message).toBe('auth group not found. try explicitly adding auth_group to the client reg request.');
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}
@@ -705,16 +710,20 @@ describe('OIDC Pre/Post Middleware', () => {
 					emit: jest.fn()
 				}
 			};
-			IAT.deleteOne.mockResolvedValue(true);
+			//IAT.deleteOne.mockResolvedValue(true);
+			const mIAT = jest.spyOn(IAT, 'deleteOne')
+				.mockResolvedValue(true);
 			const spy = jest.spyOn(middle, 'koaErrorOut');
 			await middle.parseKoaOIDC(ctx, jest.fn());
 			// you can toggle this config by changing your .env.test.SINGLE_USE_AT setting
 			if(config.SINGLE_USE_IAT === true) {
-				expect(IAT.deleteOne).toHaveBeenCalledWith(ctx.oidc.entities.InitialAccessToken.jti, ctx.authGroup._id);
+				expect(mIAT).toHaveBeenCalledWith(ctx.oidc.entities.InitialAccessToken.jti, ctx.authGroup._id);
 			} else {
-				expect(IAT.deleteOne).not.toHaveBeenCalled();
+				expect(mIAT).not.toHaveBeenCalled();
 			}
 			expect(spy).not.toHaveBeenCalled();
+			mIAT.mockRestore();
+			spy.mockRestore();
 		} catch (error) {
 			t.fail(error);
 		}

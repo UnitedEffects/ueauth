@@ -1,19 +1,18 @@
-import '@babel/register';
-import 'regenerator-runtime/runtime';
 import Boom from '@hapi/boom';
 import ref from 'json-schema-ref-parser';
 import merge from 'json-schema-resolve-allof';
 import yaml from 'yamljs';
 import fs from 'fs';
 import t from './testhelper';
-import { OpenApiValidator } from 'express-openapi-validate';
 jest.mock('express-openapi-validate');
+import { OpenApiValidator } from 'express-openapi-validate';
 
-import spec from '../src/swagger';
-import errorHandler from '../src/customErrorHandler';
-import m from '../src/middleware';
-import helper from '../src/helper';
-import connect from '../src/connection';
+
+import spec from '../swagger';
+import errorHandler from '../customErrorHandler';
+import m from '../middleware';
+import helper from '../helper';
+import connect from '../connection';
 
 const { doc: swag } = spec;
 
