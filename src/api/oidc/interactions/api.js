@@ -437,7 +437,7 @@ const api = {
 				} catch (error) {
 					console.error(error);
 				}
-				if(!mfaResult) throw Boom.badRequest(`The ${authGroup.name} platform now requires MFA to be enabled. We attempted to automatically do this for you but ran into an issue accessing the MFA provider. Please try again later and if the issue continues, contact the administrator.`);
+				if(!mfaResult) throw Boom.badRequest(`You have opted for MFA challenge for login to the ${authGroup.name} platform. We attempted the action but ran into a problem. Please try again later and if the issue continues, contact the administrator.`);
 				const client = await provider.Client.find(params.client_id);
 				return res.render('login/login', interactions.standardLogin(authGroup, client, debug, prompt, session, uid, params, undefined,{ accountId: account.accountId, pending: true, bindUser: false, providerKey: mfaResult.id }));
 			}
