@@ -177,7 +177,7 @@ export default {
 				}
 				if(req.user.decoded['x-access-url']) {
 					accessObject = {};
-					const userAccess = await access.getUserAccess(req.user.subject_group.id, req.user.sub, { minimized: true });
+					const userAccess = await access.getUserAccess(req.user.subject_group, req.user.sub, { minimized: true });
 					if(userAccess) {
 						if(userAccess.owner === true) accessObject['x-access-group'] = 'owner';
 						if(userAccess.member === true) {

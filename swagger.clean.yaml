@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: UEAuth Service
-  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects LLC</a>. Copyright &#169; 2023, all rights reserved.<br><br>
+  description: "UEAuth is provided by <a href='https://unitedeffects.com'>United Effects Inc</a>. Copyright &#169; 2024, all rights reserved.<br><br>
   As a general reference, this provider implements the following OIDC endpoints. All OpenID Connect schema specific endpoints follow the pattern <code>/{group}/path</code>.<br>UE Auth identity and access endpoints follow the pattern <code>/api/{group}/path</code>. Full documentation on the OpenID Connect specification can be found here: <a href='https://openid.net/developers/specs/'>OIDC API DOCUMENTATION</a>.<br><code><br>authorization: '/{group}/auth',<br>
   check_session: '/{group}/session/check',<br>
   code_verification: '/{group}/device',<br>
