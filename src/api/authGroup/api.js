@@ -10,7 +10,6 @@ import initAccess from '../../initUEAuth';
 import permissions from '../../permissions';
 const config = require('../../config');
 
-
 const RESOURCE = 'Auth Group';
 
 const api = {
@@ -305,6 +304,7 @@ const api = {
 	},
 	async getPublicGroupInfo(req, res, next) {
 		try {
+			console.info('BO DELETE', config.OPEN_GROUP_REG, typeof config.OPEN_GROUP_REG);
 			const ag = req.params.group;
 			const result = await group.getPublicOne(ag);
 			if(!result) throw Boom.notFound(ag);
