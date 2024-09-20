@@ -304,7 +304,6 @@ const api = {
 	},
 	async getPublicGroupInfo(req, res, next) {
 		try {
-			console.info('BO DELETE', config.OPEN_GROUP_REG, typeof config.OPEN_GROUP_REG);
 			const ag = req.params.group;
 			const result = await group.getPublicOne(ag);
 			if(!result) throw Boom.notFound(ag);
