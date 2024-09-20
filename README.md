@@ -50,7 +50,6 @@ Contact us at [solution@unitedeffects.com](mailto:solution@unitedeffects.com) to
 
 * [Join our slack community!](https://docs.unitedeffects.com/docs/community-and-support)
 * [LinkedIn](https://www.linkedin.com/company/unitedeffects)
-* [Twitter](https://twitter.com/ueffectsInc)
 * [Medium Blog](https://blog.unitedeffects.com)
 
 ## Investment Opportunities

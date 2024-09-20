@@ -26,11 +26,11 @@ const config = {
 	// Reference to where users should be linked when they need to complete a registration (optional)
 	ROOT_GROUP_REGISTRATION_UI_URL: process.env.ROOT_GROUP_REGISTRATION_UI_URL || envVars.ROOT_GROUP_REGISTRATION_UI_URL || undefined,
 	// This service can persist http errors in mongo logs. Not recommended for production
-	PERSIST_HTTP_ERRORS: (process.env.PERSIST_HTTP_ERRORS === 'true') || envVars.PERSIST_HTTP_ERRORS || false,
+	PERSIST_HTTP_ERRORS: process.env.PERSIST_HTTP_ERRORS === 'true' ? true : process.env.PERSIST_HTTP_ERRORS === 'false' ? false : envVars.PERSIST_HTTP_ERRORS ?? false,
 	// This service can persist unexpected error logs to mongo. Not recommended for production
-	WRITE_LOGS_TO_DB: (process.env.WRITE_LOGS_TO_DB === 'true') || envVars.WRITE_LOGS_TO_DB || false,
+	WRITE_LOGS_TO_DB: process.env.WRITE_LOGS_TO_DB === 'true' ? true : process.env.WRITE_LOGS_TO_DB === 'false' ? false : envVars.WRITE_LOGS_TO_DB ?? false,
 	// When set to true, this ensures that any Initial Access Token being used is deleted after the first attempt, even if attempt fails
-	SINGLE_USE_IAT: (process.env.SINGLE_USE_IAT === 'true') || envVars.SINGLE_USE_IAT || false,
+	SINGLE_USE_IAT: process.env.SINGLE_USE_IAT === 'true' ? true : process.env.SINGLE_USE_IAT === 'false' ? false : envVars.SINGLE_USE_IAT ?? false,
 	// When registering a new AuthGroup, there is an expiration window to activate that AuthGroup
 	GROUP_SECURE_EXPIRES: parseInt(process.env.GROUP_SECURE_EXPIRES) || envVars.GROUP_SECURE_EXPIRES || 86400 * 31,
 	// OIDC uses cookies to manage local sessions for users. COOKIE_KEYS provides the encryption keys
@@ -45,15 +45,15 @@ const config = {
 		}
 	},
 	// When true and when Root does not yet exist, a user can request to initialize UE Auth with a Root AuthGroup
-	ALLOW_ROOT_CREATION: (process.env.ALLOW_ROOT_CREATION === 'true') || envVars.ALLOW_ROOT_CREATION || false,
+	ALLOW_ROOT_CREATION: process.env.ALLOW_ROOT_CREATION === 'true' ? true : process.env.ALLOW_ROOT_CREATION === 'false' ? false : envVars.ALLOW_ROOT_CREATION ?? false,
 	// As a backup to the database limit of only one Root AuthGroup, creation of the Root AuthGroup requires a creation key. It is recommended that this be set to null, empty string, or undefined unless you are actively creating a Root AuthGroup
 	ONE_TIME_PERSONAL_ROOT_CREATION_KEY: process.env.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || envVars.ONE_TIME_PERSONAL_ROOT_CREATION_KEY || null,
 	// The email address to be used when creating the Root AuthGroup. A user Account will be generated with this email address.
 	ROOT_EMAIL: process.env.ROOT_EMAIL || envVars.ROOT_EMAIL || null,
 	// The Root AuthGroup has super admin across all accounts, organizations and domains. When set to false, that control is limited to read across all rather than the ability to update data on some sensative objects.
-	FULL_SUPER_CONTROL: (process.env.FULL_SUPER_CONTROL === 'true') || envVars.FULL_SUPER_CONTROL || false,
+	FULL_SUPER_CONTROL: process.env.FULL_SUPER_CONTROL === 'true' ? true : process.env.FULL_SUPER_CONTROL === 'false' ? false : envVars.FULL_SUPER_CONTROL ?? false,
 	// When OPEN_GROUP_REG is true, anyone can sign up for an AuthGroup. Otherwise only Root users can
-	OPEN_GROUP_REG: (process.env.OPEN_GROUP_REG === 'true') || envVars.OPEN_GROUP_REG || false,
+	OPEN_GROUP_REG: process.env.OPEN_GROUP_REG === 'true' ? true : process.env.OPEN_GROUP_REG === 'false' ? false : envVars.OPEN_GROUP_REG ?? false,
 	// Company name for the Root AuthGroup
 	ROOT_COMPANY_NAME: process.env.ROOT_COMPANY_NAME || envVars.ROOT_COMPANY_NAME || 'United Effects',
 	// Company URL for the Root AuthGroup
@@ -78,7 +78,7 @@ const config = {
 	// UE Auth assumes you will provide an audience to access its API
 	UI_CORE_AUDIENCE_ORIGIN: process.env.UI_CORE_AUDIENCE_ORIGIN || envVars.UI_CORE_AUDIENCE_ORIGIN || 'http://localhost:3000',
 	// UI_PKCE_REQUIRED tells UE Auth whether to set “token_endpoint_auth_method” to "none" or not for AuthGroup Client creation: true=none
-	UI_PKCE_REQUIRED: (process.env.UI_PKCE_REQUIRED === 'true') || envVars.UI_PKCE_REQUIRED || false,
+	UI_PKCE_REQUIRED: process.env.UI_PKCE_REQUIRED === 'true' ? true : process.env.UI_PKCE_REQUIRED === 'false' ? false : envVars.UI_PKCE_REQUIRED ?? false,
 	// Any globally available (across AuthGroups) scopes beyond what is hardcoded or defined per AuthGroup can be set here
 	CORE_SCOPES () {
 		try {
@@ -113,11 +113,11 @@ const config = {
 	// Any member of an AuthGroup must have certain basic permissions to manage their account. This defines those permissions
 	MEMBER_PERMISSIONS: ['member:::accounts::update:own', 'member:::accounts::read:own', 'member:::accounts::delete:own', 'member:::useraccess::delete:own', 'member:::useraccess::read:own','member:::operations-reset-user-password::create', 'member:::operations-user::create:own', 'member:::operations-invite::create:own', 'member:::accounts-notification::read:own'],
 	// The Event Emitter writes out a lot of information with regards to the objects of the system. Some of that information could contain sensative information such as passwords or secrets. When this setting is true, sensitive data is sanitized before display.
-	EVENT_EMITTER_CLEAN_SENSITIVE: (process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true') || envVars.EVENT_EMITTER_CLEAN_SENSITIVE || false,
+	EVENT_EMITTER_CLEAN_SENSITIVE: process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'true' ? true : process.env.EVENT_EMITTER_CLEAN_SENSITIVE === 'false' ? false : envVars.EVENT_EMITTER_CLEAN_SENSITIVE ?? false,
 	// You can set the custom domain header you want to use to track incoming upstream request domains
 	CUSTOM_DOMAIN_PROXY_HEADER: process.env.CUSTOM_DOMAIN_PROXY_HEADER || envVars.CUSTOM_DOMAIN_PROXY_HEADER || 'x-host',
 	DISABLE_STREAMS: envVars.DISABLE_STREAMS || false,
-	INIT_AG_WITH_STREAMS: (process.env.INIT_AG_WITH_STREAMS === 'true') || envVars.INIT_AG_WITH_STREAMS || true,
+	INIT_AG_WITH_STREAMS: process.env.INIT_AG_WITH_STREAMS === 'true' ? true : process.env.INIT_AG_WITH_STREAMS === 'false' ? false : envVars.INIT_AG_WITH_STREAMS ?? false,
 	// This is a default/backup of the event emitter options generally defined per AuthGroup.
 	EVENT_EMITTER: (envVars && envVars.DISABLE_STREAMS === true) ? {} :{
 		general: true,

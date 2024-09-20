@@ -10,7 +10,6 @@ import initAccess from '../../initUEAuth';
 import permissions from '../../permissions';
 const config = require('../../config');
 
-
 const RESOURCE = 'Auth Group';
 
 const api = {
